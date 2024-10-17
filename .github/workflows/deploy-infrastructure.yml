@@ -66,4 +66,3 @@ jobs:
             location=${{ inputs.LOCATION }}
             baseResourceName=${{ vars.BASE_RESOURCE_NAME }}
             resourceGroupName=${{ vars.RESOURCE_GROUP_NAME }}
-            buildVersion=${{ inputs.BUILD_VERSION }}
