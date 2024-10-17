@@ -29,5 +29,5 @@ jobs:
     - name: Upload ARM Template as workflow artifact
       uses: actions/upload-artifact@v4
       with:
-        name: applicationarmtemplate
+        name: infrastructurearmtemplate
         path: ./infrastructure/bicep/infrastructure.json
