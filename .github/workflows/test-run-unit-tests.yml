@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        project: ['GMCopilot.Core', 'GMCopilot.Data', 'GMCopilot.ApiCore', 'GMCopilot.AccessApi']
+        project: ['genaidbexplorer.console']
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -22,19 +22,18 @@ jobs:
       - name: Run unit tests on ${{ matrix.project }}
         run: |
           dotnet test --configuration Release --logger trx
-        working-directory: ./src/GMCopilot/Tests/Unit/${{ matrix.project }}.Test/
+        working-directory: ./src/genai-database-explorer/Tests/Unit/${{ matrix.project }}.Test/
 
       - name: Upload test results for ${{ matrix.project }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.project }}.Test
-          path: ./src/GMCopilot/Tests/Unit/${{ matrix.project }}.Test/TestResults/*.trx
+          path: ./src/genai-database-explorer/Tests/Unit/${{ matrix.project }}.Test/TestResults/*.trx
 
       - name: Publish test results for ${{ matrix.project }}
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
             files: |
-              ./src/GMCopilot/Tests/Unit/${{ matrix.project }}.Test/TestResults/*.trx
+              ./src/genai-database-explorer/Tests/Unit/${{ matrix.project }}.Test/TestResults/*.trx
             check_name: Unit tests ${{ matrix.project }}.Test
-              
