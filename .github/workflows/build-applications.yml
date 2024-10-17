@@ -1,0 +1,22 @@
+name: build-applications
+
+on:
+  workflow_call:
+    inputs:
+      BUILD_CONFIGURATION:
+        description: 'The version to assign to the client'
+        type: string
+        default: 'Debug'
+
+jobs:
+  build-app-client:
+    name: Build application client
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8

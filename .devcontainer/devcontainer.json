@@ -1,0 +1,36 @@
+{
+    "name": "genai-database-explorer",
+    "image": "mcr.microsoft.com/devcontainers/dotnet:0-7.0",
+    "workspaceFolder": "/workspaces/genai-database-explorer",
+    "onCreateCommand": "bash ./.devcontainer/on-setup.sh",
+  
+    // Features to add to the dev container. More info: https://containers.dev/features.
+    "features": {
+      "ghcr.io/devcontainers/features/azure-cli:1": {},
+      "ghcr.io/devcontainers/features/dotnet:2.1.3": {},
+      "ghcr.io/devcontainers/features/powershell:1": {},
+      "ghcr.io/devcontainers/features/python:1": {}
+    },
+  
+    // Configure tool-specific properties.
+    "customizations": {
+      // Configure properties specific to VS Code.
+      "vscode": {
+        "settings": {},
+        "extensions": [
+          "ms-dotnettools.csharp",
+          "ms-azuretools.vscode-docker",
+          "GitHub.copilot-nightly",
+          "GitHub.copilot-chat",
+          "ms-dotnettools.csdevkit",
+          "ms-azuretools.vscode-bicep",
+          "ms-vscode.azure-account",
+          "ms-vscode.azurecli",
+          "ms-vscode-remote.remote-containers",
+          "ms-semantic-kernel.semantic-kernel",
+          "GitHub.copilot-labs",
+          "ms-python.python"
+        ]
+      }
+    }
+  }

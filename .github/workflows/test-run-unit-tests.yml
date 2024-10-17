@@ -1,0 +1,40 @@
+name: test-run-unit-tests
+
+on:
+  workflow_call:
+
+jobs:
+  test-run-unit-tests:
+    name: Run unit tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: ['GMCopilot.Core', 'GMCopilot.Data', 'GMCopilot.ApiCore', 'GMCopilot.AccessApi']
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8
+
+      - name: Run unit tests on ${{ matrix.project }}
+        run: |
+          dotnet test --configuration Release --logger trx
+        working-directory: ./src/GMCopilot/Tests/Unit/${{ matrix.project }}.Test/
+
+      - name: Upload test results for ${{ matrix.project }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.project }}.Test
+          path: ./src/GMCopilot/Tests/Unit/${{ matrix.project }}.Test/TestResults/*.trx
+
+      - name: Publish test results for ${{ matrix.project }}
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+            files: |
+              ./src/GMCopilot/Tests/Unit/${{ matrix.project }}.Test/TestResults/*.trx
+            check_name: Unit tests ${{ matrix.project }}.Test
+              
