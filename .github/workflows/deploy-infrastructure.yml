@@ -64,7 +64,6 @@ jobs:
           scope: subscription
           parameters: >
             location=${{ inputs.LOCATION }}
-            environmentCode=${{ inputs.ENVIRONMENT }}
             baseResourceName=${{ vars.BASE_RESOURCE_NAME }}
             resourceGroupName=${{ vars.RESOURCE_GROUP_NAME }}
             buildVersion=${{ inputs.BUILD_VERSION }}
