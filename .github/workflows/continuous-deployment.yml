@@ -43,8 +43,6 @@ jobs:
       ENVIRONMENT: Test
       BUILD_VERSION: ${{ needs.set-build-variables.outputs.BUILD_VERSION }}
       LOCATION: ${{ vars.LOCATION }}
-      RESOURCE_GROUP_NAME: ${{ vars.RESOURCE_GROUP_NAME }}
-      BASE_RESOURCE_NAME: ${{ vars.BASE_RESOURCE_NAME }}
     secrets:
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
@@ -59,8 +57,6 @@ jobs:
       ENVIRONMENT: Test
       BUILD_VERSION: ${{ needs.set-build-variables.outputs.BUILD_VERSION }}
       LOCATION: ${{ vars.LOCATION }}
-      RESOURCE_GROUP_NAME: ${{ vars.RESOURCE_GROUP_NAME }}
-      BASE_RESOURCE_NAME: ${{ vars.BASE_RESOURCE_NAME }}
     secrets:
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
