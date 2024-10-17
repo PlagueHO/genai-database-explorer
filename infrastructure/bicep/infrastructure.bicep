@@ -3,17 +3,20 @@ targetScope = 'subscription'
 @description('The location to deploy the resources into.')
 @allowed([
   'AustraliaEast'
-  'CanadaEast'
+  'CentralUS'
   'EastUS'
   'EastUS2'
   'FranceCentral'
   'JapanEast'
   'NorthCentralUS'
+  'NorwayEast'
   'SouthCentralUS'
   'SwedenCentral'
   'SwitzerlandNorth'
-  'WestEurope'
   'UKSouth'
+  'WestEurope'
+  'WestUS'
+  'WestUS3'
 ])
 param location string = 'EastUS'
 
@@ -26,7 +29,7 @@ param resourceGroupName string
 var logAnalyticsWorkspaceName = '${baseResourceName}-law'
 var applicationInsightsName = '${baseResourceName}-appinsights'
 var openAiServiceName = '${baseResourceName}-openai'
-var aiSearchName = '${baseResourceName}-aisearch'
+// var aiSearchName = '${baseResourceName}-aisearch'
 
 var openAiModelDeployments = [
   {
@@ -75,6 +78,7 @@ module openAiService './modules/openAiService.bicep' = {
   }
 }
 
+/*
 module aiSearch './modules/aiSearch.bicep' = {
   name: 'aiSearch'
   scope: rg
@@ -92,5 +96,6 @@ module aiSearch './modules/aiSearch.bicep' = {
     logAnalyticsWorkspaceName: logAnalyticsWorkspaceName
   }
 }
+*/
 
 output openAiServiceEndpoint string = openAiService.outputs.openAiServiceEndpoint
