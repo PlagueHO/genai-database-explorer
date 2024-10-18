@@ -26,6 +26,13 @@ param baseResourceName string
 @description('The name of the resource group that will contain all the resources.')
 param resourceGroupName string
 
+@description('The SQL logical server administrator username.')
+param sqlServerUsername string = 'sqladmin'
+
+@description('The SQL logical server administrator password.')
+@secure()
+param sqlServerPassword string
+
 var logAnalyticsWorkspaceName = '${baseResourceName}-law'
 var applicationInsightsName = '${baseResourceName}-appinsights'
 var openAiServiceName = '${baseResourceName}-openai'
@@ -73,6 +80,20 @@ module openAiService './modules/openAiService.bicep' = {
     location: location
     openAiServiceName: openAiServiceName
     openAiModeldeployments: openAiModelDeployments
+    logAnalyticsWorkspaceId: monitoring.outputs.logAnalyticsWorkspaceId
+    logAnalyticsWorkspaceName: logAnalyticsWorkspaceName
+  }
+}
+
+module sqlDatabase './modules/sqlDatabase.bicep' = {
+  name: 'sqlDatabase'
+  scope: rg
+  params: {
+    location: location
+    sqlLogicalServerName: '${baseResourceName}'
+    sqlDatabaseName: 'AdventureWorksLT'
+    sqlServerUsername: sqlServerUsername
+    sqlServerPassword: sqlServerPassword
     logAnalyticsWorkspaceId: monitoring.outputs.logAnalyticsWorkspaceId
     logAnalyticsWorkspaceName: logAnalyticsWorkspaceName
   }

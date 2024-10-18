@@ -26,6 +26,12 @@ on:
       AZURE_CLIENT_ID:
         description: "The Azure client ID to use for authentication to Azure for deployment"
         required: true
+      SQL_SERVER_USERNAME:
+        description: "The SQL logical server administrator username"
+        required: true
+      SQL_SERVER_PASSWORD:
+        description: "The SQL logical server administrator password"
+        required: true      
   
     outputs:
       openAiServiceEndpoint:
@@ -66,3 +72,5 @@ jobs:
             location=${{ inputs.LOCATION }}
             baseResourceName=${{ vars.BASE_RESOURCE_NAME }}
             resourceGroupName=${{ vars.RESOURCE_GROUP_NAME }}
+            sqlServerUsername=${{ secrets.SQL_SERVER_USERNAME }}
+            sqlServerPassword=${{ secrets.SQL_SERVER_PASSWORD }}
