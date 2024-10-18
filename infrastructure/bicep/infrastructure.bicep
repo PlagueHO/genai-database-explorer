@@ -42,8 +42,8 @@ var openAiModelDeployments = [
   {
     name: 'gpt-4o'
     modelName: 'gpt-4o'
-    sku: 'Global-Standard'
-    capacity: 80
+    sku: 'GlobalStandard'
+    capacity: 250
   }
   {
     name: 'embedding'
