@@ -42,6 +42,7 @@ var openAiModelDeployments = [
   {
     name: 'gpt-4o'
     modelName: 'gpt-4o'
+    version: '2024-05-13'
     sku: 'GlobalStandard'
     capacity: 250
   }
