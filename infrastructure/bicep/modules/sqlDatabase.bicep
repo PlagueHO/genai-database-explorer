@@ -47,24 +47,33 @@ resource sqlDatabase 'Microsoft.Sql/servers/databases@2022-08-01-preview' = {
 }
 
 // Add the diagnostic settings to send logs and metrics to Log Analytics
+var sqlDatabaseMetricCategories = [
+  'Basic'
+  'InstanceAndAppAdvanced'
+  'WorkloadManagement'
+]
+var sqlDatabaseDiagnosticCategories = [
+  'allLogs'
+]
+
 resource sqlDatabaseDiagnosticSetting 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
   name: 'send-to-${logAnalyticsWorkspaceName}'
   scope: sqlDatabase
   properties: {
     workspaceId: logAnalyticsWorkspaceId
     logs: [
-      {
-        category: 'OperationLogs'
+      for categoryName in sqlDatabaseDiagnosticCategories: {
+        category: categoryName
         enabled: true
         retentionPolicy: {
+          enabled: false
           days: 0
-          enabled: false 
         }
       }
     ]
-    metrics:[
-      {
-        category: 'AllMetrics'
+    metrics: [
+      for categoryName in sqlDatabaseMetricCategories: {
+        category: categoryName
         enabled: true
         retentionPolicy: {
           enabled: false
