@@ -53,7 +53,16 @@ var sqlDatabaseMetricCategories = [
   'WorkloadManagement'
 ]
 var sqlDatabaseDiagnosticCategories = [
-  'allLogs'
+  'SQLInsights'
+  'AutomaticTuning'
+  'QueryStoreRuntimeStatistics'
+  'QueryStoreWaitStatistics'
+  'Errors'
+  'DatabaseWaitStatistics'
+  'Timeouts'
+  'Deadlocks'
+  'DevOpsOperationsAudit'
+  'SQLSecurityAuditEvents'
 ]
 
 resource sqlDatabaseDiagnosticSetting 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
