@@ -1,4 +1,4 @@
-﻿namespace genaidbexplorer.console.Test
+﻿namespace GenAIDBExplorer.console.Test
 {
     [TestClass]
     public sealed class Test1

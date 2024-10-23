@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        project: ['genaidbexplorer.console']
+        project: ['GenAIDBExplorer.Console']
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
