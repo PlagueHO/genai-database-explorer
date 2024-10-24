@@ -8,7 +8,7 @@ namespace GenAIDBExplorer.Models.SemanticModel;
 
 public sealed class SemanticModelStoredProcedure : ISemanticModelItem
 {
-    public SemanticModelItemType ItemType = SemanticModelItemType.StoredProcedure;
+    SemanticModelItemType ISemanticModelItem.ItemType => SemanticModelItemType.StoredProcedure;
 
     public SemanticModelStoredProcedure(
         string name,

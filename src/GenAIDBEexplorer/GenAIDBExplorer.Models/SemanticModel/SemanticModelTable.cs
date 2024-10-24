@@ -9,7 +9,7 @@ namespace GenAIDBExplorer.Models.SemanticModel;
 
 public sealed class SemanticModelTable : ISemanticModelItem
 {
-    public SemanticModelItemType ItemType = SemanticModelItemType.Table;
+    SemanticModelItemType ISemanticModelItem.ItemType => SemanticModelItemType.Table;
 
     public SemanticModelTable(
         string name,
