@@ -1,17 +1,15 @@
-﻿using System;
-using System.IO;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.SemanticKernel;
+using GenAIDBExplorer.Models.Project;
 
 namespace GenAIDBExplorer.AI.SemanticKernel;
 
-public static class SemanticKernelFactory
+public class SemanticKernelFactory : ISemanticKernelFactory
 {
     /// <summary>
     /// Factory method for <see cref="IServiceCollection"/>
     /// </summary>
-    public static Func<IServiceProvider, Kernel> CreateSemanticKernel(IConfiguration projectConfiguration)
+    public Func<IServiceProvider, Kernel> CreateSemanticKernel(IProject project)
     {
         return CreateKernel;
 
@@ -21,15 +19,15 @@ public static class SemanticKernelFactory
 
             builder.Services.AddLogging();
 
-            var apikey = projectConfiguration.GetValue<string>(SettingNameAzureApiKey);
+            var apikey = project.ChatCompletionSettings.AzureOpenAIKey;
 
             if (!string.IsNullOrWhiteSpace(apikey))
             {
-                var endpoint = configuration.GetValue<string>(SettingNameAzureEndpoint) ??
-                               throw new InvalidDataException($"No endpoint configured in {SettingNameAzureEndpoint}.");
+                var endpoint = project.ChatCompletionSettings.AzureOpenAIEndpoint ??
+                               throw new InvalidDataException($"No endpoint configured in {nameof(project.ChatCompletionSettings.AzureOpenAIEndpoint)}.");
 
                 var modelCompletion =
-                    configuration.GetValue<string>(SettingNameAzureModelCompletion) ??
+                    project.ChatCompletionSettings.AzureOpenAIDeploymentId ??
                     DefaultChatModel;
 
                 builder.AddAzureOpenAIChatCompletion(modelCompletion, modelCompletion, endpoint, apikey);
@@ -37,12 +35,12 @@ public static class SemanticKernelFactory
                 return (Kernel)builder.Build();
             }
 
-            apikey = configuration.GetValue<string>(SettingNameOpenAIApiKey);
+            apikey = project.ChatCompletionSettings.OpenAIKey;
 
             if (!string.IsNullOrWhiteSpace(apikey))
             {
                 var modelCompletion =
-                    configuration.GetValue<string>(SettingNameOpenAIModelCompletion) ??
+                    project.ChatCompletionSettings.AzureOpenAIDeploymentId ??
                     DefaultChatModel;
 
                 builder.AddOpenAIChatCompletion(modelCompletion, apikey);
@@ -50,7 +48,7 @@ public static class SemanticKernelFactory
                 return (Kernel)builder.Build();
             }
 
-            throw new InvalidDataException($"No api-key configured in {SettingNameAzureApiKey} or {SettingNameOpenAIApiKey}.");
+            throw new InvalidDataException($"No api-key configured in {nameof(project.ChatCompletionSettings.AzureOpenAIKey)} or {nameof(project.ChatCompletionSettings.OpenAIKey)}.");
         }
     }
 }

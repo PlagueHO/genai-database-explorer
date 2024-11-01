@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace GenAIDBExplorer.Models.ProjectSettings;
+namespace GenAIDBExplorer.Models.Project;
 
 /// <summary>
 /// If the string is set, it must not be empty or whitespace.

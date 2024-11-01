@@ -1,4 +1,4 @@
-﻿namespace GenAIDBExplorer.Models.ProjectSettings;
+﻿namespace GenAIDBExplorer.Models.Project;
 
 public enum OpenAISeriviceType
 {

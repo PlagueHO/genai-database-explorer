@@ -1,61 +1,48 @@
 ﻿using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+using GenAIDBExplorer.Models.Project;
 
-namespace GenAIDBExplorer.Data.DatabaseProviders;
-
-/// <summary>
-/// Responsible for producing a connection string for the requested project.
-/// </summary>
-public sealed class SqlConnectionProvider : IDatabaseConnectionProvider
+namespace GenAIDBExplorer.Data.DatabaseProviders
 {
-    private readonly IConfiguration _configuration;
-
     /// <summary>
-    /// Factory method for <see cref="IServiceCollection"/>
+    /// Responsible for producing a connection string for the requested project.
     /// </summary>
-    public static Func<IServiceProvider, SqlConnectionProvider> Create(IConfiguration configuration)
+    public sealed class SqlConnectionProvider : IDatabaseConnectionProvider
     {
-        return CreateProvider;
+        private readonly IProject _project;
 
-        SqlConnectionProvider CreateProvider(IServiceProvider provider)
+        public SqlConnectionProvider(IProject project)
         {
-            return new SqlConnectionProvider(configuration);
-        }
-    }
-
-    private SqlConnectionProvider(IConfiguration configuration)
-    {
-        this._configuration = configuration;
-    }
-
-    /// <summary>
-    /// Factory method for producing a live SQL connection instance.
-    /// </summary>
-    /// <param name="schemaName">The schema name (which should match a corresponding connectionstring setting).</param>
-    /// <returns>A <see cref="SqlConnection"/> instance in the "Open" state.</returns>
-    /// <remarks>
-    /// Connection pooling enabled by default makes re-establishing connections
-    /// relatively efficient.
-    /// </remarks>
-    public async Task<SqlConnection> ConnectAsync(string schemaName)
-    {
-        var connectionString =
-            this._configuration.GetConnectionString(schemaName) ??
-            throw new InvalidDataException($"Missing configuration for connection-string: {schemaName}");
-
-        var connection = new SqlConnection(connectionString);
-
-        try
-        {
-            await connection.OpenAsync().ConfigureAwait(false);
-        }
-        catch
-        {
-            connection.Dispose();
-            throw;
+            this._project = project;
         }
 
-        return connection;
+        /// <summary>
+        /// Factory method for producing a live SQL connection instance.
+        /// </summary>
+        /// <param name="schemaName">The schema name (which should match a corresponding connectionstring setting).</param>
+        /// <returns>A <see cref="SqlConnection"/> instance in the "Open" state.</returns>
+        /// <remarks>
+        /// Connection pooling enabled by default makes re-establishing connections
+        /// relatively efficient.
+        /// </remarks>
+        public async Task<SqlConnection> ConnectAsync(string schemaName)
+        {
+            var connectionString =
+                this._project.DatabaseSettings.ConnectionString ??
+                throw new InvalidDataException($"Missing configuration for connection-string: {schemaName}");
+
+            var connection = new SqlConnection(connectionString);
+
+            try
+            {
+                await connection.OpenAsync().ConfigureAwait(false);
+            }
+            catch
+            {
+                connection.Dispose();
+                throw;
+            }
+
+            return connection;
+        }
     }
 }

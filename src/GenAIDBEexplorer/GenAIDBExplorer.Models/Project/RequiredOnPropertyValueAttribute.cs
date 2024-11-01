@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 
-namespace GenAIDBExplorer.Models.ProjectSettings;
+namespace GenAIDBExplorer.Models.Project;
 
 /// <summary>
 /// If the other property is set to the expected value, then this property is required.

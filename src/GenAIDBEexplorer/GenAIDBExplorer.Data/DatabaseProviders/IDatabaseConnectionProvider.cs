@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
 
 namespace GenAIDBExplorer.Data.DatabaseProviders

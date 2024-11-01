@@ -1,4 +1,7 @@
 ﻿using System.CommandLine;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using System.IO;
 
 namespace GenAIDBExplorer.Console;
 
@@ -8,7 +11,7 @@ public sealed class CommandLineRunner
     {
         var rootCommand = new RootCommand("GenAI Database Explorer tool");
 
-        var projectOption = new Option<FileInfo>(
+        var projectOption = new Option<DirectoryInfo>(
             aliases: new[] { "--project", "-p" },
             description: "The path to the GenAI Database Explorer project."
         )
@@ -18,12 +21,12 @@ public sealed class CommandLineRunner
 
         rootCommand.AddGlobalOption(projectOption);
 
-        var commands = new Dictionary<string, Action<FileInfo>>
-    {
-        { "init", CommandLineRunner.InitializeProject },
-        { "build", CommandLineRunner.BuildProject },
-        { "query", CommandLineRunner.QueryProject }
-    };
+        var commands = new Dictionary<string, Action<DirectoryInfo>>
+        {
+            { "init", CommandLineRunner.InitializeProject },
+            { "build", CommandLineRunner.BuildProject },
+            { "query", CommandLineRunner.QueryProject }
+        };
 
         foreach (var kvp in commands)
         {
@@ -41,7 +44,7 @@ public sealed class CommandLineRunner
         return await rootCommand.InvokeAsync(args);
     }
 
-    private static void ValidateProjectPath(FileInfo projectPath)
+    private static void ValidateProjectPath(DirectoryInfo projectPath)
     {
         if (projectPath == null)
         {
@@ -49,25 +52,25 @@ public sealed class CommandLineRunner
         }
     }
 
-    public static void InitializeProject(FileInfo projectPath)
+    public static void InitializeProject(DirectoryInfo projectPath)
     {
         ValidateProjectPath(projectPath);
         System.Console.WriteLine($"Initializing project at '{projectPath.FullName}'.");
 
         // Create the project directory if it doesn't exist
-        if (!projectPath.Directory.Exists)
+        if (!projectPath.Exists)
         {
-            projectPath.Directory.Create();
+            projectPath.Create();
         }
     }
 
-    public static void BuildProject(FileInfo projectPath)
+    public static void BuildProject(DirectoryInfo projectPath)
     {
         ValidateProjectPath(projectPath);
         System.Console.WriteLine($"Building project at '{projectPath.FullName}'.");
     }
 
-    public static void QueryProject(FileInfo projectPath)
+    public static void QueryProject(DirectoryInfo projectPath)
     {
         ValidateProjectPath(projectPath);
         System.Console.WriteLine($"Querying project at '{projectPath.FullName}'.");

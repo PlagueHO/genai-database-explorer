@@ -22,4 +22,8 @@
     <PackageReference Include="Microsoft.SemanticKernel.Yaml" Version="1.26.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\GenAIDBExplorer.Models\GenAIDBExplorer.Models.csproj" />
+  </ItemGroup>
+
 </Project>

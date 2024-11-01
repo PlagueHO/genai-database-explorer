@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace GenAIDBExplorer.Models.ProjectSettings;
+namespace GenAIDBExplorer.Models.Project;
 
 public class DatabaseSettings
 {
