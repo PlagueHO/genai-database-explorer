@@ -1,61 +1,51 @@
 ﻿using System.CommandLine;
-using System;
-using System.IO;
-using System.CommandLine.Invocation;
+using System.Reflection;
+using System.Diagnostics;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using GenAIDBExplorer.Data.DatabaseProviders;
+using GenAIDBExplorer.AI.SemanticKernel;
+using GenAIDBExplorer.AI.KernelMemory;
 
 namespace GenAIDBExplorer.Console;
 
-class Program
+internal static class Program
 {
-    static async Task<int> Main(string[] args)
+    private static async Task Main(string[] args)
     {
-        var rootCommand = new RootCommand("GenAI Database Explorer tool");
+        using var traceListener = new TextWriterTraceListener("genaidbexplorer.log");
 
-        var projectOption = new Option<FileInfo>(
-            aliases: [ "--project", "-p" ],
-            description: "The path to the GenAI Database Explorer project."
-        )
-        {
-            IsRequired = true
-        };
+        var host = Host.CreateDefaultBuilder(args)
+            .ConfigureAppConfiguration(
+                (context, config) =>
+                {
+                    config
+                        .AddJsonFile("appsettings.json")
+                        .AddJsonFile($"appsettings.{context.HostingEnvironment.EnvironmentName}.json", optional: true)
+                        .AddEnvironmentVariables()
+                        .AddUserSecrets(Assembly.GetExecutingAssembly());
+                })
+            .ConfigureLogging(
+                (context, config) =>
+                {
+                    config
+                        .ClearProviders()
+                        .AddConfiguration(context.Configuration.GetSection("Logging"));
+                })
+            .ConfigureServices(
+                (context, services) =>
+                {
+                    services
+                        .AddSingleton(SemanticKernelFactory.CreateSemanticKernel(context.Configuration))
+                        .AddSingleton(KernelMemoryFactory.CreateKernelMemory(context.Configuration))
+                        .AddSingleton(SqlConnectionProvider.Create(context.Configuration))
+                        .AddSingleton<CommandLineRunner>();
+                })
+            .UseConsoleLifetime()
+            .Build();
 
-        rootCommand.AddGlobalOption(projectOption);
-
-        var commands = new Dictionary<string, Action<FileInfo>>
-        {
-            { "init", InitializeProject },
-            { "build", BuildProject },
-            { "query", QueryProject }
-        };
-
-        foreach (var kvp in commands)
-        {
-            var command = new Command(kvp.Key, $"{kvp.Key} a GenAI Database Explorer project.");
-            command.AddOption(projectOption);
-            command.SetHandler(kvp.Value, projectOption);
-            rootCommand.Add(command);
-        }
-
-        rootCommand.SetHandler(() =>
-        {
-            System.Console.WriteLine("Command not specified.");
-        });
-
-        return await rootCommand.InvokeAsync(args);
-    }
-
-    public static void InitializeProject(FileInfo projectPath)
-    {
-        System.Console.WriteLine($"Initializing project at '{projectPath.FullName}'.");
-    }
-
-    public static void BuildProject(FileInfo projectPath)
-    {
-        System.Console.WriteLine($"Building project at '{projectPath.FullName}'.");
-    }
-
-    public static void QueryProject(FileInfo projectPath)
-    {
-        System.Console.WriteLine($"Querying project at '{projectPath.FullName}'.");
+        await host.Services.GetRequiredService<CommandLineRunner>().RunAsync(args);
     }
 }

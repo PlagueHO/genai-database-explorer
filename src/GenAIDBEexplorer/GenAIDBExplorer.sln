@@ -13,6 +13,24 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenAIDBExplorer.Console.Tes
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenAIDBExplorer.Models", "GenAIDBExplorer.Models\GenAIDBExplorer.Models.csproj", "{2D51AD92-1502-427F-915C-0E8E44B2E263}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenAIDBExplorer.Data", "GenAIDBExplorer.Data\GenAIDBExplorer.Data.csproj", "{C43E80AE-A136-4FAE-B7D0-F73035914E0F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenAIDBExplorer.AI", "GenAIDBExplorer.AI\GenAIDBExplorer.AI.csproj", "{6AC63CED-EA1D-41D8-AFB9-CF3DAC18665D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{F932A986-F757-43FA-A2DA-EE69555F7F57}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{9F6A9BFE-07ED-49EF-88BF-9E5B09EF61A3}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\.github\workflows\build-applications.yml = ..\..\.github\workflows\build-applications.yml
+		..\..\.github\workflows\build-arm-templates.yml = ..\..\.github\workflows\build-arm-templates.yml
+		..\..\.github\workflows\continuous-deployment.yml = ..\..\.github\workflows\continuous-deployment.yml
+		..\..\.github\workflows\continuous-integration.yml = ..\..\.github\workflows\continuous-integration.yml
+		..\..\.github\workflows\deploy-infrastructure.yml = ..\..\.github\workflows\deploy-infrastructure.yml
+		..\..\.github\workflows\set-build-variables.yml = ..\..\.github\workflows\set-build-variables.yml
+		..\..\.github\workflows\test-run-unit-tests.yml = ..\..\.github\workflows\test-run-unit-tests.yml
+		..\..\.github\workflows\validate-infrastructure.yml = ..\..\.github\workflows\validate-infrastructure.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +49,14 @@ Global
 		{2D51AD92-1502-427F-915C-0E8E44B2E263}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2D51AD92-1502-427F-915C-0E8E44B2E263}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2D51AD92-1502-427F-915C-0E8E44B2E263}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C43E80AE-A136-4FAE-B7D0-F73035914E0F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C43E80AE-A136-4FAE-B7D0-F73035914E0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C43E80AE-A136-4FAE-B7D0-F73035914E0F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C43E80AE-A136-4FAE-B7D0-F73035914E0F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6AC63CED-EA1D-41D8-AFB9-CF3DAC18665D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6AC63CED-EA1D-41D8-AFB9-CF3DAC18665D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6AC63CED-EA1D-41D8-AFB9-CF3DAC18665D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6AC63CED-EA1D-41D8-AFB9-CF3DAC18665D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -38,6 +64,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{196DBF2D-9EE1-4453-9A59-70FE0FB2EBB9} = {AE3C59E3-D04A-4DF8-B8A0-251510F7312E}
 		{E95312FE-3044-473A-9662-468DEF7514E8} = {196DBF2D-9EE1-4453-9A59-70FE0FB2EBB9}
+		{9F6A9BFE-07ED-49EF-88BF-9E5B09EF61A3} = {F932A986-F757-43FA-A2DA-EE69555F7F57}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {77E9FCDF-9A98-4242-A12D-9565607A3087}

@@ -1,18 +1,13 @@
-﻿using System;
-using Microsoft.Data.SqlClient;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace GenAIDBExplorer.Console;
+namespace GenAIDBExplorer.Data.DatabaseProviders;
 
 /// <summary>
 /// Responsible for producing a connection string for the requested project.
 /// </summary>
-internal sealed class SqlConnectionProvider
+public sealed class SqlConnectionProvider : IDatabaseConnectionProvider
 {
     private readonly IConfiguration _configuration;
 
