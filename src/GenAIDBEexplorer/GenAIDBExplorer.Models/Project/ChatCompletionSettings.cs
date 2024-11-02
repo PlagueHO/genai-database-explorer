@@ -15,7 +15,11 @@ public class ChatCompletionSettings
     /// <summary>
     /// The service type to use for ChatCompletion
     /// </summary>
+    [Required, NotEmptyOrWhitespace]
     public OpenAISeriviceType ServiceType { get; set; } = OpenAISeriviceType.OpenAI;
+
+    [NotEmptyOrWhitespace]
+    public string Model { get; set; } = "gpt-4o";
 
     public string? OpenAIKey { get; set; }
 

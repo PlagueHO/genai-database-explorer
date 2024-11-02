@@ -69,11 +69,12 @@ internal static class Program
             {
                 config
                     .ClearProviders()
-                    .AddConfiguration(context.Configuration.GetSection("Logging"));
+                    .AddConfiguration(context.Configuration.GetSection("Logging"))
+                    .AddConsole();
             })
             .ConfigureServices((context, services) =>
             {
-                // Register IConfiguration
+                // Register IConfiguration for the handling the project settings
                 services.AddSingleton<IConfiguration>(provider =>
                 {
                     var configurationBuilder = new ConfigurationBuilder()
@@ -100,12 +101,8 @@ internal static class Program
                     return new KernelMemoryFactory().CreateKernelMemory(project)(provider);
                 });
 
-                // Register the SQL connection provider
-                services.AddSingleton(provider =>
-                {
-                    var project = provider.GetRequiredService<IProject>();
-                    return new DatabaseConnectionProviderFactory().CreateSqlProvider(project)(provider);
-                });
+                // Register the SQL connection provider directly
+                services.AddSingleton<IDatabaseConnectionProvider, SqlConnectionProvider>();
 
                 // Register the command-line runner
                 services.AddSingleton<CommandLineRunner>();

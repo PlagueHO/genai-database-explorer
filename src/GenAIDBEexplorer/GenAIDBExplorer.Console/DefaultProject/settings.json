@@ -1,0 +1,24 @@
+{
+  "SettingsVersion": "1.0.0",
+  "Database": {
+    "ConnectionString": "Server=.;Database=AdventureWorks2017;Trusted_Connection=True;"
+  },
+  "ChatCompletion": {
+    "OpenAISeriviceType": "AzureOpenAI", // AzureOpenAI, OpenAI
+    "Model": "gpt-4o", // gpt-4o-mini
+    // "OpenAIKey": "<Set your OpenAI API key>"
+    "AzureOpenAIKey": "<Set your Azure OpenAI API key>", // Azure OpenAI key
+    "AzureOpenAIEndpoint": "https://<Set your Azure OpenAI endpoint>.cognitiveservices.azure.com/", // Azure OpenAI endpoint
+    // "AzureOpenAIAppId": "", // Azure OpenAI App Id
+    "AzureOpenAIDeploymentId": "<Set your Azure OpenAI deployment id>", // Azure OpenAI deployment id
+  },
+  "Embedding": {
+    "OpenAISeriviceType": "AzureOpenAI", // AzureOpenAI, OpenAI
+    "Model": "text-embedding-3-large", // text-embedding-3-small, text-embedding-ada-002
+    // "OpenAIKey": "<Set your OpenAI API key>"
+    "AzureOpenAIKey": "<Set your Azure OpenAI API key>", // Azure OpenAI key
+    "AzureOpenAIEndpoint": "https://<Set your Azure OpenAI endpoint>.cognitiveservices.azure.com/", // Azure OpenAI endpoint
+    // "AzureOpenAIAppId": "", // Azure OpenAI App Id
+    "AzureOpenAIDeploymentId": "<Set your Azure OpenAI deployment id>" // Azure OpenAI deployment id
+  }
+}

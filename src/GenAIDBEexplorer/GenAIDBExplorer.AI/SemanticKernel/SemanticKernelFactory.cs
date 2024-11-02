@@ -15,20 +15,18 @@ public class SemanticKernelFactory : ISemanticKernelFactory
 
         Kernel CreateKernel(IServiceProvider provider)
         {
-            var builder = new KernelBuilder();
+            var builder = Kernel.CreateBuilder();
 
             builder.Services.AddLogging();
 
-            var apikey = project.ChatCompletionSettings.AzureOpenAIKey;
+            var apikey = project.Settings.ChatCompletion.AzureOpenAIKey;
 
             if (!string.IsNullOrWhiteSpace(apikey))
             {
                 var endpoint = project.ChatCompletionSettings.AzureOpenAIEndpoint ??
                                throw new InvalidDataException($"No endpoint configured in {nameof(project.ChatCompletionSettings.AzureOpenAIEndpoint)}.");
 
-                var modelCompletion =
-                    project.ChatCompletionSettings.AzureOpenAIDeploymentId ??
-                    DefaultChatModel;
+                var modelCompletion = project.ChatCompletionSettings.AzureOpenAIDeploymentId ??
 
                 builder.AddAzureOpenAIChatCompletion(modelCompletion, modelCompletion, endpoint, apikey);
 
