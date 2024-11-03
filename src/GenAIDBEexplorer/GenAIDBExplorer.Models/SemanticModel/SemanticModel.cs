@@ -12,9 +12,9 @@ public sealed class SemanticModel : ISemanticModel
     public SemanticModel(
         string name,
         string source,
-        IEnumerable<SemanticModelTable> tables = null,
-        IEnumerable<SemanticModelView> views = null,
-        IEnumerable<SemanticModelStoredProcedure> storedProcedures = null,
+        IEnumerable<SemanticModelTable>? tables = null,
+        IEnumerable<SemanticModelView>? views = null,
+        IEnumerable<SemanticModelStoredProcedure>? storedProcedures = null,
         string? description = null)
     {
         Name = name;

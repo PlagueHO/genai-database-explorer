@@ -13,6 +13,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="FluentAssertions" Version="6.12.1" />
+    <PackageReference Include="Moq" Version="4.20.72" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\GenAIDBExplorer.console\GenAIDBExplorer.Console.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Update="Microsoft.NET.Test.Sdk" Version="17.11.1" />
   </ItemGroup>
 
@@ -21,22 +30,22 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Update="Microsoft.Testing.Extensions.TrxReport" Version="1.4.1" />
+    <PackageReference Update="Microsoft.Testing.Extensions.TrxReport" Version="1.4.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Update="MSTest.Analyzers" Version="3.6.1">
+    <PackageReference Update="MSTest.Analyzers" Version="3.6.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Update="MSTest.TestAdapter" Version="3.6.1" />
+    <PackageReference Update="MSTest.TestAdapter" Version="3.6.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Update="MSTest.TestFramework" Version="3.6.1" />
+    <PackageReference Update="MSTest.TestFramework" Version="3.6.2" />
   </ItemGroup>
 
 </Project>

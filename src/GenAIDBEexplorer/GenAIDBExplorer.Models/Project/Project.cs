@@ -18,10 +18,15 @@ namespace GenAIDBExplorer.Models.Project
             _logger = logger;
 
             // Initialize ProjectSettings and bind configuration sections
-            Settings = new ProjectSettings();
+            Settings = new ProjectSettings
+            {
+                Database = new DatabaseSettings(),
+                ChatCompletion = new ChatCompletionSettings(),
+                Embedding = new EmbeddingSettings()
+            };
 
             // Read the SettingsVersion
-            Settings.SettingsVersion = _configuration.GetValue<Version>(nameof(Settings.SettingsVersion));
+            Settings.SettingsVersion = _configuration.GetValue<Version>(nameof(Settings.SettingsVersion)) ?? new Version();
 
             _configuration.GetSection(DatabaseSettings.PropertyName).Bind(Settings.Database);
             _configuration.GetSection(ChatCompletionSettings.PropertyName).Bind(Settings.ChatCompletion);

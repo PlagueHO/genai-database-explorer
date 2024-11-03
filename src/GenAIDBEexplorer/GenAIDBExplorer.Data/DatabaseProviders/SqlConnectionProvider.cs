@@ -27,7 +27,7 @@ public sealed class SqlConnectionProvider : IDatabaseConnectionProvider
     public async Task<SqlConnection> ConnectAsync(string schemaName)
     {
         var connectionString =
-            this._project.DatabaseSettings.ConnectionString ??
+            this._project.Settings.Database.ConnectionString ??
             throw new InvalidDataException($"Missing configuration for connection-string: {schemaName}");
 
         var connection = new SqlConnection(connectionString);

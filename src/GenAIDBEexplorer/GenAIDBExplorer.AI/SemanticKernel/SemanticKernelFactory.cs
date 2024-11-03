@@ -19,34 +19,7 @@ public class SemanticKernelFactory : ISemanticKernelFactory
 
             builder.Services.AddLogging();
 
-            var apikey = project.Settings.ChatCompletion.AzureOpenAIKey;
-
-            if (!string.IsNullOrWhiteSpace(apikey))
-            {
-                var endpoint = project.ChatCompletionSettings.AzureOpenAIEndpoint ??
-                               throw new InvalidDataException($"No endpoint configured in {nameof(project.ChatCompletionSettings.AzureOpenAIEndpoint)}.");
-
-                var modelCompletion = project.ChatCompletionSettings.AzureOpenAIDeploymentId ??
-
-                builder.AddAzureOpenAIChatCompletion(modelCompletion, modelCompletion, endpoint, apikey);
-
-                return (Kernel)builder.Build();
-            }
-
-            apikey = project.ChatCompletionSettings.OpenAIKey;
-
-            if (!string.IsNullOrWhiteSpace(apikey))
-            {
-                var modelCompletion =
-                    project.ChatCompletionSettings.AzureOpenAIDeploymentId ??
-                    DefaultChatModel;
-
-                builder.AddOpenAIChatCompletion(modelCompletion, apikey);
-
-                return (Kernel)builder.Build();
-            }
-
-            throw new InvalidDataException($"No api-key configured in {nameof(project.ChatCompletionSettings.AzureOpenAIKey)} or {nameof(project.ChatCompletionSettings.OpenAIKey)}.");
+            return (Kernel)builder.Build();
         }
     }
 }

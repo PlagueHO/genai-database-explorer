@@ -8,10 +8,10 @@ namespace GenAIDBExplorer.Models.Project
 {
     public class ProjectSettings
     {
-        public Version SettingsVersion { get; set; }
+        public Version? SettingsVersion { get; set; }
 
-        public DatabaseSettings Database { get; set; }
-        public ChatCompletionSettings ChatCompletion { get; set; }
-        public EmbeddingSettings Embedding { get; set; }
+        public required DatabaseSettings Database { get; set; }
+        public required ChatCompletionSettings ChatCompletion { get; set; }
+        public required EmbeddingSettings Embedding { get; set; }
     }
 }
