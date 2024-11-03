@@ -1,7 +1,8 @@
+using Moq;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
-using Moq;
 using GenAIDBExplorer.Console.CommandHandlers;
+using GenAIDBExplorer.Models.Project;
 
 namespace GenAIDBExplorer.Console.Test;
 
@@ -10,6 +11,7 @@ public class InitCommandHandlerTests
 {
     private Mock<ILogger<ICommandHandler>> _loggerMock;
     private Mock<IServiceProvider> _serviceProviderMock;
+    private Mock<IProjectFactory> _projectFactoryMock;
     private InitCommandHandler _initCommandHandler;
 
     [TestInitialize]
@@ -17,7 +19,8 @@ public class InitCommandHandlerTests
     {
         _loggerMock = new Mock<ILogger<ICommandHandler>>();
         _serviceProviderMock = new Mock<IServiceProvider>();
-        _initCommandHandler = new InitCommandHandler(_loggerMock.Object, _serviceProviderMock.Object);
+        _projectFactoryMock = new Mock<IProjectFactory>();
+        _initCommandHandler = new InitCommandHandler(_projectFactoryMock.Object, _serviceProviderMock.Object, _loggerMock.Object);
     }
 
     [TestMethod]
@@ -38,9 +41,9 @@ public class InitCommandHandlerTests
             logger => logger.Log(
                 It.Is<LogLevel>(logLevel => logLevel == LogLevel.Information),
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Initializing project at '{projectDirectory.FullName}'.")),
+                It.Is<It.IsAnyType>((v, t) => v != null && v.ToString()!.Contains($"Initializing project at '{projectDirectory.FullName}'.")),
                 It.IsAny<Exception>(),
-                It.Is<Func<It.IsAnyType, Exception, string>>((v, t) => true)),
+                It.Is<Func<It.IsAnyType, Exception?, string>>((v, t) => true)),
             Times.Once);
 
         // Cleanup

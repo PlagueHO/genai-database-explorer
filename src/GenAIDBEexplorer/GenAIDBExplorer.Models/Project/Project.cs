@@ -7,15 +7,20 @@ namespace GenAIDBExplorer.Models.Project
     public class Project : IProject
     {
         private readonly ILogger<Project> _logger;
-
         private readonly IConfiguration _configuration;
 
         public ProjectSettings Settings { get; private set; }
 
-        public Project(IConfiguration configuration, ILogger<Project> logger)
+        public Project(string projectPath, ILogger<Project> logger)
         {
-            _configuration = configuration;
             _logger = logger;
+
+            // Create IConfiguration from the projectPath
+            var configurationBuilder = new ConfigurationBuilder()
+                .SetBasePath(projectPath)
+                .AddJsonFile("settings.json", optional: false, reloadOnChange: false);
+
+            _configuration = configurationBuilder.Build();
 
             // Initialize ProjectSettings and bind configuration sections
             Settings = new ProjectSettings

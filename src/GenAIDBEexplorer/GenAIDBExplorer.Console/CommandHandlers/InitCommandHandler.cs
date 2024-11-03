@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using GenAIDBExplorer.Models.Project;
 
 namespace GenAIDBExplorer.Console.CommandHandlers;
 
@@ -8,30 +9,33 @@ namespace GenAIDBExplorer.Console.CommandHandlers;
 /// <remarks>
 /// Initializes a new instance of the <see cref="InitCommandHandler"/> class.
 /// </remarks>
-/// <param name="logger">The logger instance for logging information, warnings, and errors.</param>
+/// <param name="projectFactory">The project factory instance for creating project instances.</param>
 /// <param name="serviceProvider">The service provider instance for resolving dependencies.</param>
-public class InitCommandHandler(ILogger<ICommandHandler> logger, IServiceProvider serviceProvider) : CommandHandler(logger, serviceProvider)
+/// <param name="logger">The logger instance for logging information, warnings, and errors.</param>
+public class InitCommandHandler(IProjectFactory projectFactory, IServiceProvider serviceProvider, ILogger<ICommandHandler> logger)
+    : CommandHandler(projectFactory, serviceProvider, logger)
 {
-
     /// <summary>
     /// Handles the initialization command with the specified project path.
     /// </summary>
     /// <param name="projectDirectory">The directory path of the project to initialize.</param>
     public override void Handle(DirectoryInfo projectDirectory)
     {
-        _logger.LogInformation($"Initializing project at '{projectDirectory.FullName}'.");
+        _logger.LogInformation(LogMessages.InitializingProject, projectDirectory.FullName);
 
         ValidateProjectPath(projectDirectory);
 
         if (IsDirectoryNotEmpty(projectDirectory))
         {
-            System.Console.WriteLine("The project folder is not empty. Please specify an empty folder.");
+            _logger.LogError(LogMessages.ProjectFolderNotEmpty);
+
+            OutputStopError(LogMessages.ProjectFolderNotEmpty);
             return;
         }
 
         InitializeProjectDirectory(projectDirectory);
 
-        System.Console.WriteLine($"Project initialized successfully in '{projectDirectory.FullName}'.");
+        _logger.LogInformation(LogMessages.ProjectInitialized, projectDirectory.FullName);
     }
 
     /// <summary>
@@ -102,3 +106,12 @@ public class InitCommandHandler(ILogger<ICommandHandler> logger, IServiceProvide
     }
 }
 
+/// <summary>
+/// Contains log messages used in the <see cref="InitCommandHandler"/> class.
+/// </summary>
+public static class LogMessages
+{
+    public const string InitializingProject = "Initializing project at '{ProjectPath}'";
+    public const string ProjectFolderNotEmpty = "The project folder is not empty. Please specify an empty folder.";
+    public const string ProjectInitialized = "Project initialized successfully in '{ProjectPath}'.";
+}

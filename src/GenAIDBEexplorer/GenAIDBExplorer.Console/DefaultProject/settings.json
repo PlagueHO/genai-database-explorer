@@ -1,8 +1,9 @@
 {
   "SettingsVersion": "1.0.0",
   "Database": {
-    "ConnectionString": "Server=.;Database=AdventureWorks2017;Trusted_Connection=True;",
-    "Description": "Description of the purpose of the database." // This helps ground the AI on the context of the database.
+    "Name": "AdventureWorksLT",
+    "Description": "Product, sales, and customer data for the AdventureWorks company.", // This helps ground the AI on the context of the database.
+    "ConnectionString": "Server=.;Database=AdventureWorks2017;Trusted_Connection=True;"
   },
   "ChatCompletion": {
     "OpenAISeriviceType": "AzureOpenAI", // AzureOpenAI, OpenAI

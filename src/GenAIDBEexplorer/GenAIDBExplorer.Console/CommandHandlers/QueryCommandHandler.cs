@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using GenAIDBExplorer.Models.Project;
 
 namespace GenAIDBExplorer.Console.CommandHandlers;
 
@@ -8,9 +9,11 @@ namespace GenAIDBExplorer.Console.CommandHandlers;
 /// <remarks>
 /// Initializes a new instance of the <see cref="QueryCommandHandler"/> class.
 /// </remarks>
-/// <param name="logger">The logger instance for logging information, warnings, and errors.</param>
+/// <param name="projectFactory">The project factory instance for creating project instances.</param>
 /// <param name="serviceProvider">The service provider instance for resolving dependencies.</param>
-public class QueryCommandHandler(ILogger<ICommandHandler> logger, IServiceProvider serviceProvider) : CommandHandler(logger, serviceProvider)
+/// <param name="logger">The logger instance for logging information, warnings, and errors.</param>
+public class QueryCommandHandler(IProjectFactory projectFactory, IServiceProvider serviceProvider, ILogger<ICommandHandler> logger )
+    : CommandHandler(projectFactory, serviceProvider, logger)
 {
     /// <summary>
     /// Handles the query command with the specified project path.

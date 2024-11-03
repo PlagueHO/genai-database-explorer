@@ -1,3 +1,4 @@
+using GenAIDBExplorer.Models.Project;
 using Microsoft.Extensions.Logging;
 using System;
 
@@ -9,28 +10,25 @@ namespace GenAIDBExplorer.Console.CommandHandlers
     /// <remarks>
     /// This class provides common utility functionality for handling console commands.
     /// </remarks>
-    public abstract class CommandHandler : ICommandHandler
+    /// <remarks>
+    /// Initializes a new instance of the <see cref="CommandHandler"/> class.
+    /// </remarks>
+    public abstract class CommandHandler(IProjectFactory projectFactory, IServiceProvider serviceProvider, ILogger<ICommandHandler> logger) : ICommandHandler
     {
         /// <summary>
-        /// Logger instance for logging information, warnings, and errors.
+        /// The project factory instance for creating project instances.
         /// </summary>
-        protected readonly ILogger<ICommandHandler> _logger;
+        protected readonly IProjectFactory _projectFactory = projectFactory ?? throw new ArgumentNullException(nameof(projectFactory));
 
         /// <summary>
         /// Service provider instance for resolving dependencies.
         /// </summary>
-        protected readonly IServiceProvider _serviceProvider;
+        protected readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CommandHandler"/> class.
+        /// Logger instance for logging information, warnings, and errors.
         /// </summary>
-        /// <param name="logger">The logger instance.</param>
-        /// <param name="serviceProvider">The service provider instance.</param>
-        protected CommandHandler(ILogger<ICommandHandler> logger, IServiceProvider serviceProvider)
-        {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-        }
+        protected readonly ILogger<ICommandHandler> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         /// <summary>
         /// Handles the command with the specified project path.
@@ -49,6 +47,37 @@ namespace GenAIDBExplorer.Console.CommandHandlers
             {
                 throw new ArgumentNullException(nameof(projectPath), "Project path cannot be null.");
             }
+        }
+
+        /// <summary>
+        /// Outputs an informational message to the console.
+        /// </summary>
+        /// <param name="message">The message to output.</param>
+        protected static void OutputInformation(string message)
+        {
+            System.Console.WriteLine(message);
+        }
+
+        /// <summary>
+        /// Outputs a warning message to the console in yellow text.
+        /// </summary>
+        /// <param name="message">The message to output.</param>
+        protected static void OutputWarning(string message)
+        {
+            System.Console.ForegroundColor = ConsoleColor.Yellow;
+            System.Console.WriteLine(message);
+            System.Console.ResetColor();
+        }
+
+        /// <summary>
+        /// Output a stop error to the console as red text.
+        /// </summary>
+        /// <param name="message">The message to output.</param>
+        protected static void OutputStopError(string message)
+        {
+            System.Console.ForegroundColor = ConsoleColor.Red;
+            System.Console.WriteLine(message);
+            System.Console.ResetColor();
         }
     }
 }
