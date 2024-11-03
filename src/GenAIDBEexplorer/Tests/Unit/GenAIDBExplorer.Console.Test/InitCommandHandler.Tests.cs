@@ -11,7 +11,7 @@ public class InitCommandHandlerTests
 {
     private Mock<ILogger<ICommandHandler>> _loggerMock;
     private Mock<IServiceProvider> _serviceProviderMock;
-    private Mock<IProjectFactory> _projectFactoryMock;
+    private Mock<IProject> _projectMock;
     private InitCommandHandler _initCommandHandler;
 
     [TestInitialize]
@@ -19,8 +19,8 @@ public class InitCommandHandlerTests
     {
         _loggerMock = new Mock<ILogger<ICommandHandler>>();
         _serviceProviderMock = new Mock<IServiceProvider>();
-        _projectFactoryMock = new Mock<IProjectFactory>();
-        _initCommandHandler = new InitCommandHandler(_projectFactoryMock.Object, _serviceProviderMock.Object, _loggerMock.Object);
+        _projectMock = new Mock<IProject>();
+        _initCommandHandler = new InitCommandHandler(_projectMock.Object, _serviceProviderMock.Object, _loggerMock.Object);
     }
 
     [TestMethod]

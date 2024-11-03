@@ -1,65 +1,67 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using GenAIDBExplorer.Models.Project;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.ComponentModel.DataAnnotations;
+using System.Runtime.InteropServices;
 
-namespace GenAIDBExplorer.Models.Project
+public class Project(ILogger<Project> logger) : IProject
 {
-    public class Project : IProject
+    private readonly ILogger<Project> _logger = logger;
+    private IConfiguration _configuration;
+
+    public ProjectSettings Settings { get; private set; }
+
+    public void LoadConfiguration(string projectPath)
     {
-        private readonly ILogger<Project> _logger;
-        private readonly IConfiguration _configuration;
+        // Create IConfiguration from the projectPath
+        var configurationBuilder = new ConfigurationBuilder()
+            .SetBasePath(projectPath)
+            .AddJsonFile("settings.json", optional: false, reloadOnChange: false);
 
-        public ProjectSettings Settings { get; private set; }
+        configurationBuilder.Build();
 
-        public Project(string projectPath, ILogger<Project> logger)
+        InitializeSettings();
+    }
+
+    private void InitializeSettings()
+    {
+        // Initialize ProjectSettings and bind configuration sections
+        Settings = new ProjectSettings
         {
-            _logger = logger;
+            Database = new DatabaseSettings(),
+            ChatCompletion = new ChatCompletionSettings(),
+            Embedding = new EmbeddingSettings()
+        };
 
-            // Create IConfiguration from the projectPath
-            var configurationBuilder = new ConfigurationBuilder()
-                .SetBasePath(projectPath)
-                .AddJsonFile("settings.json", optional: false, reloadOnChange: false);
+        // Read the SettingsVersion
+        Settings.SettingsVersion = _configuration.GetValue<Version>(nameof(Settings.SettingsVersion)) ?? new Version();
 
-            _configuration = configurationBuilder.Build();
+        _configuration.GetSection(DatabaseSettings.PropertyName).Bind(Settings.Database);
+        _configuration.GetSection(ChatCompletionSettings.PropertyName).Bind(Settings.ChatCompletion);
+        _configuration.GetSection(EmbeddingSettings.PropertyName).Bind(Settings.Embedding);
 
-            // Initialize ProjectSettings and bind configuration sections
-            Settings = new ProjectSettings
-            {
-                Database = new DatabaseSettings(),
-                ChatCompletion = new ChatCompletionSettings(),
-                Embedding = new EmbeddingSettings()
-            };
+        ValidateSettings();
+    }
 
-            // Read the SettingsVersion
-            Settings.SettingsVersion = _configuration.GetValue<Version>(nameof(Settings.SettingsVersion)) ?? new Version();
+    private void ValidateSettings()
+    {
+        _logger.LogInformation("Starting project settings validation.");
 
-            _configuration.GetSection(DatabaseSettings.PropertyName).Bind(Settings.Database);
-            _configuration.GetSection(ChatCompletionSettings.PropertyName).Bind(Settings.ChatCompletion);
-            _configuration.GetSection(EmbeddingSettings.PropertyName).Bind(Settings.Embedding);
+        var validationContext = new ValidationContext(Settings.Database);
+        Validator.ValidateObject(Settings.Database, validationContext, validateAllProperties: true);
 
-            ValidateSettings();
-        }
+        _logger.LogInformation("Database project settings validated successfully.");
 
-        private void ValidateSettings()
-        {
-            _logger.LogInformation("Starting project settings validation.");
+        validationContext = new ValidationContext(Settings.ChatCompletion);
+        Validator.ValidateObject(Settings.ChatCompletion, validationContext, validateAllProperties: true);
 
-            var validationContext = new ValidationContext(Settings.Database);
-            Validator.ValidateObject(Settings.Database, validationContext, validateAllProperties: true);
+        _logger.LogInformation("ChatCompletion project settings validated successfully.");
 
-            _logger.LogInformation("Database project settings validated successfully.");
+        validationContext = new ValidationContext(Settings.Embedding);
+        Validator.ValidateObject(Settings.Embedding, validationContext, validateAllProperties: true);
 
-            validationContext = new ValidationContext(Settings.ChatCompletion);
-            Validator.ValidateObject(Settings.ChatCompletion, validationContext, validateAllProperties: true);
+        _logger.LogInformation("Embedding project settings validated successfully.");
 
-            _logger.LogInformation("ChatCompletion project settings validated successfully.");
-
-            validationContext = new ValidationContext(Settings.Embedding);
-            Validator.ValidateObject(Settings.Embedding, validationContext, validateAllProperties: true);
-
-            _logger.LogInformation("Embedding project settings validated successfully.");
-
-            _logger.LogInformation("Project settings validation completed.");
-        }
+        _logger.LogInformation("Project settings validation completed.");
     }
 }

@@ -45,8 +45,8 @@ public static class HostBuilderExtensions
                 services.AddSingleton<BuildCommandHandler>();
                 services.AddSingleton<QueryCommandHandler>();
 
-                // Register the Project factory service
-                services.AddSingleton<IProjectFactory, ProjectFactory>();
+                // Register the Project service
+                services.AddSingleton<IProject, Project>();
 
                 // Register the database connection provider
                 services.AddSingleton<IDatabaseConnectionProvider, SqlConnectionProvider>();

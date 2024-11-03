@@ -9,11 +9,11 @@ namespace GenAIDBExplorer.Console.CommandHandlers;
 /// <remarks>
 /// Initializes a new instance of the <see cref="InitCommandHandler"/> class.
 /// </remarks>
-/// <param name="projectFactory">The project factory instance for creating project instances.</param>
+/// <param name="project">The project instance to initialize.</param>
 /// <param name="serviceProvider">The service provider instance for resolving dependencies.</param>
 /// <param name="logger">The logger instance for logging information, warnings, and errors.</param>
-public class InitCommandHandler(IProjectFactory projectFactory, IServiceProvider serviceProvider, ILogger<ICommandHandler> logger)
-    : CommandHandler(projectFactory, serviceProvider, logger)
+public class InitCommandHandler(IProject project, IServiceProvider serviceProvider, ILogger<ICommandHandler> logger)
+    : CommandHandler(project, serviceProvider, logger)
 {
     /// <summary>
     /// Handles the initialization command with the specified project path.

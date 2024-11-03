@@ -9,12 +9,11 @@ namespace GenAIDBExplorer.Console.CommandHandlers;
 /// <remarks>
 /// Initializes a new instance of the <see cref="BuildCommandHandler"/> class.
 /// </remarks>
-/// <param name="projectFactory">The project factory instance for creating project instances.</param>
+/// <param name="project">The project instance to build.</param>
 /// <param name="serviceProvider">The service provider instance for resolving dependencies.</param>
 /// <param name="logger">The logger instance for logging information, warnings, and errors.</param>
-public class BuildCommandHandler(IProjectFactory projectFactory, IServiceProvider serviceProvider, ILogger<ICommandHandler> logger)
-    : CommandHandler(projectFactory, serviceProvider, logger)
-
+public class BuildCommandHandler(IProject project, IServiceProvider serviceProvider, ILogger<ICommandHandler> logger)
+    : CommandHandler(project, serviceProvider, logger)
 {
     /// <summary>
     /// Handles the build command with the specified project path.
@@ -24,9 +23,6 @@ public class BuildCommandHandler(IProjectFactory projectFactory, IServiceProvide
     {
         const string logMessageTemplate = "Building project at '{ProjectPath}'.";
         _logger.LogInformation(logMessageTemplate, projectPath.FullName);
-
-        // Get the IProject service instance using the factory
-        var project = _projectFactory.Create(projectPath);
 
         // Continue with the build process...
     }

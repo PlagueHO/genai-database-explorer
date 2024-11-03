@@ -13,12 +13,12 @@ namespace GenAIDBExplorer.Console.CommandHandlers
     /// <remarks>
     /// Initializes a new instance of the <see cref="CommandHandler"/> class.
     /// </remarks>
-    public abstract class CommandHandler(IProjectFactory projectFactory, IServiceProvider serviceProvider, ILogger<ICommandHandler> logger) : ICommandHandler
+    public abstract class CommandHandler(IProject project, IServiceProvider serviceProvider, ILogger<ICommandHandler> logger) : ICommandHandler
     {
         /// <summary>
-        /// The project factory instance for creating project instances.
+        /// Project instance to handle.
         /// </summary>
-        protected readonly IProjectFactory _projectFactory = projectFactory ?? throw new ArgumentNullException(nameof(projectFactory));
+        protected readonly IProject _project = project ?? throw new ArgumentNullException(nameof(project));
 
         /// <summary>
         /// Service provider instance for resolving dependencies.
