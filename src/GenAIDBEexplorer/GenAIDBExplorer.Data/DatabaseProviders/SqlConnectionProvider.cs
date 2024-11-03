@@ -6,29 +6,23 @@ namespace GenAIDBExplorer.Data.DatabaseProviders;
 /// <summary>
 /// Responsible for producing a connection string for the requested project.
 /// </summary>
-public sealed class SqlConnectionProvider : IDatabaseConnectionProvider
+public sealed class SqlConnectionProvider(IProject project) : IDatabaseConnectionProvider
 {
-    private readonly IProject _project;
-
-    public SqlConnectionProvider(IProject project)
-    {
-        this._project = project;
-    }
+    private readonly IProject _project = project;
 
     /// <summary>
     /// Factory method for producing a live SQL connection instance.
     /// </summary>
-    /// <param name="schemaName">The schema name (which should match a corresponding connectionstring setting).</param>
     /// <returns>A <see cref="SqlConnection"/> instance in the "Open" state.</returns>
     /// <remarks>
     /// Connection pooling enabled by default makes re-establishing connections
     /// relatively efficient.
     /// </remarks>
-    public async Task<SqlConnection> ConnectAsync(string schemaName)
+    public async Task<SqlConnection> ConnectAsync()
     {
         var connectionString =
             this._project.Settings.Database.ConnectionString ??
-            throw new InvalidDataException($"Missing configuration for connection-string: {schemaName}");
+            throw new InvalidDataException($"Missing database connection string.");
 
         var connection = new SqlConnection(connectionString);
 

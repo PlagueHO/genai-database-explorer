@@ -6,15 +6,12 @@ namespace GenAIDBExplorer.Console.CommandHandlers;
 /// Command handler for initializing a project.
 /// </summary>
 /// <remarks>
-/// This class implements the <see cref="ICommandHandler"/> interface and provides functionality to handle initialization commands.
+/// Initializes a new instance of the <see cref="InitCommandHandler"/> class.
 /// </remarks>
-public class InitCommandHandler : CommandHandler
+/// <param name="logger">The logger instance for logging information, warnings, and errors.</param>
+/// <param name="serviceProvider">The service provider instance for resolving dependencies.</param>
+public class InitCommandHandler(ILogger<ICommandHandler> logger, IServiceProvider serviceProvider) : CommandHandler(logger, serviceProvider)
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="InitCommandHandler"/> class.
-    /// </summary>
-    /// <param name="logger">The logger instance for logging information, warnings, and errors.</param>
-    public InitCommandHandler(ILogger<ICommandHandler> logger) : base(logger) { }
 
     /// <summary>
     /// Handles the initialization command with the specified project path.

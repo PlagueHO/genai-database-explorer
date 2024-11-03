@@ -31,9 +31,26 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 		..\..\.github\workflows\validate-infrastructure.yml = ..\..\.github\workflows\validate-infrastructure.yml
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{92129E6D-FCE0-4431-A456-AD4678B325BE}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{92129E6D-FCE0-4431-A456-AD4678B325BE}"
 	ProjectSection(SolutionItems) = preProject
 		..\..\README.md = ..\..\README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "infrastructure", "infrastructure", "{505C00C0-1F49-4212-831B-8C45673ED89D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "bicep", "bicep", "{AFA1E28B-A93F-466A-BC24-27C0269C1530}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\infrastructure\bicep\bicepconfig.json = ..\..\infrastructure\bicep\bicepconfig.json
+		..\..\infrastructure\bicep\infrastructure.bicep = ..\..\infrastructure\bicep\infrastructure.bicep
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "modules", "modules", "{525A63A8-D163-4CD1-805D-C35DBFB021D2}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\infrastructure\bicep\modules\aiSearch.bicep = ..\..\infrastructure\bicep\modules\aiSearch.bicep
+		..\..\infrastructure\bicep\modules\monitoring.bicep = ..\..\infrastructure\bicep\modules\monitoring.bicep
+		..\..\infrastructure\bicep\modules\openAiService.bicep = ..\..\infrastructure\bicep\modules\openAiService.bicep
+		..\..\infrastructure\bicep\modules\roleAssignment.bicep = ..\..\infrastructure\bicep\modules\roleAssignment.bicep
+		..\..\infrastructure\bicep\modules\sqlDatabase.bicep = ..\..\infrastructure\bicep\modules\sqlDatabase.bicep
 	EndProjectSection
 EndProject
 Global
@@ -70,6 +87,8 @@ Global
 		{196DBF2D-9EE1-4453-9A59-70FE0FB2EBB9} = {AE3C59E3-D04A-4DF8-B8A0-251510F7312E}
 		{E95312FE-3044-473A-9662-468DEF7514E8} = {196DBF2D-9EE1-4453-9A59-70FE0FB2EBB9}
 		{9F6A9BFE-07ED-49EF-88BF-9E5B09EF61A3} = {F932A986-F757-43FA-A2DA-EE69555F7F57}
+		{AFA1E28B-A93F-466A-BC24-27C0269C1530} = {505C00C0-1F49-4212-831B-8C45673ED89D}
+		{525A63A8-D163-4CD1-805D-C35DBFB021D2} = {AFA1E28B-A93F-466A-BC24-27C0269C1530}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {77E9FCDF-9A98-4242-A12D-9565607A3087}

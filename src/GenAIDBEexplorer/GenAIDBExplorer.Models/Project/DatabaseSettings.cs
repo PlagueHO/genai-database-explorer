@@ -12,4 +12,11 @@ public class DatabaseSettings
     /// </summary>
     [Required, NotEmptyOrWhitespace]
     public string? ConnectionString { get; set; }
+
+    /// <summary>
+    /// The description of the purpose of the database.
+    /// This is used to ground the AI in the context of the database.
+    /// It is not required, but it will improve the AI's understanding of the database.
+    /// </summary>
+    public string? Description { get; set; }
 }
