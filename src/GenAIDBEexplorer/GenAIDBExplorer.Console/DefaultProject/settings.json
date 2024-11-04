@@ -6,7 +6,7 @@
     "ConnectionString": "Server=.;Database=AdventureWorks2017;Trusted_Connection=True;"
   },
   "ChatCompletion": {
-    "OpenAISeriviceType": "AzureOpenAI", // AzureOpenAI, OpenAI
+    "ServiceType": "AzureOpenAI", // AzureOpenAI, OpenAI
     "Model": "gpt-4o", // gpt-4o-mini
     // "OpenAIKey": "<Set your OpenAI API key>"
     "AzureOpenAIKey": "<Set your Azure OpenAI API key>", // Azure OpenAI key
@@ -15,7 +15,7 @@
     "AzureOpenAIDeploymentId": "<Set your Azure OpenAI deployment id>" // Azure OpenAI deployment id
   },
   "Embedding": {
-    "OpenAISeriviceType": "AzureOpenAI", // AzureOpenAI, OpenAI
+    "ServiceType": "AzureOpenAI", // AzureOpenAI, OpenAI
     "Model": "text-embedding-3-large", // text-embedding-3-small, text-embedding-ada-002
     // "OpenAIKey": "<Set your OpenAI API key>"
     "AzureOpenAIKey": "<Set your Azure OpenAI API key>", // Azure OpenAI key

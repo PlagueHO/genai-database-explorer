@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GenAIDBExplorer.Models.Project;
 
@@ -16,18 +12,22 @@ public class ChatCompletionSettings
     /// The service type to use for ChatCompletion
     /// </summary>
     [Required, NotEmptyOrWhitespace]
-    public OpenAISeriviceType ServiceType { get; set; } = OpenAISeriviceType.OpenAI;
+    public string ServiceType { get; set; } = "AzureOpenAI";
 
     [NotEmptyOrWhitespace]
     public string Model { get; set; } = "gpt-4o";
 
+    [RequiredOnPropertyValue(nameof(ServiceType), "OpenAI")]
     public string? OpenAIKey { get; set; }
 
+    [RequiredOnPropertyValue(nameof(ServiceType), "AzureOpenAI")]
     public string? AzureOpenAIKey { get; set; }
 
+    [RequiredOnPropertyValue(nameof(ServiceType), "AzureOpenAI")]
     public string? AzureOpenAIEndpoint { get; set; }
 
     public string? AzureOpenAIAppId { get; set; }
 
+    [RequiredOnPropertyValue(nameof(ServiceType), "AzureOpenAI")]
     public string? AzureOpenAIDeploymentId { get; set; }
 }

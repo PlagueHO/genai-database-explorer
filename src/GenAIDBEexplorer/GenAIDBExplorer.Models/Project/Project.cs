@@ -2,15 +2,28 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.ComponentModel.DataAnnotations;
-using System.Runtime.InteropServices;
 
 public class Project(ILogger<Project> logger) : IProject
 {
+    /// <summary>
+    /// Logger instance for logging information, warnings, and errors.
+    /// </summary>
     private readonly ILogger<Project> _logger = logger;
+
+    /// <summary>
+    /// Configuration instance for accessing project settings.
+    /// </summary>
     private IConfiguration _configuration;
 
+    /// <summary>
+    /// Gets the project settings.
+    /// </summary>
     public ProjectSettings Settings { get; private set; }
 
+    /// <summary>
+    /// Loads the configuration from the specified project path.
+    /// </summary>
+    /// <param name="projectPath">The directory path of the project to load the configuration from.</param>
     public void LoadConfiguration(string projectPath)
     {
         // Create IConfiguration from the projectPath
@@ -18,11 +31,14 @@ public class Project(ILogger<Project> logger) : IProject
             .SetBasePath(projectPath)
             .AddJsonFile("settings.json", optional: false, reloadOnChange: false);
 
-        configurationBuilder.Build();
+        _configuration = configurationBuilder.Build();
 
         InitializeSettings();
     }
 
+    /// <summary>
+    /// Initializes the project settings and binds configuration sections.
+    /// </summary>
     private void InitializeSettings()
     {
         // Initialize ProjectSettings and bind configuration sections
@@ -43,6 +59,9 @@ public class Project(ILogger<Project> logger) : IProject
         ValidateSettings();
     }
 
+    /// <summary>
+    /// Validates the project settings.
+    /// </summary>
     private void ValidateSettings()
     {
         _logger.LogInformation("Starting project settings validation.");

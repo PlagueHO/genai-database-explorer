@@ -24,6 +24,6 @@ public class BuildCommandHandler(IProject project, IServiceProvider serviceProvi
         const string logMessageTemplate = "Building project at '{ProjectPath}'.";
         _logger.LogInformation(logMessageTemplate, projectPath.FullName);
 
-        // Continue with the build process...
+        _project.LoadConfiguration(projectPath.FullName);
     }
 }
