@@ -6,5 +6,7 @@ public interface IProject
 {
     ProjectSettings Settings { get; }
 
+    public void InitializeProjectDirectory(DirectoryInfo projectDirectory);
+
     public void LoadConfiguration(string projectPath);
 }

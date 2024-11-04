@@ -3,6 +3,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using GenAIDBExplorer.Console.CommandHandlers;
 using GenAIDBExplorer.Models.Project;
+using GenAIDBExplorer.Data.DatabaseProviders;
 
 namespace GenAIDBExplorer.Console.Test;
 
@@ -12,6 +13,7 @@ public class InitCommandHandlerTests
     private Mock<ILogger<ICommandHandler>> _loggerMock;
     private Mock<IServiceProvider> _serviceProviderMock;
     private Mock<IProject> _projectMock;
+    private Mock<IDatabaseConnectionProvider> _sqlConnectionProviderMock;
     private InitCommandHandler _initCommandHandler;
 
     [TestInitialize]
@@ -20,7 +22,8 @@ public class InitCommandHandlerTests
         _loggerMock = new Mock<ILogger<ICommandHandler>>();
         _serviceProviderMock = new Mock<IServiceProvider>();
         _projectMock = new Mock<IProject>();
-        _initCommandHandler = new InitCommandHandler(_projectMock.Object, _serviceProviderMock.Object, _loggerMock.Object);
+        _sqlConnectionProviderMock = new Mock<IDatabaseConnectionProvider>();
+        _initCommandHandler = new InitCommandHandler(_projectMock.Object, _sqlConnectionProviderMock.Object, _serviceProviderMock.Object, _loggerMock.Object);
     }
 
     [TestMethod]
