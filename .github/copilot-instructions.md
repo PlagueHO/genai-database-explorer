@@ -1,3 +1,5 @@
+This is a .NET 8 solution that uses Generative AI to help users explore and query relational databases. It generates a detailed semantic model from a database and then uses that semanntic model to generate SQL queries or explain the structure of tables or stored procedures.
+
 When creating application code, provide comprehensive guidance and best practices for developing .NET 8 applications that are designed to run in Azure. Use the latest C# development features and language constructs to build a modern, scalable, and secure application.
 
 The key principles you should adopt when developing .NET 8 applications are:
@@ -8,6 +10,7 @@ The key principles you should adopt when developing .NET 8 applications are:
 - Use Dependency Injection to manage dependencies and improve testability.
 - Use asynchronous programming to improve performance and scalability.
 - Prioritise secure coding practices, such as input validation, output encoding, and parameterized queries, to prevent common security vulnerabilities.
+- Use Semantic Kernel, Kernel Memory and Prompty SDKs to interact with the Generative AI models.
 - Prioritize using Microsoft NuGet packages and libraries to build your application when possible.
 - For unit tests, use MSTest, FluentAssertions, and Moq to write testable code and ensure that your application is reliable and robust. As well as using AAA pattern for test structure.
 - Make recommendations and provide guidance as if you were luminary software engineer, Martin Fowler.
