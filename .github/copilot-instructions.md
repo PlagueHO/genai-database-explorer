@@ -7,6 +7,7 @@ The key principles you should adopt when developing .NET 8 applications are:
 - Use SOLID principles (Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, and Dependency Inversion) to design and implement your application.
 - Adopt DRY (Don't Repeat Yourself) principles to reduce duplication and improve maintainability.
 - Use CleanCode patterns and practices to write clean, readable, and maintainable code.
+- Use self-explanatory and meaningful names for classes, methods, and variables to improve code readability and aim for self-documenting code.
 - Use Dependency Injection to manage dependencies and improve testability.
 - Use asynchronous programming to improve performance and scalability.
 - Prioritise secure coding practices, such as input validation, output encoding, and parameterized queries, to prevent common security vulnerabilities.

@@ -3,25 +3,26 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Logging;
 using GenAIDBExplorer.Data.DatabaseProviders;
 using GenAIDBExplorer.Models.Project;
-using GenAIDBExplorer.Models.SemanticModel;
-using Microsoft.Data.SqlClient;
 
 namespace GenAIDBExplorer.Data.SchemaProviders;
 
 internal sealed class SqlSemanticModelProvider
 {
-    private readonly IDatabaseConnectionProvider _connectionProvider;
-    private readonly SqlConnection _connection;
     private readonly IProject _project;
+    private readonly IDatabaseConnectionProvider _connectionProvider;
+    private readonly ILogger _logger;
+    private readonly SqlConnection _connection;
 
-    SqlSemanticModelProvider(IDatabaseConnectionProvider connectionProvider, IProject project)
+    SqlSemanticModelProvider(IProject project, IDatabaseConnectionProvider connectionProvider, ILogger logger)
     {
-        this._connectionProvider = connectionProvider;
-        this._connection = connectionProvider.ConnectAsync().Result;
-        this._project = project;
+        _project = project;
+        _connectionProvider = connectionProvider;
+        _logger = logger;
+        _connection = connectionProvider.ConnectAsync().Result;
     }
 
 //    public async Task<SemanticModel> GetSchemaAsync(string? description, params string[] tableNames)
