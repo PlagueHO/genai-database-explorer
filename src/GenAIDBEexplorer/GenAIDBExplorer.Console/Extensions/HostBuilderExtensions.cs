@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using GenAIDBExplorer.Data.DatabaseProviders;
+using GenAIDBExplorer.Data.SemanticModelProviders;
 using GenAIDBExplorer.AI.SemanticKernel;
 using GenAIDBExplorer.AI.KernelMemory;
 using GenAIDBExplorer.Models.Project;
@@ -50,6 +51,9 @@ public static class HostBuilderExtensions
 
                 // Register the database connection provider
                 services.AddSingleton<IDatabaseConnectionProvider, SqlConnectionProvider>();
+
+                // Register the Semantic Model provider
+                services.AddSingleton<ISemanticModelProvider, SqlSemanticModelProvider>();
 
                 // Register the Semantic Kernel factory
                 services.AddSingleton(provider =>

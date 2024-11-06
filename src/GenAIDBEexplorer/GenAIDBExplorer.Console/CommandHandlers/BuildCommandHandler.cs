@@ -30,8 +30,6 @@ public class BuildCommandHandler(IProject project, IDatabaseConnectionProvider c
         // Get a database connection from the SqlConnectionProvider
         using var connection = _connectionProvider.ConnectAsync().GetAwaiter().GetResult();
 
-        // Perform database operations here
-        // Example: Log the connection state
         _logger.LogInformation(LogMessages.DatabaseConnectionState, connection.State);
 
         // Assemble the Semantic Model
