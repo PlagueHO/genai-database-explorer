@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using GenAIDBExplorer.Models.Project;
+using GenAIDBExplorer.Data.SemanticModelProviders;
 using GenAIDBExplorer.Data.DatabaseProviders;
 
 namespace GenAIDBExplorer.Console.CommandHandlers
@@ -13,7 +14,13 @@ namespace GenAIDBExplorer.Console.CommandHandlers
     /// <remarks>
     /// Initializes a new instance of the <see cref="CommandHandler"/> class.
     /// </remarks>
-    public abstract class CommandHandler(IProject project, IDatabaseConnectionProvider connectionProvider, IServiceProvider serviceProvider, ILogger<ICommandHandler> logger) : ICommandHandler
+    public abstract class CommandHandler(
+        IProject project,
+        IDatabaseConnectionProvider connectionProvider,
+        ISemanticModelProvider semanticModelProvider,
+        IServiceProvider serviceProvider,
+        ILogger<ICommandHandler> logger
+    ) : ICommandHandler
     {
         /// <summary>
         /// Project instance to handle.
@@ -24,6 +31,11 @@ namespace GenAIDBExplorer.Console.CommandHandlers
         /// Database connection provider instance for connecting to a SQL database.
         /// </summary>
         protected readonly IDatabaseConnectionProvider _connectionProvider = connectionProvider ?? throw new ArgumentNullException(nameof(connectionProvider));
+
+        /// <summary>
+        /// Semantic model provider instance for building a semantic model of the database.
+        /// </summary>
+        protected readonly ISemanticModelProvider _semanticModelProvider = semanticModelProvider ?? throw new ArgumentNullException(nameof(semanticModelProvider));
 
         /// <summary>
         /// Service provider instance for resolving dependencies.

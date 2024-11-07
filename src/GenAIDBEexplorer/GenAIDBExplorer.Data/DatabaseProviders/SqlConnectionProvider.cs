@@ -7,7 +7,10 @@ namespace GenAIDBExplorer.Data.DatabaseProviders;
 /// <summary>
 /// Responsible for producing a connection string for the requested project.
 /// </summary>
-public sealed class SqlConnectionProvider(IProject project, ILogger<SqlConnectionProvider> logger) : IDatabaseConnectionProvider
+public sealed class SqlConnectionProvider(
+    IProject project,
+    ILogger<SqlConnectionProvider> logger
+) : IDatabaseConnectionProvider
 {
     private readonly IProject _project = project;
     private readonly ILogger<SqlConnectionProvider> _logger = logger;

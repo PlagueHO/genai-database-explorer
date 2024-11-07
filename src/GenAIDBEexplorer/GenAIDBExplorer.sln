@@ -18,6 +18,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenAIDBExplorer.AI", "GenAIDBExplorer.AI\GenAIDBExplorer.AI.csproj", "{6AC63CED-EA1D-41D8-AFB9-CF3DAC18665D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{F932A986-F757-43FA-A2DA-EE69555F7F57}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\.github\copilot-instructions.md = ..\..\.github\copilot-instructions.md
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{9F6A9BFE-07ED-49EF-88BF-9E5B09EF61A3}"
 	ProjectSection(SolutionItems) = preProject

@@ -10,7 +10,8 @@ The key principles you should adopt when developing .NET 8 applications are:
 - Use self-explanatory and meaningful names for classes, methods, and variables to improve code readability and aim for self-documenting code.
 - Use Dependency Injection to manage dependencies and improve testability.
 - Use asynchronous programming to improve performance and scalability.
-- Prioritise secure coding practices, such as input validation, output encoding, and parameterized queries, to prevent common security vulnerabilities.
+- Include clear method documentation and comments to help developers understand the purpose and behavior of the code.
+- Prioritize secure coding practices, such as input validation, output encoding, and parameterized queries, to prevent common security vulnerabilities.
 - Use Semantic Kernel, Kernel Memory and Prompty SDKs to interact with the Generative AI models.
 - Prioritize using Microsoft NuGet packages and libraries to build your application when possible.
 - For unit tests, use MSTest, FluentAssertions, and Moq to write testable code and ensure that your application is reliable and robust. As well as using AAA pattern for test structure.

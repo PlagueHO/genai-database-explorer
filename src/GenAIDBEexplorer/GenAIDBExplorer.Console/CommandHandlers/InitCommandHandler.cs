@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using GenAIDBExplorer.Models.Project;
 using GenAIDBExplorer.Data.DatabaseProviders;
+using GenAIDBExplorer.Data.SemanticModelProviders;
 
 namespace GenAIDBExplorer.Console.CommandHandlers;
 
@@ -12,10 +13,16 @@ namespace GenAIDBExplorer.Console.CommandHandlers;
 /// </remarks>
 /// <param name="project">The project instance to initialize.</param>
 /// <param name="connectionProvider">The database connection provider instance for connecting to a SQL database.</param>
+/// <param name="semanticModelProvider">The semantic model provider instance for building a semantic model of the database.</param>
 /// <param name="serviceProvider">The service provider instance for resolving dependencies.</param>
 /// <param name="logger">The logger instance for logging information, warnings, and errors.</param>
-public class InitCommandHandler(IProject project, IDatabaseConnectionProvider connectionProvider, IServiceProvider serviceProvider, ILogger<ICommandHandler> logger)
-    : CommandHandler(project, connectionProvider, serviceProvider, logger)
+public class InitCommandHandler(
+    IProject project,
+    ISemanticModelProvider semanticModelProvider,
+    IDatabaseConnectionProvider connectionProvider,
+    IServiceProvider serviceProvider,
+    ILogger<ICommandHandler> logger
+) : CommandHandler(project, connectionProvider, semanticModelProvider, serviceProvider, logger)
 {
     /// <summary>
     /// Handles the initialization command with the specified project path.

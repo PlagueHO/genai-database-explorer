@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using GenAIDBExplorer.Console.CommandHandlers;
 using GenAIDBExplorer.Models.Project;
 using GenAIDBExplorer.Data.DatabaseProviders;
+using GenAIDBExplorer.Data.SemanticModelProviders;
 
 namespace GenAIDBExplorer.Console.Test;
 
@@ -14,6 +15,7 @@ public class InitCommandHandlerTests
     private Mock<IServiceProvider> _serviceProviderMock;
     private Mock<IProject> _projectMock;
     private Mock<IDatabaseConnectionProvider> _sqlConnectionProviderMock;
+    private Mock<ISemanticModelProvider> _semanticModelProviderMock;
     private InitCommandHandler _initCommandHandler;
 
     [TestInitialize]
@@ -23,7 +25,14 @@ public class InitCommandHandlerTests
         _serviceProviderMock = new Mock<IServiceProvider>();
         _projectMock = new Mock<IProject>();
         _sqlConnectionProviderMock = new Mock<IDatabaseConnectionProvider>();
-        _initCommandHandler = new InitCommandHandler(_projectMock.Object, _sqlConnectionProviderMock.Object, _serviceProviderMock.Object, _loggerMock.Object);
+        _semanticModelProviderMock = new Mock<ISemanticModelProvider>();
+        _initCommandHandler = new InitCommandHandler(
+            _projectMock.Object,
+            _semanticModelProviderMock.Object,
+            _sqlConnectionProviderMock.Object,
+            _serviceProviderMock.Object,
+            _loggerMock.Object
+        );
     }
 
     [TestMethod]
