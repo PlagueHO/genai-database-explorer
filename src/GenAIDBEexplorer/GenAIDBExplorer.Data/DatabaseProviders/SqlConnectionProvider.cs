@@ -44,6 +44,9 @@ public sealed class SqlConnectionProvider(
             throw;
         }
 
+        // log the connection state
+        _logger.LogInformation("Connection state: {ConnectionState}", connection.State);
+
         return connection;
     }
 }

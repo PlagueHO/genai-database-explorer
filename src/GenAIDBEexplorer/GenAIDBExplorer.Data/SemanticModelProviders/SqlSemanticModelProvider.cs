@@ -22,6 +22,8 @@ public sealed class SqlSemanticModelProvider(
     {
         if (_connection == null || _connection.State != System.Data.ConnectionState.Open)
         {
+            _logger.LogInformation("Connecting to database {DatabaseName} at {ConnectionString}", _project.Settings.Database.Name, _project.Settings.Database.ConnectionString);
+
             _connection = await _connectionProvider.ConnectAsync().ConfigureAwait(false);
 
             if (_connection.State != System.Data.ConnectionState.Open)
@@ -31,15 +33,15 @@ public sealed class SqlSemanticModelProvider(
         }
     }
 
-    public async Task<SemanticModel> BuildSemanticModelAsync(params string[] tableNames)
+    public async Task<SemanticModel> BuildSemanticModelAsync()
     {
+        _logger.LogInformation("Building semantic model for database {DatabaseName}", _project.Settings.Database.Name);
+
         var semanticModel = new SemanticModel(
             name: _project.Settings.Database.Name,
             source: _project.Settings.Database.ConnectionString,
             description: _project.Settings.Database.Description
         );
-
-        var tableFilter = new HashSet<string>(tableNames ?? Array.Empty<string>(), StringComparer.OrdinalIgnoreCase);
 
         var tablesDictionary = await GetTableListAsync().ConfigureAwait(false);
 
@@ -47,14 +49,11 @@ public sealed class SqlSemanticModelProvider(
         {
             _logger.LogInformation("Adding table {TableName} to the semantic model", tableName);
 
-            if (tableFilter.Count == 0 || tableFilter.Contains(tableName))
-            {
-                var table = new SemanticModelTable(
-                    name: tableName,
-                    description: tableKey
-                );
-                semanticModel.AddTable(table);
-            }
+            var table = new SemanticModelTable(
+                name: tableName,
+                description: tableKey
+            );
+            semanticModel.AddTable(table);
         }
 
         return semanticModel;
@@ -92,21 +91,15 @@ public sealed class SqlSemanticModelProvider(
     /// <param name="statement">The SQL query to be executed.</param>
     /// <returns>A task representing the asynchronous operation. The task result contains a <see cref="SqlDataReader"/> to read the query results.</returns>
     /// <exception cref="SqlException">Thrown when there is an error executing the SQL query.</exception>
-    /// <example>
-    /// <code>
-    /// using var reader = await ExecuteQueryAsync("SELECT * FROM MyTable");
-    /// while (await reader.ReadAsync())
-    /// {
-    ///     // Process each row
-    /// }
-    /// </code>
-    /// </example>
     private async Task<SqlDataReader> ExecuteQueryAsync(string statement)
     {
         using var cmd = _connection.CreateCommand();
 
+        // Log the SQL query being executed
+        _logger.LogDebug("Executing SQL query: {SqlQuery}", statement);
+
 #pragma warning disable CA2100 // Queries passed in from static resource
-            cmd.CommandText = statement;
+        cmd.CommandText = statement;
 #pragma warning restore CA2100
 
         return await cmd.ExecuteReaderAsync().ConfigureAwait(false);
@@ -145,14 +138,22 @@ public sealed class SqlSemanticModelProvider(
         /// <summary>
         /// SQL query to describe tables, including schema name, table name, and table description.
         /// </summary>
-        public const string DescribeTables = @"SELECT 
-            S.name AS SchemaName,
-            O.name AS TableName,
-            ep.value AS TableDesc
-        FROM sys.extended_properties EP
-        JOIN sys.tables O ON ep.major_id = O.object_id
-        JOIN sys.schemas S on O.schema_id = S.schema_id
-        WHERE ep.name = 'MS_DESCRIPTION'
-        AND ep.minor_id = 0";
+        public const string DescribeTables = @"
+SELECT 
+    S.name AS SchemaName,
+    O.name AS TableName,
+    ep.value AS TableDesc
+FROM 
+    sys.tables O
+JOIN 
+    sys.schemas S ON O.schema_id = S.schema_id
+LEFT JOIN 
+    sys.extended_properties EP ON ep.major_id = O.object_id 
+    AND ep.name = 'MS_DESCRIPTION' 
+    AND ep.minor_id = 0
+ORDER BY 
+    S.name, 
+    O.name;
+";
     }
 }
