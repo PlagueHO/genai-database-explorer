@@ -7,24 +7,46 @@ using System.Threading.Tasks;
 
 namespace GenAIDBExplorer.Models.SemanticModel;
 
-public sealed class SemanticModelTable : ISemanticModelItem
+/// <summary>
+/// Represents a table in the semantic model.
+/// </summary>
+public sealed class SemanticModelTable(
+    string name,
+    string? description = null
+    ) : ISemanticModelItem
 {
-    SemanticModelItemType ISemanticModelItem.ItemType => SemanticModelItemType.Table;
+    /// <summary>
+    /// Gets the name of the table.
+    /// </summary>
+    public string Name { get; set; } = name;
 
-    public SemanticModelTable(
-        string name,
-        string? description = null,
-        IEnumerable<SemanticModelColumn>? columns = null)
+    /// <summary>
+    /// Gets the description of the table.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public string? Description { get; set; } = description;
+
+    /// <summary>
+    /// Gets the columns in the table.
+    /// </summary>
+    public List<SemanticModelColumn> Columns { get; set; } = [];
+
+    /// <summary>
+    /// Adds a column to the table.
+    /// </summary>
+    /// <param name="column">The column to add.</param>
+    public void AddColumn(SemanticModelColumn column)
     {
-        Name = name;
-        Description = description;
-        Columns = columns ?? Array.Empty<SemanticModelColumn>();
+        Columns.Add(column);
     }
 
-    public string Name { get; }
-
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public string? Description { get; }
-
-    public IEnumerable<SemanticModelColumn> Columns { get; }
+    /// <summary>
+    /// Removes a column from the table.
+    /// </summary>
+    /// <param name="column">The column to remove.</param>
+    /// <returns>True if the column was removed; otherwise, false.</returns>
+    public bool RemoveColumn(SemanticModelColumn column)
+    {
+        return Columns.Remove(column);
+    }
 }

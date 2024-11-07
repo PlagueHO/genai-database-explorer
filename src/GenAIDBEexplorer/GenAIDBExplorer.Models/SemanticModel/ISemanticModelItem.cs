@@ -12,11 +12,12 @@ namespace GenAIDBExplorer.Models.SemanticModel;
 internal interface ISemanticModelItem
 {
     /// <summary>
-    /// Name of the semantic model item
+    /// Gets the name of the semantic model item.
     /// </summary>
-    public string Name { get; }
+    public string Name { get; set; }
 
-    public string? Description { get; }
-
-    public SemanticModelItemType ItemType { get; }
+    /// <summary>
+    /// Gets the description of the semantic model item.
+    /// </summary>
+    public string? Description { get; set; }
 }

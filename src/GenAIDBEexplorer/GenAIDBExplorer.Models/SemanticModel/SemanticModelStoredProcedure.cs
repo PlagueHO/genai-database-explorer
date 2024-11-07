@@ -6,23 +6,27 @@ using System.Threading.Tasks;
 
 namespace GenAIDBExplorer.Models.SemanticModel;
 
-public sealed class SemanticModelStoredProcedure : ISemanticModelItem
+/// <summary>
+/// Represents a stored procedure in the semantic model.
+/// </summary>
+public sealed class SemanticModelStoredProcedure(
+    string name,
+    string source,
+    string? description = null
+    ) : ISemanticModelItem
 {
-    SemanticModelItemType ISemanticModelItem.ItemType => SemanticModelItemType.StoredProcedure;
+    /// <summary>
+    /// Gets or sets the name of the stored procedure.
+    /// </summary>
+    public string Name { get; set; } = name;
 
-    public SemanticModelStoredProcedure(
-        string name,
-        string source,
-        string? description = null)
-    {
-        Name = name;
-        Description = description;
-        Source = source;
-    }
+    /// <summary>
+    /// Gets or sets the description of the stored procedure.
+    /// </summary>
+    public string? Description { get; set; } = description;
 
-    public string Name { get; }
-
-    public string? Description { get; }
-
-    public string Source { get; }
+    /// <summary>
+    /// Gets or sets the source of the stored procedure.
+    /// </summary>
+    public string Source { get; set; } = source;
 }

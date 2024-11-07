@@ -22,7 +22,7 @@ public class BuildCommandHandler(
     IDatabaseConnectionProvider connectionProvider,
     IServiceProvider serviceProvider,
     ILogger<ICommandHandler> logger
-) : CommandHandler(project, connectionProvider, semanticModelProvider, serviceProvider, logger)
+    ) : CommandHandler(project, connectionProvider, semanticModelProvider, serviceProvider, logger)
 {
     /// <summary>
     /// Handles the build command with the specified project path.
@@ -35,10 +35,9 @@ public class BuildCommandHandler(
         _project.LoadConfiguration(projectPath.FullName);
 
         // Assemble the Semantic Model
-        // Get a list of all the tables in the database
-        var tables = _semanticModelProvider.GetTablesAsync().Result;
+        _semanticModelProvider.BuildSemanticModelAsync().ConfigureAwait(false);
 
-
+        _logger.LogInformation(LogMessages.ProjectBuildComplete, projectPath.FullName);
     }
 
     /// <summary>
@@ -47,6 +46,6 @@ public class BuildCommandHandler(
     public static class LogMessages
     {
         public const string BuildingProject = "Building project at '{ProjectPath}'.";
-        public const string DatabaseConnectionState = "Database connection state: {State}";
+        public const string ProjectBuildComplete = "Project build complete at '{ProjectPath}'.";
     }
 }

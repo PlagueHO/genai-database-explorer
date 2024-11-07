@@ -25,5 +25,4 @@ public class DatabaseSettings
     /// </summary>
     [Required, NotEmptyOrWhitespace]
     public string ConnectionString { get; set; } = string.Empty;
-
 }

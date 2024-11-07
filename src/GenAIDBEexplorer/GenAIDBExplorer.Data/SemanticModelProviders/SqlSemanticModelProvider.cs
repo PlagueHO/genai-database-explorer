@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using Microsoft.Data.SqlClient;
+﻿using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using GenAIDBExplorer.Data.DatabaseProviders;
 using GenAIDBExplorer.Models.Project;
@@ -36,7 +31,36 @@ public sealed class SqlSemanticModelProvider(
         }
     }
 
-    public async Task<Dictionary<string, string>> GetTablesAsync()
+    public async Task<SemanticModel> BuildSemanticModelAsync(params string[] tableNames)
+    {
+        var semanticModel = new SemanticModel(
+            name: _project.Settings.Database.Name,
+            source: _project.Settings.Database.ConnectionString,
+            description: _project.Settings.Database.Description
+        );
+
+        var tableFilter = new HashSet<string>(tableNames ?? Array.Empty<string>(), StringComparer.OrdinalIgnoreCase);
+
+        var tablesDictionary = await GetTableListAsync().ConfigureAwait(false);
+
+        foreach (var (tableKey, tableName) in tablesDictionary)
+        {
+            _logger.LogInformation("Adding table {TableName} to the semantic model", tableName);
+
+            if (tableFilter.Count == 0 || tableFilter.Contains(tableName))
+            {
+                var table = new SemanticModelTable(
+                    name: tableName,
+                    description: tableKey
+                );
+                semanticModel.AddTable(table);
+            }
+        }
+
+        return semanticModel;
+    }
+
+    public async Task<Dictionary<string, string>> GetTableListAsync()
     {
         await EnsureConnectedAsync().ConfigureAwait(false);
 
@@ -79,7 +103,7 @@ public sealed class SqlSemanticModelProvider(
     /// </example>
     private async Task<SqlDataReader> ExecuteQueryAsync(string statement)
     {
-        using var cmd = this._connection.CreateCommand();
+        using var cmd = _connection.CreateCommand();
 
 #pragma warning disable CA2100 // Queries passed in from static resource
             cmd.CommandText = statement;
