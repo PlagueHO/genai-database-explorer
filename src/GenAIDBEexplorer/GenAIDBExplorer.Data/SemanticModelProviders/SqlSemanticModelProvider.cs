@@ -18,7 +18,7 @@ public sealed class SqlSemanticModelProvider(
     private SqlConnection? _connection;
     private bool _disposed = false;
 
-    private async Task EnsureConnectedAsync()
+    private async Task ConnectDatabaseAsync()
     {
         if (_connection == null || _connection.State != System.Data.ConnectionState.Open)
         {
@@ -61,7 +61,7 @@ public sealed class SqlSemanticModelProvider(
 
     public async Task<Dictionary<string, string>> GetTableListAsync()
     {
-        await EnsureConnectedAsync().ConfigureAwait(false);
+        await ConnectDatabaseAsync().ConfigureAwait(false);
 
         var tables = new Dictionary<string, string>();
 

@@ -36,7 +36,7 @@ public class InitCommandHandlerTests
     }
 
     [TestMethod]
-    public void Handle_ShouldLogInformation_WhenProjectDirectoryIsValid()
+    public async Task HandleAsync_ShouldLogInformation_WhenProjectDirectoryIsValid()
     {
         // Arrange
         var projectDirectory = new DirectoryInfo("TestProject");
@@ -46,7 +46,7 @@ public class InitCommandHandlerTests
         }
 
         // Act
-        _initCommandHandler.Handle(projectDirectory);
+        await _initCommandHandler.HandleAsync(projectDirectory);
 
         // Assert
         _loggerMock.Verify(
@@ -63,7 +63,7 @@ public class InitCommandHandlerTests
     }
 
     [TestMethod]
-    public void Handle_ShouldWarnUser_WhenProjectDirectoryIsNotEmpty()
+    public async Task HandleAsync_ShouldWarnUser_WhenProjectDirectoryIsNotEmpty()
     {
         // Arrange
         var projectDirectory = new DirectoryInfo("TestProject");
@@ -76,7 +76,7 @@ public class InitCommandHandlerTests
         using var consoleOutput = new ConsoleOutput();
 
         // Act
-        _initCommandHandler.Handle(projectDirectory);
+        await _initCommandHandler.HandleAsync(projectDirectory);
 
         // Assert
         consoleOutput.GetOutput().Should().Contain("The project folder is not empty. Please specify an empty folder.");
@@ -86,7 +86,7 @@ public class InitCommandHandlerTests
     }
 
     [TestMethod]
-    public void Handle_ShouldInitializeProject_WhenProjectDirectoryIsEmpty()
+    public async Task HandleAsync_ShouldInitializeProject_WhenProjectDirectoryIsEmpty()
     {
         // Arrange
         var projectDirectory = new DirectoryInfo("TestProject");
@@ -105,7 +105,7 @@ public class InitCommandHandlerTests
         using var consoleOutput = new ConsoleOutput();
 
         // Act
-        _initCommandHandler.Handle(projectDirectory);
+        await _initCommandHandler.HandleAsync(projectDirectory);
 
         // Assert
         consoleOutput.GetOutput().Should().Contain($"Project initialized successfully in '{projectDirectory.FullName}'.");

@@ -12,5 +12,5 @@ public interface ICommandHandler
     /// Handles the command with the specified project path.
     /// </summary>
     /// <param name="projectPath">The directory path of the project to handle.</param>
-    void Handle(DirectoryInfo projectPath);
+    Task HandleAsync(DirectoryInfo projectPath);
 }

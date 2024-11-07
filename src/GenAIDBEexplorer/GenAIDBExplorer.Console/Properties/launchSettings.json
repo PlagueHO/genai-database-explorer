@@ -1,0 +1,16 @@
+{
+  "profiles": {
+    "WSL": {
+      "commandName": "WSL2",
+      "distributionName": ""
+    },
+    "GenAIDBExplorer.Console Build": {
+      "commandName": "Project",
+      "commandLineArgs": "build\r\n-p d:\\temp"
+    },
+    "GenAIDBExplorer.Console Init": {
+      "commandName": "Project",
+      "commandLineArgs": "init\r\n-p d:\\temp"
+    }
+  }
+}

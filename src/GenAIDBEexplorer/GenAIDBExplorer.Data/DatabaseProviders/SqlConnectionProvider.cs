@@ -26,8 +26,8 @@ public sealed class SqlConnectionProvider(
     public async Task<SqlConnection> ConnectAsync()
     {
         var connectionString =
-            this._project.Settings.Database.ConnectionString ??
-            throw new InvalidDataException($"Missing database connection string.");
+            _project.Settings.Database.ConnectionString ??
+                throw new InvalidDataException($"Missing database connection string.");
 
         var connection = new SqlConnection(connectionString);
 
@@ -37,9 +37,15 @@ public sealed class SqlConnectionProvider(
             await connection.OpenAsync().ConfigureAwait(false);
             _logger.LogInformation("SQL connection opened successfully.");
         }
+        catch (SqlException ex)
+        {
+            _logger.LogError(ex, "SQL exception occurred while opening connection to {ConnectionString}", connectionString);
+            connection.Dispose();
+            throw;
+        }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to open SQL connection to {ConnectionString}", connectionString);
+            _logger.LogError(ex, "An error occurred while opening connection to {ConnectionString}", connectionString);
             connection.Dispose();
             throw;
         }

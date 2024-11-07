@@ -28,14 +28,14 @@ public class BuildCommandHandler(
     /// Handles the build command with the specified project path.
     /// </summary>
     /// <param name="projectPath">The directory path of the project to build.</param>
-    public override void Handle(DirectoryInfo projectPath)
+    public override async Task HandleAsync(DirectoryInfo projectPath)
     {
         _logger.LogInformation(LogMessages.BuildingProject, projectPath.FullName);
 
         _project.LoadConfiguration(projectPath.FullName);
 
         // Assemble the Semantic Model
-        _semanticModelProvider.BuildSemanticModelAsync().ConfigureAwait(false);
+        await _semanticModelProvider.BuildSemanticModelAsync().ConfigureAwait(false);
 
         _logger.LogInformation(LogMessages.ProjectBuildComplete, projectPath.FullName);
     }

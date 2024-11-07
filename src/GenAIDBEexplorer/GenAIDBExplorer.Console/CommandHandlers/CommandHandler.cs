@@ -51,7 +51,7 @@ namespace GenAIDBExplorer.Console.CommandHandlers
         /// Handles the command with the specified project path.
         /// </summary>
         /// <param name="projectPath">The directory path of the project to handle.</param>
-        public abstract void Handle(DirectoryInfo projectPath);
+        public abstract Task HandleAsync(DirectoryInfo projectPath);
 
         /// <summary>
         /// Validates the specified project path.

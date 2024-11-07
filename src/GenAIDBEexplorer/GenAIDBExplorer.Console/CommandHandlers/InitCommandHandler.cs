@@ -28,7 +28,7 @@ public class InitCommandHandler(
     /// Handles the initialization command with the specified project path.
     /// </summary>
     /// <param name="projectDirectory">The directory path of the project to initialize.</param>
-    public override void Handle(DirectoryInfo projectDirectory)
+    public override async Task HandleAsync(DirectoryInfo projectDirectory)
     {
         _logger.LogInformation(LogMessages.InitializingProject, projectDirectory.FullName);
 
@@ -46,6 +46,7 @@ public class InitCommandHandler(
         }
 
         _logger.LogInformation(LogMessages.ProjectInitialized, projectDirectory.FullName);
+        await Task.CompletedTask;
     }
 
     /// <summary>

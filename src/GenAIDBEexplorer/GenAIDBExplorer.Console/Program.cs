@@ -3,6 +3,7 @@ using Microsoft.Extensions.Hosting;
 using GenAIDBExplorer.Console.CommandHandlers;
 using GenAIDBExplorer.Console.Extensions;
 using Microsoft.Extensions.DependencyInjection;
+using System.Threading;
 
 namespace GenAIDBExplorer.Console;
 
@@ -40,28 +41,28 @@ internal static class Program
         // Define the init command
         var initCommand = new Command("init", "Initialize a GenAI Database Explorer project.");
         initCommand.AddOption(projectOption);
-        initCommand.SetHandler((DirectoryInfo projectPath) =>
+        initCommand.SetHandler(async (DirectoryInfo projectPath) =>
         {
             var handler = host.Services.GetRequiredService<InitCommandHandler>();
-            handler.Handle(projectPath);
+            await handler.HandleAsync(projectPath);
         }, projectOption);
 
         // Define the build command
         var buildCommand = new Command("build", "Build a GenAI Database Explorer project.");
         buildCommand.AddOption(projectOption);
-        buildCommand.SetHandler((DirectoryInfo projectPath) =>
+        buildCommand.SetHandler(async (DirectoryInfo projectPath) =>
         {
             var handler = host.Services.GetRequiredService<BuildCommandHandler>();
-            handler.Handle(projectPath);
+            await handler.HandleAsync(projectPath);
         }, projectOption);
 
         // Define the query command
         var queryCommand = new Command("query", "Query a GenAI Database Explorer project.");
         queryCommand.AddOption(projectOption);
-        queryCommand.SetHandler((DirectoryInfo projectPath) =>
+        queryCommand.SetHandler(async (DirectoryInfo projectPath) =>
         {
             var handler = host.Services.GetRequiredService<QueryCommandHandler>();
-            handler.Handle(projectPath);
+            await handler.HandleAsync(projectPath);
         }, projectOption);
 
         // Add commands to the root command

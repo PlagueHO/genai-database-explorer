@@ -28,11 +28,13 @@ public class QueryCommandHandler(
     /// Handles the query command with the specified project path.
     /// </summary>
     /// <param name="projectPath">The directory path of the project to query.</param>
-    public override void Handle(DirectoryInfo projectPath)
+    public override async Task HandleAsync(DirectoryInfo projectPath)
     {
         _logger.LogInformation(LogMessages.QueryingProject, projectPath.FullName);
 
         // Your query logic here
+
+        await Task.CompletedTask;
     }
 
     /// <summary>
