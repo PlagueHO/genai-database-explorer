@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -38,6 +38,7 @@ public static class HostBuilderExtensions
                     .ClearProviders()
                     .AddConfiguration(context.Configuration.GetSection("Logging"))
                     .AddConsole();
+
             })
             .ConfigureServices((context, services) =>
             {

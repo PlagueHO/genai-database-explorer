@@ -1,9 +1,9 @@
 ﻿using System.CommandLine;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using GenAIDBExplorer.Console.CommandHandlers;
 using GenAIDBExplorer.Console.Extensions;
 using Microsoft.Extensions.DependencyInjection;
-using System.Threading;
 
 namespace GenAIDBExplorer.Console;
 
