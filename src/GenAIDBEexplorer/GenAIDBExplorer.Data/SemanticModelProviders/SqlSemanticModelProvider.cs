@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using GenAIDBExplorer.Data.DatabaseProviders;
 using GenAIDBExplorer.Models.Project;
 using GenAIDBExplorer.Models.SemanticModel;
+using System.Collections.Concurrent;
 
 namespace GenAIDBExplorer.Data.SemanticModelProviders;
 
@@ -33,15 +34,22 @@ public sealed class SqlSemanticModelProvider(
         );
 
         var tablesDictionary = await GetTableListAsync().ConfigureAwait(false);
-        foreach (var (_, table) in tablesDictionary)
+
+        var options = new ParallelOptions { MaxDegreeOfParallelism = _project.Settings.Database.MaxDegreeOfParallelism };
+        var semanticModelTables = new ConcurrentBag<SemanticModelTable>();
+
+        await Parallel.ForEachAsync(tablesDictionary.Values, options, async (table, cancellationToken) =>
         {
             _logger.LogInformation("Adding table {SchemaName}.{TableName} to the semantic model", table.SchemaName, table.TableName);
 
-            var semanticModelTable = await CreateSemanticModelTableAsync(table);
-            semanticModel.AddTable(semanticModelTable);
-        }
+            var semanticModelTable = await CreateSemanticModelTableAsync(table).ConfigureAwait(false);
+            semanticModelTables.Add(semanticModelTable);
+        });
+
+        semanticModel.Tables.AddRange(semanticModelTables);
 
         return semanticModel;
+
     }
 
     /// <summary>
