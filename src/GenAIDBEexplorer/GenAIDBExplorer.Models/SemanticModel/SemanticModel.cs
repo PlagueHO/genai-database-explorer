@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace GenAIDBExplorer.Models.SemanticModel;
 
@@ -11,10 +12,12 @@ public sealed class SemanticModel(
     string? description = null
     ) : ISemanticModel
 {
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true };
+
     /// <summary>
     /// Gets the name of the semantic model.
     /// </summary>
-    public string Name { get; set;  } = name;
+    public string Name { get; set; } = name;
 
     /// <summary>
     /// Gets the source of the semantic model.
@@ -97,5 +100,22 @@ public sealed class SemanticModel(
     public bool RemoveStoredProcedure(SemanticModelStoredProcedure storedProcedure)
     {
         return StoredProcedures.Remove(storedProcedure);
+    }
+
+    /// <summary>
+    /// Saves the semantic model to the specified folder.
+    /// </summary>
+    /// <param name="folderPath">The folder path where the model will be saved.</param>
+    public void SaveModel(DirectoryInfo folderPath)
+    {
+        Directory.CreateDirectory(folderPath.FullName);
+
+        var semanticModelJsonPath = Path.Combine(folderPath.FullName, "semanticmodel.json");
+        File.WriteAllText(semanticModelJsonPath, JsonSerializer.Serialize(this, JsonSerializerOptions));
+
+        foreach (var table in this.Tables)
+        {
+            table.SaveModel(folderPath);
+        }
     }
 }

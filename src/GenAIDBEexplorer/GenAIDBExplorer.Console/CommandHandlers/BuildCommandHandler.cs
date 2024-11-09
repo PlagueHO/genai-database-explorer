@@ -35,7 +35,15 @@ public class BuildCommandHandler(
         _project.LoadConfiguration(projectPath.FullName);
 
         // Assemble the Semantic Model
-        await _semanticModelProvider.BuildSemanticModelAsync().ConfigureAwait(false);
+        var semanticModel = await _semanticModelProvider.BuildSemanticModelAsync().ConfigureAwait(false);
+
+        // Save the Semantic Model into the project directory into a subdirectory with the name of the semanticModel.Name
+        var semanticModelDirectory = new DirectoryInfo(Path.Combine(projectPath.FullName, semanticModel.Name));
+        if (!semanticModelDirectory.Exists)
+        {
+            semanticModelDirectory.Create();
+        }
+        semanticModel.SaveModel(semanticModelDirectory);
 
         _logger.LogInformation(LogMessages.ProjectBuildComplete, projectPath.FullName);
     }

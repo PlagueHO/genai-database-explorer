@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
@@ -16,6 +17,8 @@ public sealed class SemanticModelTable(
     string? description = null
     ) : ISemanticModelItem
 {
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true };
+
     /// <summary>
     /// Gets the schema of the table.
     /// </summary>
@@ -54,5 +57,17 @@ public sealed class SemanticModelTable(
     public bool RemoveColumn(SemanticModelColumn column)
     {
         return Columns.Remove(column);
+    }
+
+    /// <summary>
+    /// Saves the semantic model table to the specified folder.
+    /// </summary>
+    /// <param name="folderPath">The folder path where the table will be saved.</param>
+    public void SaveModel(DirectoryInfo folderPath)
+    {
+        var fileName = $"{Schema}.{Name}.json";
+        var filePath = Path.Combine(folderPath.FullName, fileName);
+
+        File.WriteAllText(filePath, JsonSerializer.Serialize(this, JsonSerializerOptions));
     }
 }
