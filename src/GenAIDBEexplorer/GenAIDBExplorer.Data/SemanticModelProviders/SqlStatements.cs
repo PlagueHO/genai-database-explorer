@@ -1,0 +1,155 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace GenAIDBExplorer.Data.SemanticModelProviders;
+
+/// <summary>
+/// Contains SQL statements used by the <see cref="SqlSemanticModelProvider"/>.
+/// </summary>
+internal static class SqlStatements
+{
+    /// <summary>
+    /// SQL query to describe tables, including schema name, table name, and table description.
+    /// </summary>
+    public const string DescribeTables = @"
+SELECT 
+    S.name AS SchemaName,
+    O.name AS TableName,
+    ep.value AS TableDesc
+FROM 
+    sys.tables O
+JOIN 
+    sys.schemas S ON O.schema_id = S.schema_id
+LEFT JOIN 
+    sys.extended_properties EP ON ep.major_id = O.object_id 
+    AND ep.name = 'MS_DESCRIPTION' 
+    AND ep.minor_id = 0
+ORDER BY 
+    S.name, 
+    O.name;
+";
+
+    /// <summary>
+    /// SQL query to describe tables, including schema name, table name, and table description.
+    /// </summary>
+    public const string DescribeViews = @"
+SELECT 
+    S.name AS SchemaName,
+    V.name AS ViewName,
+    ep.value AS ViewDesc
+FROM 
+    sys.views V
+JOIN 
+    sys.schemas S ON V.schema_id = S.schema_id
+LEFT JOIN 
+    sys.extended_properties EP ON ep.major_id = V.object_id 
+    AND ep.name = 'MS_DESCRIPTION' 
+    AND ep.minor_id = 0
+ORDER BY 
+    S.name, 
+    V.name;
+";
+
+    /// <summary>
+    /// SQL query to describe columns for a specified table.
+    /// </summary>
+    public const string DescribeTableColumns = @"
+SELECT
+    sch.name AS SchemaName,
+    tab.name AS TableName,
+    col.name AS ColumnName,
+    ep.value AS ColumnDesc,
+    base.name AS ColumnType,
+    CAST(IIF(ic.column_id IS NULL, 0, 1) AS bit) IsPK,
+    col.max_length AS MaxLength,
+    col.precision AS Precision,
+    col.scale AS Scale,
+    col.is_nullable AS IsNullable,
+    col.is_identity AS IsIdentity,
+    col.is_computed AS IsComputed,
+    col.is_xml_document AS IsXmlDocument
+FROM 
+    (
+        select object_id, schema_id, name, CAST(0 as bit) IsView from sys.tables
+        UNION ALL
+        select object_id, schema_id, name, CAST(1 as bit) IsView from sys.views
+    ) tab
+INNER JOIN
+    sys.objects obj ON obj.object_id = tab.object_id
+INNER JOIN
+    sys.schemas sch ON tab.schema_id = sch.schema_id
+INNER JOIN
+    sys.columns col ON col.object_id = tab.object_id
+INNER JOIN
+    sys.types t ON col.user_type_id = t.user_type_id
+INNER JOIN
+    sys.types base ON t.system_type_id = base.user_type_id
+LEFT OUTER JOIN 
+    sys.indexes pk ON tab.object_id = pk.object_id AND pk.is_primary_key = 1
+LEFT OUTER JOIN
+    sys.index_columns ic ON ic.object_id = pk.object_id AND ic.index_id = pk.index_id AND ic.column_id = col.column_id 
+LEFT OUTER JOIN
+    sys.extended_properties ep ON ep.major_id = col.object_id AND ep.minor_id = col.column_id and ep.name = 'MS_DESCRIPTION'
+WHERE
+    sch.name != 'sys'
+    AND sch.name = @SchemaName
+    AND tab.name = @TableName
+ORDER BY
+    SchemaName, TableName, IsPK DESC, ColumnName
+";
+
+    public const string DescribeReferences = @"
+SELECT
+    obj.name AS KeyName,
+    sch.name AS SchemaName,
+    parentTab.name AS TableName,
+    parentCol.name AS ColumnName,
+    refTable.name AS ReferencedTableName,
+    refCol.name AS ReferencedColumnName
+FROM
+    sys.foreign_key_columns fkc
+INNER JOIN
+    sys.objects obj ON obj.object_id = fkc.constraint_object_id
+INNER JOIN
+    sys.tables parentTab ON parentTab.object_id = fkc.parent_object_id
+INNER JOIN
+    sys.schemas sch ON parentTab.schema_id = sch.schema_id
+INNER JOIN
+    sys.columns parentCol ON parentCol.column_id = parent_column_id AND parentCol.object_id = parentTab.object_id
+INNER JOIN
+    sys.tables refTable ON refTable.object_id = fkc.referenced_object_id
+INNER JOIN
+    sys.columns refCol ON refCol.column_id = referenced_column_id AND refCol.object_id = refTable.object_id
+";
+
+    public const string DescribeStoredProcedures = @"
+SELECT
+    schema_name(obj.schema_id) as schemaName,
+    obj.name as procedureName,
+    case type
+        when 'P' then 'SQL Stored Procedure'
+        when 'X' then 'Extended stored procedure'
+    end as type,
+    substring(par.parameters, 0, len(par.parameters)) as parameters,
+    mod.definition as definition
+FROM
+    sys.objects obj JOIN sys.sql_modules mod ON mod.object_id = obj.object_id
+    CROSS APPLY (
+        SELECT
+            p.name + ' ' + TYPE_NAME(p.user_type_id) + ', ' 
+        FROM
+            sys.parameters p
+        WHERE
+            p.object_id = obj.object_id
+            AND p.parameter_id != 0 
+        FOR XML path ('') ) par (parameters)
+WHERE
+    obj.type in ('P', 'X')
+ORDER BY
+    schema_name,
+    procedure_name;
+";
+}
