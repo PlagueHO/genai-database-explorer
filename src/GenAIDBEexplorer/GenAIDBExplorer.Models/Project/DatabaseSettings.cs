@@ -25,4 +25,10 @@ public class DatabaseSettings
     /// </summary>
     [Required, NotEmptyOrWhitespace]
     public string ConnectionString { get; set; } = string.Empty;
+
+
+    /// <summary>
+    /// Schema to use when querying the database. If not specified, all schemas will be queried.
+    /// </summary>
+    public string Schema { get; set; } = string.Empty;
 }

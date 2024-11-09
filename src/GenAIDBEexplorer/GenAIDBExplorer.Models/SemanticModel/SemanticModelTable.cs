@@ -11,10 +11,16 @@ namespace GenAIDBExplorer.Models.SemanticModel;
 /// Represents a table in the semantic model.
 /// </summary>
 public sealed class SemanticModelTable(
+    string schema,
     string name,
     string? description = null
     ) : ISemanticModelItem
 {
+    /// <summary>
+    /// Gets the schema of the table.
+    /// </summary>
+    public string Schema { get; set; } = schema;
+
     /// <summary>
     /// Gets the name of the table.
     /// </summary>

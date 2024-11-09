@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Serialization;
 
 namespace GenAIDBExplorer.Models.SemanticModel;
 
@@ -13,7 +8,7 @@ namespace GenAIDBExplorer.Models.SemanticModel;
 public sealed class SemanticModelColumn(
     string name,
     string type,
-    bool isPrimary,
+    bool isPrimaryKey,
     string? description = null,
     string? referencedTable = null,
     string? referencedColumn = null
@@ -39,7 +34,7 @@ public sealed class SemanticModelColumn(
     /// Gets a value indicating whether the column is a primary key.
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public bool IsPrimary { get; set; } = isPrimary;
+    public bool IsPrimaryKey { get; set; } = isPrimaryKey;
 
     /// <summary>
     /// Gets the name of the referenced table, if any.

@@ -38,7 +38,7 @@ public static class HostBuilderExtensions
                 config
                     .ClearProviders()
                     .AddConfiguration(context.Configuration.GetSection("Logging"))
-                    .AddConsole()
+                    // .AddConsole()
                     .AddProvider(new RedactingLoggerProvider());
             })
             .ConfigureServices((context, services) =>

@@ -8,6 +8,4 @@ namespace GenAIDBExplorer.Data.SemanticModelProviders;
 public interface ISemanticModelProvider : IDisposable
 {
     Task<SemanticModel> BuildSemanticModelAsync();
-
-    Task<Dictionary<string, string>> GetTableListAsync();
 }
