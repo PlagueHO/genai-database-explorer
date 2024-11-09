@@ -113,9 +113,20 @@ public sealed class SemanticModel(
         var semanticModelJsonPath = Path.Combine(folderPath.FullName, "semanticmodel.json");
         File.WriteAllText(semanticModelJsonPath, JsonSerializer.Serialize(this, JsonSerializerOptions));
 
-        foreach (var table in this.Tables)
+        var tablesFolderPath = new DirectoryInfo(Path.Combine(folderPath.FullName, "tables"));
+        Directory.CreateDirectory(tablesFolderPath.FullName);
+
+        foreach (var table in Tables)
         {
-            table.SaveModel(folderPath);
+            table.SaveModel(tablesFolderPath);
+        }
+
+        var viewsFolderPath = new DirectoryInfo(Path.Combine(folderPath.FullName, "views"));
+        Directory.CreateDirectory(viewsFolderPath.FullName);
+
+        foreach (var view in Views)
+        {
+            view.SaveModel(viewsFolderPath);
         }
     }
 }

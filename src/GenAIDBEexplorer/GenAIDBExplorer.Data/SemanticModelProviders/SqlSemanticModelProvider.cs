@@ -30,17 +30,23 @@ public sealed class SqlSemanticModelProvider(
     {
         _logger.LogInformation("Building semantic model for database {DatabaseName}", _project.Settings.Database.Name);
 
+        // Create the new SemanticModel instance to build
         var semanticModel = new SemanticModel(
             name: _project.Settings.Database.Name,
             source: _project.Settings.Database.ConnectionString,
             description: _project.Settings.Database.Description
         );
 
-        var tablesDictionary = await GetTableListAsync().ConfigureAwait(false);
+        // Configure the parallel options for the operation
+        var options = new ParallelOptions {
+            MaxDegreeOfParallelism = _project.Settings.Database.MaxDegreeOfParallelism
+        };
 
-        var options = new ParallelOptions { MaxDegreeOfParallelism = _project.Settings.Database.MaxDegreeOfParallelism };
+        // Get the tables from the database
+        var tablesDictionary = await GetTableListAsync().ConfigureAwait(false);
         var semanticModelTables = new ConcurrentBag<SemanticModelTable>();
 
+        // Construct the semantic model tables
         await Parallel.ForEachAsync(tablesDictionary.Values, options, async (table, cancellationToken) =>
         {
             _logger.LogInformation("Adding table {SchemaName}.{TableName} to the semantic model", table.SchemaName, table.TableName);
@@ -49,7 +55,24 @@ public sealed class SqlSemanticModelProvider(
             semanticModelTables.Add(semanticModelTable);
         });
 
+        // Add the tables to the semantic model
         semanticModel.Tables.AddRange(semanticModelTables);
+
+        // Get the views from the database
+        var viewsDictionary = await GetViewListAsync().ConfigureAwait(false);
+        var semanticModelViews = new ConcurrentBag<SemanticModelView>();
+
+        // Construct the semantic model views
+        await Parallel.ForEachAsync(viewsDictionary.Values, options, async (view, cancellationToken) =>
+        {
+            _logger.LogInformation("Adding view {SchemaName}.{ViewName} to the semantic model", view.SchemaName, view.ViewName);
+
+            var semanticModelView = await CreateSemanticModelViewAsync(view).ConfigureAwait(false);
+            semanticModelViews.Add(semanticModelView);
+        });
+
+        // Add the view to the semantic model
+        semanticModel.Views.AddRange(semanticModelViews);
 
         return semanticModel;
 
@@ -118,6 +141,48 @@ public sealed class SqlSemanticModelProvider(
     }
 
     /// <summary>
+    /// Retrieves a list of views from the database, optionally filtered by schema.
+    /// </summary>
+    /// <param name="schema">The schema to filter view by. If null, all schemas are included.</param>
+    /// <returns>A task representing the asynchronous operation. The task result contains a dictionary where the key is the schema and table name, and the value is the table name.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the database connection is not open.</exception>
+    /// <exception cref="SqlException">Thrown when there is an error executing the SQL query.</exception>
+    private async Task<Dictionary<string, ViewInfo>> GetViewListAsync(string? schema = null)
+    {
+        await ConnectDatabaseAsync().ConfigureAwait(false);
+
+        var views = new Dictionary<string, ViewInfo>();
+
+        try
+        {
+            var query = Statements.DescribeViews;
+            var parameters = new Dictionary<string, object>();
+
+            if (!string.IsNullOrEmpty(schema))
+            {
+                query += " WHERE S.name = @Schema";
+                parameters.Add("@Schema", schema);
+            }
+
+            using var reader = await ExecuteQueryAsync(query, parameters).ConfigureAwait(false);
+
+            while (await reader.ReadAsync().ConfigureAwait(false))
+            {
+                var schemaName = reader.GetString(0);
+                var viewName = reader.GetString(1);
+                views.Add($"{schemaName}.{viewName}", new ViewInfo(schemaName, viewName));
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to retrieve views from the database.");
+            throw;
+        }
+
+        return views;
+    }
+
+    /// <summary>
     /// Creates a Semantic Model Table for the specified table by querying the columns and keys.
     /// </summary>
     /// <param name="table">The table info for the table to create a semantic model for.</param>
@@ -133,6 +198,24 @@ public sealed class SqlSemanticModelProvider(
         semanticModelTable.Columns.AddRange(columns);
 
         return semanticModelTable;
+    }
+
+    /// <summary>
+    /// Creates a Semantic Model View for the specified view by querying the columns and keys.
+    /// </summary>
+    /// <param name="view">The view info for the view to create a semantic model for.</param>
+    /// <returns>A task representing the asynchronous operation. The task result contains the created <see cref="SemanticModelTable"/>.</returns>
+    private async Task<SemanticModelView> CreateSemanticModelViewAsync(ViewInfo view)
+    {
+        await ConnectDatabaseAsync().ConfigureAwait(false);
+
+        var semanticModelView = new SemanticModelView(view.SchemaName, view.ViewName);
+
+        // Get the columns for the view
+        // var columns = await GetColumnsForViewAsync(view).ConfigureAwait(false);
+        // semanticModelView.Columns.AddRange(columns);
+
+        return semanticModelView;
     }
 
     /// <summary>
@@ -160,7 +243,7 @@ public sealed class SqlSemanticModelProvider(
                 // get the contents of column schemaName in the reader into a var 
                 var columnName = reader.GetString(2);
                 var columnType = reader.GetString(4);
-                var column = new SemanticModelColumn(columnName, columnType);
+                var column = new SemanticModelColumn(table.SchemaName, columnName, columnType);
                 column.Description = reader.IsDBNull(3) ? null : reader.GetString(3);
                 column.IsPrimaryKey = reader.GetBoolean(5);
                 column.MaxLength = reader.GetInt16(6);
@@ -243,6 +326,12 @@ public sealed class SqlSemanticModelProvider(
         public string TableName { get; set; } = tableName;
     }
 
+    // Represents a view in the database
+    internal class ViewInfo(string schemaName, string viewName)
+    {
+        public string SchemaName { get; set; } = schemaName;
+        public string ViewName { get; set; } = viewName;
+    }
 
     /// <summary>
     /// Contains SQL statements used by the <see cref="SqlSemanticModelProvider"/>.
@@ -268,6 +357,27 @@ LEFT JOIN
 ORDER BY 
     S.name, 
     O.name;
+";
+
+        /// <summary>
+        /// SQL query to describe tables, including schema name, table name, and table description.
+        /// </summary>
+        public const string DescribeViews = @"
+SELECT 
+    S.name AS SchemaName,
+    V.name AS ViewName,
+    ep.value AS ViewDesc
+FROM 
+    sys.views V
+JOIN 
+    sys.schemas S ON V.schema_id = S.schema_id
+LEFT JOIN 
+    sys.extended_properties EP ON ep.major_id = V.object_id 
+    AND ep.name = 'MS_DESCRIPTION' 
+    AND ep.minor_id = 0
+ORDER BY 
+    S.name, 
+    V.name;
 ";
 
         /// <summary>

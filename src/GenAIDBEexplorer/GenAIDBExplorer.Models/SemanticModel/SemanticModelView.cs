@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace GenAIDBExplorer.Models.SemanticModel;
@@ -10,17 +11,32 @@ namespace GenAIDBExplorer.Models.SemanticModel;
 /// Represents a view in the semantic model.
 /// </summary>
 public sealed class SemanticModelView(
+    string schema,
     string name,
     string? description = null
-    ) : ISemanticModelItem
+    ) : SemanticModelEntity(schema, name, description)
 {
     /// <summary>
-    /// Gets or sets the name of the view.
+    /// Gets the columns in the view.
     /// </summary>
-    public string Name { get; set; } = name;
+    public List<SemanticModelColumn> Columns { get; set; } = [];
 
     /// <summary>
-    /// Gets or sets the description of the view.
+    /// Adds a column to the view.
     /// </summary>
-    public string? Description { get; set; } = description;
+    /// <param name="column">The column to add.</param>
+    public void AddColumn(SemanticModelColumn column)
+    {
+        Columns.Add(column);
+    }
+
+    /// <summary>
+    /// Removes a column from the view.
+    /// </summary>
+    /// <param name="column">The column to remove.</param>
+    /// <returns>True if the column was removed; otherwise, false.</returns>
+    public bool RemoveColumn(SemanticModelColumn column)
+    {
+        return Columns.Remove(column);
+    }
 }

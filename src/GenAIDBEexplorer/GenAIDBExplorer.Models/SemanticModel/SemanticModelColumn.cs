@@ -6,10 +6,16 @@ namespace GenAIDBExplorer.Models.SemanticModel;
 /// Represents a column in the semantic model.
 /// </summary>
 public sealed class SemanticModelColumn(
+    string schema,
     string name,
     string type
-    ) : ISemanticModelItem
+    ) : ISemanticModelEntity
 {
+    /// <summary>
+    /// Gets the name of the column.
+    /// </summary>
+    public string Schema { get; set; } = schema;
+
     /// <summary>
     /// Gets the name of the column.
     /// </summary>
@@ -85,4 +91,14 @@ public sealed class SemanticModelColumn(
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? ReferencedColumn { get; set; }
+
+    /// <summary>
+    /// Saving a column to a folder is not implemented.
+    /// </summary>
+    /// <param name="folderPath"></param>
+    /// <exception cref="NotImplementedException"></exception>
+    public void SaveModel(DirectoryInfo folderPath)
+    {
+        throw new NotImplementedException();
+    }
 }
