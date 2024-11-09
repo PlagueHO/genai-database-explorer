@@ -148,7 +148,7 @@ public sealed class SqlSemanticModelProvider(
 
         try
         {
-            var query = Statements.DescribeColumns;
+            var query = Statements.DescribeTableColumns;
             var parameters = new Dictionary<string, object> {
                 { "@SchemaName", table.SchemaName },
                 { "@TableName", table.TableName }
@@ -163,13 +163,13 @@ public sealed class SqlSemanticModelProvider(
                 var column = new SemanticModelColumn(columnName, columnType);
                 column.Description = reader.IsDBNull(3) ? null : reader.GetString(3);
                 column.IsPrimaryKey = reader.GetBoolean(5);
-                column.MaxLength = reader.GetInt16(7);
-                column.Precision = reader.GetByte(8);
-                column.Scale = reader.GetByte(9);
-                column.IsNullable = reader.GetBoolean(10);
-                column.IsIdentity = reader.GetBoolean(11);
-                column.IsComputed = reader.GetBoolean(12);
-                column.IsXmlDocument = reader.GetBoolean(13);
+                column.MaxLength = reader.GetInt16(6);
+                column.Precision = reader.GetByte(7);
+                column.Scale = reader.GetByte(8);
+                column.IsNullable = reader.GetBoolean(9);
+                column.IsIdentity = reader.GetBoolean(10);
+                column.IsComputed = reader.GetBoolean(11);
+                column.IsXmlDocument = reader.GetBoolean(12);
                 semanticModelColumns.Add(column);
             }
         }
@@ -271,9 +271,9 @@ ORDER BY
 ";
 
         /// <summary>
-        /// SQL query to describe columns for a specified table, including column name, data type, and column description.
+        /// SQL query to describe columns for a specified table.
         /// </summary>
-        public const string DescribeColumns = @"
+        public const string DescribeTableColumns = @"
 SELECT
     sch.name AS SchemaName,
     tab.name AS TableName,
@@ -281,7 +281,6 @@ SELECT
     ep.value AS ColumnDesc,
     base.name AS ColumnType,
     CAST(IIF(ic.column_id IS NULL, 0, 1) AS bit) IsPK,
-    tab.IsView,
     col.max_length AS MaxLength,
     col.precision AS Precision,
     col.scale AS Scale,
