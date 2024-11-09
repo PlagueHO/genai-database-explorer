@@ -58,6 +58,9 @@ public static class HostBuilderExtensions
                 // Register the database connection manager
                 services.AddSingleton<IDatabaseConnectionManager, DatabaseConnectionManager>();
 
+                // Register the SQL Query executor
+                services.AddSingleton<ISqlQueryExecutor, SqlQueryExecutor>();
+
                 // Register the Semantic Model provider
                 services.AddSingleton<ISemanticModelProvider, SqlSemanticModelProvider>();
 

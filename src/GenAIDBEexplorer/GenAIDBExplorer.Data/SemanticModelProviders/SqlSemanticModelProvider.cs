@@ -4,17 +4,19 @@ using GenAIDBExplorer.Models.Project;
 using GenAIDBExplorer.Models.SemanticModel;
 using System.Collections.Concurrent;
 using GenAIDBExplorer.Data.ConnectionManager;
+using GenAIDBExplorer.Data.DatabaseProviders;
 
 namespace GenAIDBExplorer.Data.SemanticModelProviders;
 
 public sealed class SqlSemanticModelProvider(
     IProject project,
+    ISqlQueryExecutor sqlQueryExecutor,
     IDatabaseConnectionManager connectionManager,
     ILogger<SqlSemanticModelProvider> logger
 ) : ISemanticModelProvider
 {
     private readonly IProject _project = project;
-    private readonly IDatabaseConnectionManager _connectionManager = connectionManager;
+    private readonly ISqlQueryExecutor _sqlQueryExecutor = sqlQueryExecutor;
     private readonly ILogger _logger = logger;
 
     /// <summary>
@@ -95,7 +97,7 @@ public sealed class SqlSemanticModelProvider(
                 parameters.Add("@Schema", schema);
             }
 
-            using var reader = await ExecuteQueryAsync(query, parameters).ConfigureAwait(false);
+            using var reader = await _sqlQueryExecutor.ExecuteReaderAsync(query, parameters).ConfigureAwait(false);
 
             while (await reader.ReadAsync().ConfigureAwait(false))
             {
@@ -135,7 +137,7 @@ public sealed class SqlSemanticModelProvider(
                 parameters.Add("@Schema", schema);
             }
 
-            using var reader = await ExecuteQueryAsync(query, parameters).ConfigureAwait(false);
+            using var reader = await _sqlQueryExecutor.ExecuteReaderAsync(query, parameters).ConfigureAwait(false);
 
             while (await reader.ReadAsync().ConfigureAwait(false))
             {
@@ -201,7 +203,7 @@ public sealed class SqlSemanticModelProvider(
                 { "@SchemaName", table.SchemaName },
                 { "@TableName", table.TableName }
             };
-            using var reader = await ExecuteQueryAsync(query, parameters).ConfigureAwait(false);
+            using var reader = await _sqlQueryExecutor.ExecuteReaderAsync(query, parameters).ConfigureAwait(false);
 
             while (await reader.ReadAsync().ConfigureAwait(false))
             {
@@ -229,37 +231,6 @@ public sealed class SqlSemanticModelProvider(
         }
         
         return semanticModelColumns;
-    }
-
-    /// <summary>
-    /// Executes the provided SQL query asynchronously and returns a <see cref="SqlDataReader"/> to read the results.
-    /// </summary>
-    /// <param name="statement">The SQL query to be executed.</param>
-    /// <param name="parameters">The SQL parameters to be added to the query.</param>
-    /// <returns>A task representing the asynchronous operation. The task result contains a <see cref="SqlDataReader"/> to read the query results.</returns>
-    /// <exception cref="SqlException">Thrown when there is an error executing the SQL query.</exception>
-    private async Task<SqlDataReader> ExecuteQueryAsync(string statement, Dictionary<string, object>? parameters = null)
-    {
-        var connection = await _connectionManager.GetOpenConnectionAsync().ConfigureAwait(false);
-
-        using var cmd = connection.CreateCommand();
-
-        // Log the SQL query being executed
-        _logger.LogDebug("Executing SQL query: {SqlQuery}", statement);
-
-#pragma warning disable CA2100 // Queries passed in from static resource
-        cmd.CommandText = statement;
-#pragma warning restore CA2100
-
-        if (parameters != null)
-        {
-            foreach (var param in parameters)
-            {
-                cmd.Parameters.AddWithValue(param.Key, param.Value);
-            }
-        }
-
-        return await cmd.ExecuteReaderAsync().ConfigureAwait(false);
     }
 
     // Represents a table in the database

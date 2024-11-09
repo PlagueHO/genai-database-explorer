@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace GenAIDBExplorer.Data.SemanticModelProviders;
+﻿namespace GenAIDBExplorer.Data.SemanticModelProviders;
 
 /// <summary>
 /// Contains SQL statements used by the <see cref="SqlSemanticModelProvider"/>.
