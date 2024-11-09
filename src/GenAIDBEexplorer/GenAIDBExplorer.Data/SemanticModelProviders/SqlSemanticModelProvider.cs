@@ -4,6 +4,9 @@ using GenAIDBExplorer.Data.DatabaseProviders;
 using GenAIDBExplorer.Models.Project;
 using GenAIDBExplorer.Models.SemanticModel;
 using System.Collections.Concurrent;
+using System.Security.Principal;
+using System.Xml;
+using System.Dynamic;
 
 namespace GenAIDBExplorer.Data.SemanticModelProviders;
 
@@ -154,17 +157,19 @@ public sealed class SqlSemanticModelProvider(
 
             while (await reader.ReadAsync().ConfigureAwait(false))
             {
+                // get the contents of column schemaName in the reader into a var 
                 var columnName = reader.GetString(2);
-                var columnDesc = reader.IsDBNull(3) ? null : reader.GetString(3);
                 var columnType = reader.GetString(4);
-                var isPK = reader.GetBoolean(5);
-                var isView = reader.GetBoolean(6);
-                var column = new SemanticModelColumn(
-                    name: columnName,
-                    description: columnDesc,
-                    type: columnType,
-                    isPrimaryKey: isPK
-                );
+                var column = new SemanticModelColumn(columnName, columnType);
+                column.Description = reader.IsDBNull(3) ? null : reader.GetString(3);
+                column.IsPrimaryKey = reader.GetBoolean(5);
+                column.MaxLength = reader.GetInt16(7);
+                column.Precision = reader.GetByte(8);
+                column.Scale = reader.GetByte(9);
+                column.IsNullable = reader.GetBoolean(10);
+                column.IsIdentity = reader.GetBoolean(11);
+                column.IsComputed = reader.GetBoolean(12);
+                column.IsXmlDocument = reader.GetBoolean(13);
                 semanticModelColumns.Add(column);
             }
         }
@@ -276,7 +281,14 @@ SELECT
     ep.value AS ColumnDesc,
     base.name AS ColumnType,
     CAST(IIF(ic.column_id IS NULL, 0, 1) AS bit) IsPK,
-    tab.IsView
+    tab.IsView,
+    col.max_length AS MaxLength,
+    col.precision AS Precision,
+    col.scale AS Scale,
+    col.is_nullable AS IsNullable,
+    col.is_identity AS IsIdentity,
+    col.is_computed AS IsComputed,
+    col.is_xml_document AS IsXmlDocument
 FROM 
     (
         select object_id, schema_id, name, CAST(0 as bit) IsView from sys.tables
