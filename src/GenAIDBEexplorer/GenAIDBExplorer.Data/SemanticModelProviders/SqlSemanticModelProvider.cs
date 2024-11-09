@@ -13,13 +13,11 @@ namespace GenAIDBExplorer.Data.SemanticModelProviders;
 
 public sealed class SqlSemanticModelProvider(
     IProject project,
-    IDatabaseConnectionProvider connectionProvider,
     IDatabaseConnectionManager connectionManager,
     ILogger<SqlSemanticModelProvider> logger
 ) : ISemanticModelProvider
 {
     private readonly IProject _project = project;
-    private readonly IDatabaseConnectionProvider _connectionProvider = connectionProvider;
     private readonly IDatabaseConnectionManager _connectionManager = connectionManager;
     private readonly ILogger _logger = logger;
 
