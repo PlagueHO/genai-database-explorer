@@ -13,12 +13,18 @@ namespace GenAIDBExplorer.Models.SemanticModel;
 public sealed class SemanticModelStoredProcedure(
     string schema,
     string name,
-    string source,
+    string parameters,
+    string definition,
     string? description = null
     ) : SemanticModelEntity(schema, name, description)
 {
     /// <summary>
-    /// Gets or sets the source of the stored procedure.
+    /// Gets or sets the parameters of the stored procedure.
     /// </summary>
-    public string Source { get; set; } = source;
+    public string Parameters { get; set; } = parameters;
+
+    /// <summary>
+    /// Gets or sets the definition of the stored procedure.
+    /// </summary>
+    public string Definition { get; set; } = definition;
 }

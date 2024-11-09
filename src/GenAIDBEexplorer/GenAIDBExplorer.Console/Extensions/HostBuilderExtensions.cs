@@ -9,6 +9,7 @@ using GenAIDBExplorer.AI.KernelMemory;
 using GenAIDBExplorer.Models.Project;
 using GenAIDBExplorer.Console.CommandHandlers;
 using GenAIDBExplorer.Console.Logger;
+using GenAIDBExplorer.Data.ConnectionManager;
 
 namespace GenAIDBExplorer.Console.Extensions;
 
@@ -53,6 +54,9 @@ public static class HostBuilderExtensions
 
                 // Register the database connection provider
                 services.AddSingleton<IDatabaseConnectionProvider, SqlConnectionProvider>();
+
+                // Register the database connection manager
+                services.AddSingleton<IDatabaseConnectionManager, DatabaseConnectionManager>();
 
                 // Register the Semantic Model provider
                 services.AddSingleton<ISemanticModelProvider, SqlSemanticModelProvider>();

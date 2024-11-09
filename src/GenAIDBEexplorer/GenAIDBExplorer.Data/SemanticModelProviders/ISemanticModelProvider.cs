@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace GenAIDBExplorer.Data.SemanticModelProviders;
 
-public interface ISemanticModelProvider : IDisposable
+public interface ISemanticModelProvider
 {
     Task<SemanticModel> BuildSemanticModelAsync();
 }

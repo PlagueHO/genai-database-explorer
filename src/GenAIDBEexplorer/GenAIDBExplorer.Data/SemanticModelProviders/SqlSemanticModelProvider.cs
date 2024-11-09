@@ -7,20 +7,21 @@ using System.Collections.Concurrent;
 using System.Security.Principal;
 using System.Xml;
 using System.Dynamic;
+using GenAIDBExplorer.Data.ConnectionManager;
 
 namespace GenAIDBExplorer.Data.SemanticModelProviders;
 
 public sealed class SqlSemanticModelProvider(
     IProject project,
     IDatabaseConnectionProvider connectionProvider,
+    IDatabaseConnectionManager connectionManager,
     ILogger<SqlSemanticModelProvider> logger
-) : ISemanticModelProvider, IDisposable
+) : ISemanticModelProvider
 {
     private readonly IProject _project = project;
     private readonly IDatabaseConnectionProvider _connectionProvider = connectionProvider;
+    private readonly IDatabaseConnectionManager _connectionManager = connectionManager;
     private readonly ILogger _logger = logger;
-    private SqlConnection? _connection;
-    private bool _disposed = false;
 
     /// <summary>
     /// Builds the semantic model asynchronously.
@@ -79,26 +80,6 @@ public sealed class SqlSemanticModelProvider(
     }
 
     /// <summary>
-    /// Connects to the database asynchronously if not already connected.
-    /// </summary>
-    /// <returns>A task representing the asynchronous operation.</returns>
-    /// <exception cref="InvalidOperationException">Thrown when the connection is not open after attempting to connect.</exception>
-    private async Task ConnectDatabaseAsync()
-    {
-        if (_connection == null || _connection.State != System.Data.ConnectionState.Open)
-        {
-            _logger.LogInformation("Connecting to database {DatabaseName} at {ConnectionString}", _project.Settings.Database.Name, _project.Settings.Database.ConnectionString);
-
-            _connection = await _connectionProvider.ConnectAsync().ConfigureAwait(false);
-
-            if (_connection.State != System.Data.ConnectionState.Open)
-            {
-                throw new InvalidOperationException("Connection is not open.");
-            }
-        }
-    }
-
-    /// <summary>
     /// Retrieves a list of tables from the database, optionally filtered by schema.
     /// </summary>
     /// <param name="schema">The schema to filter tables by. If null, all schemas are included.</param>
@@ -107,8 +88,6 @@ public sealed class SqlSemanticModelProvider(
     /// <exception cref="SqlException">Thrown when there is an error executing the SQL query.</exception>
     private async Task<Dictionary<string, TableInfo>> GetTableListAsync(string? schema = null)
     {
-        await ConnectDatabaseAsync().ConfigureAwait(false);
-
         var tables = new Dictionary<string, TableInfo>();
 
         try
@@ -149,8 +128,6 @@ public sealed class SqlSemanticModelProvider(
     /// <exception cref="SqlException">Thrown when there is an error executing the SQL query.</exception>
     private async Task<Dictionary<string, ViewInfo>> GetViewListAsync(string? schema = null)
     {
-        await ConnectDatabaseAsync().ConfigureAwait(false);
-
         var views = new Dictionary<string, ViewInfo>();
 
         try
@@ -189,8 +166,6 @@ public sealed class SqlSemanticModelProvider(
     /// <returns>A task representing the asynchronous operation. The task result contains the created <see cref="SemanticModelTable"/>.</returns>
     private async Task<SemanticModelTable> CreateSemanticModelTableAsync(TableInfo table)
     {
-        await ConnectDatabaseAsync().ConfigureAwait(false);
-
         var semanticModelTable = new SemanticModelTable(table.SchemaName, table.TableName);
         
         // Get the columns for the table
@@ -207,8 +182,6 @@ public sealed class SqlSemanticModelProvider(
     /// <returns>A task representing the asynchronous operation. The task result contains the created <see cref="SemanticModelTable"/>.</returns>
     private async Task<SemanticModelView> CreateSemanticModelViewAsync(ViewInfo view)
     {
-        await ConnectDatabaseAsync().ConfigureAwait(false);
-
         var semanticModelView = new SemanticModelView(view.SchemaName, view.ViewName);
 
         // Get the columns for the view
@@ -225,8 +198,6 @@ public sealed class SqlSemanticModelProvider(
     /// <returns>A task representing the asynchronous operation. The task result contains a list of <see cref="SemanticModelColumn"/> for the specified table.</returns>
     private async Task<List<SemanticModelColumn>> GetColumnsForTableAsync(TableInfo table)
     {
-        await ConnectDatabaseAsync().ConfigureAwait(false);
-
         var semanticModelColumns = new List<SemanticModelColumn>();
 
         try
@@ -275,7 +246,9 @@ public sealed class SqlSemanticModelProvider(
     /// <exception cref="SqlException">Thrown when there is an error executing the SQL query.</exception>
     private async Task<SqlDataReader> ExecuteQueryAsync(string statement, Dictionary<string, object>? parameters = null)
     {
-        using var cmd = _connection.CreateCommand();
+        var connection = await _connectionManager.GetOpenConnectionAsync().ConfigureAwait(false);
+
+        using var cmd = connection.CreateCommand();
 
         // Log the SQL query being executed
         _logger.LogDebug("Executing SQL query: {SqlQuery}", statement);
@@ -293,30 +266,6 @@ public sealed class SqlSemanticModelProvider(
         }
 
         return await cmd.ExecuteReaderAsync().ConfigureAwait(false);
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    private void Dispose(bool disposing)
-    {
-        if (!_disposed)
-        {
-            if (disposing)
-            {
-                _connection?.Dispose();
-            }
-
-            _disposed = true;
-        }
-    }
-
-    ~SqlSemanticModelProvider()
-    {
-        Dispose(false);
     }
 
     // Represents a table in the database
@@ -450,6 +399,34 @@ INNER JOIN
     sys.tables refTable ON refTable.object_id = fkc.referenced_object_id
 INNER JOIN
     sys.columns refCol ON refCol.column_id = referenced_column_id AND refCol.object_id = refTable.object_id
+";
+
+        public const string DescribeStoredProcedures = @"
+SELECT
+    schema_name(obj.schema_id) as schemaName,
+    obj.name as procedureName,
+    case type
+        when 'P' then 'SQL Stored Procedure'
+        when 'X' then 'Extended stored procedure'
+    end as type,
+    substring(par.parameters, 0, len(par.parameters)) as parameters,
+    mod.definition as definition
+FROM
+    sys.objects obj JOIN sys.sql_modules mod ON mod.object_id = obj.object_id
+    CROSS APPLY (
+        SELECT
+            p.name + ' ' + TYPE_NAME(p.user_type_id) + ', ' 
+        FROM
+            sys.parameters p
+        WHERE
+            p.object_id = obj.object_id
+            AND p.parameter_id != 0 
+        FOR XML path ('') ) par (parameters)
+WHERE
+    obj.type in ('P', 'X')
+ORDER BY
+    schema_name,
+    procedure_name;
 ";
     }
 }
