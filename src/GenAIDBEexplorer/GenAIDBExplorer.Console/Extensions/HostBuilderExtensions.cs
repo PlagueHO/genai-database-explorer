@@ -8,6 +8,7 @@ using GenAIDBExplorer.AI.SemanticKernel;
 using GenAIDBExplorer.AI.KernelMemory;
 using GenAIDBExplorer.Models.Project;
 using GenAIDBExplorer.Console.CommandHandlers;
+using GenAIDBExplorer.Console.Logger;
 
 namespace GenAIDBExplorer.Console.Extensions;
 
@@ -37,8 +38,8 @@ public static class HostBuilderExtensions
                 config
                     .ClearProviders()
                     .AddConfiguration(context.Configuration.GetSection("Logging"))
-                    .AddConsole();
-
+                    .AddConsole()
+                    .AddProvider(new RedactingLoggerProvider());
             })
             .ConfigureServices((context, services) =>
             {
