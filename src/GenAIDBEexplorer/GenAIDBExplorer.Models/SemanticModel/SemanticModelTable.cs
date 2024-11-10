@@ -1,4 +1,7 @@
-﻿namespace GenAIDBExplorer.Models.SemanticModel;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+
+namespace GenAIDBExplorer.Models.SemanticModel;
 
 /// <summary>
 /// Represents a table in the semantic model.

@@ -11,7 +11,7 @@ public abstract class SemanticModelEntity(
     string? description = null
 ) : ISemanticModelEntity
 {
-    private static readonly JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true };
+    protected static readonly JsonSerializerOptions _jsonSerializerOptions = new() { WriteIndented = true };
 
     /// <summary>
     /// Gets or sets the schema of the entity.
@@ -37,6 +37,6 @@ public abstract class SemanticModelEntity(
         var fileName = $"{Schema}.{Name}.json";
         var filePath = Path.Combine(folderPath.FullName, fileName);
 
-        File.WriteAllText(filePath, JsonSerializer.Serialize(this, JsonSerializerOptions));
+        File.WriteAllText(filePath, JsonSerializer.Serialize<object>(this, _jsonSerializerOptions));
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace GenAIDBExplorer.Models.SemanticModel;
+﻿using System.Text.Json;
+
+namespace GenAIDBExplorer.Models.SemanticModel;
 
 /// <summary>
 /// Represents a view in the semantic model.

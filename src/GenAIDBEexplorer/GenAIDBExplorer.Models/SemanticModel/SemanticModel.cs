@@ -108,11 +108,13 @@ public sealed class SemanticModel(
     /// <param name="folderPath">The folder path where the model will be saved.</param>
     public void SaveModel(DirectoryInfo folderPath)
     {
+        // Save the semantic model to a JSON file.
         Directory.CreateDirectory(folderPath.FullName);
 
         var semanticModelJsonPath = Path.Combine(folderPath.FullName, "semanticmodel.json");
         File.WriteAllText(semanticModelJsonPath, JsonSerializer.Serialize(this, JsonSerializerOptions));
 
+        // Save the tables to separate files in a subfolder called "tables".
         var tablesFolderPath = new DirectoryInfo(Path.Combine(folderPath.FullName, "tables"));
         Directory.CreateDirectory(tablesFolderPath.FullName);
 
@@ -121,6 +123,7 @@ public sealed class SemanticModel(
             table.SaveModel(tablesFolderPath);
         }
 
+        // Save the views to separate files in a subfolder called "views".
         var viewsFolderPath = new DirectoryInfo(Path.Combine(folderPath.FullName, "views"));
         Directory.CreateDirectory(viewsFolderPath.FullName);
 
@@ -129,6 +132,7 @@ public sealed class SemanticModel(
             view.SaveModel(viewsFolderPath);
         }
 
+        // Save the stored procedures to separate files in a subfolder called "storedprocedures".
         var storedProceduresFolderPath = new DirectoryInfo(Path.Combine(folderPath.FullName, "storedprocedures"));
         Directory.CreateDirectory(storedProceduresFolderPath.FullName);
 
