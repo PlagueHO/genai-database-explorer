@@ -143,19 +143,19 @@ SELECT
     refTable.name AS ReferencedTableName,
     refCol.name AS ReferencedColumnName
 FROM
-    sys.foreign_key_columns fkc
+	sys.foreign_key_columns fkc
 INNER JOIN
-    sys.objects obj ON obj.object_id = fkc.constraint_object_id
+	sys.objects obj ON obj.object_id = fkc.constraint_object_id
 INNER JOIN
-    sys.tables parentTab ON parentTab.object_id = fkc.parent_object_id
+	sys.tables parentTab ON parentTab.object_id = fkc.parent_object_id
 INNER JOIN
-    sys.schemas sch ON parentTab.schema_id = sch.schema_id
+	sys.schemas sch ON parentTab.schema_id = sch.schema_id
 INNER JOIN
-    sys.columns parentCol ON parentCol.column_id = parent_column_id AND parentCol.object_id = parentTab.object_id
+	sys.columns parentCol ON parentCol.column_id = parent_column_id AND parentCol.object_id = parentTab.object_id
 INNER JOIN
-    sys.tables refTable ON refTable.object_id = fkc.referenced_object_id
+	sys.tables refTable ON refTable.object_id = fkc.referenced_object_id
 INNER JOIN
-    sys.columns refCol ON refCol.column_id = referenced_column_id AND refCol.object_id = refTable.object_id
+	sys.columns refCol ON refCol.column_id = referenced_column_id AND refCol.object_id = refTable.object_id
 ";
 
     public const string DescribeStoredProcedures = @"

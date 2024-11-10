@@ -133,6 +133,21 @@ public sealed class SchemaRepository(
 
         // Get the columns for the table
         var columns = await GetColumnsForTableAsync(table).ConfigureAwait(false);
+
+        // Get the references for the table
+        var references = await GetReferencesForTableAsync(table).ConfigureAwait(false);
+
+        // Match references with columns and set the referenced properties
+        foreach (var reference in references)
+        {
+            var column = columns.FirstOrDefault(c => c.Name == reference.ColumnName);
+            if (column != null)
+            {
+                column.ReferencedTable = reference.ReferencedTableName;
+                column.ReferencedColumn = reference.ReferencedColumnName;
+            }
+        }
+
         semanticModelTable.Columns.AddRange(columns);
 
         return semanticModelTable;
@@ -220,6 +235,52 @@ public sealed class SchemaRepository(
     }
 
     /// <summary>
+    /// Retrieves the references for the specified table.
+    /// </summary>
+    /// <param name="table">The table info for the table to extract references for.</param>
+    /// <returns>A task representing the asynchronous operation. The task result contains a list of <see cref="ReferenceInfo"/> for the specified table.</returns>
+    public async Task<List<ReferenceInfo>> GetReferencesForTableAsync(TableInfo table)
+    {
+        var references = new List<ReferenceInfo>();
+
+        try
+        {
+            var query = SqlStatements.DescribeReferences;
+            var parameters = new Dictionary<string, object> {
+            { "@SchemaName", table.SchemaName },
+            { "@TableName", table.TableName }
+        };
+            using var reader = await _sqlQueryExecutor.ExecuteReaderAsync(query, parameters).ConfigureAwait(false);
+
+            while (await reader.ReadAsync().ConfigureAwait(false))
+            {
+                var schemaName = reader.GetString(1);
+                var tableName = reader.GetString(2);
+                var columnName = reader.GetString(3);
+                var referencedTableName = reader.GetString(5);
+                var referencedColumnName = reader.GetString(6);
+
+                var reference = new ReferenceInfo(
+                    schemaName,
+                    tableName,
+                    columnName,
+                    referencedTableName,
+                    referencedColumnName
+                );
+
+                references.Add(reference);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to retrieve references for table {schemaName}.{tableName}", table.SchemaName, table.TableName);
+            throw;
+        }
+
+        return references;
+    }
+
+    /// <summary>
     /// Retrieves the columns for the specified view.
     /// </summary>
     /// <param name="view">The view info for the view to extract columns for.</param>
@@ -266,10 +327,30 @@ public sealed class SchemaRepository(
 }
 
 // Represents a table in the database
-public record TableInfo(string SchemaName, string TableName);
+public record TableInfo(
+    string SchemaName,
+    string TableName
+);
 
 // Represents a view in the database
-public record ViewInfo(string SchemaName, string ViewName);
+public record ViewInfo(
+    string SchemaName,
+    string ViewName
+);
 
 // Represents a stored procedure in the database
-public record StoredProcedureInfo(string SchemaName, string ProcedureName, string ProcedureType, string? Parameters, string Definition);
+public record StoredProcedureInfo(
+    string SchemaName,
+    string ProcedureName,
+    string ProcedureType,
+    string? Parameters,
+    string Definition
+);
+
+public record ReferenceInfo(
+    string SchemaName,
+    string TableName,
+    string ColumnName,
+    string ReferencedTableName,
+    string ReferencedColumnName
+);
