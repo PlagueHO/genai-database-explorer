@@ -164,8 +164,8 @@ public sealed class SchemaRepository(
         var semanticModelStoredProcedure = new SemanticModelStoredProcedure(
             storedProcedure.SchemaName,
             storedProcedure.ProcedureName,
-            storedProcedure.Parameters,
-            storedProcedure.Definition
+            storedProcedure.Definition,
+            storedProcedure.Parameters
         );
 
         return Task.FromResult(semanticModelStoredProcedure);
