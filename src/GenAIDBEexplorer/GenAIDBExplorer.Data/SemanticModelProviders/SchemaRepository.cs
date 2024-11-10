@@ -16,24 +16,30 @@ public sealed class SchemaRepository(
     public async Task<Dictionary<string, TableInfo>> GetTablesAsync(string? schema = null)
     {
         var tables = new Dictionary<string, TableInfo>();
-        var query = SqlStatements.DescribeTables;
-
-        if (!string.IsNullOrEmpty(schema))
+        try
         {
-            query += " WHERE S.name = @Schema";
+            var query = SqlStatements.DescribeTables;
+            var parameters = new Dictionary<string, object>();
+
+            if (!string.IsNullOrEmpty(schema))
+            {
+                query += " WHERE S.name = @Schema";
+                parameters.Add("@Schema", schema);
+            }
+
+            using var reader = await _sqlQueryExecutor.ExecuteReaderAsync(query, parameters).ConfigureAwait(false);
+
+            while (await reader.ReadAsync().ConfigureAwait(false))
+            {
+                var schemaName = reader.GetString(0);
+                var tableName = reader.GetString(1);
+                tables.Add($"{schemaName}.{tableName}", new TableInfo(schemaName, tableName));
+            }
         }
-
-        var parameters = new Dictionary<string, object>
+        catch (Exception ex)
         {
-            { "@Schema", schema ?? string.Empty }
-        };
-
-        using var reader = await _sqlQueryExecutor.ExecuteReaderAsync(query, parameters).ConfigureAwait(false);
-        while (await reader.ReadAsync().ConfigureAwait(false))
-        {
-            var schemaName = reader.GetString(0);
-            var tableName = reader.GetString(1);
-            tables.Add($"{schemaName}.{tableName}", new TableInfo(schemaName, tableName));
+            _logger.LogError(ex, "Failed to retrieve tables from the database.");
+            throw;
         }
 
         return tables;
@@ -97,7 +103,7 @@ public sealed class SchemaRepository(
 
             if (!string.IsNullOrEmpty(schema))
             {
-                query += " WHERE schema_name(obj.schema_id) = @Schema";
+                query += " AND schema_name(obj.schema_id) = @Schema";
                 parameters.Add("@Schema", schema);
             }
 

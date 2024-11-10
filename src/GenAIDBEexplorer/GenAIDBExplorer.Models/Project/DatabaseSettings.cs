@@ -26,11 +26,10 @@ public class DatabaseSettings
     [Required, NotEmptyOrWhitespace]
     public string ConnectionString { get; set; } = string.Empty;
 
-
     /// <summary>
-    /// Schema to use when querying the database. If not specified, all schemas will be queried.
+    /// The list of schemas to extract from the database. If not specified, all schemas will be queried.
     /// </summary>
-    public string Schema { get; set; } = string.Empty;
+    public string? Schema { get; set; }
 
     /// <summary>
     /// The maximum number of parallel queries to run against the database. Requires MultipleActiveResultSets=True in the connection string.

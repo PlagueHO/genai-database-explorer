@@ -21,9 +21,6 @@ LEFT JOIN
     sys.extended_properties EP ON ep.major_id = O.object_id 
     AND ep.name = 'MS_DESCRIPTION' 
     AND ep.minor_id = 0
-ORDER BY 
-    S.name, 
-    O.name;
 ";
 
     /// <summary>
@@ -42,9 +39,6 @@ LEFT JOIN
     sys.extended_properties EP ON ep.major_id = V.object_id 
     AND ep.name = 'MS_DESCRIPTION' 
     AND ep.minor_id = 0
-ORDER BY 
-    S.name, 
-    V.name;
 ";
 
     /// <summary>
@@ -210,8 +204,5 @@ FROM
         FOR XML path ('') ) par (parameters)
 WHERE
     obj.type in ('P', 'X')
-ORDER BY
-    schemaName,
-    procedureName;
 ";
 }

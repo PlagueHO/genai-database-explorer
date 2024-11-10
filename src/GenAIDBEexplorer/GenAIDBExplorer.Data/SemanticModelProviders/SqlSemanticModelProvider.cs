@@ -11,12 +11,10 @@ namespace GenAIDBExplorer.Data.SemanticModelProviders;
 public sealed class SqlSemanticModelProvider(
     IProject project,
     ISchemaRepository schemaRepository,
-    ISqlQueryExecutor sqlQueryExecutor,
     ILogger<SqlSemanticModelProvider> logger
 ) : ISemanticModelProvider
 {
     private readonly IProject _project = project;
-    private readonly ISqlQueryExecutor _sqlQueryExecutor = sqlQueryExecutor;
     private readonly ILogger _logger = logger;
 
     /// <summary>
@@ -40,7 +38,7 @@ public sealed class SqlSemanticModelProvider(
         };
 
         // Get the tables from the database
-        var tablesDictionary = await schemaRepository.GetTablesAsync().ConfigureAwait(false);
+        var tablesDictionary = await schemaRepository.GetTablesAsync(_project.Settings.Database.Schema).ConfigureAwait(false);
         var semanticModelTables = new ConcurrentBag<SemanticModelTable>();
 
         // Construct the semantic model tables
@@ -56,7 +54,7 @@ public sealed class SqlSemanticModelProvider(
         semanticModel.Tables.AddRange(semanticModelTables);
 
         // Get the views from the database
-        var viewsDictionary = await schemaRepository.GetViewsAsync().ConfigureAwait(false);
+        var viewsDictionary = await schemaRepository.GetViewsAsync(_project.Settings.Database.Schema).ConfigureAwait(false);
         var semanticModelViews = new ConcurrentBag<SemanticModelView>();
 
         // Construct the semantic model views
@@ -72,7 +70,7 @@ public sealed class SqlSemanticModelProvider(
         semanticModel.Views.AddRange(semanticModelViews);
 
         // Get the stored procedures from the database
-        var storedProceduresDictionary = await schemaRepository.GetStoredProceduresAsync().ConfigureAwait(false);
+        var storedProceduresDictionary = await schemaRepository.GetStoredProceduresAsync(_project.Settings.Database.Schema).ConfigureAwait(false);
         var semanticModelStoredProcedures = new ConcurrentBag<SemanticModelStoredProcedure>();
 
         // Construct the semantic model views
