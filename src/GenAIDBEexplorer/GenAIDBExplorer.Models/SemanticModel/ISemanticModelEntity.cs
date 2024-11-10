@@ -1,11 +1,9 @@
-// File: GenAIDBExplorer.Models/SemanticModel/ISemanticModelEntity.cs
-
 namespace GenAIDBExplorer.Models.SemanticModel;
 
 /// <summary>
 /// Represents a semantic model entity.
 /// </summary>
-internal interface ISemanticModelEntity
+public interface ISemanticModelEntity
 {
     /// <summary>
     /// Gets the schema of the semantic model entity.
@@ -38,4 +36,3 @@ internal interface ISemanticModelEntity
     /// <param name="folderPath">The folder path where the entity will be saved.</param>
     void SaveModel(DirectoryInfo folderPath);
 }
-

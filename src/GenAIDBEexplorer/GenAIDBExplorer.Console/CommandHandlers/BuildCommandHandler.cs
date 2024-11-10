@@ -2,6 +2,7 @@
 using GenAIDBExplorer.Models.Project;
 using GenAIDBExplorer.Data.DatabaseProviders;
 using GenAIDBExplorer.Data.SemanticModelProviders;
+using GenAIDBExplorer.Models.SemanticModel;
 
 namespace GenAIDBExplorer.Console.CommandHandlers;
 
@@ -36,6 +37,8 @@ public class BuildCommandHandler(
 
         // Assemble the Semantic Model
         var semanticModel = await _semanticModelProvider.BuildSemanticModelAsync().ConfigureAwait(false);
+
+
 
         // Save the Semantic Model into the project directory into a subdirectory with the name of the semanticModel.Name
         var semanticModelDirectory = new DirectoryInfo(Path.Combine(projectPath.FullName, semanticModel.Name));
