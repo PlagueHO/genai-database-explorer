@@ -257,8 +257,8 @@ public sealed class SchemaRepository(
                 var schemaName = reader.GetString(1);
                 var tableName = reader.GetString(2);
                 var columnName = reader.GetString(3);
-                var referencedTableName = reader.GetString(5);
-                var referencedColumnName = reader.GetString(6);
+                var referencedTableName = reader.GetString(4);
+                var referencedColumnName = reader.GetString(5);
 
                 var reference = new ReferenceInfo(
                     schemaName,
