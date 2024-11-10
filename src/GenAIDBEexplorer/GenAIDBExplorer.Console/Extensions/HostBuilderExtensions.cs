@@ -61,6 +61,9 @@ public static class HostBuilderExtensions
                 // Register the SQL Query executor
                 services.AddSingleton<ISqlQueryExecutor, SqlQueryExecutor>();
 
+                // Register the Schema Repository
+                services.AddSingleton<ISchemaRepository, SchemaRepository>();
+
                 // Register the Semantic Model provider
                 services.AddSingleton<ISemanticModelProvider, SqlSemanticModelProvider>();
 
