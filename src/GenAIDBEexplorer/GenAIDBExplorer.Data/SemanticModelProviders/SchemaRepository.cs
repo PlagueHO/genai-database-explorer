@@ -150,6 +150,10 @@ public sealed class SchemaRepository(
 
         semanticModelTable.Columns.AddRange(columns);
 
+        // Get the indexes for the table
+        var indexes = await GetIndexesForTableAsync(table).ConfigureAwait(false);
+        semanticModelTable.Indexes.AddRange(indexes);
+
         return semanticModelTable;
     }
 
@@ -208,9 +212,9 @@ public sealed class SchemaRepository(
             {
                 // get the contents of column schemaName in the reader into a var 
                 var columnName = reader.GetString(2);
-                var columnType = reader.GetString(4);
-                var column = new SemanticModelColumn(table.SchemaName, columnName, columnType)
+                var column = new SemanticModelColumn(table.SchemaName, columnName)
                 {
+                    Type = reader.GetString(4),
                     Description = reader.IsDBNull(3) ? null : reader.GetString(3),
                     IsPrimaryKey = reader.GetBoolean(5),
                     MaxLength = reader.GetInt16(6),
@@ -301,9 +305,9 @@ public sealed class SchemaRepository(
             while (await reader.ReadAsync().ConfigureAwait(false))
             {
                 var columnName = reader.GetString(2);
-                var columnType = reader.GetString(4);
-                var column = new SemanticModelColumn(view.SchemaName, columnName, columnType)
+                var column = new SemanticModelColumn(view.SchemaName, columnName)
                 {
+                    Type = reader.GetString(4),
                     Description = reader.IsDBNull(3) ? null : reader.GetString(3),
                     MaxLength = reader.GetInt16(5),
                     Precision = reader.GetByte(6),
@@ -323,6 +327,58 @@ public sealed class SchemaRepository(
         }
 
         return semanticModelColumns;
+    }
+
+    /// <summary>
+    /// Retrieves the indexes for the specified table.
+    /// </summary>
+    /// <param name="table">The table info for the table to extract indexes for.</param>
+    /// <returns>A task representing the asynchronous operation. The task result contains a list of <see cref="SemanticModelIndex"/> for the specified table.</returns>
+    public async Task<List<SemanticModelIndex>> GetIndexesForTableAsync(TableInfo table)
+    {
+        var indexes = new List<SemanticModelIndex>();
+
+        try
+        {
+            var query = SqlStatements.DescribeIndexes;
+            var parameters = new Dictionary<string, object> {
+                { "@SchemaName", table.SchemaName },
+                { "@TableName", table.TableName }
+            };
+            using var reader = await _sqlQueryExecutor.ExecuteReaderAsync(query, parameters).ConfigureAwait(false);
+
+            while (await reader.ReadAsync().ConfigureAwait(false))
+            {
+                var indexName = reader.GetString(2);
+                var indexType = reader.GetString(3);
+                var columnName = reader.GetString(4);
+                var isIncludedColumn = reader.GetBoolean(5);
+                var isUnique = reader.GetBoolean(6);
+                var isPrimaryKey = reader.GetBoolean(7);
+                var isUniqueConstraint = reader.GetBoolean(8);
+
+                var index = indexes.FirstOrDefault(i => i.Name == indexName);
+                if (index == null)
+                {
+                    index = new SemanticModelIndex(table.SchemaName, indexName)
+                    {
+                        Type = indexType,
+                        ColumnName = columnName,
+                        IsUnique = isUnique,
+                        IsPrimaryKey = isPrimaryKey,
+                        IsUniqueConstraint = isUniqueConstraint,
+                    };
+                    indexes.Add(index);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to retrieve indexes for table {schemaName}.{tableName}", table.SchemaName, table.TableName);
+            throw;
+        }
+
+        return indexes;
     }
 }
 

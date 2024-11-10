@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace GenAIDBExplorer.Models.SemanticModel;
 
@@ -27,6 +28,24 @@ public abstract class SemanticModelEntity(
     /// Gets or sets the description of the entity.
     /// </summary>
     public string? Description { get; set; } = description;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the entity should be ignored.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool IsIgnored { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating why the entity is ignored (if ignored).
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public string? IgnoreReason { get; set; }
+
+    /// <summary>
+    /// Gets or sets the semantic description of the entity.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public string? SemanticDescription { get; set; }
 
     /// <summary>
     /// Saves the semantic model entity to the specified folder.

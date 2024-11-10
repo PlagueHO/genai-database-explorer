@@ -18,6 +18,11 @@ public sealed class SemanticModelTable(
     public List<SemanticModelColumn> Columns { get; set; } = [];
 
     /// <summary>
+    /// Gets the indexes in the table.
+    /// </summary>
+    public List<SemanticModelIndex> Indexes { get; set; } = [];
+
+    /// <summary>
     /// Adds a column to the table.
     /// </summary>
     /// <param name="column">The column to add.</param>
@@ -34,5 +39,24 @@ public sealed class SemanticModelTable(
     public bool RemoveColumn(SemanticModelColumn column)
     {
         return Columns.Remove(column);
+    }
+
+    /// <summary>
+    /// Adds an index to the table.
+    /// </summary>
+    /// <param name="index">The index to add.</param>
+    public void AddIndex(SemanticModelIndex index)
+    {
+        Indexes.Add(index);
+    }
+
+    /// <summary>
+    /// Removes an index from the table.
+    /// </summary>
+    /// <param name="index">The index to remove.</param>
+    /// <returns>True if the index was removed; otherwise, false.</returns>
+    public bool RemoveIndex(SemanticModelIndex index)
+    {
+        return Indexes.Remove(index);
     }
 }

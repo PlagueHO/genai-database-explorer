@@ -8,29 +8,29 @@ namespace GenAIDBExplorer.Models.SemanticModel;
 public sealed class SemanticModelColumn(
     string schema,
     string name,
-    string type
-    ) : ISemanticModelEntity
+    string? description = null
+    ) : SemanticModelEntity (schema, name, description)
 {
     /// <summary>
     /// Gets the name of the column.
     /// </summary>
-    public string Schema { get; set; } = schema;
+    public new string Schema { get; set; } = schema;
 
     /// <summary>
     /// Gets the name of the column.
     /// </summary>
-    public string Name { get; set; } = name;
-
-    /// <summary>
-    /// Gets the type of the column.
-    /// </summary>
-    public string Type { get; set; } = type;
+    public new string Name { get; set; } = name;
 
     /// <summary>
     /// Gets the description of the column.
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public string? Description { get; set; }
+    public new string? Description { get; set; } = description;
+
+    /// <summary>
+    /// Gets the type of the column.
+    /// </summary>
+    public required string Type { get; set; }
 
     /// <summary>
     /// Gets a value indicating whether the column is a primary key.
@@ -60,25 +60,25 @@ public sealed class SemanticModelColumn(
     /// Gets or sets a value indicating whether the column is nullable.
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public bool? IsNullable { get; set; }
+    public bool IsNullable { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether the column is an identity column.
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public bool? IsIdentity { get; set; }
+    public bool IsIdentity { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether the column is computed.
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public bool? IsComputed { get; set; }
+    public bool IsComputed { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether the column is an XML document.
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public bool? IsXmlDocument { get; set; }
+    public bool IsXmlDocument { get; set; }
 
     /// <summary>
     /// Gets the name of the referenced table, if any.
@@ -97,7 +97,7 @@ public sealed class SemanticModelColumn(
     /// </summary>
     /// <param name="folderPath"></param>
     /// <exception cref="NotImplementedException"></exception>
-    public void SaveModel(DirectoryInfo folderPath)
+    public new void SaveModel(DirectoryInfo folderPath)
     {
         throw new NotImplementedException();
     }

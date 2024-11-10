@@ -134,6 +134,35 @@ ORDER BY
     SchemaName, ViewName, ColumnName
 ";
 
+    public const string DescribeIndexes = @"
+SELECT
+    sch.name AS SchemaName,
+    tbl.name AS TableName,
+    idx.name AS IndexName,
+    idx.type_desc AS IndexType,
+    col.name AS ColumnName,
+    ic.is_included_column AS IsIncludedColumn,
+    idx.is_unique AS IsUnique,
+    idx.is_primary_key AS IsPrimaryKey,
+    idx.is_unique_constraint AS IsUniqueConstraint
+FROM
+    sys.indexes idx
+INNER JOIN
+    sys.index_columns ic ON idx.object_id = ic.object_id AND idx.index_id = ic.index_id
+INNER JOIN
+    sys.columns col ON ic.object_id = col.object_id AND ic.column_id = col.column_id
+INNER JOIN
+    sys.tables tbl ON idx.object_id = tbl.object_id
+INNER JOIN
+    sys.schemas sch ON tbl.schema_id = sch.schema_id
+WHERE
+    sch.name = @SchemaName
+    AND tbl.name = @TableName
+ORDER BY
+    idx.name,
+    ic.key_ordinal;
+";
+
     public const string DescribeReferences = @"
 SELECT
     obj.name AS KeyName,

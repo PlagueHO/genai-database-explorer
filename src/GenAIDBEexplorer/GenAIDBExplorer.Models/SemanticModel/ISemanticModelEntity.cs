@@ -23,6 +23,16 @@ internal interface ISemanticModelEntity
     public string? Description { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether the entity should be ignored.
+    /// </summary>
+    public bool IsIgnored { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating why the entity is ignored (if ignored).
+    /// </summary>
+    public string? IgnoreReason { get; set; }
+
+    /// <summary>
     /// Saves the semantic model entity to the specified folder.
     /// </summary>
     /// <param name="folderPath">The folder path where the entity will be saved.</param>
