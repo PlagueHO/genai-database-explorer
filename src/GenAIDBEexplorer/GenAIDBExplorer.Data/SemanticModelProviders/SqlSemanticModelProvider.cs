@@ -4,6 +4,7 @@ using GenAIDBExplorer.Models.SemanticModel;
 using System.Collections.Concurrent;
 using GenAIDBExplorer.Data.ConnectionManager;
 using GenAIDBExplorer.Data.DatabaseProviders;
+using System.Collections.Generic;
 
 namespace GenAIDBExplorer.Data.SemanticModelProviders;
 
@@ -70,6 +71,40 @@ public sealed class SqlSemanticModelProvider(
         // Add the view to the semantic model
         semanticModel.Views.AddRange(semanticModelViews);
 
+        // Get the stored procedures from the database
+        var storedProceduresDictionary = await schemaRepository.GetStoredProceduresAsync().ConfigureAwait(false);
+        var semanticModelStoredProcedures = new ConcurrentBag<SemanticModelStoredProcedure>();
+
+        // Construct the semantic model views
+        await Parallel.ForEachAsync(storedProceduresDictionary.Values, options, async (storedProcedure, cancellationToken) =>
+        {
+            _logger.LogInformation("Adding stored procedure {SchemaName}.{StoredProcedure} to the semantic model", storedProcedure.SchemaName, storedProcedure.ProcedureName);
+
+            var semanticModeStoredProcedure = await schemaRepository.CreateSemanticModelStoredProcedureAsync(storedProcedure).ConfigureAwait(false);
+            semanticModelStoredProcedures.Add(semanticModeStoredProcedure);
+        });
+
+        // Add the stored procedures to the semantic model
+        semanticModel.StoredProcedures.AddRange(semanticModelStoredProcedures);
+
         return semanticModel;
     }
+
+    /// <summary>
+    /// Creates a Semantic Model Stored Procedure for the specified stored procedure info.
+    /// </summary>
+    /// <param name="storedProcedure">The stored procedure info to create a semantic model for.</param>
+    /// <returns>A task representing the asynchronous operation. The task result contains the created <see cref="SemanticModelStoredProcedure"/>.</returns>
+    public Task<SemanticModelStoredProcedure> CreateSemanticModelStoredProcedureAsync(StoredProcedureInfo storedProcedure)
+    {
+        var semanticModelStoredProcedure = new SemanticModelStoredProcedure(
+            storedProcedure.SchemaName,
+            storedProcedure.ProcedureName,
+            storedProcedure.Parameters,
+            storedProcedure.Definition
+        );
+
+        return Task.FromResult(semanticModelStoredProcedure);
+    }
+
 }

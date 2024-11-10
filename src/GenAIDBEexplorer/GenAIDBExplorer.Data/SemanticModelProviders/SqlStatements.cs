@@ -95,6 +95,45 @@ ORDER BY
     SchemaName, TableName, IsPK DESC, ColumnName
 ";
 
+    /// <summary>
+    /// SQL query to describe columns for a specified table.
+    /// </summary>
+    public const string DescribeViewColumns = @"
+SELECT
+    sch.name AS SchemaName,
+    vw.name AS ViewName,
+    col.name AS ColumnName,
+    ep.value AS ColumnDesc,
+    base.name AS ColumnType,
+    col.max_length AS MaxLength,
+    col.precision AS Precision,
+    col.scale AS Scale,
+    col.is_nullable AS IsNullable,
+    col.is_identity AS IsIdentity,
+    col.is_computed AS IsComputed,
+    col.is_xml_document AS IsXmlDocument
+FROM 
+    sys.views vw
+INNER JOIN
+    sys.objects obj ON obj.object_id = vw.object_id
+INNER JOIN
+    sys.schemas sch ON vw.schema_id = sch.schema_id
+INNER JOIN
+    sys.columns col ON col.object_id = vw.object_id
+INNER JOIN
+    sys.types t ON col.user_type_id = t.user_type_id
+INNER JOIN
+    sys.types base ON t.system_type_id = base.user_type_id
+LEFT OUTER JOIN
+    sys.extended_properties ep ON ep.major_id = col.object_id AND ep.minor_id = col.column_id and ep.name = 'MS_DESCRIPTION'
+WHERE
+    sch.name != 'sys'
+    AND sch.name = @SchemaName
+    AND vw.name = @ViewName
+ORDER BY
+    SchemaName, ViewName, ColumnName
+";
+
     public const string DescribeReferences = @"
 SELECT
     obj.name AS KeyName,
@@ -143,7 +182,7 @@ FROM
 WHERE
     obj.type in ('P', 'X')
 ORDER BY
-    schema_name,
-    procedure_name;
+    schemaName,
+    procedureName;
 ";
 }

@@ -43,6 +43,8 @@ public class BuildCommandHandler(
         {
             semanticModelDirectory.Create();
         }
+
+        _logger.LogInformation(LogMessages.SavingSemanticModel, semanticModelDirectory);
         semanticModel.SaveModel(semanticModelDirectory);
 
         _logger.LogInformation(LogMessages.ProjectBuildComplete, projectPath.FullName);
@@ -54,6 +56,7 @@ public class BuildCommandHandler(
     public static class LogMessages
     {
         public const string BuildingProject = "Building project at '{ProjectPath}'.";
+        public const string SavingSemanticModel = "Saving semantic model to '{SemanticModelName}'.";
         public const string ProjectBuildComplete = "Project build complete at '{ProjectPath}'.";
     }
 }

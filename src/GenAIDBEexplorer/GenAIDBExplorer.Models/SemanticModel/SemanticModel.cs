@@ -128,5 +128,13 @@ public sealed class SemanticModel(
         {
             view.SaveModel(viewsFolderPath);
         }
+
+        var storedProceduresFolderPath = new DirectoryInfo(Path.Combine(folderPath.FullName, "storedprocedures"));
+        Directory.CreateDirectory(storedProceduresFolderPath.FullName);
+
+        foreach (var storedProcedure in StoredProcedures)
+        {
+            storedProcedure.SaveModel(storedProceduresFolderPath);
+        }
     }
 }
