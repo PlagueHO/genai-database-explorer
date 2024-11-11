@@ -128,6 +128,21 @@ ORDER BY
     SchemaName, ViewName, ColumnName
 ";
 
+    public const string DescribeViewDefinition = @"
+SELECT 
+    sm.definition
+FROM 
+    sys.sql_modules AS sm
+JOIN 
+    sys.objects AS o ON sm.object_id = o.object_id
+JOIN 
+    sys.schemas AS s ON o.schema_id = s.schema_id
+WHERE 
+    o.type = 'V' AND 
+    o.name = @SchemaName AND 
+    s.name = @ViewName
+";
+
     public const string DescribeIndexes = @"
 SELECT
     sch.name AS SchemaName,

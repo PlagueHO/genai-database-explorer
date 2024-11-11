@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using GenAIDBExplorer.Data.DatabaseProviders;
 using GenAIDBExplorer.Models.SemanticModel;
+using static System.Runtime.InteropServices.Marshalling.IIUnknownCacheStrategy;
 
 namespace GenAIDBExplorer.Data.SemanticModelProviders;
 
@@ -439,6 +440,58 @@ public sealed class SchemaRepository(
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to retrieve sample data for table {SchemaName}.{TableName}", tableInfo.SchemaName, tableInfo.TableName);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Retrieves sample data for the specified view by selecting the most recent records or a random sample.
+    /// </summary>
+    /// <param name="viewInfo">The view info for the view to retrieve sample data for.</param>
+    /// <param name="numberOfRecords">The number of records to retrieve.</param>
+    /// <param name="selectRandom">Whether to select a random sample of records.</param>
+    public async Task<List<Dictionary<string, object>>> GetSampleViewDataAsync(ViewInfo viewInfo, int numberOfRecords = 5, bool selectRandom = false)
+    {
+        try
+        {
+            string query;
+            if (selectRandom)
+            {
+                query = $"SELECT TOP (@NumberOfRecords) * FROM [@{viewInfo.SchemaName}].[@{viewInfo.ViewName}] ORDER BY NEWID()";
+            }
+            else
+            {
+                query = $@"
+                    SELECT * FROM (
+                        SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum
+                        FROM [{viewInfo.SchemaName}].[{viewInfo.ViewName}]
+                    ) AS RowConstrainedResult
+                    WHERE RowNum <= @NumberOfRecords
+                    ORDER BY RowNum";
+            }
+            var parameters = new Dictionary<string, object>
+            {
+                { "@NumberOfRecords", numberOfRecords }
+            };
+            using var reader = await _sqlQueryExecutor.ExecuteReaderAsync(query, parameters).ConfigureAwait(false);
+            var results = new List<Dictionary<string, object>>();
+            while (await reader.ReadAsync().ConfigureAwait(false))
+            {
+                var row = new Dictionary<string, object>();
+
+                for (var i = 0; i < reader.FieldCount; i++)
+                {
+                    row[reader.GetName(i)] = reader.IsDBNull(i) ? null : reader.GetValue(i);
+                }
+
+                results.Add(row);
+            }
+
+            return results;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to retrieve sample data for view {SchemaName}.{TableName}", viewInfo.SchemaName, viewInfo.ViewName);
             throw;
         }
     }

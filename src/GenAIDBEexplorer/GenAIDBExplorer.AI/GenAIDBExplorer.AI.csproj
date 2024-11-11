@@ -35,6 +35,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Prompty\semantic_model_describe_view.prompty">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Prompty\semantic_model_describe_table.prompty">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

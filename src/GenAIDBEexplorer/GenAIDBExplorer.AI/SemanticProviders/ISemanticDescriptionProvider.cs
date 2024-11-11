@@ -10,4 +10,5 @@ namespace GenAIDBExplorer.AI.SemanticProviders;
 public interface ISemanticDescriptionProvider
 {
     Task UpdateSemanticDescriptionAsync(SemanticModelTable table);
+    Task UpdateSemanticDescriptionAsync(SemanticModelView view);
 }
