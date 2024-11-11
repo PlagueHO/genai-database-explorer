@@ -2,14 +2,16 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using GenAIDBExplorer.Data.DatabaseProviders;
-using GenAIDBExplorer.Data.SemanticModelProviders;
 using GenAIDBExplorer.AI.SemanticKernel;
 using GenAIDBExplorer.AI.KernelMemory;
+using GenAIDBExplorer.AI.SemanticProviders;
+using GenAIDBExplorer.Data.DatabaseProviders;
+using GenAIDBExplorer.Data.SemanticModelProviders;
+using GenAIDBExplorer.Data.ConnectionManager;
 using GenAIDBExplorer.Models.Project;
+using GenAIDBExplorer.Models.SemanticModel;
 using GenAIDBExplorer.Console.CommandHandlers;
 using GenAIDBExplorer.Console.Logger;
-using GenAIDBExplorer.Data.ConnectionManager;
 
 namespace GenAIDBExplorer.Console.Extensions;
 
@@ -67,12 +69,11 @@ public static class HostBuilderExtensions
                 // Register the Semantic Model provider
                 services.AddSingleton<ISemanticModelProvider, SqlSemanticModelProvider>();
 
+                // Register the Semantic Description provider
+                services.AddSingleton<ISemanticDescriptionProvider, SemanticDescriptionProvider>();
+
                 // Register the Semantic Kernel factory
-                services.AddSingleton(provider =>
-                {
-                    var project = provider.GetRequiredService<IProject>();
-                    return new SemanticKernelFactory().CreateSemanticKernel(project)(provider);
-                });
+                services.AddSingleton<ISemanticKernelFactory, SemanticKernelFactory>();
 
                 // Register the Kernel Memory factory
                 services.AddSingleton(provider =>

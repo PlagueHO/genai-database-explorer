@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using GenAIDBExplorer.AI.SemanticProviders;
 using GenAIDBExplorer.Models.Project;
 using GenAIDBExplorer.Data.SemanticModelProviders;
 using GenAIDBExplorer.Data.DatabaseProviders;
@@ -18,6 +19,7 @@ namespace GenAIDBExplorer.Console.CommandHandlers
         IProject project,
         IDatabaseConnectionProvider connectionProvider,
         ISemanticModelProvider semanticModelProvider,
+        ISemanticDescriptionProvider semanticDescriptionProvider,
         IServiceProvider serviceProvider,
         ILogger<ICommandHandler> logger
     ) : ICommandHandler
@@ -36,6 +38,11 @@ namespace GenAIDBExplorer.Console.CommandHandlers
         /// Semantic model provider instance for building a semantic model of the database.
         /// </summary>
         protected readonly ISemanticModelProvider _semanticModelProvider = semanticModelProvider ?? throw new ArgumentNullException(nameof(semanticModelProvider));
+
+        /// <summary>
+        /// Semantic description provider instance for generating semantic descriptions.
+        /// </summary>
+        protected readonly ISemanticDescriptionProvider _semanticDescriptionProvider = semanticDescriptionProvider ?? throw new ArgumentNullException(nameof(semanticDescriptionProvider));
 
         /// <summary>
         /// Service provider instance for resolving dependencies.

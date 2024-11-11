@@ -3,7 +3,7 @@
 /// <summary>
 /// Represents a semantic model.
 /// </summary>
-internal interface ISemanticModel
+public interface ISemanticModel
 {
     /// <summary>
     /// Gets the source of the semantic model.

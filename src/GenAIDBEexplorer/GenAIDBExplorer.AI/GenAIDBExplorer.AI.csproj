@@ -23,7 +23,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\GenAIDBExplorer.Data\GenAIDBExplorer.Data.csproj" />
     <ProjectReference Include="..\GenAIDBExplorer.Models\GenAIDBExplorer.Models.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="SemanticProviders\" />
   </ItemGroup>
 
 </Project>

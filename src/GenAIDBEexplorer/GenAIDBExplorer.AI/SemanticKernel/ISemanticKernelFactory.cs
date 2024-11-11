@@ -6,7 +6,7 @@ namespace GenAIDBExplorer.AI.SemanticKernel
 {
     public interface ISemanticKernelFactory
     {
-        Func<IServiceProvider, Kernel> CreateSemanticKernel(IProject project);
+        Kernel CreateSemanticKernel();
     }
 }
 

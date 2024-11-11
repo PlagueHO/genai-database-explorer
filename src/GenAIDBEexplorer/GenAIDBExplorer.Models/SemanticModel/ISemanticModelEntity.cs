@@ -21,6 +21,11 @@ public interface ISemanticModelEntity
     public string? Description { get; set; }
 
     /// <summary>
+    /// Gets or sets the semantic description of the entity.
+    /// </summary>
+    public string? SemanticDescription { get; set; }
+
+    /// <summary>
     /// Gets or sets a value indicating whether the entity should be ignored.
     /// </summary>
     public bool IsIgnored { get; set; }
