@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Serialization;
 
 namespace GenAIDBExplorer.Models.SemanticModel;
 
@@ -33,6 +34,7 @@ public abstract class SemanticModelEntity(
     /// Gets or sets the semantic description of the entity.
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    [YamlDotNet.Serialization.YamlIgnore]
     public string? SemanticDescription { get; set; }
 
     /// <summary>

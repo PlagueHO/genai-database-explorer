@@ -179,6 +179,9 @@ INNER JOIN
 	sys.tables refTable ON refTable.object_id = fkc.referenced_object_id
 INNER JOIN
 	sys.columns refCol ON refCol.column_id = referenced_column_id AND refCol.object_id = refTable.object_id
+WHERE
+    sch.name = @SchemaName
+    AND parentTab.name = @TableName
 ";
 
     public const string DescribeStoredProcedures = @"

@@ -14,4 +14,5 @@ public interface ISchemaRepository
     Task<SemanticModelStoredProcedure> CreateSemanticModelStoredProcedureAsync(StoredProcedureInfo storedProcedure);
     Task<List<SemanticModelColumn>> GetColumnsForTableAsync(TableInfo table);
     Task<List<SemanticModelColumn>> GetColumnsForViewAsync(ViewInfo view);
+    Task<List<Dictionary<string, object>>> GetSampleTableDataAsync(TableInfo tableInfo, int numberOfRecords = 5, bool selectRandom = false);
 }

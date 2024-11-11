@@ -20,19 +20,19 @@ public class SemanticKernelFactory(
     {
         var kernelBuilder = Kernel.CreateBuilder();
 
-        if (project.Settings.ChatCompletion.ServiceType == "AzureOpenAI")
+        if (_project.Settings.ChatCompletion.ServiceType == "AzureOpenAI")
         {
             kernelBuilder.AddAzureOpenAIChatCompletion(
-                deploymentName: project.Settings.ChatCompletion.AzureOpenAIDeploymentId,
-                endpoint: project.Settings.ChatCompletion.AzureOpenAIEndpoint,
-                apiKey: project.Settings.ChatCompletion.AzureOpenAIKey
+                deploymentName: _project.Settings.ChatCompletion.AzureOpenAIDeploymentId,
+                endpoint: _project.Settings.ChatCompletion.AzureOpenAIEndpoint,
+                apiKey: _project.Settings.ChatCompletion.AzureOpenAIKey
             );
         }
         else
         {
             kernelBuilder.AddOpenAIChatCompletion(
-                modelId: project.Settings.ChatCompletion.Model,
-                apiKey: project.Settings.ChatCompletion.OpenAIKey
+                modelId: _project.Settings.ChatCompletion.Model,
+                apiKey: _project.Settings.ChatCompletion.OpenAIKey
             );
         }
 

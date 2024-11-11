@@ -14,12 +14,15 @@
     <PackageReference Include="Microsoft.KernelMemory.Core" Version="0.91.241101.1" />
     <PackageReference Include="Microsoft.KernelMemory.MemoryDb.AzureAISearch" Version="0.91.241101.1" />
     <PackageReference Include="Microsoft.KernelMemory.SemanticKernelPlugin" Version="0.91.241101.1" />
-    <PackageReference Include="Microsoft.SemanticKernel" Version="1.26.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.Abstractions" Version="1.26.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.Connectors.AzureOpenAI" Version="1.26.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.Connectors.OpenAI" Version="1.26.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.Core" Version="1.26.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.Yaml" Version="1.26.0" />
+    <PackageReference Include="Microsoft.SemanticKernel" Version="1.28.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Abstractions" Version="1.28.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Connectors.AzureOpenAI" Version="1.28.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Connectors.OpenAI" Version="1.28.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Core" Version="1.28.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.PromptTemplates.Handlebars" Version="1.28.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.PromptTemplates.Liquid" Version="1.28.0-alpha" />
+    <PackageReference Include="Microsoft.SemanticKernel.Prompty" Version="1.28.0-alpha" />
+    <PackageReference Include="Microsoft.SemanticKernel.Yaml" Version="1.28.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -29,6 +32,12 @@
 
   <ItemGroup>
     <Folder Include="SemanticProviders\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Prompty\semantic_model_describe_table.prompty">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

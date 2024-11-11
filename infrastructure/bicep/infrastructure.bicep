@@ -47,6 +47,13 @@ var openAiModelDeployments = [
     capacity: 250
   }
   {
+    name: 'gpt-4o-mini'
+    modelName: 'gpt-4o-mini'
+    version: '2024-07-18'
+    sku: 'GlobalStandard'
+    capacity: 2000
+  }
+  {
     name: 'embedding'
     modelName: 'text-embedding-3-large'
     version: '1'

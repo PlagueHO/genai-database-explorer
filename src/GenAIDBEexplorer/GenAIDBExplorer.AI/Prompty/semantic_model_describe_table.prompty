@@ -1,0 +1,103 @@
+﻿---
+name: semantic_model_describe_table
+description: A sample prompt that responds with what Seattle is.
+model:
+  api: chat
+---
+system:
+You are a AI SQL database assistant that generates semantic descriptions for SQL database tables, based on the table structure and some sample content.
+Generate a concise description for the following SQL database table. The table is described using YAML and contains columns, including relationships to other tables and indexes.
+            
+- If description can't be generated because missing information, say "Unable to generate description".
+- If a table, column or index has IsIgnore set to true, do not consider it when creating the description.
+- If there is no sample data, still generate a description based on the table structure, but note that there is no sample data.
+
+user:
+# Database Purpose
+
+# Table Structure (YAML)
+columns:
+- schema: SalesLT
+  name: AddressID
+  type: int
+  isPrimaryKey: true
+  maxLength: 4
+  precision: 10
+  scale: 0
+  referencedTable: Address
+  referencedColumn: AddressID
+- schema: SalesLT
+  name: CustomerID
+  type: int
+  isPrimaryKey: true
+  maxLength: 4
+  precision: 10
+  scale: 0
+  referencedTable: Customer
+  referencedColumn: CustomerID
+- schema: SalesLT
+  name: AddressType
+  type: nvarchar
+  maxLength: 100
+  precision: 0
+  scale: 0
+- schema: SalesLT
+  name: ModifiedDate
+  type: datetime
+  maxLength: 8
+  precision: 23
+  scale: 3
+- schema: SalesLT
+  name: rowguid
+  type: uniqueidentifier
+  maxLength: 16
+  precision: 0
+  scale: 0
+indexes:
+- schema: SalesLT
+  name: AK_CustomerAddress_rowguid
+  type: NONCLUSTERED
+  columnName: rowguid
+  isUnique: true
+  isUniqueConstraint: true
+- schema: SalesLT
+  name: PK_CustomerAddress_CustomerID_AddressID
+  type: CLUSTERED
+  columnName: CustomerID
+  isUnique: true
+  isPrimaryKey: true
+schema: SalesLT
+name: CustomerAddress
+
+# Sample Data
+[{"CustomerID":29485,"AddressID":1086,"AddressType":"Mailing","rowguid":"16765338-dbe4-4421-b5e9-3836b9278e63","ModifiedDate":"2007-09-01T00:00:00","RowNum":1},{"CustomerID":29486,"AddressID":621,"AddressType":"Home","rowguid":"22b3e910-14af-4ed5-8b4d-23bbe757414d","ModifiedDate":"2005-09-01T00:00:00","RowNum":2},{"CustomerID":29489,"AddressID":1069,"AddressType":"Work","rowguid":"a095c88b-d7e6-4178-a078-2eca44214801","ModifiedDate":"2005-07-01T00:00:00","RowNum":3},{"CustomerID":29490,"AddressID":887,"AddressType":"Home","rowguid":"f12e1702-d897-4035-b614-0fe2c72168a9","ModifiedDate":"2006-09-01T00:00:00","RowNum":4},{"CustomerID":29492,"AddressID":618,"AddressType":"Main Office","rowguid":"5b3b3eb2-3f43-47ed-a20c-23697dabf23b","ModifiedDate":"2006-12-01T00:00:00","RowNum":5}]
+
+assistant:
+The `SalesLT.CustomerAddress` stores the relationship between customers (`SalesLT.Customer`) and addresses (`SalesLT.Address`).
+It is used to create invoice documents, shipping labels and documentation, send correspondance and marketing. 
+It is not likely to be used on it's own, but rather to link customers to their addresses, and so will appear in queries and application forms that involve customer information.
+It does not appear to contain any private or sensitive information, but may link to tables that do contain sensitive information.
+It has a composite primary key of `CustomerID` and `AddressID` columns.
+
+# Notable Columns
+
+- `AddressType` the type of address
+- `ModifiedDate` the date the record was last modified.
+- `rowguid` is a unique identifier for each row. It has a unique non-clustered index.
+- `CustomerID` is a foreign key to the `SalesLT.Customer` table on the `CustomerID` column. It has a unique clustered index.
+- `AddressID` is a foreign key to the `SalesLT.Address` table on the `AddressID` column.
+
+# Related Tables
+
+- `SalesLT.Customer`
+- `SalesLT.Address`
+
+user:
+# Database Purpose
+{{project.description}}
+
+# Table Structure (YAML)
+{{table.structure}}
+
+# Sample Data
+{{table.data}}
