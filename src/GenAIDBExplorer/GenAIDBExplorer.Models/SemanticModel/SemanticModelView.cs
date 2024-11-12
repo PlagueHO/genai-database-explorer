@@ -12,6 +12,11 @@ public sealed class SemanticModelView(
     ) : SemanticModelEntity(schema, name, description)
 {
     /// <summary>
+    /// Gets and sets the view definition.
+    /// </summary>
+    public string Definition { get; set; } = string.Empty;
+
+    /// <summary>
     /// Gets the columns in the view.
     /// </summary>
     public List<SemanticModelColumn> Columns { get; set; } = [];

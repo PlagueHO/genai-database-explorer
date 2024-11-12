@@ -9,6 +9,7 @@ public interface ISchemaRepository
     Task<Dictionary<string, TableInfo>> GetTablesAsync(string? schema = null);
     Task<Dictionary<string, ViewInfo>> GetViewsAsync(string? schema = null);
     Task<Dictionary<string, StoredProcedureInfo>> GetStoredProceduresAsync(string? schema = null);
+    Task<string> GetViewDefinitionAsync(ViewInfo view);
     Task<SemanticModelTable> CreateSemanticModelTableAsync(TableInfo table);
     Task<SemanticModelView> CreateSemanticModelViewAsync(ViewInfo view);
     Task<SemanticModelStoredProcedure> CreateSemanticModelStoredProcedureAsync(StoredProcedureInfo storedProcedure);

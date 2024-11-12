@@ -12,6 +12,13 @@ public sealed class SchemaRepository(
     private readonly ISqlQueryExecutor _sqlQueryExecutor = sqlQueryExecutor;
     private readonly ILogger<SchemaRepository> _logger = logger;
 
+    /// <summary>
+    /// Retrieves a list of tables from the database, optionally filtered by schema.
+    /// </summary>
+    /// <param name="schema">The schema to filter tables by. If null, all schemas are included.</param>
+    /// <returns>A task representing the asynchronous operation. The task result contains a dictionary where the key is the schema and table name, and the value is the table info.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the database connection is not open.</exception>
+    /// <exception cref="SqlException">Thrown when there is an error executing the SQL query.</exception>
     public async Task<Dictionary<string, TableInfo>> GetTablesAsync(string? schema = null)
     {
         var tables = new Dictionary<string, TableInfo>();
@@ -128,6 +135,41 @@ public sealed class SchemaRepository(
     }
 
     /// <summary>
+    /// Retrieves the definition of the specified view.
+    /// </summary>
+    /// <param name="view">The view info for the view to retrieve the definition for.</param>
+    /// <returns>A task representing the asynchronous operation. The task result contains the definition of the view.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the database connection is not open.</exception>
+    /// <exception cref="SqlException">Thrown when there is an error executing the SQL query.</exception>
+    public async Task<string> GetViewDefinitionAsync(ViewInfo view)
+    {
+        try
+        {
+            var query = SqlStatements.DescribeViewDefinition;
+            var parameters = new Dictionary<string, object> {
+            { "@SchemaName", view.SchemaName },
+            { "@ViewName", view.ViewName }
+        };
+
+            using var reader = await _sqlQueryExecutor.ExecuteReaderAsync(query, parameters).ConfigureAwait(false);
+
+            if (await reader.ReadAsync().ConfigureAwait(false))
+            {
+                return reader.GetString(0);
+            }
+            else
+            {
+                throw new InvalidOperationException($"View definition for {view.SchemaName}.{view.ViewName} not found.");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to retrieve definition for view {SchemaName}.{ViewName}", view.SchemaName, view.ViewName);
+            throw;
+        }
+    }
+
+    /// <summary>
     /// Creates a Semantic Model Table for the specified table by querying the columns and keys.
     /// </summary>
     /// <param name="table">The table info for the table to create a semantic model for.</param>
@@ -174,6 +216,9 @@ public sealed class SchemaRepository(
         // Get the columns for the view
         var columns = await GetColumnsForViewAsync(view).ConfigureAwait(false);
         semanticModelView.Columns.AddRange(columns);
+
+        // Add the view definition
+        semanticModelView.Definition = await GetViewDefinitionAsync(view).ConfigureAwait(false);
 
         return semanticModelView;
     }

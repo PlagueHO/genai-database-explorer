@@ -30,12 +30,12 @@ public sealed class SemanticModelIndex(
     /// <summary>
     /// Gets the type of the index (clustered, nonclustered, etc.).
     /// </summary>
-    public string Type { get; set; }
+    public string? Type { get; set; }
 
     /// <summary>
     /// Gets or sets the column 
     /// </summary>
-    public string ColumnName { get; set; }
+    public string? ColumnName { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether the index is unique.
