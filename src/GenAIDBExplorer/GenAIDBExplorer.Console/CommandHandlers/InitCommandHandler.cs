@@ -24,23 +24,25 @@ public class InitCommandHandler(
     IDatabaseConnectionProvider connectionProvider,
     ISemanticDescriptionProvider semanticDescriptionProvider,
     IServiceProvider serviceProvider,
-    ILogger<ICommandHandler> logger
-) : CommandHandler(project, connectionProvider, semanticModelProvider, semanticDescriptionProvider, serviceProvider, logger)
+    ILogger<ICommandHandler<InitCommandHandlerOptions>> logger
+) : CommandHandler<InitCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, semanticDescriptionProvider, serviceProvider, logger)
 {
     /// <summary>
     /// Handles the initialization command with the specified project path.
     /// </summary>
-    /// <param name="projectDirectory">The directory path of the project to initialize.</param>
-    public override async Task HandleAsync(DirectoryInfo projectDirectory)
+    /// <param name="commandOptions">The options for the command.</param>
+    public override async Task HandleAsync(InitCommandHandlerOptions commandOptions)
     {
-        _logger.LogInformation(LogMessages.InitializingProject, projectDirectory.FullName);
+        var projectPath = commandOptions.ProjectPath;
 
-        ValidateProjectPath(projectDirectory);
+        _logger.LogInformation(LogMessages.InitializingProject, projectPath.FullName);
+
+        ValidateProjectPath(projectPath);
 
         // Initialize the project directory, but catch the exception if the directory is not empty
         try
         {
-            _project.InitializeProjectDirectory(projectDirectory);
+            _project.InitializeProjectDirectory(projectPath);
         }
         catch (Exception ex)
         {
@@ -48,7 +50,7 @@ public class InitCommandHandler(
             return;
         }
 
-        _logger.LogInformation(LogMessages.ProjectInitialized, projectDirectory.FullName);
+        _logger.LogInformation(LogMessages.ProjectInitialized, projectPath.FullName);
         await Task.CompletedTask;
     }
 

@@ -4,13 +4,13 @@ namespace GenAIDBExplorer.Console.CommandHandlers;
 /// Defines the contract for a command handler.
 /// </summary>
 /// <remarks>
-/// Implementations of this interface are responsible for handling commands with a specified project path.
+/// Implementations of this interface are responsible for handling commands with specified options.
 /// </remarks>
-public interface ICommandHandler
+public interface ICommandHandler<TOptions> where TOptions : ICommandHandlerOptions
 {
     /// <summary>
-    /// Handles the command with the specified project path.
+    /// Handles the command.
     /// </summary>
-    /// <param name="projectPath">The directory path of the project to handle.</param>
-    Task HandleAsync(DirectoryInfo projectPath);
+    /// <param name="commandOptions">The command options that were provided to the command.</param>
+    Task HandleAsync(TOptions commandOptions);
 }

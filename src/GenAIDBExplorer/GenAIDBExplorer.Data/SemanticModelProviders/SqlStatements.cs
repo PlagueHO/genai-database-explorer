@@ -139,8 +139,8 @@ JOIN
     sys.schemas AS s ON o.schema_id = s.schema_id
 WHERE 
     o.type = 'V' AND 
-    o.name = @SchemaName AND 
-    s.name = @ViewName
+    o.name = @ViewName AND 
+    s.name = @SchemaName
 ";
 
     public const string DescribeIndexes = @"

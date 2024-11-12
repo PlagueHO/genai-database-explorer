@@ -22,8 +22,8 @@ internal static class Program
         var rootCommand = new RootCommand("GenAI Database Explorer tool");
 
         // Define the project option
-        var projectOption = new Option<DirectoryInfo>(
-            aliases: new[] { "--project", "-p" },
+        var projectPathOption = new Option<DirectoryInfo>(
+            aliases: ["--project", "-p"],
             description: "The path to the GenAI Database Explorer project."
         )
         {
@@ -31,7 +31,7 @@ internal static class Program
         };
 
         // Add the project option as a global option
-        rootCommand.AddGlobalOption(projectOption);
+        rootCommand.AddGlobalOption(projectPathOption);
 
         // Build the host
         var host = Host.CreateDefaultBuilder(args)
@@ -40,30 +40,33 @@ internal static class Program
 
         // Define the init command
         var initCommand = new Command("init", "Initialize a GenAI Database Explorer project.");
-        initCommand.AddOption(projectOption);
+        initCommand.AddOption(projectPathOption);
         initCommand.SetHandler(async (DirectoryInfo projectPath) =>
         {
             var handler = host.Services.GetRequiredService<InitCommandHandler>();
-            await handler.HandleAsync(projectPath);
-        }, projectOption);
+            var options = new InitCommandHandlerOptions(projectPath);
+            await handler.HandleAsync(options);
+        }, projectPathOption);
 
         // Define the build command
         var buildCommand = new Command("build", "Build a GenAI Database Explorer project.");
-        buildCommand.AddOption(projectOption);
+        buildCommand.AddOption(projectPathOption);
         buildCommand.SetHandler(async (DirectoryInfo projectPath) =>
         {
             var handler = host.Services.GetRequiredService<BuildCommandHandler>();
-            await handler.HandleAsync(projectPath);
-        }, projectOption);
+            var options = new BuildCommandHandlerOptions(projectPath);
+            await handler.HandleAsync(options);
+        }, projectPathOption);
 
         // Define the query command
         var queryCommand = new Command("query", "Query a GenAI Database Explorer project.");
-        queryCommand.AddOption(projectOption);
+        queryCommand.AddOption(projectPathOption);
         queryCommand.SetHandler(async (DirectoryInfo projectPath) =>
         {
             var handler = host.Services.GetRequiredService<QueryCommandHandler>();
-            await handler.HandleAsync(projectPath);
-        }, projectOption);
+            var options = new QueryCommandHandlerOptions(projectPath);
+            await handler.HandleAsync(options);
+        }, projectPathOption);
 
         // Add commands to the root command
         rootCommand.AddCommand(initCommand);

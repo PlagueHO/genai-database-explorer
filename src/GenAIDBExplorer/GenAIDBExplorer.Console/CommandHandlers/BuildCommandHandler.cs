@@ -25,15 +25,17 @@ public class BuildCommandHandler(
     ISemanticModelProvider semanticModelProvider,
     ISemanticDescriptionProvider semanticDescriptionProvider,
     IServiceProvider serviceProvider,
-    ILogger<ICommandHandler> logger
-    ) : CommandHandler(project, connectionProvider, semanticModelProvider, semanticDescriptionProvider, serviceProvider, logger)
+    ILogger<ICommandHandler<BuildCommandHandlerOptions>> logger
+    ) : CommandHandler<BuildCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, semanticDescriptionProvider, serviceProvider, logger)
 {
     /// <summary>
     /// Handles the build command with the specified project path.
     /// </summary>
-    /// <param name="projectPath">The directory path of the project to build.</param>
-    public override async Task HandleAsync(DirectoryInfo projectPath)
+    /// <param name="commandOptions">The options for the command.</param>
+    public override async Task HandleAsync(BuildCommandHandlerOptions commandOptions)
     {
+        var projectPath = commandOptions.ProjectPath;
+
         _logger.LogInformation(LogMessages.BuildingProject, projectPath.FullName);
 
         _project.LoadConfiguration(projectPath.FullName);

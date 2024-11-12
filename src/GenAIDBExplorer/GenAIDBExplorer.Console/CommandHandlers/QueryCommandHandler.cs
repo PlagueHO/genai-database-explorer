@@ -24,15 +24,17 @@ public class QueryCommandHandler(
     IDatabaseConnectionProvider connectionProvider,
     ISemanticDescriptionProvider semanticDescriptionProvider,
     IServiceProvider serviceProvider,
-    ILogger<ICommandHandler> logger
-) : CommandHandler(project, connectionProvider, semanticModelProvider, semanticDescriptionProvider, serviceProvider, logger)
+    ILogger<ICommandHandler<QueryCommandHandlerOptions>> logger
+) : CommandHandler<QueryCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, semanticDescriptionProvider, serviceProvider, logger)
 {
     /// <summary>
     /// Handles the query command with the specified project path.
     /// </summary>
-    /// <param name="projectPath">The directory path of the project to query.</param>
-    public override async Task HandleAsync(DirectoryInfo projectPath)
+    /// <param name="commandOptions">The options for the command.</param>
+    public override async Task HandleAsync(QueryCommandHandlerOptions commandOptions)
     {
+        var projectPath = commandOptions.ProjectPath;
+
         _logger.LogInformation(LogMessages.QueryingProject, projectPath.FullName);
 
         // Your query logic here
