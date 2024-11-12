@@ -47,6 +47,12 @@ public class BuildCommandHandler(
             await _semanticDescriptionProvider.UpdateSemanticDescriptionAsync(table).ConfigureAwait(false);
         }
 
+        // For each view generate the Semantic Description using the Semantic Description Provider
+        foreach (var view in semanticModel.Views)
+        {
+            await _semanticDescriptionProvider.UpdateSemanticDescriptionAsync(view).ConfigureAwait(false);
+        }
+
         // Save the Semantic Model into the project directory into a subdirectory with the name of the semanticModel.Name
         var semanticModelDirectory = new DirectoryInfo(Path.Combine(projectPath.FullName, semanticModel.Name));
         if (!semanticModelDirectory.Exists)

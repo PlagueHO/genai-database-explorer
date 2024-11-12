@@ -6,7 +6,6 @@ using GenAIDBExplorer.Data.SemanticModelProviders;
 using GenAIDBExplorer.Models.Project;
 using System.Text.Json;
 
-
 namespace GenAIDBExplorer.AI.SemanticProviders;
 
 /// <summary>
@@ -29,6 +28,10 @@ public class SemanticDescriptionProvider(
 
     private const string _promptyFolder = "Prompty";
 
+    /// <summary>
+    /// Generates a semantic description for the specified table using the Semantic Kernel.
+    /// </summary>
+    /// <param name="table">The semantic model table for which to generate the description.</param>
     public async Task UpdateSemanticDescriptionAsync(SemanticModelTable table)
     {
         _logger.LogInformation("Generating semantic description for table {Schema}.{Name}", table.Schema, table.Name);
@@ -37,11 +40,12 @@ public class SemanticDescriptionProvider(
         promptyFilename = Path.Combine(_promptyFolder, promptyFilename);
         var semanticKernel = _semanticKernelFactory.CreateSemanticKernel();
 
+        // Retrieve sample data for the table
         var sampleData = await _schemaRepository.GetSampleTableDataAsync(new TableInfo(table.Schema, table.Name));
         var sampleDataJson = "No sample data available";
-        // Serialize sample data to JSON
         if (sampleData.Count > 0)
         {
+            // Serialize sample data to JSON
             sampleDataJson = JsonSerializer.Serialize(sampleData);
         }
 
@@ -65,9 +69,58 @@ public class SemanticDescriptionProvider(
         var function = semanticKernel.CreateFunctionFromPromptyFile(promptyFilename);
 #pragma warning restore SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
+        // Invoke the semantic kernel function to generate the description
         var result = await semanticKernel.InvokeAsync(function, arguments);
 
         _logger.LogInformation("Completed generation of semantic description for table {Schema}.{Name}", table.Schema, table.Name);
         table.SemanticDescription = result.ToString();
+    }
+
+    /// <summary>
+    /// Generates a semantic description for the specified view using the Semantic Kernel.
+    /// </summary>
+    /// <param name="view">The semantic model view for which to generate the description.</param>
+    public async Task UpdateSemanticDescriptionAsync(SemanticModelView view)
+    {
+        _logger.LogInformation("Generating semantic description for view {Schema}.{Name}", view.Schema, view.Name);
+
+        var promptyFilename = "semantic_model_describe_view.prompty";
+        promptyFilename = Path.Combine(_promptyFolder, promptyFilename);
+        var semanticKernel = _semanticKernelFactory.CreateSemanticKernel();
+
+        // Retrieve sample data for the view
+        var sampleData = await _schemaRepository.GetSampleViewDataAsync(new ViewInfo(view.Schema, view.Name));
+        var sampleDataJson = "No sample data available";
+        if (sampleData.Count > 0)
+        {
+            // Serialize sample data to JSON
+            sampleDataJson = JsonSerializer.Serialize(sampleData);
+        }
+
+        var projectInfo = new
+        {
+            description = _project.Settings.Database.Description
+        };
+        var viewInfo = new
+        {
+            structure = view.ToYaml(),
+            data = sampleDataJson
+        };
+
+        var arguments = new KernelArguments()
+        {
+            { "view", viewInfo },
+            { "project", projectInfo }
+        };
+
+#pragma warning disable SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+        var function = semanticKernel.CreateFunctionFromPromptyFile(promptyFilename);
+#pragma warning restore SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+
+        // Invoke the semantic kernel function to generate the description
+        var result = await semanticKernel.InvokeAsync(function, arguments);
+
+        _logger.LogInformation("Completed generation of semantic description for view {Schema}.{Name}", view.Schema, view.Name);
+        view.SemanticDescription = result.ToString();
     }
 }

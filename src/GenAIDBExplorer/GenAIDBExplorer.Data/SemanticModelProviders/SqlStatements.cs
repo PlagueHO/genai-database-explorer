@@ -130,11 +130,17 @@ ORDER BY
 
     public const string DescribeViewDefinition = @"
 SELECT 
-    definition
+    sm.definition
 FROM 
-    sys.sql_modules
+    sys.sql_modules AS sm
+JOIN 
+    sys.objects AS o ON sm.object_id = o.object_id
+JOIN 
+    sys.schemas AS s ON o.schema_id = s.schema_id
 WHERE 
-    object_id = OBJECT_ID(@SchemaName + '.' + @ViewName);
+    o.type = 'V' AND 
+    o.name = @SchemaName AND 
+    s.name = @ViewName
 ";
 
     public const string DescribeIndexes = @"

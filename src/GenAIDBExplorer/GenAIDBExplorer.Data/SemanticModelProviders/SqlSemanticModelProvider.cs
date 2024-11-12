@@ -2,9 +2,6 @@
 using GenAIDBExplorer.Models.Project;
 using GenAIDBExplorer.Models.SemanticModel;
 using System.Collections.Concurrent;
-using GenAIDBExplorer.Data.ConnectionManager;
-using GenAIDBExplorer.Data.DatabaseProviders;
-using System.Collections.Generic;
 
 namespace GenAIDBExplorer.Data.SemanticModelProviders;
 
