@@ -123,4 +123,43 @@ public class SemanticDescriptionProvider(
         _logger.LogInformation("Completed generation of semantic description for view {Schema}.{Name}", view.Schema, view.Name);
         view.SemanticDescription = result.ToString();
     }
+
+    /// <summary>
+    /// Generates a semantic description for the specified stored procedure using the Semantic Kernel.
+    /// </summary>
+    /// <param name="storedProcedure">The semantic model stored procedure for which to generate the description.</param>
+    public async Task UpdateSemanticDescriptionAsync(SemanticModelStoredProcedure storedProcedure)
+    {
+        _logger.LogInformation("Generating semantic description for stored procedure {Schema}.{Name}", storedProcedure.Schema, storedProcedure.Name);
+
+        var promptyFilename = "semantic_model_describe_stored_procedure.prompty";
+        promptyFilename = Path.Combine(_promptyFolder, promptyFilename);
+        var semanticKernel = _semanticKernelFactory.CreateSemanticKernel();
+
+        var projectInfo = new
+        {
+            description = _project.Settings.Database.Description
+        };
+        var storedProcedureInfo = new
+        {
+            definition = storedProcedure.Definition,
+            parameters = storedProcedure.Parameters
+        };
+
+        var arguments = new KernelArguments()
+        {
+            { "storedProcedure", storedProcedureInfo },
+            { "project", projectInfo }
+        };
+
+#pragma warning disable SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+        var function = semanticKernel.CreateFunctionFromPromptyFile(promptyFilename);
+#pragma warning restore SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+
+        // Invoke the semantic kernel function to generate the description
+        var result = await semanticKernel.InvokeAsync(function, arguments);
+
+        _logger.LogInformation("Completed generation of semantic description for stored procedure {Schema}.{Name}", storedProcedure.Schema, storedProcedure.Name);
+        storedProcedure.SemanticDescription = result.ToString();
+    }
 }

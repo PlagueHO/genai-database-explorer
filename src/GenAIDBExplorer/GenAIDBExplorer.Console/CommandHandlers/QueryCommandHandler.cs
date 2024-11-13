@@ -1,11 +1,11 @@
-﻿using Microsoft.Extensions.Logging;
-using GenAIDBExplorer.Models.Project;
+﻿using GenAIDBExplorer.AI.SemanticProviders;
 using GenAIDBExplorer.Data.DatabaseProviders;
 using GenAIDBExplorer.Data.SemanticModelProviders;
-using GenAIDBExplorer.AI.SemanticProviders;
-using Microsoft.Extensions.Hosting;
-using System.CommandLine;
+using GenAIDBExplorer.Models.Project;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using System.CommandLine;
 
 namespace GenAIDBExplorer.Console.CommandHandlers;
 

@@ -11,4 +11,5 @@ public interface ISemanticDescriptionProvider
 {
     Task UpdateSemanticDescriptionAsync(SemanticModelTable table);
     Task UpdateSemanticDescriptionAsync(SemanticModelView view);
+    Task UpdateSemanticDescriptionAsync(SemanticModelStoredProcedure storedProcedure);
 }

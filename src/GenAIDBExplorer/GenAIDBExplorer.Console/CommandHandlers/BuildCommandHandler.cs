@@ -1,12 +1,11 @@
-﻿using Microsoft.Extensions.Logging;
-using GenAIDBExplorer.AI.SemanticProviders;
+﻿using GenAIDBExplorer.AI.SemanticProviders;
 using GenAIDBExplorer.Data.DatabaseProviders;
 using GenAIDBExplorer.Data.SemanticModelProviders;
 using GenAIDBExplorer.Models.Project;
-using GenAIDBExplorer.Models.SemanticModel;
-using Microsoft.Extensions.Hosting;
-using System.CommandLine;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using System.CommandLine;
 
 namespace GenAIDBExplorer.Console.CommandHandlers;
 
@@ -29,7 +28,7 @@ public class BuildCommandHandler(
     ISemanticDescriptionProvider semanticDescriptionProvider,
     IServiceProvider serviceProvider,
     ILogger<ICommandHandler<BuildCommandHandlerOptions>> logger
-    ) : CommandHandler<BuildCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, semanticDescriptionProvider, serviceProvider, logger)
+) : CommandHandler<BuildCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, semanticDescriptionProvider, serviceProvider, logger)
 {
     /// <summary>
     /// Sets up the build command.
@@ -39,21 +38,42 @@ public class BuildCommandHandler(
     public static Command SetupCommand(IHost host)
     {
         var projectPathOption = new Option<DirectoryInfo>(
-            aliases: [ "--project", "-p" ],
+            aliases: ["--project", "-p"],
             description: "The path to the GenAI Database Explorer project."
         )
         {
             IsRequired = true
         };
 
+        var ignoreTablesOption = new Option<bool>(
+            aliases: ["--ignoreTables"],
+            description: "Flag to ignore tables during the build process.",
+            getDefaultValue: () => false
+        );
+
+        var ignoreViewsOption = new Option<bool>(
+            aliases: ["--ignoreViews"],
+            description: "Flag to ignore views during the build process.",
+            getDefaultValue: () => false
+        );
+
+        var ignoreStoredProceduresOption = new Option<bool>(
+            aliases: ["--ignoreStoredProcedures"],
+            description: "Flag to ignore stored procedures during the build process.",
+            getDefaultValue: () => false
+        );
+
         var buildCommand = new Command("build", "Build a GenAI Database Explorer project.");
         buildCommand.AddOption(projectPathOption);
-        buildCommand.SetHandler(async (DirectoryInfo projectPath) =>
+        buildCommand.AddOption(ignoreTablesOption);
+        buildCommand.AddOption(ignoreViewsOption);
+        buildCommand.AddOption(ignoreStoredProceduresOption);
+        buildCommand.SetHandler(async (DirectoryInfo projectPath, bool ignoreTables, bool ignoreViews, bool ignoreStoredProcedures) =>
         {
             var handler = host.Services.GetRequiredService<BuildCommandHandler>();
-            var options = new BuildCommandHandlerOptions(projectPath);
+            var options = new BuildCommandHandlerOptions(projectPath, ignoreTables, ignoreViews, ignoreStoredProcedures);
             await handler.HandleAsync(options);
-        }, projectPathOption);
+        }, projectPathOption, ignoreTablesOption, ignoreViewsOption, ignoreStoredProceduresOption);
 
         return buildCommand;
     }
@@ -73,16 +93,31 @@ public class BuildCommandHandler(
         // Assemble the Semantic Model
         var semanticModel = await _semanticModelProvider.BuildSemanticModelAsync().ConfigureAwait(false);
 
-        // For each table generate the Semantic Description using the Semantic Description Provider
-        foreach (var table in semanticModel.Tables)
+        if (!commandOptions.IgnoreTables)
         {
-            await _semanticDescriptionProvider.UpdateSemanticDescriptionAsync(table).ConfigureAwait(false);
+            // For each table generate the Semantic Description using the Semantic Description Provider
+            foreach (var table in semanticModel.Tables)
+            {
+                await _semanticDescriptionProvider.UpdateSemanticDescriptionAsync(table).ConfigureAwait(false);
+            }
         }
 
-        // For each view generate the Semantic Description using the Semantic Description Provider
-        foreach (var view in semanticModel.Views)
+        if (!commandOptions.IgnoreViews)
         {
-            await _semanticDescriptionProvider.UpdateSemanticDescriptionAsync(view).ConfigureAwait(false);
+            // For each view generate the Semantic Description using the Semantic Description Provider
+            foreach (var view in semanticModel.Views)
+            {
+                await _semanticDescriptionProvider.UpdateSemanticDescriptionAsync(view).ConfigureAwait(false);
+            }
+        }
+
+        if (!commandOptions.IgnoreStoredProcedures)
+        {
+            // For each stored procedure generate the Semantic Description using the Semantic Description Provider
+            foreach (var storedProcedure in semanticModel.StoredProcedures)
+            {
+                await _semanticDescriptionProvider.UpdateSemanticDescriptionAsync(storedProcedure).ConfigureAwait(false);
+            }
         }
 
         // Save the Semantic Model into the project directory into a subdirectory with the name of the semanticModel.Name
