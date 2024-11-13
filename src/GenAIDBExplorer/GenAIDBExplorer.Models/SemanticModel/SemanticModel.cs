@@ -106,7 +106,8 @@ public sealed class SemanticModel(
     /// Saves the semantic model to the specified folder.
     /// </summary>
     /// <param name="folderPath">The folder path where the model will be saved.</param>
-    public void SaveModel(DirectoryInfo folderPath)
+    /// <param name="splitModel">Flag to split the model into separate files.</param>
+    public void SaveModel(DirectoryInfo folderPath, bool splitModel = false)
     {
         // Save the semantic model to a JSON file.
         Directory.CreateDirectory(folderPath.FullName);
@@ -114,31 +115,55 @@ public sealed class SemanticModel(
         var semanticModelJsonPath = Path.Combine(folderPath.FullName, "semanticmodel.json");
         File.WriteAllText(semanticModelJsonPath, JsonSerializer.Serialize(this, JsonSerializerOptions));
 
-        // Save the tables to separate files in a subfolder called "tables".
-        var tablesFolderPath = new DirectoryInfo(Path.Combine(folderPath.FullName, "tables"));
-        Directory.CreateDirectory(tablesFolderPath.FullName);
-
-        foreach (var table in Tables)
+        if (splitModel)
         {
-            table.SaveModel(tablesFolderPath);
+            // Not implemented yet.
+            throw new NotImplementedException();
+
+            // Save the tables to separate files in a subfolder called "tables".
+            var tablesFolderPath = new DirectoryInfo(Path.Combine(folderPath.FullName, "tables"));
+            Directory.CreateDirectory(tablesFolderPath.FullName);
+
+            foreach (var table in Tables)
+            {
+                table.SaveModel(tablesFolderPath);
+            }
+
+            // Save the views to separate files in a subfolder called "views".
+            var viewsFolderPath = new DirectoryInfo(Path.Combine(folderPath.FullName, "views"));
+            Directory.CreateDirectory(viewsFolderPath.FullName);
+
+            foreach (var view in Views)
+            {
+                view.SaveModel(viewsFolderPath);
+            }
+
+            // Save the stored procedures to separate files in a subfolder called "storedprocedures".
+            var storedProceduresFolderPath = new DirectoryInfo(Path.Combine(folderPath.FullName, "storedprocedures"));
+            Directory.CreateDirectory(storedProceduresFolderPath.FullName);
+
+            foreach (var storedProcedure in StoredProcedures)
+            {
+                storedProcedure.SaveModel(storedProceduresFolderPath);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Loads the semantic model from the specified folder.
+    /// </summary>
+    /// <param name="folderPath">The folder path where the model is located.</param>
+    /// <returns>The loaded semantic model.</returns>
+    public static SemanticModel LoadModel(DirectoryInfo folderPath)
+    {
+        var semanticModelJsonPath = Path.Combine(folderPath.FullName, "semanticmodel.json");
+        if (!File.Exists(semanticModelJsonPath))
+        {
+            throw new FileNotFoundException("The semantic model file was not found.", semanticModelJsonPath);
         }
 
-        // Save the views to separate files in a subfolder called "views".
-        var viewsFolderPath = new DirectoryInfo(Path.Combine(folderPath.FullName, "views"));
-        Directory.CreateDirectory(viewsFolderPath.FullName);
-
-        foreach (var view in Views)
-        {
-            view.SaveModel(viewsFolderPath);
-        }
-
-        // Save the stored procedures to separate files in a subfolder called "storedprocedures".
-        var storedProceduresFolderPath = new DirectoryInfo(Path.Combine(folderPath.FullName, "storedprocedures"));
-        Directory.CreateDirectory(storedProceduresFolderPath.FullName);
-
-        foreach (var storedProcedure in StoredProcedures)
-        {
-            storedProcedure.SaveModel(storedProceduresFolderPath);
-        }
+        var jsonString = File.ReadAllText(semanticModelJsonPath);
+        return JsonSerializer.Deserialize<SemanticModel>(jsonString, JsonSerializerOptions)
+               ?? throw new InvalidOperationException("Failed to deserialize the semantic model.");
     }
 }

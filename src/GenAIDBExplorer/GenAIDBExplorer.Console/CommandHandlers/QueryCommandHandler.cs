@@ -67,7 +67,13 @@ public class QueryCommandHandler(
 
         _logger.LogInformation(LogMessages.QueryingProject, projectPath.FullName);
 
-        // Your query logic here
+        _project.LoadConfiguration(projectPath.FullName);
+
+        // Load the Semantic Model
+        _logger.LogInformation(LogMessages.LoadingSemanticModel);
+        var semanticModel = _semanticModelProvider.CreateSemanticModel();
+
+        _logger.LogInformation(LogMessages.SemanticModelLoaded);
 
         await Task.CompletedTask;
     }
@@ -78,5 +84,7 @@ public class QueryCommandHandler(
     public static class LogMessages
     {
         public const string QueryingProject = "Querying project at '{ProjectPath}'.";
+        public const string LoadingSemanticModel = "Loading semantic model.";
+        public const string SemanticModelLoaded = "Semantic model loaded.";
     }
 }

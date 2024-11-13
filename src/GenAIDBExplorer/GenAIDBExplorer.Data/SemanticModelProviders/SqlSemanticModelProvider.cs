@@ -14,20 +14,26 @@ public sealed class SqlSemanticModelProvider(
     private readonly IProject _project = project;
     private readonly ILogger _logger = logger;
 
-    /// <summary>
-    /// Builds the semantic model asynchronously.
-    /// </summary>
-    /// <returns>A task representing the asynchronous operation. The task result contains the built <see cref="SemanticModel"/>.</returns>
-    public async Task<SemanticModel> BuildSemanticModelAsync()
+    /// <inheritdoc/>
+    public SemanticModel CreateSemanticModel()
     {
-        _logger.LogInformation("Building semantic model for database {DatabaseName}", _project.Settings.Database.Name);
-
         // Create the new SemanticModel instance to build
         var semanticModel = new SemanticModel(
             name: _project.Settings.Database.Name,
             source: _project.Settings.Database.ConnectionString,
             description: _project.Settings.Database.Description
         );
+
+        return semanticModel;
+    }
+    
+    /// <inheritdoc/>
+    public async Task<SemanticModel> BuildSemanticModelAsync()
+    {
+        _logger.LogInformation("Building semantic model for database {DatabaseName}", _project.Settings.Database.Name);
+
+        // Create the new SemanticModel instance to build
+        var semanticModel = CreateSemanticModel();
 
         // Configure the parallel options for the operation
         var options = new ParallelOptions {
