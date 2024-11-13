@@ -45,35 +45,35 @@ public class BuildCommandHandler(
             IsRequired = true
         };
 
-        var ignoreTablesOption = new Option<bool>(
-            aliases: ["--ignoreTables"],
-            description: "Flag to ignore tables during the build process.",
+        var skipTablesOption = new Option<bool>(
+            aliases: ["--skipTables"],
+            description: "Flag to skip tables during the build process.",
             getDefaultValue: () => false
         );
 
-        var ignoreViewsOption = new Option<bool>(
-            aliases: ["--ignoreViews"],
-            description: "Flag to ignore views during the build process.",
+        var skipViewsOption = new Option<bool>(
+            aliases: ["--skipViews"],
+            description: "Flag to skip views during the build process.",
             getDefaultValue: () => false
         );
 
-        var ignoreStoredProceduresOption = new Option<bool>(
-            aliases: ["--ignoreStoredProcedures"],
-            description: "Flag to ignore stored procedures during the build process.",
+        var skipStoredProceduresOption = new Option<bool>(
+            aliases: ["--skipStoredProcedures"],
+            description: "Flag to skip stored procedures during the build process.",
             getDefaultValue: () => false
         );
 
         var buildCommand = new Command("build", "Build a GenAI Database Explorer project.");
         buildCommand.AddOption(projectPathOption);
-        buildCommand.AddOption(ignoreTablesOption);
-        buildCommand.AddOption(ignoreViewsOption);
-        buildCommand.AddOption(ignoreStoredProceduresOption);
-        buildCommand.SetHandler(async (DirectoryInfo projectPath, bool ignoreTables, bool ignoreViews, bool ignoreStoredProcedures) =>
+        buildCommand.AddOption(skipTablesOption);
+        buildCommand.AddOption(skipViewsOption);
+        buildCommand.AddOption(skipStoredProceduresOption);
+        buildCommand.SetHandler(async (DirectoryInfo projectPath, bool skipTables, bool skipViews, bool skipStoredProcedures) =>
         {
             var handler = host.Services.GetRequiredService<BuildCommandHandler>();
-            var options = new BuildCommandHandlerOptions(projectPath, ignoreTables, ignoreViews, ignoreStoredProcedures);
+            var options = new BuildCommandHandlerOptions(projectPath, skipTables, skipViews, skipStoredProcedures);
             await handler.HandleAsync(options);
-        }, projectPathOption, ignoreTablesOption, ignoreViewsOption, ignoreStoredProceduresOption);
+        }, projectPathOption, skipTablesOption, skipViewsOption, skipStoredProceduresOption);
 
         return buildCommand;
     }
@@ -90,10 +90,10 @@ public class BuildCommandHandler(
 
         _project.LoadConfiguration(projectPath.FullName);
 
-        // Assemble the Semantic Model
+        // Build the Semantic Model
         var semanticModel = await _semanticModelProvider.BuildSemanticModelAsync().ConfigureAwait(false);
 
-        if (!commandOptions.IgnoreTables)
+        if (!commandOptions.SkipTables)
         {
             // For each table generate the Semantic Description using the Semantic Description Provider
             foreach (var table in semanticModel.Tables)
@@ -102,7 +102,7 @@ public class BuildCommandHandler(
             }
         }
 
-        if (!commandOptions.IgnoreViews)
+        if (!commandOptions.SkipViews)
         {
             // For each view generate the Semantic Description using the Semantic Description Provider
             foreach (var view in semanticModel.Views)
@@ -111,7 +111,7 @@ public class BuildCommandHandler(
             }
         }
 
-        if (!commandOptions.IgnoreStoredProcedures)
+        if (!commandOptions.SkipStoredProcedures)
         {
             // For each stored procedure generate the Semantic Description using the Semantic Description Provider
             foreach (var storedProcedure in semanticModel.StoredProcedures)
