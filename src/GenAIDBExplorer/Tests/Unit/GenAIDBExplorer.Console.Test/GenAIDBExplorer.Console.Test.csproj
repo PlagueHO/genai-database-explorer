@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\GenAIDBExplorer.console\GenAIDBExplorer.Console.csproj" />
+    <ProjectReference Include="..\..\..\GenAIDBExplorer.Console\GenAIDBExplorer.Console.csproj" />
   </ItemGroup>
 
   <ItemGroup>
