@@ -1,3 +1,6 @@
+using Microsoft.Extensions.Hosting;
+using System.CommandLine;
+
 namespace GenAIDBExplorer.Console.CommandHandlers;
 
 /// <summary>

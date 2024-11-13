@@ -3,6 +3,9 @@ using GenAIDBExplorer.Models.Project;
 using GenAIDBExplorer.Data.DatabaseProviders;
 using GenAIDBExplorer.Data.SemanticModelProviders;
 using GenAIDBExplorer.AI.SemanticProviders;
+using Microsoft.Extensions.Hosting;
+using System.CommandLine;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace GenAIDBExplorer.Console.CommandHandlers;
 
@@ -27,6 +30,33 @@ public class InitCommandHandler(
     ILogger<ICommandHandler<InitCommandHandlerOptions>> logger
 ) : CommandHandler<InitCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, semanticDescriptionProvider, serviceProvider, logger)
 {
+    /// <summary>
+    /// Sets up the init command.
+    /// </summary>
+    /// <param name="host">The host instance.</param>
+    /// <returns>The init command.</returns>
+    public static Command SetupCommand(IHost host)
+    {
+        var projectPathOption = new Option<DirectoryInfo>(
+            aliases: [ "--project", "-p" ],
+            description: "The path to the GenAI Database Explorer project."
+        )
+        {
+            IsRequired = true
+        };
+
+        var initCommand = new Command("init", "Initialize a GenAI Database Explorer project.");
+        initCommand.AddOption(projectPathOption);
+        initCommand.SetHandler(async (DirectoryInfo projectPath) =>
+        {
+            var handler = host.Services.GetRequiredService<InitCommandHandler>();
+            var options = new InitCommandHandlerOptions(projectPath);
+            await handler.HandleAsync(options);
+        }, projectPathOption);
+
+        return initCommand;
+    }
+
     /// <summary>
     /// Handles the initialization command with the specified project path.
     /// </summary>

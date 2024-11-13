@@ -3,6 +3,8 @@ using GenAIDBExplorer.AI.SemanticProviders;
 using GenAIDBExplorer.Models.Project;
 using GenAIDBExplorer.Data.SemanticModelProviders;
 using GenAIDBExplorer.Data.DatabaseProviders;
+using System.CommandLine;
+using Microsoft.Extensions.Hosting;
 
 namespace GenAIDBExplorer.Console.CommandHandlers;
 

@@ -21,57 +21,15 @@ internal static class Program
         // Create the root command with a description
         var rootCommand = new RootCommand("GenAI Database Explorer tool");
 
-        // Define the project option
-        var projectPathOption = new Option<DirectoryInfo>(
-            aliases: ["--project", "-p"],
-            description: "The path to the GenAI Database Explorer project."
-        )
-        {
-            IsRequired = true
-        };
-
-        // Add the project option as a global option
-        rootCommand.AddGlobalOption(projectPathOption);
-
         // Build the host
         var host = Host.CreateDefaultBuilder(args)
             .ConfigureHost(args)
             .Build();
 
-        // Define the init command
-        var initCommand = new Command("init", "Initialize a GenAI Database Explorer project.");
-        initCommand.AddOption(projectPathOption);
-        initCommand.SetHandler(async (DirectoryInfo projectPath) =>
-        {
-            var handler = host.Services.GetRequiredService<InitCommandHandler>();
-            var options = new InitCommandHandlerOptions(projectPath);
-            await handler.HandleAsync(options);
-        }, projectPathOption);
-
-        // Define the build command
-        var buildCommand = new Command("build", "Build a GenAI Database Explorer project.");
-        buildCommand.AddOption(projectPathOption);
-        buildCommand.SetHandler(async (DirectoryInfo projectPath) =>
-        {
-            var handler = host.Services.GetRequiredService<BuildCommandHandler>();
-            var options = new BuildCommandHandlerOptions(projectPath);
-            await handler.HandleAsync(options);
-        }, projectPathOption);
-
-        // Define the query command
-        var queryCommand = new Command("query", "Query a GenAI Database Explorer project.");
-        queryCommand.AddOption(projectPathOption);
-        queryCommand.SetHandler(async (DirectoryInfo projectPath) =>
-        {
-            var handler = host.Services.GetRequiredService<QueryCommandHandler>();
-            var options = new QueryCommandHandlerOptions(projectPath);
-            await handler.HandleAsync(options);
-        }, projectPathOption);
-
-        // Add commands to the root command
-        rootCommand.AddCommand(initCommand);
-        rootCommand.AddCommand(buildCommand);
-        rootCommand.AddCommand(queryCommand);
+        // Set up commands
+        rootCommand.AddCommand(InitCommandHandler.SetupCommand(host));
+        rootCommand.AddCommand(BuildCommandHandler.SetupCommand(host));
+        rootCommand.AddCommand(QueryCommandHandler.SetupCommand(host));
 
         // Invoke the root command
         await rootCommand.InvokeAsync(args);
