@@ -101,4 +101,10 @@ public sealed class SemanticModelColumn(
     {
         throw new NotImplementedException();
     }
+
+    /// <inheritdoc/>
+    public override DirectoryInfo GetModelPath()
+    {
+        throw new NotImplementedException();
+    }
 }

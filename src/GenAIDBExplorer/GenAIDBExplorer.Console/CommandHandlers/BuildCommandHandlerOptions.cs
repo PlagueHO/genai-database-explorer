@@ -14,10 +14,12 @@ public class BuildCommandHandlerOptions(
     DirectoryInfo projectPath,
     bool skipTables = false,
     bool skipViews = false,
-    bool skipStoredProcedures = false
+    bool skipStoredProcedures = false,
+    bool singleModelFile = false
 ) : CommandHandlerOptions(projectPath)
 {
     public bool SkipTables { get; } = skipTables;
     public bool SkipViews { get; } = skipViews;
     public bool SkipStoredProcedures { get; } = skipStoredProcedures;
+    public bool SingleModelFile { get; } = singleModelFile;
 }

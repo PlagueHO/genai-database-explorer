@@ -39,4 +39,11 @@ public sealed class SemanticModelView(
     {
         return Columns.Remove(column);
     }
+
+    /// <inheritdoc/>
+    public override DirectoryInfo GetModelPath()
+    {
+        return new DirectoryInfo(Path.Combine("views", GetModelEntityFilename().Name));
+    }
+
 }

@@ -1,8 +1,4 @@
-﻿using System.Text.Json;
-using System.Text.Json.Serialization;
-using YamlDotNet.Serialization;
-
-namespace GenAIDBExplorer.Models.SemanticModel;
+﻿namespace GenAIDBExplorer.Models.SemanticModel;
 
 /// <summary>
 /// Represents a table in the semantic model.
@@ -59,5 +55,11 @@ public sealed class SemanticModelTable(
     public bool RemoveIndex(SemanticModelIndex index)
     {
         return Indexes.Remove(index);
+    }
+
+    /// <inheritdoc/>
+    public override DirectoryInfo GetModelPath()
+    {
+        return new DirectoryInfo(Path.Combine("tables", GetModelEntityFilename().Name));
     }
 }

@@ -60,4 +60,13 @@ public abstract class SemanticModelEntity(
 
         File.WriteAllText(filePath, JsonSerializer.Serialize<object>(this, _jsonSerializerOptions));
     }
+
+    /// <inheritdoc/>
+    public FileInfo GetModelEntityFilename()
+    {
+        return new FileInfo($"{Schema}.{Name}.json");
+    }
+
+    /// <inheritdoc/>
+    public abstract DirectoryInfo GetModelPath();
 }

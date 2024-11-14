@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+using GenAIDBExplorer.Models.SemanticModel.JsonConverters;
 
 namespace GenAIDBExplorer.Models.SemanticModel;
 
@@ -11,8 +12,8 @@ public sealed class SemanticModel(
     string source,
     string? description = null
     ) : ISemanticModel
-{
-    private static readonly JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true };
+{   
+    private static readonly JsonSerializerOptions _jsonSerializerOptions = new() { WriteIndented = true };
 
     /// <summary>
     /// Gets the name of the semantic model.
@@ -112,14 +113,8 @@ public sealed class SemanticModel(
         // Save the semantic model to a JSON file.
         Directory.CreateDirectory(folderPath.FullName);
 
-        var semanticModelJsonPath = Path.Combine(folderPath.FullName, "semanticmodel.json");
-        File.WriteAllText(semanticModelJsonPath, JsonSerializer.Serialize(this, JsonSerializerOptions));
-
         if (splitModel)
         {
-            // Not implemented yet.
-            throw new NotImplementedException();
-
             // Save the tables to separate files in a subfolder called "tables".
             var tablesFolderPath = new DirectoryInfo(Path.Combine(folderPath.FullName, "tables"));
             Directory.CreateDirectory(tablesFolderPath.FullName);
@@ -146,7 +141,16 @@ public sealed class SemanticModel(
             {
                 storedProcedure.SaveModel(storedProceduresFolderPath);
             }
+
+            // Add custom converters for the tables, views, and stored procedures
+            // to only serialize the name, schema and relative path of the entity.
+            _jsonSerializerOptions.Converters.Add(new SemanticModelTableJsonConverter());
+            _jsonSerializerOptions.Converters.Add(new SemanticModelViewJsonConverter());
+            _jsonSerializerOptions.Converters.Add(new SemanticModelStoredProcedureJsonConverter());
         }
+        
+        var semanticModelJsonPath = Path.Combine(folderPath.FullName, "semanticmodel.json");
+        File.WriteAllText(semanticModelJsonPath, JsonSerializer.Serialize(this, _jsonSerializerOptions));
     }
 
     /// <summary>
@@ -163,7 +167,7 @@ public sealed class SemanticModel(
         }
 
         var jsonString = File.ReadAllText(semanticModelJsonPath);
-        return JsonSerializer.Deserialize<SemanticModel>(jsonString, JsonSerializerOptions)
+        return JsonSerializer.Deserialize<SemanticModel>(jsonString, _jsonSerializerOptions)
                ?? throw new InvalidOperationException("Failed to deserialize the semantic model.");
     }
 }

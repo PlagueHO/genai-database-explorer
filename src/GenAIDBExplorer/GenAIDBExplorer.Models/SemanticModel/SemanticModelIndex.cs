@@ -64,4 +64,10 @@ public sealed class SemanticModelIndex(
     {
         throw new NotImplementedException();
     }
+
+    /// <inheritdoc/>
+    public override DirectoryInfo GetModelPath()
+    {
+        throw new NotImplementedException();
+    }
 }

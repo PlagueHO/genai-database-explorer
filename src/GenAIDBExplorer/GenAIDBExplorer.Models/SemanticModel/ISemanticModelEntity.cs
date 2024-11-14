@@ -40,4 +40,16 @@ public interface ISemanticModelEntity
     /// </summary>
     /// <param name="folderPath">The folder path where the entity will be saved.</param>
     void SaveModel(DirectoryInfo folderPath);
+
+    /// <summary>
+    /// Gets the filename of the model entity if the model is split.
+    /// </summary>
+    /// <returns>The filename of the model entity.</returns>
+    public FileInfo GetModelEntityFilename();
+
+    /// <summary>
+    /// Gets the path to the model entity if the model is split.
+    /// </summary>
+    /// <returns>The relative path to the model entity.</returns>
+    public DirectoryInfo GetModelPath();
 }

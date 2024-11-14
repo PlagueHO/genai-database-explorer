@@ -22,4 +22,10 @@ public sealed class SemanticModelStoredProcedure(
     /// Gets or sets the definition of the stored procedure.
     /// </summary>
     public string Definition { get; set; } = definition;
+
+    /// <inheritdoc/>
+    public override DirectoryInfo GetModelPath()
+    {
+        return new DirectoryInfo(Path.Combine("storedprocedures", GetModelEntityFilename().Name));
+    }
 }

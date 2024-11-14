@@ -63,17 +63,24 @@ public class BuildCommandHandler(
             getDefaultValue: () => false
         );
 
+        var singleModelFileOption = new Option<bool>(
+            aliases: ["--singleModelFile"],
+            description: "Flag to produce the model as a single file.",
+            getDefaultValue: () => false
+        );
+
         var buildCommand = new Command("build", "Build a GenAI Database Explorer project.");
         buildCommand.AddOption(projectPathOption);
         buildCommand.AddOption(skipTablesOption);
         buildCommand.AddOption(skipViewsOption);
         buildCommand.AddOption(skipStoredProceduresOption);
-        buildCommand.SetHandler(async (DirectoryInfo projectPath, bool skipTables, bool skipViews, bool skipStoredProcedures) =>
+        buildCommand.AddOption(singleModelFileOption);
+        buildCommand.SetHandler(async (DirectoryInfo projectPath, bool skipTables, bool skipViews, bool skipStoredProcedures, bool singleModelFile) =>
         {
             var handler = host.Services.GetRequiredService<BuildCommandHandler>();
-            var options = new BuildCommandHandlerOptions(projectPath, skipTables, skipViews, skipStoredProcedures);
+            var options = new BuildCommandHandlerOptions(projectPath, skipTables, skipViews, skipStoredProcedures, singleModelFile);
             await handler.HandleAsync(options);
-        }, projectPathOption, skipTablesOption, skipViewsOption, skipStoredProceduresOption);
+        }, projectPathOption, skipTablesOption, skipViewsOption, skipStoredProceduresOption, singleModelFileOption);
 
         return buildCommand;
     }
@@ -128,7 +135,7 @@ public class BuildCommandHandler(
         }
 
         _logger.LogInformation(LogMessages.SavingSemanticModel, semanticModelDirectory);
-        semanticModel.SaveModel(semanticModelDirectory);
+        semanticModel.SaveModel(semanticModelDirectory, !commandOptions.SingleModelFile);
 
         _logger.LogInformation(LogMessages.ProjectBuildComplete, projectPath.FullName);
     }
