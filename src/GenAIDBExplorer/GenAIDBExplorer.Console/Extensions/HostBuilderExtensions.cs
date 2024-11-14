@@ -47,7 +47,7 @@ public static class HostBuilderExtensions
             .ConfigureServices((context, services) =>
             {
                 // Register command handlers
-                services.AddSingleton<InitCommandHandler>();
+                services.AddSingleton<InitProjectCommandHandler>();
                 services.AddSingleton<ExtractModelCommandHandler>();
                 services.AddSingleton<QueryCommandHandler>();
                 services.AddSingleton<EnrichModelCommandHandler>();

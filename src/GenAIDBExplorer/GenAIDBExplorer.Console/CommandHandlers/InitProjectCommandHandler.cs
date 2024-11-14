@@ -13,7 +13,7 @@ namespace GenAIDBExplorer.Console.CommandHandlers;
 /// Command handler for initializing a project.
 /// </summary>
 /// <remarks>
-/// Initializes a new instance of the <see cref="InitCommandHandler"/> class.
+/// Initializes a new instance of the <see cref="InitProjectCommandHandler"/> class.
 /// </remarks>
 /// <param name="project">The project instance to initialize.</param>
 /// <param name="connectionProvider">The database connection provider instance for connecting to a SQL database.</param>
@@ -21,36 +21,36 @@ namespace GenAIDBExplorer.Console.CommandHandlers;
 /// <param name="semanticDescriptionProvider">The semantic description provider instance for generating semantic descriptions.</param>
 /// <param name="serviceProvider">The service provider instance for resolving dependencies.</param>
 /// <param name="logger">The logger instance for logging information, warnings, and errors.</param>
-public class InitCommandHandler(
+public class InitProjectCommandHandler(
     IProject project,
     ISemanticModelProvider semanticModelProvider,
     IDatabaseConnectionProvider connectionProvider,
     ISemanticDescriptionProvider semanticDescriptionProvider,
     IServiceProvider serviceProvider,
-    ILogger<ICommandHandler<InitCommandHandlerOptions>> logger
-) : CommandHandler<InitCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, semanticDescriptionProvider, serviceProvider, logger)
+    ILogger<ICommandHandler<InitProjectCommandHandlerOptions>> logger
+) : CommandHandler<InitProjectCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, semanticDescriptionProvider, serviceProvider, logger)
 {
     /// <summary>
-    /// Sets up the init command.
+    /// Sets up the init-project command.
     /// </summary>
     /// <param name="host">The host instance.</param>
-    /// <returns>The init command.</returns>
+    /// <returns>The init-project command.</returns>
     public static Command SetupCommand(IHost host)
     {
         var projectPathOption = new Option<DirectoryInfo>(
-            aliases: [ "--project", "-p" ],
+            aliases: ["--project", "-p"],
             description: "The path to the GenAI Database Explorer project."
         )
         {
             IsRequired = true
         };
 
-        var initCommand = new Command("init", "Initialize a GenAI Database Explorer project.");
+        var initCommand = new Command("init-project", "Initialize a GenAI Database Explorer project.");
         initCommand.AddOption(projectPathOption);
         initCommand.SetHandler(async (DirectoryInfo projectPath) =>
         {
-            var handler = host.Services.GetRequiredService<InitCommandHandler>();
-            var options = new InitCommandHandlerOptions(projectPath);
+            var handler = host.Services.GetRequiredService<InitProjectCommandHandler>();
+            var options = new InitProjectCommandHandlerOptions(projectPath);
             await handler.HandleAsync(options);
         }, projectPathOption);
 
@@ -61,7 +61,7 @@ public class InitCommandHandler(
     /// Handles the initialization command with the specified project path.
     /// </summary>
     /// <param name="commandOptions">The options for the command.</param>
-    public override async Task HandleAsync(InitCommandHandlerOptions commandOptions)
+    public override async Task HandleAsync(InitProjectCommandHandlerOptions commandOptions)
     {
         var projectPath = commandOptions.ProjectPath;
 
@@ -85,7 +85,7 @@ public class InitCommandHandler(
     }
 
     /// <summary>
-    /// Contains log messages used in the <see cref="InitCommandHandler"/> class.
+    /// Contains log messages used in the <see cref="InitProjectCommandHandler"/> class.
     /// </summary>
     public static class LogMessages
     {

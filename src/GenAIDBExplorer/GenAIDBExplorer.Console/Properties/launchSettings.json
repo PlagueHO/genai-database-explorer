@@ -4,10 +4,6 @@
       "commandName": "WSL2",
       "distributionName": ""
     },
-    "GenAIDBExplorer.Console Init": {
-      "commandName": "Project",
-      "commandLineArgs": "init\r\n-p d:\\temp"
-    },
     "GenAIDBExplorer.Console Query": {
       "commandName": "Project",
       "commandLineArgs": "query\r\n-p d:\\temp"
@@ -19,6 +15,10 @@
     "GenAIDBExplorer.Console enrich-model": {
       "commandName": "Project",
       "commandLineArgs": "enrich-model \r\n-p d:\\temp"
+    },
+    "GenAIDBExplorer.Console init-project": {
+      "commandName": "Project",
+      "commandLineArgs": "init-project\r\n-p d:\\temp"
     }
   }
 }

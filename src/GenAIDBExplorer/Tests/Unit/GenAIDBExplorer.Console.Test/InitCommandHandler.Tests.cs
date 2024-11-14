@@ -12,24 +12,24 @@ namespace GenAIDBExplorer.Console.Test;
 [TestClass]
 public class InitCommandHandlerTests
 {
-    private Mock<ILogger<ICommandHandler<InitCommandHandlerOptions>>> _loggerMock;
+    private Mock<ILogger<ICommandHandler<InitProjectCommandHandlerOptions>>> _loggerMock;
     private Mock<IServiceProvider> _serviceProviderMock;
     private Mock<IProject> _projectMock;
     private Mock<IDatabaseConnectionProvider> _sqlConnectionProviderMock;
     private Mock<ISemanticModelProvider> _semanticModelProviderMock;
     private Mock<ISemanticDescriptionProvider> _semanticDescriptionProviderMock;
-    private InitCommandHandler _initCommandHandler;
+    private InitProjectCommandHandler _initCommandHandler;
 
     [TestInitialize]
     public void Setup()
     {
-        _loggerMock = new Mock<ILogger<ICommandHandler<InitCommandHandlerOptions>>>();
+        _loggerMock = new Mock<ILogger<ICommandHandler<InitProjectCommandHandlerOptions>>>();
         _serviceProviderMock = new Mock<IServiceProvider>();
         _projectMock = new Mock<IProject>();
         _sqlConnectionProviderMock = new Mock<IDatabaseConnectionProvider>();
         _semanticModelProviderMock = new Mock<ISemanticModelProvider>();
         _semanticDescriptionProviderMock = new Mock<ISemanticDescriptionProvider>();
-        _initCommandHandler = new InitCommandHandler(
+        _initCommandHandler = new InitProjectCommandHandler(
             _projectMock.Object,
             _semanticModelProviderMock.Object,
             _sqlConnectionProviderMock.Object,
@@ -49,7 +49,7 @@ public class InitCommandHandlerTests
             projectPath.Create();
         }
 
-        var options = new InitCommandHandlerOptions(projectPath);
+        var options = new InitProjectCommandHandlerOptions(projectPath);
 
         // Act
         await _initCommandHandler.HandleAsync(options);
@@ -79,7 +79,7 @@ public class InitCommandHandlerTests
         }
         File.Create(Path.Combine(projectPath.FullName, "test.txt")).Dispose();
 
-        var options = new InitCommandHandlerOptions(projectPath);
+        var options = new InitProjectCommandHandlerOptions(projectPath);
 
         using var consoleOutput = new ConsoleOutput();
 
@@ -110,7 +110,7 @@ public class InitCommandHandlerTests
         }
         File.Create(Path.Combine(defaultProjectDirectory.FullName, "default.txt")).Dispose();
 
-        var options = new InitCommandHandlerOptions(projectPath);
+        var options = new InitProjectCommandHandlerOptions(projectPath);
 
         using var consoleOutput = new ConsoleOutput();
 

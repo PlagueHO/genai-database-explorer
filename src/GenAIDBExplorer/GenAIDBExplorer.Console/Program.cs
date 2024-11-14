@@ -25,7 +25,7 @@ internal static class Program
             .Build();
 
         // Set up commands
-        rootCommand.AddCommand(InitCommandHandler.SetupCommand(host));
+        rootCommand.AddCommand(InitProjectCommandHandler.SetupCommand(host));
         rootCommand.AddCommand(ExtractModelCommandHandler.SetupCommand(host));
         rootCommand.AddCommand(EnrichModelCommandHandler.SetupCommand(host));
         rootCommand.AddCommand(QueryCommandHandler.SetupCommand(host));
