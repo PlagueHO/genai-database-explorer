@@ -1,4 +1,4 @@
-﻿using GenAIDBExplorer.AI.SemanticProviders;
+using GenAIDBExplorer.AI.SemanticProviders;
 using GenAIDBExplorer.Data.DatabaseProviders;
 using GenAIDBExplorer.Data.SemanticModelProviders;
 using GenAIDBExplorer.Models.Project;
@@ -10,31 +10,30 @@ using System.CommandLine;
 namespace GenAIDBExplorer.Console.CommandHandlers;
 
 /// <summary>
-/// Command handler for building a project.
+/// Command handler for generating descriptions for a project.
 /// </summary>
 /// <remarks>
-/// Initializes a new instance of the <see cref="BuildCommandHandler"/> class.
+/// Initializes a new instance of the <see cref="GenerateDescriptionCommandHandler"/> class.
 /// </remarks>
-/// <param name="project">The project instance to build.</param>
-/// <param name="connectionProvider">The database connection provider instance for connecting to a SQL database.</param>
+/// <param name="project">The project instance to generate descriptions for.</param>
 /// <param name="semanticModelProvider">The semantic model provider instance for building a semantic model of the database.</param>
 /// <param name="semanticDescriptionProvider">The semantic description provider instance for generating semantic descriptions.</param>
 /// <param name="serviceProvider">The service provider instance for resolving dependencies.</param>
 /// <param name="logger">The logger instance for logging information, warnings, and errors.</param>
-public class BuildCommandHandler(
+public class GenerateDescriptionCommandHandler(
     IProject project,
     IDatabaseConnectionProvider connectionProvider,
     ISemanticModelProvider semanticModelProvider,
     ISemanticDescriptionProvider semanticDescriptionProvider,
     IServiceProvider serviceProvider,
-    ILogger<ICommandHandler<BuildCommandHandlerOptions>> logger
-) : CommandHandler<BuildCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, semanticDescriptionProvider, serviceProvider, logger)
+    ILogger<ICommandHandler<GenerateDescriptionCommandHandlerOptions>> logger
+) : CommandHandler<GenerateDescriptionCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, semanticDescriptionProvider, serviceProvider, logger)
 {
     /// <summary>
-    /// Sets up the build command.
+    /// Sets up the generate-description command.
     /// </summary>
     /// <param name="host">The host instance.</param>
-    /// <returns>The build command.</returns>
+    /// <returns>The generate-description command.</returns>
     public static Command SetupCommand(IHost host)
     {
         var projectPathOption = new Option<DirectoryInfo>(
@@ -47,58 +46,52 @@ public class BuildCommandHandler(
 
         var skipTablesOption = new Option<bool>(
             aliases: ["--skipTables"],
-            description: "Flag to skip tables during the build process.",
+            description: "Flag to skip tables during the description generation process.",
             getDefaultValue: () => false
         );
 
         var skipViewsOption = new Option<bool>(
             aliases: ["--skipViews"],
-            description: "Flag to skip views during the build process.",
+            description: "Flag to skip views during the description generation process.",
             getDefaultValue: () => false
         );
 
         var skipStoredProceduresOption = new Option<bool>(
             aliases: ["--skipStoredProcedures"],
-            description: "Flag to skip stored procedures during the build process.",
+            description: "Flag to skip stored procedures during the description generation process.",
             getDefaultValue: () => false
         );
 
-        var singleModelFileOption = new Option<bool>(
-            aliases: ["--singleModelFile"],
-            description: "Flag to produce the model as a single file.",
-            getDefaultValue: () => false
-        );
-
-        var buildCommand = new Command("build", "Build a GenAI Database Explorer project.");
-        buildCommand.AddOption(projectPathOption);
-        buildCommand.AddOption(skipTablesOption);
-        buildCommand.AddOption(skipViewsOption);
-        buildCommand.AddOption(skipStoredProceduresOption);
-        buildCommand.AddOption(singleModelFileOption);
-        buildCommand.SetHandler(async (DirectoryInfo projectPath, bool skipTables, bool skipViews, bool skipStoredProcedures, bool singleModelFile) =>
+        var generateDescriptionCommand = new Command("generate-description", "Generate descriptions entities for a GenAI Database Explorer project that has already been built.");
+        generateDescriptionCommand.AddOption(projectPathOption);
+        generateDescriptionCommand.AddOption(skipTablesOption);
+        generateDescriptionCommand.AddOption(skipViewsOption);
+        generateDescriptionCommand.AddOption(skipStoredProceduresOption);
+        generateDescriptionCommand.SetHandler(async (DirectoryInfo projectPath, bool skipTables, bool skipViews, bool skipStoredProcedures) =>
         {
-            var handler = host.Services.GetRequiredService<BuildCommandHandler>();
-            var options = new BuildCommandHandlerOptions(projectPath, skipTables, skipViews, skipStoredProcedures, singleModelFile);
+            var handler = host.Services.GetRequiredService<GenerateDescriptionCommandHandler>();
+            var options = new GenerateDescriptionCommandHandlerOptions(projectPath, skipTables, skipViews, skipStoredProcedures);
             await handler.HandleAsync(options);
-        }, projectPathOption, skipTablesOption, skipViewsOption, skipStoredProceduresOption, singleModelFileOption);
+        }, projectPathOption, skipTablesOption, skipViewsOption, skipStoredProceduresOption);
 
-        return buildCommand;
+        return generateDescriptionCommand;
     }
 
     /// <summary>
-    /// Handles the build command with the specified project path.
+    /// Handles the generate-description command with the specified project path.
     /// </summary>
     /// <param name="commandOptions">The options for the command.</param>
-    public override async Task HandleAsync(BuildCommandHandlerOptions commandOptions)
+    public override async Task HandleAsync(GenerateDescriptionCommandHandlerOptions commandOptions)
     {
         var projectPath = commandOptions.ProjectPath;
 
-        _logger.LogInformation(LogMessages.BuildingProject, projectPath.FullName);
+        _logger.LogInformation(LogMessages.GeneratingDescriptions, projectPath.FullName);
 
         _project.LoadConfiguration(projectPath.FullName);
 
-        // Build the Semantic Model
-        var semanticModel = await _semanticModelProvider.BuildSemanticModelAsync().ConfigureAwait(false);
+        // Load the Semantic Model
+        var semanticModelDirectory = new DirectoryInfo(Path.Combine(projectPath.FullName, _project.Settings.Database.Name));
+        var semanticModel = await _semanticModelProvider.LoadSemanticModelAsync(semanticModelDirectory);
 
         if (!commandOptions.SkipTables)
         {
@@ -127,26 +120,15 @@ public class BuildCommandHandler(
             }
         }
 
-        // Save the Semantic Model into the project directory into a subdirectory with the name of the semanticModel.Name
-        var semanticModelDirectory = new DirectoryInfo(Path.Combine(projectPath.FullName, semanticModel.Name));
-        if (!semanticModelDirectory.Exists)
-        {
-            semanticModelDirectory.Create();
-        }
-
-        _logger.LogInformation(LogMessages.SavingSemanticModel, semanticModelDirectory);
-        await semanticModel.SaveModelAsync(semanticModelDirectory, !commandOptions.SingleModelFile);
-
-        _logger.LogInformation(LogMessages.ProjectBuildComplete, projectPath.FullName);
+        _logger.LogInformation(LogMessages.DescriptionGenerationComplete, projectPath.FullName);
     }
 
     /// <summary>
-    /// Contains log messages used in the <see cref="BuildCommandHandler"/> class.
+    /// Contains log messages used in the <see cref="GenerateDescriptionCommandHandler"/> class.
     /// </summary>
     public static class LogMessages
     {
-        public const string BuildingProject = "Building project at '{ProjectPath}'.";
-        public const string SavingSemanticModel = "Saving semantic model to '{SemanticModelName}'.";
-        public const string ProjectBuildComplete = "Project build complete at '{ProjectPath}'.";
+        public const string GeneratingDescriptions = "Generating descriptions for project at '{ProjectPath}'.";
+        public const string DescriptionGenerationComplete = "Description generation complete at '{ProjectPath}'.";
     }
 }

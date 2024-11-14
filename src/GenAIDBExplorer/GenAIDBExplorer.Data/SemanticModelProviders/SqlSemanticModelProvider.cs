@@ -26,7 +26,17 @@ public sealed class SqlSemanticModelProvider(
 
         return semanticModel;
     }
-    
+
+    /// <inheritdoc/>
+    public async Task<SemanticModel> LoadSemanticModelAsync(DirectoryInfo modelPath)
+    {
+        _logger.LogInformation("Loading semantic model from {modelPath}", modelPath);
+
+        var semanticModel = await CreateSemanticModel().LoadModelAsync(modelPath);
+
+        return semanticModel;
+    }
+
     /// <inheritdoc/>
     public async Task<SemanticModel> BuildSemanticModelAsync()
     {
@@ -88,6 +98,7 @@ public sealed class SqlSemanticModelProvider(
         // Add the stored procedures to the semantic model
         semanticModel.StoredProcedures.AddRange(semanticModelStoredProcedures);
 
+        // return the semantic model Task
         return semanticModel;
     }
 

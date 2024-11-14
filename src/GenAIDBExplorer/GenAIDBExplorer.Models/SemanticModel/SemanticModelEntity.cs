@@ -1,6 +1,5 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using YamlDotNet.Serialization;
 
 namespace GenAIDBExplorer.Models.SemanticModel;
 
@@ -53,12 +52,12 @@ public abstract class SemanticModelEntity(
     /// Saves the semantic model entity to the specified folder.
     /// </summary>
     /// <param name="folderPath">The folder path where the entity will be saved.</param>
-    public void SaveModel(DirectoryInfo folderPath)
+    public async Task SaveModelAsync(DirectoryInfo folderPath)
     {
         var fileName = $"{Schema}.{Name}.json";
         var filePath = Path.Combine(folderPath.FullName, fileName);
 
-        File.WriteAllText(filePath, JsonSerializer.Serialize<object>(this, _jsonSerializerOptions));
+        await File.WriteAllTextAsync(filePath, JsonSerializer.Serialize<object>(this, _jsonSerializerOptions));
     }
 
     /// <inheritdoc/>

@@ -106,40 +106,40 @@ public sealed class SemanticModel(
     /// <summary>
     /// Saves the semantic model to the specified folder.
     /// </summary>
-    /// <param name="folderPath">The folder path where the model will be saved.</param>
+    /// <param name="modelPath">The folder path where the model will be saved.</param>
     /// <param name="splitModel">Flag to split the model into separate files.</param>
-    public void SaveModel(DirectoryInfo folderPath, bool splitModel = false)
+    public async Task SaveModelAsync(DirectoryInfo modelPath, bool splitModel = false)
     {
         // Save the semantic model to a JSON file.
-        Directory.CreateDirectory(folderPath.FullName);
+        Directory.CreateDirectory(modelPath.FullName);
 
         if (splitModel)
         {
             // Save the tables to separate files in a subfolder called "tables".
-            var tablesFolderPath = new DirectoryInfo(Path.Combine(folderPath.FullName, "tables"));
+            var tablesFolderPath = new DirectoryInfo(Path.Combine(modelPath.FullName, "tables"));
             Directory.CreateDirectory(tablesFolderPath.FullName);
 
             foreach (var table in Tables)
             {
-                table.SaveModel(tablesFolderPath);
+                await table.SaveModelAsync(tablesFolderPath);
             }
 
             // Save the views to separate files in a subfolder called "views".
-            var viewsFolderPath = new DirectoryInfo(Path.Combine(folderPath.FullName, "views"));
+            var viewsFolderPath = new DirectoryInfo(Path.Combine(modelPath.FullName, "views"));
             Directory.CreateDirectory(viewsFolderPath.FullName);
 
             foreach (var view in Views)
             {
-                view.SaveModel(viewsFolderPath);
+                await view.SaveModelAsync(viewsFolderPath);
             }
 
             // Save the stored procedures to separate files in a subfolder called "storedprocedures".
-            var storedProceduresFolderPath = new DirectoryInfo(Path.Combine(folderPath.FullName, "storedprocedures"));
+            var storedProceduresFolderPath = new DirectoryInfo(Path.Combine(modelPath.FullName, "storedprocedures"));
             Directory.CreateDirectory(storedProceduresFolderPath.FullName);
 
             foreach (var storedProcedure in StoredProcedures)
             {
-                storedProcedure.SaveModel(storedProceduresFolderPath);
+                await storedProcedure.SaveModelAsync(storedProceduresFolderPath);
             }
 
             // Add custom converters for the tables, views, and stored procedures
@@ -149,25 +149,25 @@ public sealed class SemanticModel(
             _jsonSerializerOptions.Converters.Add(new SemanticModelStoredProcedureJsonConverter());
         }
         
-        var semanticModelJsonPath = Path.Combine(folderPath.FullName, "semanticmodel.json");
-        File.WriteAllText(semanticModelJsonPath, JsonSerializer.Serialize(this, _jsonSerializerOptions));
+        var semanticModelJsonPath = Path.Combine(modelPath.FullName, "semanticmodel.json");
+        await File.WriteAllTextAsync(semanticModelJsonPath, JsonSerializer.Serialize(this, _jsonSerializerOptions));
     }
 
     /// <summary>
     /// Loads the semantic model from the specified folder.
     /// </summary>
-    /// <param name="folderPath">The folder path where the model is located.</param>
+    /// <param name="modelPath">The folder path where the model is located.</param>
     /// <returns>The loaded semantic model.</returns>
-    public static SemanticModel LoadModel(DirectoryInfo folderPath)
+    public async Task<SemanticModel> LoadModelAsync(DirectoryInfo modelPath)
     {
-        var semanticModelJsonPath = Path.Combine(folderPath.FullName, "semanticmodel.json");
+        var semanticModelJsonPath = Path.Combine(modelPath.FullName, "semanticmodel.json");
         if (!File.Exists(semanticModelJsonPath))
         {
             throw new FileNotFoundException("The semantic model file was not found.", semanticModelJsonPath);
         }
 
-        var jsonString = File.ReadAllText(semanticModelJsonPath);
-        return JsonSerializer.Deserialize<SemanticModel>(jsonString, _jsonSerializerOptions)
+        await using var stream = File.OpenRead(semanticModelJsonPath);
+        return await JsonSerializer.DeserializeAsync<SemanticModel>(stream, _jsonSerializerOptions)
                ?? throw new InvalidOperationException("Failed to deserialize the semantic model.");
     }
 }

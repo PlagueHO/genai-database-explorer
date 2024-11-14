@@ -39,7 +39,7 @@ public interface ISemanticModelEntity
     /// Saves the semantic model entity to the specified folder.
     /// </summary>
     /// <param name="folderPath">The folder path where the entity will be saved.</param>
-    void SaveModel(DirectoryInfo folderPath);
+    public Task SaveModelAsync(DirectoryInfo folderPath);
 
     /// <summary>
     /// Gets the filename of the model entity if the model is split.

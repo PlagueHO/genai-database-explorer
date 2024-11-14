@@ -14,6 +14,13 @@ public interface ISemanticModelProvider
     SemanticModel CreateSemanticModel();
 
     /// <summary>
+    /// Loads the semantic model asynchronously.
+    /// </summary>
+    /// <param name="modelPath">The folder path where the model is located.</param>
+    /// <returns></returns>
+    Task<SemanticModel> LoadSemanticModelAsync(DirectoryInfo modelPath);
+
+    /// <summary>
     /// Builds the semantic model asynchronously.
     /// </summary>
     /// <returns>A task representing the asynchronous operation. The task result contains the built <see cref="SemanticModel"/>.</returns>

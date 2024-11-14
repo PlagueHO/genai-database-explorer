@@ -13,6 +13,7 @@ public interface ISemanticModel
     /// <summary>
     /// Saves the semantic model to the specified folder.
     /// </summary>
-    /// <param name="folderPath">The folder path where the semantic model will be saved.</param>
-    void SaveModel(DirectoryInfo folderPath, bool splitModel = false);
+    /// <param name="modelPath">The folder path where the semantic model will be saved.</param>
+    /// <param name="splitModel">Flag to split the model into separate files.</param>
+    public Task SaveModelAsync(DirectoryInfo modelPath, bool splitModel = false);
 }

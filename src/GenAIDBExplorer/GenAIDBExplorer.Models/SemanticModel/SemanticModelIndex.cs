@@ -55,16 +55,6 @@ public sealed class SemanticModelIndex(
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool IsUniqueConstraint { get; set; }
 
-    /// <summary>
-    /// Saving an index to a folder is not implemented.
-    /// </summary>
-    /// <param name="folderPath"></param>
-    /// <exception cref="NotImplementedException"></exception>
-    public new void SaveModel(DirectoryInfo folderPath)
-    {
-        throw new NotImplementedException();
-    }
-
     /// <inheritdoc/>
     public override DirectoryInfo GetModelPath()
     {

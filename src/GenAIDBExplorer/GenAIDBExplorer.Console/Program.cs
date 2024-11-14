@@ -1,9 +1,7 @@
 ﻿using System.CommandLine;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using GenAIDBExplorer.Console.CommandHandlers;
 using GenAIDBExplorer.Console.Extensions;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace GenAIDBExplorer.Console;
 
@@ -30,6 +28,7 @@ internal static class Program
         rootCommand.AddCommand(InitCommandHandler.SetupCommand(host));
         rootCommand.AddCommand(BuildCommandHandler.SetupCommand(host));
         rootCommand.AddCommand(QueryCommandHandler.SetupCommand(host));
+        rootCommand.AddCommand(GenerateDescriptionCommandHandler.SetupCommand(host));
 
         // Invoke the root command
         await rootCommand.InvokeAsync(args);
