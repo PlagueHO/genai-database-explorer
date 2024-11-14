@@ -17,7 +17,7 @@ internal static class Program
     private static async Task Main(string[] args)
     {
         // Create the root command with a description
-        var rootCommand = new RootCommand("GenAI Database Explorer tool");
+        var rootCommand = new RootCommand("GenAI Database Explorer console application");
 
         // Build the host
         var host = Host.CreateDefaultBuilder(args)
@@ -26,9 +26,9 @@ internal static class Program
 
         // Set up commands
         rootCommand.AddCommand(InitCommandHandler.SetupCommand(host));
-        rootCommand.AddCommand(BuildCommandHandler.SetupCommand(host));
+        rootCommand.AddCommand(ExtractModelCommandHandler.SetupCommand(host));
+        rootCommand.AddCommand(EnrichModelCommandHandler.SetupCommand(host));
         rootCommand.AddCommand(QueryCommandHandler.SetupCommand(host));
-        rootCommand.AddCommand(GenerateDescriptionCommandHandler.SetupCommand(host));
 
         // Invoke the root command
         await rootCommand.InvokeAsync(args);

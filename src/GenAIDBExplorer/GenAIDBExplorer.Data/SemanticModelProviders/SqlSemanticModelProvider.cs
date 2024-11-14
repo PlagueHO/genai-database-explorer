@@ -38,9 +38,9 @@ public sealed class SqlSemanticModelProvider(
     }
 
     /// <inheritdoc/>
-    public async Task<SemanticModel> BuildSemanticModelAsync()
+    public async Task<SemanticModel> ExtractSemanticModelAsync()
     {
-        _logger.LogInformation("Building semantic model for database {DatabaseName}", _project.Settings.Database.Name);
+        _logger.LogInformation("Extracting semantic model for database {DatabaseName}", _project.Settings.Database.Name);
 
         // Create the new SemanticModel instance to build
         var semanticModel = CreateSemanticModel();

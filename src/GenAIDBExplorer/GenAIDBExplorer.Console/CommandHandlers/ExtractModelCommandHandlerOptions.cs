@@ -1,16 +1,16 @@
-using GenAIDBExplorer.Console.CommandHandlers;
+namespace GenAIDBExplorer.Console.CommandHandlers;
 
 /// <summary>
-/// Represents the options for the Build command handler.
+/// Represents the options for the Extract Model command handler.
 /// </summary>
 /// <remarks>
-/// Initializes a new instance of the <see cref="BuildCommandHandlerOptions"/> class.
+/// Initializes a new instance of the <see cref="ExtractModelCommandHandlerOptions"/> class.
 /// </remarks>
 /// <param name="projectPath">The path to the project directory.</param>
-/// <param name="skipTables">Flag to skip tables during the build process.</param>
-/// <param name="skipViews">Flag to skip views during the build process.</param>
-/// <param name="skipStoredProcedures">Flag to skip stored procedures during the build process.</param>
-public class BuildCommandHandlerOptions(
+/// <param name="skipTables">Flag to skip tables during the extract model process.</param>
+/// <param name="skipViews">Flag to skip views during the extract model process.</param>
+/// <param name="skipStoredProcedures">Flag to skip stored procedures during the extract model process.</param>
+public class ExtractModelCommandHandlerOptions(
     DirectoryInfo projectPath,
     bool skipTables = false,
     bool skipViews = false,

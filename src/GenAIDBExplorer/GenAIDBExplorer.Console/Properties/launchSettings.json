@@ -4,10 +4,6 @@
       "commandName": "WSL2",
       "distributionName": ""
     },
-    "GenAIDBExplorer.Console Build": {
-      "commandName": "Project",
-      "commandLineArgs": "build\r\n-p d:\\temp --skipTables --skipViews --skipStoredProcedures"
-    },
     "GenAIDBExplorer.Console Init": {
       "commandName": "Project",
       "commandLineArgs": "init\r\n-p d:\\temp"
@@ -15,6 +11,14 @@
     "GenAIDBExplorer.Console Query": {
       "commandName": "Project",
       "commandLineArgs": "query\r\n-p d:\\temp"
+    },
+    "GenAIDBExplorer.Console extract-model": {
+      "commandName": "Project",
+      "commandLineArgs": "extract-model \r\n-p d:\\temp"
+    },
+    "GenAIDBExplorer.Console enrich-model": {
+      "commandName": "Project",
+      "commandLineArgs": "enrich-model \r\n-p d:\\temp"
     }
   }
 }

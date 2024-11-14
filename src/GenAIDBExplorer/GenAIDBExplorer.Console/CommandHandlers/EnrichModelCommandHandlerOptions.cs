@@ -1,16 +1,16 @@
 namespace GenAIDBExplorer.Console.CommandHandlers;
 
 /// <summary>
-/// Represents the options for the Generate Description command handler.
+/// Represents the options for the Enrich Model command handler.
 /// </summary>
 /// <remarks>
-/// Initializes a new instance of the <see cref="GenerateDescriptionCommandHandlerOptions"/> class.
+/// Initializes a new instance of the <see cref="EnrichModelCommandHandlerOptions"/> class.
 /// </remarks>
 /// <param name="projectPath">The path to the project directory.</param>
 /// <param name="skipTables">Flag to skip tables during the description generation process.</param>
 /// <param name="skipViews">Flag to skip views during the description generation process.</param>
 /// <param name="skipStoredProcedures">Flag to skip stored procedures during the description generation process.</param>
-public class GenerateDescriptionCommandHandlerOptions(
+public class EnrichModelCommandHandlerOptions(
     DirectoryInfo projectPath,
     bool skipTables = false,
     bool skipViews = false,
