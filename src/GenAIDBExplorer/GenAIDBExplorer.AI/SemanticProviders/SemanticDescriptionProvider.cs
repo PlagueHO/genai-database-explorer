@@ -104,6 +104,7 @@ public class SemanticDescriptionProvider(
         var viewInfo = new
         {
             structure = view.ToYaml(),
+            definition = view.Definition,
             data = sampleDataJson
         };
 

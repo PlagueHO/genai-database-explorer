@@ -19,5 +19,8 @@ user:
 # View Structure (YAML)
 {{view.structure}}
 
+# View Definition
+{{view.definition}}
+
 # Sample Data
 {{view.data}}
