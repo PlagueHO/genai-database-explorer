@@ -42,6 +42,12 @@ public interface ISemanticModelEntity
     public Task SaveModelAsync(DirectoryInfo folderPath);
 
     /// <summary>
+    /// Loads the semantic model entity from the specified folder.
+    /// </summary>
+    /// <param name="folderPath">The folder path where the entity will be loaded from.</param>
+    public Task LoadModelAsync(DirectoryInfo folderPath);
+
+    /// <summary>
     /// Gets the filename of the model entity if the model is split.
     /// </summary>
     /// <returns>The filename of the model entity.</returns>

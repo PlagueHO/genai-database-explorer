@@ -41,6 +41,29 @@ public sealed class SemanticModelView(
     }
 
     /// <inheritdoc/>
+    public new async Task LoadModelAsync(DirectoryInfo folderPath)
+    {
+        var fileName = $"{Schema}.{Name}.json";
+        var filePath = Path.Combine(folderPath.FullName, fileName);
+        if (!File.Exists(filePath))
+        {
+            throw new FileNotFoundException("The specified view file does not exist.", filePath);
+        }
+        
+        var json = await File.ReadAllTextAsync(filePath);
+        var view = JsonSerializer.Deserialize<SemanticModelView>(json) ?? throw new InvalidOperationException("Failed to load view.");
+
+        Schema = view.Schema;
+        Name = view.Name;
+        Description = view.Description;
+        SemanticDescription = view.SemanticDescription;
+        IsIgnored = view.IsIgnored;
+        IgnoreReason = view.IgnoreReason;
+        Definition = view.Definition;
+        Columns = view.Columns;
+    }
+
+    /// <inheritdoc/>
     public override DirectoryInfo GetModelPath()
     {
         return new DirectoryInfo(Path.Combine("views", GetModelEntityFilename().Name));

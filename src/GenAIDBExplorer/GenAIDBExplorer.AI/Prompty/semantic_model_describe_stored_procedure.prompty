@@ -15,7 +15,7 @@ user:
 {{project.description}}
 
 # Stored Procedure Definition
-{{storedprocedure.definition}}
+{{storedProcedure.definition}}
 
 # Stored Procedure Parameters
-{{storedprocedure.parameters}}
+{{storedProcedure.parameters}}

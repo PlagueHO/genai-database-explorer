@@ -46,13 +46,13 @@ public class EnrichModelCommandHandler(
 
         var skipTablesOption = new Option<bool>(
             aliases: ["--skipTables"],
-            description: "Flag to skip tables during the description semantic model enrichment process.",
+            description: "Flag to skip tables during the semantic model enrichment process.",
             getDefaultValue: () => false
         );
 
         var skipViewsOption = new Option<bool>(
             aliases: ["--skipViews"],
-            description: "Flag to skip views during the description semantic model enrichment process.",
+            description: "Flag to skip views during the semantic model enrichment process.",
             getDefaultValue: () => false
         );
 
@@ -62,17 +62,24 @@ public class EnrichModelCommandHandler(
             getDefaultValue: () => false
         );
 
+        var singleModelFileOption = new Option<bool>(
+            aliases: ["--singleModelFile"],
+            description: "Flag to save the semantic model as a single file.",
+            getDefaultValue: () => false
+        );
+
         var enrichModelCommand = new Command("enrich-model", "Enrich an existing semantic model with descriptions in a GenAI Database Explorer project.");
         enrichModelCommand.AddOption(projectPathOption);
         enrichModelCommand.AddOption(skipTablesOption);
         enrichModelCommand.AddOption(skipViewsOption);
         enrichModelCommand.AddOption(skipStoredProceduresOption);
-        enrichModelCommand.SetHandler(async (DirectoryInfo projectPath, bool skipTables, bool skipViews, bool skipStoredProcedures) =>
+        enrichModelCommand.AddOption(singleModelFileOption);
+        enrichModelCommand.SetHandler(async (DirectoryInfo projectPath, bool skipTables, bool skipViews, bool skipStoredProcedures, bool singleModelFile) =>
         {
             var handler = host.Services.GetRequiredService<EnrichModelCommandHandler>();
-            var options = new EnrichModelCommandHandlerOptions(projectPath, skipTables, skipViews, skipStoredProcedures);
+            var options = new EnrichModelCommandHandlerOptions(projectPath, skipTables, skipViews, skipStoredProcedures, singleModelFile);
             await handler.HandleAsync(options);
-        }, projectPathOption, skipTablesOption, skipViewsOption, skipStoredProceduresOption);
+        }, projectPathOption, skipTablesOption, skipViewsOption, skipStoredProceduresOption, singleModelFileOption);
 
         return enrichModelCommand;
     }
@@ -122,7 +129,7 @@ public class EnrichModelCommandHandler(
 
         // Save the semantic model
         _logger.LogInformation(LogMessages.SavingSemanticModel, projectPath.FullName);
-        await semanticModel.SaveModelAsync(semanticModelDirectory);
+        await semanticModel.SaveModelAsync(semanticModelDirectory, !commandOptions.SingleModelFile);
 
         _logger.LogInformation(LogMessages.EnrichSemanticModelComplete, projectPath.FullName);
     }

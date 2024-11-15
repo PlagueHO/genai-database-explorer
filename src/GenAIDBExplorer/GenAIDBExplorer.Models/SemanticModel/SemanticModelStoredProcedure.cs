@@ -24,6 +24,28 @@ public sealed class SemanticModelStoredProcedure(
     public string Definition { get; set; } = definition;
 
     /// <inheritdoc/>
+    public new async Task LoadModelAsync(DirectoryInfo folderPath)
+    {
+        var fileName = $"{Schema}.{Name}.json";
+        var filePath = Path.Combine(folderPath.FullName, fileName);
+        if (!File.Exists(filePath))
+        {
+            throw new FileNotFoundException("The specified stored procedure file does not exist.", filePath);
+        }
+
+        var json = await File.ReadAllTextAsync(filePath);
+        var storedProcedure = JsonSerializer.Deserialize<SemanticModelStoredProcedure>(json) ?? throw new InvalidOperationException("Failed to load stored procedure.");
+
+        Schema = storedProcedure.Schema;
+        Name = storedProcedure.Name;
+        Description = storedProcedure.Description;
+        SemanticDescription = storedProcedure.SemanticDescription;
+        IsIgnored = storedProcedure.IsIgnored;
+        Parameters = storedProcedure.Parameters;
+        Definition = storedProcedure.Definition;
+    }
+
+    /// <inheritdoc/>
     public override DirectoryInfo GetModelPath()
     {
         return new DirectoryInfo(Path.Combine("storedprocedures", GetModelEntityFilename().Name));

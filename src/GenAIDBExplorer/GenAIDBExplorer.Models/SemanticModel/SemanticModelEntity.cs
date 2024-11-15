@@ -48,16 +48,31 @@ public abstract class SemanticModelEntity(
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? IgnoreReason { get; set; }
 
-    /// <summary>
-    /// Saves the semantic model entity to the specified folder.
-    /// </summary>
-    /// <param name="folderPath">The folder path where the entity will be saved.</param>
+    /// <inheritdoc/>
     public async Task SaveModelAsync(DirectoryInfo folderPath)
     {
         var fileName = $"{Schema}.{Name}.json";
         var filePath = Path.Combine(folderPath.FullName, fileName);
 
         await File.WriteAllTextAsync(filePath, JsonSerializer.Serialize<object>(this, _jsonSerializerOptions));
+    }
+
+    /// <inheritdoc/>
+    public async Task LoadModelAsync(DirectoryInfo folderPath)
+    {
+        var fileName = $"{Schema}.{Name}.json";
+        var filePath = Path.Combine(folderPath.FullName, fileName);
+        if (File.Exists(filePath))
+        {
+            await using var stream = File.OpenRead(filePath);
+            var entity = await JsonSerializer.DeserializeAsync<SemanticModelEntity>(stream, _jsonSerializerOptions);
+            Schema = entity.Schema;
+            Name = entity.Name;
+            Description = entity.Description;
+            SemanticDescription = entity.SemanticDescription;
+            IsIgnored = entity.IsIgnored;
+            IgnoreReason = entity.IgnoreReason;
+        }
     }
 
     /// <inheritdoc/>

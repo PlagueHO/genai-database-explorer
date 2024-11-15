@@ -101,22 +101,4 @@ public sealed class SqlSemanticModelProvider(
         // return the semantic model Task
         return semanticModel;
     }
-
-    /// <summary>
-    /// Creates a Semantic Model Stored Procedure for the specified stored procedure info.
-    /// </summary>
-    /// <param name="storedProcedure">The stored procedure info to create a semantic model for.</param>
-    /// <returns>A task representing the asynchronous operation. The task result contains the created <see cref="SemanticModelStoredProcedure"/>.</returns>
-    public Task<SemanticModelStoredProcedure> CreateSemanticModelStoredProcedureAsync(StoredProcedureInfo storedProcedure)
-    {
-        var semanticModelStoredProcedure = new SemanticModelStoredProcedure(
-            storedProcedure.SchemaName,
-            storedProcedure.ProcedureName,
-            storedProcedure.Parameters,
-            storedProcedure.Definition
-        );
-
-        return Task.FromResult(semanticModelStoredProcedure);
-    }
-
 }

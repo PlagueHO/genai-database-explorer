@@ -1,4 +1,6 @@
-﻿namespace GenAIDBExplorer.Models.SemanticModel;
+﻿using System.Text.Json;
+
+namespace GenAIDBExplorer.Models.SemanticModel;
 
 /// <summary>
 /// Represents a table in the semantic model.
@@ -55,6 +57,29 @@ public sealed class SemanticModelTable(
     public bool RemoveIndex(SemanticModelIndex index)
     {
         return Indexes.Remove(index);
+    }
+
+    /// <inheritdoc/>
+    public new async Task LoadModelAsync(DirectoryInfo folderPath)
+    {
+        var fileName = $"{Schema}.{Name}.json";
+        var filePath = Path.Combine(folderPath.FullName, fileName);
+        if (!File.Exists(filePath))
+        {
+            throw new FileNotFoundException("The specified table file does not exist.", filePath);
+        }
+
+        await using var stream = File.OpenRead(filePath);
+        var table = await JsonSerializer.DeserializeAsync<SemanticModelTable>(stream) ?? throw new InvalidOperationException("Failed to load table.");
+
+        Schema = table.Schema;
+        Name = table.Name;
+        Description = table.Description;
+        SemanticDescription = table.SemanticDescription;
+        IsIgnored = table.IsIgnored;
+        IgnoreReason = table.IgnoreReason;
+        Columns = table.Columns;
+        Indexes = table.Indexes;
     }
 
     /// <inheritdoc/>
