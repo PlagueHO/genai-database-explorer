@@ -45,6 +45,7 @@ public sealed class SemanticModelView(
     {
         var fileName = $"{Schema}.{Name}.json";
         var filePath = Path.Combine(folderPath.FullName, fileName);
+        
         if (!File.Exists(filePath))
         {
             throw new FileNotFoundException("The specified view file does not exist.", filePath);

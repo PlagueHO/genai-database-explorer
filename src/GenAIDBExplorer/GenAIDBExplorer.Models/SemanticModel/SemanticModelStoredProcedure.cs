@@ -28,6 +28,7 @@ public sealed class SemanticModelStoredProcedure(
     {
         var fileName = $"{Schema}.{Name}.json";
         var filePath = Path.Combine(folderPath.FullName, fileName);
+        
         if (!File.Exists(filePath))
         {
             throw new FileNotFoundException("The specified stored procedure file does not exist.", filePath);

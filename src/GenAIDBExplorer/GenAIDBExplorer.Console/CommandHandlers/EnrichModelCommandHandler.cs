@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.CommandLine;
+using System.Resources;
 
 namespace GenAIDBExplorer.Console.CommandHandlers;
 
@@ -29,6 +30,8 @@ public class EnrichModelCommandHandler(
     ILogger<ICommandHandler<EnrichModelCommandHandlerOptions>> logger
 ) : CommandHandler<EnrichModelCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, semanticDescriptionProvider, serviceProvider, logger)
 {
+    private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Console.Resources.LogMessages", typeof(EnrichModelCommandHandler).Assembly);
+
     /// <summary>
     /// Sets up the enrich-model command.
     /// </summary>
@@ -92,13 +95,14 @@ public class EnrichModelCommandHandler(
     {
         var projectPath = commandOptions.ProjectPath;
 
-        _logger.LogInformation(LogMessages.EnrichingSemanticModel, projectPath.FullName);
 
         _project.LoadConfiguration(projectPath.FullName);
 
         // Load the Semantic Model
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("LoadingSemanticModel"), projectPath.FullName);
         var semanticModelDirectory = new DirectoryInfo(Path.Combine(projectPath.FullName, _project.Settings.Database.Name));
         var semanticModel = await _semanticModelProvider.LoadSemanticModelAsync(semanticModelDirectory);
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("LoadedSemanticModel"), projectPath.FullName);
 
         if (!commandOptions.SkipTables)
         {
@@ -128,19 +132,10 @@ public class EnrichModelCommandHandler(
         }
 
         // Save the semantic model
-        _logger.LogInformation(LogMessages.SavingSemanticModel, projectPath.FullName);
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("SavingSemanticModel"), projectPath.FullName);
         await semanticModel.SaveModelAsync(semanticModelDirectory, !commandOptions.SingleModelFile);
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("SavedSemanticModel"), projectPath.FullName);
 
-        _logger.LogInformation(LogMessages.EnrichSemanticModelComplete, projectPath.FullName);
-    }
-
-    /// <summary>
-    /// Contains log messages used in the <see cref="EnrichModelCommandHandler"/> class.
-    /// </summary>
-    public static class LogMessages
-    {
-        public const string EnrichingSemanticModel = "Enriching semantic model with descriptions for project at '{ProjectPath}'.";
-        public const string SavingSemanticModel = "Saving semantic model to '{SemanticModelName}'.";
-        public const string EnrichSemanticModelComplete = "Semantic model enrichment complete at '{ProjectPath}'.";
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("EnrichSemanticModelComplete"), projectPath.FullName);
     }
 }

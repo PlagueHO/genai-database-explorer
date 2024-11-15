@@ -64,6 +64,7 @@ public sealed class SemanticModelTable(
     {
         var fileName = $"{Schema}.{Name}.json";
         var filePath = Path.Combine(folderPath.FullName, fileName);
+        
         if (!File.Exists(filePath))
         {
             throw new FileNotFoundException("The specified table file does not exist.", filePath);

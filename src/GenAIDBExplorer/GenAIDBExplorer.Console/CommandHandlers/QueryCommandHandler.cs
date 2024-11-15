@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.CommandLine;
+using System.Resources;
 
 namespace GenAIDBExplorer.Console.CommandHandlers;
 
@@ -30,6 +31,8 @@ public class QueryCommandHandler(
     ILogger<ICommandHandler<QueryCommandHandlerOptions>> logger
 ) : CommandHandler<QueryCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, semanticDescriptionProvider, serviceProvider, logger)
 {
+    private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Console.Resources.LogMessages", typeof(QueryCommandHandler).Assembly);
+
     /// <summary>
     /// Sets up the query command.
     /// </summary>
@@ -65,26 +68,17 @@ public class QueryCommandHandler(
     {
         var projectPath = commandOptions.ProjectPath;
 
-        _logger.LogInformation(LogMessages.QueryingProject, projectPath.FullName);
 
         _project.LoadConfiguration(projectPath.FullName);
 
         // Load the Semantic Model
-        _logger.LogInformation(LogMessages.LoadingSemanticModel);
-        var semanticModel = _semanticModelProvider.CreateSemanticModel();
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("LoadingSemanticModel"), projectPath.FullName);
+        var semanticModelDirectory = new DirectoryInfo(Path.Combine(projectPath.FullName, _project.Settings.Database.Name));
+        var semanticModel = await _semanticModelProvider.LoadSemanticModelAsync(semanticModelDirectory);
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("LoadedSemanticModel"), projectPath.FullName);
 
-        _logger.LogInformation(LogMessages.SemanticModelLoaded);
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("QueryingProject"), projectPath.FullName);
 
         await Task.CompletedTask;
-    }
-
-    /// <summary>
-    /// Contains log messages used in the <see cref="QueryCommandHandler"/> class.
-    /// </summary>
-    public static class LogMessages
-    {
-        public const string QueryingProject = "Querying project at '{ProjectPath}'.";
-        public const string LoadingSemanticModel = "Loading semantic model.";
-        public const string SemanticModelLoaded = "Semantic model loaded.";
     }
 }

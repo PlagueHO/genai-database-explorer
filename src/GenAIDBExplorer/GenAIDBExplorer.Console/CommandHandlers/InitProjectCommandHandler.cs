@@ -6,6 +6,7 @@ using GenAIDBExplorer.AI.SemanticProviders;
 using Microsoft.Extensions.Hosting;
 using System.CommandLine;
 using Microsoft.Extensions.DependencyInjection;
+using System.Resources;
 
 namespace GenAIDBExplorer.Console.CommandHandlers;
 
@@ -30,6 +31,8 @@ public class InitProjectCommandHandler(
     ILogger<ICommandHandler<InitProjectCommandHandlerOptions>> logger
 ) : CommandHandler<InitProjectCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, semanticDescriptionProvider, serviceProvider, logger)
 {
+    private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Console.Resources.LogMessages", typeof(InitProjectCommandHandler).Assembly);
+
     /// <summary>
     /// Sets up the init-project command.
     /// </summary>
@@ -65,7 +68,7 @@ public class InitProjectCommandHandler(
     {
         var projectPath = commandOptions.ProjectPath;
 
-        _logger.LogInformation(LogMessages.InitializingProject, projectPath.FullName);
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("InitializingProject"), projectPath.FullName);
 
         ValidateProjectPath(projectPath);
 
@@ -80,17 +83,7 @@ public class InitProjectCommandHandler(
             return;
         }
 
-        _logger.LogInformation(LogMessages.ProjectInitialized, projectPath.FullName);
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("InitializeProjectComplete"), projectPath.FullName);
         await Task.CompletedTask;
-    }
-
-    /// <summary>
-    /// Contains log messages used in the <see cref="InitProjectCommandHandler"/> class.
-    /// </summary>
-    public static class LogMessages
-    {
-        public const string InitializingProject = "Initializing project at '{ProjectPath}'";
-        public const string ProjectFolderNotEmpty = "The project folder is not empty. Please specify an empty folder.";
-        public const string ProjectInitialized = "Project initialized successfully in '{ProjectPath}'.";
     }
 }

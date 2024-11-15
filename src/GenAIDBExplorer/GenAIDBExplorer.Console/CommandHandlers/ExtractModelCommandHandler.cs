@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.CommandLine;
+using System.Resources;
 
 namespace GenAIDBExplorer.Console.CommandHandlers;
 
@@ -30,6 +31,8 @@ public class ExtractModelCommandHandler(
     ILogger<ICommandHandler<ExtractModelCommandHandlerOptions>> logger
 ) : CommandHandler<ExtractModelCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, semanticDescriptionProvider, serviceProvider, logger)
 {
+    private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Console.Resources.LogMessages", typeof(ExtractModelCommandHandler).Assembly);
+
     /// <summary>
     /// Sets up the extract model command.
     /// </summary>
@@ -93,7 +96,7 @@ public class ExtractModelCommandHandler(
     {
         var projectPath = commandOptions.ProjectPath;
 
-        _logger.LogInformation(LogMessages.ExtractingSemanticModel, projectPath.FullName);
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("ExtractingSemanticModel"), projectPath.FullName);
 
         _project.LoadConfiguration(projectPath.FullName);
 
@@ -107,19 +110,9 @@ public class ExtractModelCommandHandler(
             semanticModelDirectory.Create();
         }
 
-        _logger.LogInformation(LogMessages.SavingSemanticModel, semanticModelDirectory);
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("SavingSemanticModel"), semanticModelDirectory);
         await semanticModel.SaveModelAsync(semanticModelDirectory, !commandOptions.SingleModelFile);
 
-        _logger.LogInformation(LogMessages.ExtractSemanticModelComplete, projectPath.FullName);
-    }
-
-    /// <summary>
-    /// Contains log messages used in the <see cref="ExtractModelCommandHandler"/> class.
-    /// </summary>
-    public static class LogMessages
-    {
-        public const string ExtractingSemanticModel = "Extracting semantic model for project for '{ProjectPath}'.";
-        public const string SavingSemanticModel = "Saving semantic model to '{SemanticModelName}'.";
-        public const string ExtractSemanticModelComplete = "Semantic model extraction complete for '{ProjectPath}'.";
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("ExtractSemanticModelComplete"), projectPath.FullName);
     }
 }

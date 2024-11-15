@@ -34,6 +34,8 @@ public sealed class SqlSemanticModelProvider(
 
         var semanticModel = await CreateSemanticModel().LoadModelAsync(modelPath);
 
+        _logger.LogInformation("Semantic model {DatabaseName} loaded successfully", semanticModel.Name);
+
         return semanticModel;
     }
 
