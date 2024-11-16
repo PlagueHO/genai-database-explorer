@@ -20,6 +20,9 @@ public class SemanticKernelFactory(
     {
         var kernelBuilder = Kernel.CreateBuilder();
 
+        kernelBuilder.Services.AddSingleton(_logger);
+        kernelBuilder.Services.AddLogging();
+
         if (_project.Settings.ChatCompletion.ServiceType == "AzureOpenAI")
         {
             kernelBuilder.AddAzureOpenAIChatCompletion(
@@ -35,9 +38,7 @@ public class SemanticKernelFactory(
                 apiKey: _project.Settings.ChatCompletion.OpenAIKey
             );
         }
-
-        kernelBuilder.Services.AddLogging();
-
+        
         return kernelBuilder.Build();
     }
 }

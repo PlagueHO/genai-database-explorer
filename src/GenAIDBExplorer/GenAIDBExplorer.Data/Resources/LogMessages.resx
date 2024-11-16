@@ -127,7 +127,7 @@
     <value>Adding view '{SchemaName}.{ViewName}' to the semantic model</value>
   </data>
   <data name="DatabaseConnectionState" xml:space="preserve">
-    <value>Database connection state 'ConnectionState'</value>
+    <value>Database connection state '{ConnectionState}'</value>
   </data>
   <data name="ExecutingSQLQuery" xml:space="preserve">
     <value>Executing SQL query '{query}'</value>
@@ -145,6 +145,6 @@
     <value>Connection to SQL database opened successfully</value>
   </data>
   <data name="ConnectingSQLDatabase" xml:space="preserve">
-    <value>Connecting to SQLdatabase</value>
+    <value>Connecting to SQL database</value>
   </data>
 </root>
