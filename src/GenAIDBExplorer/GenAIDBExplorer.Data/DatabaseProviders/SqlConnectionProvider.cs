@@ -1,14 +1,16 @@
 ﻿using Microsoft.Data.SqlClient;
 using GenAIDBExplorer.Models.Project;
 using Microsoft.Extensions.Logging;
-using GenAIDBExplorer.Data.SemanticModelProviders;
 using System.Resources;
 
 namespace GenAIDBExplorer.Data.DatabaseProviders;
 
 /// <summary>
-/// Responsible for producing a connection string for the requested project.
+/// Responsible for producing a connection string for the requested project and establishing a SQL connection.
 /// </summary>
+/// <remarks>
+/// This class is responsible for creating and opening a SQL connection using the connection string provided in the project settings. It handles the connection lifecycle, including logging connection attempts and errors.
+/// </remarks>
 public sealed class SqlConnectionProvider(
     IProject project,
     ILogger<SqlConnectionProvider> logger
@@ -24,9 +26,12 @@ public sealed class SqlConnectionProvider(
     /// </summary>
     /// <returns>A <see cref="SqlConnection"/> instance in the "Open" state.</returns>
     /// <remarks>
-    /// Connection pooling enabled by default makes re-establishing connections
-    /// relatively efficient.
+    /// This method retrieves the connection string from the project settings and attempts to open a SQL connection. It logs the connection attempt and any errors that occur.
+    /// Connection pooling enabled by default makes re-establishing connections relatively efficient.
     /// </remarks>
+    /// <exception cref="InvalidDataException">Thrown if the connection string is missing.</exception>
+    /// <exception cref="SqlException">Thrown if there is an error connecting to the SQL database.</exception>
+    /// <exception cref="Exception">Thrown if there is a general error connecting to the database.</exception>
     public async Task<SqlConnection> ConnectAsync()
     {
         var connectionString =
@@ -54,7 +59,7 @@ public sealed class SqlConnectionProvider(
             throw;
         }
 
-        // log the connection state
+        // Log the connection state
         _logger.LogInformation(_resourceManagerLogMessages.GetString("DatabaseConnectionState"), connection.State);
 
         return connection;

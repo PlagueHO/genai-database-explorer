@@ -118,19 +118,19 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AddingStoredProcedureToSemanticModel" xml:space="preserve">
-    <value>Adding stored procedure {SchemaName}.{StoredProcedure} to the semantic model</value>
+    <value>Adding stored procedure '{SchemaName}.{StoredProcedure}' to the semantic model</value>
   </data>
   <data name="AddingTableToSemanticModel" xml:space="preserve">
-    <value>Adding table {SchemaName}.{TableName} to the semantic model</value>
+    <value>Adding table '{SchemaName}.{TableName}' to the semantic model</value>
   </data>
   <data name="AddingViewToSemanticModel" xml:space="preserve">
-    <value>Adding view {SchemaName}.{ViewName} to the semantic model</value>
+    <value>Adding view '{SchemaName}.{ViewName}' to the semantic model</value>
   </data>
   <data name="DatabaseConnectionState" xml:space="preserve">
-    <value>Database connection state: {ConnectionState}</value>
+    <value>Database connection state 'ConnectionState'</value>
   </data>
   <data name="ExecutingSQLQuery" xml:space="preserve">
-    <value>Executing SQL query: {query}</value>
+    <value>Executing SQL query '{query}'</value>
   </data>
   <data name="ExtractingModelForDatabase" xml:space="preserve">
     <value>Extracting semantic model for database '{Database}'</value>
@@ -145,6 +145,6 @@
     <value>Connection to SQL database opened successfully</value>
   </data>
   <data name="ConnectingSQLDatabase" xml:space="preserve">
-    <value>Connecting to SQL database</value>
+    <value>Connecting to SQLdatabase</value>
   </data>
 </root>

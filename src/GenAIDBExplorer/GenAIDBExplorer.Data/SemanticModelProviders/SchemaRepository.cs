@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging;
 using GenAIDBExplorer.Data.DatabaseProviders;
 using GenAIDBExplorer.Models.SemanticModel;
-using static System.Runtime.InteropServices.Marshalling.IIUnknownCacheStrategy;
 using System.Resources;
 
 namespace GenAIDBExplorer.Data.SemanticModelProviders;

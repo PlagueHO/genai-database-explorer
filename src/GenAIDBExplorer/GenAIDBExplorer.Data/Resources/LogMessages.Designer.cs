@@ -61,7 +61,7 @@ namespace GenAIDBExplorer.Data.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Adding stored procedure {SchemaName}.{StoredProcedure} to the semantic model.
+        ///   Looks up a localized string similar to Adding stored procedure &apos;{SchemaName}.{StoredProcedure}&apos; to the semantic model.
         /// </summary>
         internal static string AddingStoredProcedureToSemanticModel {
             get {
@@ -70,7 +70,7 @@ namespace GenAIDBExplorer.Data.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Adding table {SchemaName}.{TableName} to the semantic model.
+        ///   Looks up a localized string similar to Adding table &apos;{SchemaName}.{TableName}&apos; to the semantic model.
         /// </summary>
         internal static string AddingTableToSemanticModel {
             get {
@@ -79,7 +79,7 @@ namespace GenAIDBExplorer.Data.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Adding view {SchemaName}.{ViewName} to the semantic model.
+        ///   Looks up a localized string similar to Adding view &apos;{SchemaName}.{ViewName}&apos; to the semantic model.
         /// </summary>
         internal static string AddingViewToSemanticModel {
             get {
@@ -88,7 +88,7 @@ namespace GenAIDBExplorer.Data.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Connecting to SQL database.
+        ///   Looks up a localized string similar to Connecting to SQLdatabase.
         /// </summary>
         internal static string ConnectingSQLDatabase {
             get {
@@ -106,7 +106,7 @@ namespace GenAIDBExplorer.Data.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Database connection state: {ConnectionState}.
+        ///   Looks up a localized string similar to Database connection state &apos;ConnectionState&apos;.
         /// </summary>
         internal static string DatabaseConnectionState {
             get {
@@ -115,7 +115,7 @@ namespace GenAIDBExplorer.Data.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Executing SQL query: {query}.
+        ///   Looks up a localized string similar to Executing SQL query &apos;{query}&apos;.
         /// </summary>
         internal static string ExecutingSQLQuery {
             get {
