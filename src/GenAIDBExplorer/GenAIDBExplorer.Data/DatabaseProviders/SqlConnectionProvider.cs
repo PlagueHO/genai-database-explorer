@@ -19,7 +19,6 @@ public sealed class SqlConnectionProvider(
     private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Data.Resources.LogMessages", typeof(SqlConnectionProvider).Assembly);
     private static readonly ResourceManager _resourceManagerErrorMessages = new("GenAIDBExplorer.Data.Resources.ErrorMessages", typeof(SqlConnectionProvider).Assembly);
 
-
     /// <summary>
     /// Factory method for producing a live SQL connection instance.
     /// </summary>

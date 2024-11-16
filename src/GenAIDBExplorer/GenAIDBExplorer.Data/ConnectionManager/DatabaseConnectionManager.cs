@@ -2,6 +2,7 @@ using GenAIDBExplorer.Data.DatabaseProviders;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using System.Data;
+using System.Resources;
 
 namespace GenAIDBExplorer.Data.ConnectionManager
 {
@@ -12,6 +13,7 @@ namespace GenAIDBExplorer.Data.ConnectionManager
     {
         private readonly IDatabaseConnectionProvider _connectionProvider = connectionProvider;
         private readonly ILogger<DatabaseConnectionManager> _logger = logger;
+        private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Console.Resources.LogMessages", typeof(DatabaseConnectionManager).Assembly);
         private SqlConnection? _connection;
         private bool _disposed = false;
 

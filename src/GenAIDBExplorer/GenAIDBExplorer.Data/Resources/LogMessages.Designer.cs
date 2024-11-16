@@ -88,7 +88,7 @@ namespace GenAIDBExplorer.Data.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Connecting to SQLdatabase.
+        ///   Looks up a localized string similar to Connecting to SQL database.
         /// </summary>
         internal static string ConnectingSQLDatabase {
             get {

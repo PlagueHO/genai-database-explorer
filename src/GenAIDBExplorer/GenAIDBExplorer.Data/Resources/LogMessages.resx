@@ -145,6 +145,6 @@
     <value>Connection to SQL database opened successfully</value>
   </data>
   <data name="ConnectingSQLDatabase" xml:space="preserve">
-    <value>Connecting to SQLdatabase</value>
+    <value>Connecting to SQL database</value>
   </data>
 </root>
