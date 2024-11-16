@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using GenAIDBExplorer.Data.DatabaseProviders;
 using GenAIDBExplorer.Models.SemanticModel;
 using static System.Runtime.InteropServices.Marshalling.IIUnknownCacheStrategy;
+using System.Resources;
 
 namespace GenAIDBExplorer.Data.SemanticModelProviders;
 
@@ -12,6 +13,7 @@ public sealed class SchemaRepository(
 {
     private readonly ISqlQueryExecutor _sqlQueryExecutor = sqlQueryExecutor;
     private readonly ILogger<SchemaRepository> _logger = logger;
+    private static readonly ResourceManager _resourceManagerErrorMessages = new("GenAIDBExplorer.Data.Resources.ErrorMessages", typeof(SchemaRepository).Assembly);
 
     /// <summary>
     /// Retrieves a list of tables from the database, optionally filtered by schema.
@@ -45,7 +47,7 @@ public sealed class SchemaRepository(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to retrieve tables from the database.");
+            _logger.LogError(ex, _resourceManagerErrorMessages.GetString("ErrorGettingTablesFromDatabase"));
             throw;
         }
 
@@ -85,7 +87,7 @@ public sealed class SchemaRepository(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to retrieve views from the database.");
+            _logger.LogError(ex, _resourceManagerErrorMessages.GetString("ErrorGettingViewsFromDatabase"));
             throw;
         }
 
@@ -128,7 +130,7 @@ public sealed class SchemaRepository(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to retrieve stored procedures from the database.");
+            _logger.LogError(ex, _resourceManagerErrorMessages.GetString("ErrorGettingStoredProceduresFromDatabase"));
             throw;
         }
 
@@ -165,7 +167,7 @@ public sealed class SchemaRepository(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to retrieve definition for view {SchemaName}.{ViewName}", view.SchemaName, view.ViewName);
+            _logger.LogError(ex, _resourceManagerErrorMessages.GetString("ErrorGettingViewDefinitionFromDatabase"), view.SchemaName, view.ViewName);
             throw;
         }
     }
@@ -281,7 +283,7 @@ public sealed class SchemaRepository(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to retrieve columns for table {schemaName}.{tableName}", table.SchemaName, table.TableName);
+            _logger.LogError(ex, _resourceManagerErrorMessages.GetString("ErrorGettingColumnsForTable"), table.SchemaName, table.TableName);
             throw;
 
         }
@@ -328,7 +330,7 @@ public sealed class SchemaRepository(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to retrieve references for table {schemaName}.{tableName}", table.SchemaName, table.TableName);
+            _logger.LogError(ex, _resourceManagerErrorMessages.GetString("ErrorGettingReferencesForTable"), table.SchemaName, table.TableName);
             throw;
         }
 
@@ -373,7 +375,7 @@ public sealed class SchemaRepository(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to retrieve columns for view {schemaName}.{viewName}", view.SchemaName, view.ViewName);
+            _logger.LogError(ex, _resourceManagerErrorMessages.GetString("ErrorGettingColumnsForView"), view.SchemaName, view.ViewName);
             throw;
         }
 
@@ -425,7 +427,7 @@ public sealed class SchemaRepository(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to retrieve indexes for table {schemaName}.{tableName}", table.SchemaName, table.TableName);
+            _logger.LogError(ex, _resourceManagerErrorMessages.GetString("ErrorGettingIndexesForTable"), table.SchemaName, table.TableName);
             throw;
         }
 
@@ -484,7 +486,7 @@ public sealed class SchemaRepository(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to retrieve sample data for table {SchemaName}.{TableName}", tableInfo.SchemaName, tableInfo.TableName);
+            _logger.LogError(ex, _resourceManagerErrorMessages.GetString("ErrorGettingSampleDataForTable"), tableInfo.SchemaName, tableInfo.TableName);
             throw;
         }
     }
@@ -536,7 +538,7 @@ public sealed class SchemaRepository(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to retrieve sample data for view {SchemaName}.{TableName}", viewInfo.SchemaName, viewInfo.ViewName);
+            _logger.LogError(ex, _resourceManagerErrorMessages.GetString("ErrorGettingSampleDataForView"), viewInfo.SchemaName, viewInfo.ViewName);
             throw;
         }
     }

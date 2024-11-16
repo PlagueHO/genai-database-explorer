@@ -2,6 +2,7 @@
 using GenAIDBExplorer.Models.Project;
 using GenAIDBExplorer.Models.SemanticModel;
 using System.Collections.Concurrent;
+using System.Resources;
 
 namespace GenAIDBExplorer.Data.SemanticModelProviders;
 
@@ -13,6 +14,7 @@ public sealed class SqlSemanticModelProvider(
 {
     private readonly IProject _project = project;
     private readonly ILogger _logger = logger;
+    private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Data.Resources.LogMessages", typeof(SqlSemanticModelProvider).Assembly);
 
     /// <inheritdoc/>
     public SemanticModel CreateSemanticModel()
@@ -30,11 +32,11 @@ public sealed class SqlSemanticModelProvider(
     /// <inheritdoc/>
     public async Task<SemanticModel> LoadSemanticModelAsync(DirectoryInfo modelPath)
     {
-        _logger.LogInformation("Loading semantic model from {modelPath}", modelPath);
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("LoadingSemanticModel"), modelPath);
 
         var semanticModel = await CreateSemanticModel().LoadModelAsync(modelPath);
 
-        _logger.LogInformation("Semantic model {DatabaseName} loaded successfully", semanticModel.Name);
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("LoadedSemanticModelForDatabase"), semanticModel.Name);
 
         return semanticModel;
     }
@@ -42,7 +44,7 @@ public sealed class SqlSemanticModelProvider(
     /// <inheritdoc/>
     public async Task<SemanticModel> ExtractSemanticModelAsync()
     {
-        _logger.LogInformation("Extracting semantic model for database {DatabaseName}", _project.Settings.Database.Name);
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("ExtractingModelForDatabase"), _project.Settings.Database.Name);
 
         // Create the new SemanticModel instance to build
         var semanticModel = CreateSemanticModel();
@@ -59,7 +61,7 @@ public sealed class SqlSemanticModelProvider(
         // Construct the semantic model tables
         await Parallel.ForEachAsync(tablesDictionary.Values, options, async (table, cancellationToken) =>
         {
-            _logger.LogInformation("Adding table {SchemaName}.{TableName} to the semantic model", table.SchemaName, table.TableName);
+            _logger.LogInformation(_resourceManagerLogMessages.GetString("AddingTableToSemanticModel"), table.SchemaName, table.TableName);
 
             var semanticModelTable = await schemaRepository.CreateSemanticModelTableAsync(table).ConfigureAwait(false);
             semanticModelTables.Add(semanticModelTable);
@@ -75,7 +77,7 @@ public sealed class SqlSemanticModelProvider(
         // Construct the semantic model views
         await Parallel.ForEachAsync(viewsDictionary.Values, options, async (view, cancellationToken) =>
         {
-            _logger.LogInformation("Adding view {SchemaName}.{ViewName} to the semantic model", view.SchemaName, view.ViewName);
+            _logger.LogInformation(_resourceManagerLogMessages.GetString("AddingViewToSemanticModel"), view.SchemaName, view.ViewName);
 
             var semanticModelView = await schemaRepository.CreateSemanticModelViewAsync(view).ConfigureAwait(false);
             semanticModelViews.Add(semanticModelView);
@@ -91,7 +93,7 @@ public sealed class SqlSemanticModelProvider(
         // Construct the semantic model views
         await Parallel.ForEachAsync(storedProceduresDictionary.Values, options, async (storedProcedure, cancellationToken) =>
         {
-            _logger.LogInformation("Adding stored procedure {SchemaName}.{StoredProcedure} to the semantic model", storedProcedure.SchemaName, storedProcedure.ProcedureName);
+            _logger.LogInformation(_resourceManagerLogMessages.GetString("AddingStoredProcedureToSemanticModel"), storedProcedure.SchemaName, storedProcedure.ProcedureName);
 
             var semanticModeStoredProcedure = await schemaRepository.CreateSemanticModelStoredProcedureAsync(storedProcedure).ConfigureAwait(false);
             semanticModelStoredProcedures.Add(semanticModeStoredProcedure);

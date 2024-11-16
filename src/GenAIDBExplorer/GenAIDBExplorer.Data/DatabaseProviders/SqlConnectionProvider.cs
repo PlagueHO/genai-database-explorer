@@ -1,6 +1,8 @@
 ﻿using Microsoft.Data.SqlClient;
 using GenAIDBExplorer.Models.Project;
 using Microsoft.Extensions.Logging;
+using GenAIDBExplorer.Data.SemanticModelProviders;
+using System.Resources;
 
 namespace GenAIDBExplorer.Data.DatabaseProviders;
 
@@ -14,6 +16,9 @@ public sealed class SqlConnectionProvider(
 {
     private readonly IProject _project = project;
     private readonly ILogger<SqlConnectionProvider> _logger = logger;
+    private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Data.Resources.LogMessages", typeof(SqlConnectionProvider).Assembly);
+    private static readonly ResourceManager _resourceManagerErrorMessages = new("GenAIDBExplorer.Data.Resources.ErrorMessages", typeof(SqlConnectionProvider).Assembly);
+
 
     /// <summary>
     /// Factory method for producing a live SQL connection instance.
@@ -33,25 +38,25 @@ public sealed class SqlConnectionProvider(
 
         try
         {
-            _logger.LogInformation("Opening SQL connection to {ConnectionString}", connectionString);
+            _logger.LogInformation(_resourceManagerLogMessages.GetString("ConnectingSQLDatabase"));
             await connection.OpenAsync().ConfigureAwait(false);
-            _logger.LogInformation("SQL connection opened successfully.");
+            _logger.LogInformation(_resourceManagerLogMessages.GetString("ConnectSQLSuccessful"));
         }
         catch (SqlException ex)
         {
-            _logger.LogError(ex, "SQL exception occurred while opening connection to {ConnectionString}", connectionString);
+            _logger.LogError(ex, _resourceManagerErrorMessages.GetString("ErrorConnectingToDatabaseSQL"));
             connection.Dispose();
             throw;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "An error occurred while opening connection to {ConnectionString}", connectionString);
+            _logger.LogError(ex, _resourceManagerErrorMessages.GetString("ErrorConnectingToDatabase"));
             connection.Dispose();
             throw;
         }
 
         // log the connection state
-        _logger.LogInformation("Connection state: {ConnectionState}", connection.State);
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("DatabaseConnectionState"), connection.State);
 
         return connection;
     }
