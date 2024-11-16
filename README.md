@@ -1,16 +1,95 @@
 # Generative AI Database Explorer
 
-This is a .NET 8 application that allows you to explore a SQL Database using Generative AI. It consists of several components.
+[![Pipeline][continuous-deployment-shield]][continuous-deployment-url]
+[![Contributors][contributors-shield]][contributors-url]
+[![Forks][forks-shield]][forks-url]
+[![Stargazers][stars-shield]][stars-url]
+[![Issues][issues-shield]][issues-url]
+[![MIT License][license-shield]][license-url]
+[![LinkedIn][linkedin-shield]][linkedin-url]
 
-## GenAIDBExplorer.Console App
+With **Generative AI Database Explorer**, you can explore your database schema and stored procedures using Generative AI. This tool helps you understand your database schema and stored procedures by generating SQL queries based on the schema and explaining the schema and stored procedures in the database to the user based on the stored schema.
 
-A simple .NET 8 console application that provides commands to manage Generative AI Database Explorer projects, including functions for:
+Although there are many other tools available that perform similar functions, this tool differs in that it produces a **semantic model** of the database schema that is then enriched and decorated using Generative AI.
 
-- Initializing a new project folder with a settings.json file.
-- Building a representation of the database schema in the project folder based on the settings.json file
-- Querying the database by using Generative AI to generate SQL queries based on the schema
-- Explaining the schema and stored procedures in the database to the user based on the stored schema
+The reason that this approach of enriching a semantic model rather than just querying the database directly is:
 
-### Generative AI Database Explorer project
+1. Many databases are not well normalized and have grown organically over time. This can make it difficult to understand the schema and stored procedures by just looking at the table & column names.
+1. Additional grounding information may need to be provided by a user to ensure that the Generative AI can provide accurate information.
+1. Enables greater control and the database owner can review and adjust the semantic model to ensure it is correct.
+1. The semantic model can be stored in version control and used as an asset that is deployed as part of another application.
+
+## Components
+
+### Console App (GenAIDBExplorer.Console)
+cd 
+A console application that provides commands to manage Generative AI Database Explorer projects, including functions for:
+
+- **init-project**: Initializing a new project folder with a `settings.json` file.
+- **extract-model**: Extract a representation of the database schema as a **semantic model** in the ((project folder** based on the `settings.json` file.
+- **enrich-model**: Enrich an existing **semantic model** of a database schema in the project folder based on the `settings.json` file using Generative AI to produce an **enriched** semantic model.
+- **query-model**: Answer questions based on the semantic model by using Generative AI. This includes recommending SQL.
+
+### Web App (GenAIDBExplorer.Web)
+
+This planned app is a simple web application that can take an **enriched model** and enable a user to explore the database schema and stored procedures using chat.
+
+## Generative AI Database Explorer project
 
 All commands require the -p/--project setting that specifies a folder on disk called a "Project folder" that will contain a settings.json file that the user will configure before being able to execute any other commands.
+
+## Semantic Model
+
+This is a representation of the database schema that is enriched by Generative AI. The semantic model is stored in subfolder in the project folder with the name of the database in a file called `semanticmodel.json`. The **semantic model** must be produced by the console tool before it can be used to querying or with the web application.
+
+## Disclaimer
+
+This repository is provided "as is" without warranty of any kind, whether express or implied. Use at your own risk! The author will not be liable for any losses or damages associated with the use of this repository. 
+
+It is intended to be used as a starting point for your own project and not as a final product.
+
+## License
+
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+Licensed under the [MIT](LICENSE) license.
+
+## Contact
+
+- [Daniel Scott-Raynsford](https://danielscottraynsford.com/) | [@github](https://github.com/PlagueHO) | danielscottraynsford.com
+- Project Link: [https://github.com/PlagueHO/genai-database-explorer](https://github.com/PlagueHO/genai-database-explorer)
+
+## Acknowledgments
+
+TBC
+
+## References
+
+TBC
+
+[continuous-deployment-shield]: https://github.com/PlagueHO/genai-database-explorer/actions/workflows/continuous-deployment.yml/badge.svg
+[continuous-deployment-url]:https://github.com/github/docs/actions/workflows/main.yml/badge.svg
+[contributors-shield]: https://img.shields.io/github/contributors/PlagueHO/genai-database-explorer.svg
+[contributors-url]: https://github.com/PlagueHO/genai-database-explorer/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/PlagueHO/genai-database-explorer.svg
+[forks-url]: https://github.com/PlagueHO/genai-database-explorer/network/members
+[stars-shield]: https://img.shields.io/github/stars/PlagueHO/genai-database-explorer.svg
+[stars-url]: https://github.com/PlagueHO/genai-database-explorer/stargazers
+[issues-shield]: https://img.shields.io/github/issues/PlagueHO/genai-database-explorer.svg
+[issues-url]: https://github.com/PlagueHO/genai-database-explorer/issues
+[license-shield]: https://img.shields.io/github/license/PlagueHO/genai-database-explorer.svg
+[license-url]: https://github.com/PlagueHO/genai-database-explorer/blob/master/LICENSE
+[linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?logo=linkedin&colorB=555
+[linkedin-url]: https://www.linkedin.com/in/dscottraynsford
+
+[openai.com]: https://img.shields.io/badge/OpenAI-5A5AFF?style=for-the-badge&logo=openai&logoColor=white
+[openai-url]: https://openai.com/
+[azure.com]: https://img.shields.io/badge/Microsoft_Azure-0078D4?style=for-the-badge&logo=microsoft-azure&logoColor=white
+[azure-url]: https://azure.microsoft.com
+[dotnet.microsoft.com]: https://img.shields.io/badge/.NET-512BD4?style=for-the-badge&logo=dotnet&logoColor=white
+[dotnet-url]: https://dotnet.microsoft.com
+[python.org]: https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white
+[python-url]: https://www.python.org
+[learn-sk]: https://img.shields.io/badge/Semantic%20Kernel-5E5E5E?style=for-the-badge&logo=microsoft
+[sk-url]: https://learn.microsoft.com/en-us/semantic-kernel/
+

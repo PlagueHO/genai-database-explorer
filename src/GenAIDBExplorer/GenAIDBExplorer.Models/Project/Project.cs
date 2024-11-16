@@ -1,5 +1,4 @@
-﻿using GenAIDBExplorer.Models.Project;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.ComponentModel.DataAnnotations;
 

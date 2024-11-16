@@ -5,6 +5,8 @@ using GenAIDBExplorer.Models.SemanticModel;
 using GenAIDBExplorer.Data.SemanticModelProviders;
 using GenAIDBExplorer.Models.Project;
 using System.Text.Json;
+using System.Resources;
+using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace GenAIDBExplorer.AI.SemanticProviders;
 
@@ -16,15 +18,16 @@ public class SemanticDescriptionProvider(
         IProject project,
         ISemanticModelProvider semanticModelProvider,
         ISemanticKernelFactory semanticKernelFactory,
-        ISchemaRepository schemaRespository,
+        ISchemaRepository schemaRepository,
         ILogger<SemanticDescriptionProvider> logger
     ) : ISemanticDescriptionProvider
 {
     private readonly IProject _project = project;
     private readonly ISemanticModelProvider _semanticModelProvider = semanticModelProvider;
     private readonly ISemanticKernelFactory _semanticKernelFactory = semanticKernelFactory;
-    private readonly ISchemaRepository _schemaRepository = schemaRespository;
+    private readonly ISchemaRepository _schemaRepository = schemaRepository;
     private readonly ILogger<SemanticDescriptionProvider> _logger = logger;
+    private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Data.Resources.LogMessages", typeof(SemanticDescriptionProvider).Assembly);
 
     private const string _promptyFolder = "Prompty";
 
@@ -34,7 +37,7 @@ public class SemanticDescriptionProvider(
     /// <param name="table">The semantic model table for which to generate the description.</param>
     public async Task UpdateSemanticDescriptionAsync(SemanticModelTable table)
     {
-        _logger.LogInformation("Generating semantic description for table {Schema}.{Name}", table.Schema, table.Name);
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("GenerateSemanticDescriptionForTable"), table.Schema, table.Name);
 
         var promptyFilename = "semantic_model_describe_table.prompty";
         promptyFilename = Path.Combine(_promptyFolder, promptyFilename);
@@ -72,8 +75,8 @@ public class SemanticDescriptionProvider(
         // Invoke the semantic kernel function to generate the description
         var result = await semanticKernel.InvokeAsync(function, arguments);
 
-        _logger.LogInformation("Completed generation of semantic description for table {Schema}.{Name}", table.Schema, table.Name);
         table.SemanticDescription = result.ToString();
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("GeneratedSemanticDescriptionForTable"), table.Schema, table.Name);
     }
 
     /// <summary>
@@ -82,7 +85,7 @@ public class SemanticDescriptionProvider(
     /// <param name="view">The semantic model view for which to generate the description.</param>
     public async Task UpdateSemanticDescriptionAsync(SemanticModelView view)
     {
-        _logger.LogInformation("Generating semantic description for view {Schema}.{Name}", view.Schema, view.Name);
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("GenerateSemanticDescriptionForView"), view.Schema, view.Name);
 
         var promptyFilename = "semantic_model_describe_view.prompty";
         promptyFilename = Path.Combine(_promptyFolder, promptyFilename);
@@ -121,8 +124,8 @@ public class SemanticDescriptionProvider(
         // Invoke the semantic kernel function to generate the description
         var result = await semanticKernel.InvokeAsync(function, arguments);
 
-        _logger.LogInformation("Completed generation of semantic description for view {Schema}.{Name}", view.Schema, view.Name);
         view.SemanticDescription = result.ToString();
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("GeneratedSemanticDescriptionForView"), view.Schema, view.Name);
     }
 
     /// <summary>
@@ -131,7 +134,7 @@ public class SemanticDescriptionProvider(
     /// <param name="storedProcedure">The semantic model stored procedure for which to generate the description.</param>
     public async Task UpdateSemanticDescriptionAsync(SemanticModelStoredProcedure storedProcedure)
     {
-        _logger.LogInformation("Generating semantic description for stored procedure {Schema}.{Name}", storedProcedure.Schema, storedProcedure.Name);
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("GenerateSemanticDescriptionForStoredProcedure"), storedProcedure.Schema, storedProcedure.Name);
 
         var promptyFilename = "semantic_model_describe_stored_procedure.prompty";
         promptyFilename = Path.Combine(_promptyFolder, promptyFilename);
@@ -160,7 +163,7 @@ public class SemanticDescriptionProvider(
         // Invoke the semantic kernel function to generate the description
         var result = await semanticKernel.InvokeAsync(function, arguments);
 
-        _logger.LogInformation("Completed generation of semantic description for stored procedure {Schema}.{Name}", storedProcedure.Schema, storedProcedure.Name);
         storedProcedure.SemanticDescription = result.ToString();
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("GeneratedSemanticDescriptionForStoredProcedure"), storedProcedure.Schema, storedProcedure.Name);
     }
 }
