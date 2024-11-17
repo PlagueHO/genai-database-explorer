@@ -1,17 +1,16 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using GenAIDBExplorer.Console.CommandHandlers;
+using GenAIDBExplorer.Console.Logger;
+using GenAIDBExplorer.Core.Data.ConnectionManager;
+using GenAIDBExplorer.Core.Data.DatabaseProviders;
+using GenAIDBExplorer.Core.KernelMemory;
+using GenAIDBExplorer.Core.Models.Project;
+using GenAIDBExplorer.Core.SemanticKernel;
+using GenAIDBExplorer.Core.SemanticModelProviders;
+using GenAIDBExplorer.Core.SemanticProviders;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using GenAIDBExplorer.AI.SemanticKernel;
-using GenAIDBExplorer.AI.KernelMemory;
-using GenAIDBExplorer.AI.SemanticProviders;
-using GenAIDBExplorer.Data.DatabaseProviders;
-using GenAIDBExplorer.Data.SemanticModelProviders;
-using GenAIDBExplorer.Data.ConnectionManager;
-using GenAIDBExplorer.Models.Project;
-using GenAIDBExplorer.Models.SemanticModel;
-using GenAIDBExplorer.Console.CommandHandlers;
-using GenAIDBExplorer.Console.Logger;
 
 namespace GenAIDBExplorer.Console.Extensions;
 

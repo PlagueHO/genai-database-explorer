@@ -11,12 +11,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unit", "Unit", "{196DBF2D-9
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenAIDBExplorer.Console.Test", "Tests\Unit\GenAIDBExplorer.Console.Test\GenAIDBExplorer.Console.Test.csproj", "{E95312FE-3044-473A-9662-468DEF7514E8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenAIDBExplorer.Models", "GenAIDBExplorer.Models\GenAIDBExplorer.Models.csproj", "{2D51AD92-1502-427F-915C-0E8E44B2E263}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenAIDBExplorer.Data", "GenAIDBExplorer.Data\GenAIDBExplorer.Data.csproj", "{C43E80AE-A136-4FAE-B7D0-F73035914E0F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenAIDBExplorer.AI", "GenAIDBExplorer.AI\GenAIDBExplorer.AI.csproj", "{6AC63CED-EA1D-41D8-AFB9-CF3DAC18665D}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{F932A986-F757-43FA-A2DA-EE69555F7F57}"
 	ProjectSection(SolutionItems) = preProject
 		..\..\.github\copilot-instructions.md = ..\..\.github\copilot-instructions.md
@@ -56,6 +50,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "modules", "modules", "{525A
 		..\..\infrastructure\bicep\modules\sqlDatabase.bicep = ..\..\infrastructure\bicep\modules\sqlDatabase.bicep
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenAIDBExplorer.Core", "GenAIDBExplorer.Core\GenAIDBExplorer.Core.csproj", "{149A5661-5CD2-4D33-99C8-ACCC3D9FC350}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -70,18 +66,10 @@ Global
 		{E95312FE-3044-473A-9662-468DEF7514E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E95312FE-3044-473A-9662-468DEF7514E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E95312FE-3044-473A-9662-468DEF7514E8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2D51AD92-1502-427F-915C-0E8E44B2E263}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2D51AD92-1502-427F-915C-0E8E44B2E263}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2D51AD92-1502-427F-915C-0E8E44B2E263}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2D51AD92-1502-427F-915C-0E8E44B2E263}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C43E80AE-A136-4FAE-B7D0-F73035914E0F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C43E80AE-A136-4FAE-B7D0-F73035914E0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C43E80AE-A136-4FAE-B7D0-F73035914E0F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C43E80AE-A136-4FAE-B7D0-F73035914E0F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6AC63CED-EA1D-41D8-AFB9-CF3DAC18665D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6AC63CED-EA1D-41D8-AFB9-CF3DAC18665D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6AC63CED-EA1D-41D8-AFB9-CF3DAC18665D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6AC63CED-EA1D-41D8-AFB9-CF3DAC18665D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{149A5661-5CD2-4D33-99C8-ACCC3D9FC350}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{149A5661-5CD2-4D33-99C8-ACCC3D9FC350}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{149A5661-5CD2-4D33-99C8-ACCC3D9FC350}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{149A5661-5CD2-4D33-99C8-ACCC3D9FC350}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

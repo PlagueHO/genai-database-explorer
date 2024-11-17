@@ -1,11 +1,11 @@
-using Moq;
 using FluentAssertions;
-using Microsoft.Extensions.Logging;
 using GenAIDBExplorer.Console.CommandHandlers;
-using GenAIDBExplorer.Models.Project;
-using GenAIDBExplorer.Data.DatabaseProviders;
-using GenAIDBExplorer.Data.SemanticModelProviders;
-using GenAIDBExplorer.AI.SemanticProviders;
+using GenAIDBExplorer.Core.Data.DatabaseProviders;
+using GenAIDBExplorer.Core.Models.Project;
+using GenAIDBExplorer.Core.SemanticModelProviders;
+using GenAIDBExplorer.Core.SemanticProviders;
+using Microsoft.Extensions.Logging;
+using Moq;
 
 namespace GenAIDBExplorer.Console.Test;
 

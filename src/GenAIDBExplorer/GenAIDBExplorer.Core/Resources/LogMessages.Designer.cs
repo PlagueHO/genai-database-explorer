@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace GenAIDBExplorer.Console.Resources {
+namespace GenAIDBExplorer.Core.Resources {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace GenAIDBExplorer.Console.Resources {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("GenAIDBExplorer.Console.Resources.LogMessages", typeof(LogMessages).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("GenAIDBExplorer.Core.Resources.LogMessages", typeof(LogMessages).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,38 +61,65 @@ namespace GenAIDBExplorer.Console.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Enriching semantic model with descriptions for project at &apos;{ProjectPath}&apos;.
+        ///   Looks up a localized string similar to Adding table &apos;{SchemaName}.{TableName}&apos; to the semantic model.
         /// </summary>
-        internal static string EnrichingSemanticModel {
+        internal static string AddingTableToSemanticModel {
             get {
-                return ResourceManager.GetString("EnrichingSemanticModel", resourceCulture);
+                return ResourceManager.GetString("AddingTableToSemanticModel", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Semantic model enrichment complete for &apos;{ProjectPath}&apos;.
+        ///   Looks up a localized string similar to Adding view &apos;{SchemaName}.{ViewName}&apos; to the semantic model.
         /// </summary>
-        internal static string EnrichSemanticModelComplete {
+        internal static string AddingViewToSemanticModel {
             get {
-                return ResourceManager.GetString("EnrichSemanticModelComplete", resourceCulture);
+                return ResourceManager.GetString("AddingViewToSemanticModel", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Extracting semantic model for project for &apos;{ProjectPath}&apos;.
+        ///   Looks up a localized string similar to Connecting to SQL database.
         /// </summary>
-        internal static string ExtractingSemanticModel {
+        internal static string ConnectingSQLDatabase {
             get {
-                return ResourceManager.GetString("ExtractingSemanticModel", resourceCulture);
+                return ResourceManager.GetString("ConnectingSQLDatabase", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Semantic model extraction complete for &apos;{ProjectPath}&apos;.
+        ///   Looks up a localized string similar to Connection to SQL database opened successfully.
         /// </summary>
-        internal static string ExtractSemanticModelComplete {
+        internal static string ConnectSQLSuccessful {
             get {
-                return ResourceManager.GetString("ExtractSemanticModelComplete", resourceCulture);
+                return ResourceManager.GetString("ConnectSQLSuccessful", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Database connection state &apos;{ConnectionState}&apos;.
+        /// </summary>
+        internal static string DatabaseConnectionState {
+            get {
+                return ResourceManager.GetString("DatabaseConnectionState", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Executing SQL query &apos;{query}&apos;.
+        /// </summary>
+        internal static string ExecutingSQLQuery {
+            get {
+                return ResourceManager.GetString("ExecutingSQLQuery", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Extracting semantic model for database &apos;{Database}&apos;.
+        /// </summary>
+        internal static string ExtractingModelForDatabase {
+            get {
+                return ResourceManager.GetString("ExtractingModelForDatabase", resourceCulture);
             }
         }
         
@@ -151,74 +178,20 @@ namespace GenAIDBExplorer.Console.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Project initialized successfully in &apos;{ProjectPath}&apos;.
+        ///   Looks up a localized string similar to Semantic model loaded successfully for database &apos;{Database}&apos;.
         /// </summary>
-        internal static string InitializeProjectComplete {
+        internal static string LoadedSemanticModelForDatabase {
             get {
-                return ResourceManager.GetString("InitializeProjectComplete", resourceCulture);
+                return ResourceManager.GetString("LoadedSemanticModelForDatabase", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Initializing project at &apos;{ProjectPath}&apos;.
-        /// </summary>
-        internal static string InitializingProject {
-            get {
-                return ResourceManager.GetString("InitializingProject", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Semantic model loaded successfully from &apos;{ProjectPath}&apos;.
-        /// </summary>
-        internal static string LoadedSemanticModel {
-            get {
-                return ResourceManager.GetString("LoadedSemanticModel", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Loading semantic model from &apos;{ProjectPath}&apos;.
+        ///   Looks up a localized string similar to Loading semantic model from &apos;{ModelPath}&apos;.
         /// </summary>
         internal static string LoadingSemanticModel {
             get {
                 return ResourceManager.GetString("LoadingSemanticModel", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The project folder is not empty. Please specify an empty folder.
-        /// </summary>
-        internal static string ProjectFolderNotEmpty {
-            get {
-                return ResourceManager.GetString("ProjectFolderNotEmpty", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Querying project at &apos;{ProjectPath}&apos;.
-        /// </summary>
-        internal static string QueryingProject {
-            get {
-                return ResourceManager.GetString("QueryingProject", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Semantic model saved successfully to &apos;{ProjectPath}&apos;.
-        /// </summary>
-        internal static string SavedSemanticModel {
-            get {
-                return ResourceManager.GetString("SavedSemanticModel", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Saving semantic model to &apos;{SemanticModelName}&apos;.
-        /// </summary>
-        internal static string SavingSemanticModel {
-            get {
-                return ResourceManager.GetString("SavingSemanticModel", resourceCulture);
             }
         }
     }
