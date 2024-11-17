@@ -6,7 +6,6 @@ using GenAIDBExplorer.Data.SemanticModelProviders;
 using GenAIDBExplorer.Models.Project;
 using System.Text.Json;
 using System.Resources;
-using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace GenAIDBExplorer.AI.SemanticProviders;
 
@@ -27,7 +26,7 @@ public class SemanticDescriptionProvider(
     private readonly ISemanticKernelFactory _semanticKernelFactory = semanticKernelFactory;
     private readonly ISchemaRepository _schemaRepository = schemaRepository;
     private readonly ILogger<SemanticDescriptionProvider> _logger = logger;
-    private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Data.Resources.LogMessages", typeof(SemanticDescriptionProvider).Assembly);
+    private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.AI.Resources.LogMessages", typeof(SemanticDescriptionProvider).Assembly);
 
     private const string _promptyFolder = "Prompty";
 
@@ -107,7 +106,6 @@ public class SemanticDescriptionProvider(
         var viewInfo = new
         {
             structure = view.ToYaml(),
-            definition = view.Definition,
             data = sampleDataJson
         };
 
