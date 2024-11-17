@@ -1,7 +1,7 @@
-using GenAIDBExplorer.AI.SemanticProviders;
-using GenAIDBExplorer.Data.DatabaseProviders;
-using GenAIDBExplorer.Data.SemanticModelProviders;
-using GenAIDBExplorer.Models.Project;
+using GenAIDBExplorer.Core.Data.DatabaseProviders;
+using GenAIDBExplorer.Core.Models.Project;
+using GenAIDBExplorer.Core.SemanticModelProviders;
+using GenAIDBExplorer.Core.SemanticProviders;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;

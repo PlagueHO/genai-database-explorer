@@ -117,47 +117,35 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="EnrichingSemanticModel" xml:space="preserve">
-    <value>Enriching semantic model with descriptions for project at '{ProjectPath}'</value>
+  <data name="AddingTableToSemanticModel" xml:space="preserve">
+    <value>Adding table '{SchemaName}.{TableName}' to the semantic model</value>
   </data>
-  <data name="EnrichSemanticModelComplete" xml:space="preserve">
-    <value>Semantic model enrichment complete for '{ProjectPath}'</value>
+  <data name="AddingViewToSemanticModel" xml:space="preserve">
+    <value>Adding view '{SchemaName}.{ViewName}' to the semantic model</value>
   </data>
-  <data name="ExtractingSemanticModel" xml:space="preserve">
-    <value>Extracting semantic model for project for '{ProjectPath}'</value>
+  <data name="DatabaseConnectionState" xml:space="preserve">
+    <value>Database connection state '{ConnectionState}'</value>
   </data>
-  <data name="ExtractSemanticModelComplete" xml:space="preserve">
-    <value>Semantic model extraction complete for '{ProjectPath}'</value>
+  <data name="ExecutingSQLQuery" xml:space="preserve">
+    <value>Executing SQL query '{query}'</value>
   </data>
-  <data name="InitializingProject" xml:space="preserve">
-    <value>Initializing project at '{ProjectPath}'</value>
+  <data name="ExtractingModelForDatabase" xml:space="preserve">
+    <value>Extracting semantic model for database '{Database}'</value>
   </data>
-  <data name="ProjectFolderNotEmpty" xml:space="preserve">
-    <value>The project folder is not empty. Please specify an empty folder</value>
-  </data>
-  <data name="InitializeProjectComplete" xml:space="preserve">
-    <value>Project initialized successfully in '{ProjectPath}'</value>
-  </data>
-  <data name="SavingSemanticModel" xml:space="preserve">
-    <value>Saving semantic model to '{SemanticModelName}'</value>
-  </data>
-  <data name="QueryingProject" xml:space="preserve">
-    <value>Querying project at '{ProjectPath}'</value>
+  <data name="LoadedSemanticModelForDatabase" xml:space="preserve">
+    <value>Semantic model loaded successfully for database '{Database}'</value>
   </data>
   <data name="LoadingSemanticModel" xml:space="preserve">
-    <value>Loading semantic model from '{ProjectPath}'</value>
+    <value>Loading semantic model from '{ModelPath}'</value>
   </data>
-  <data name="LoadedSemanticModel" xml:space="preserve">
-    <value>Semantic model loaded successfully from '{ProjectPath}'</value>
+  <data name="ConnectSQLSuccessful" xml:space="preserve">
+    <value>Connection to SQL database opened successfully</value>
   </data>
-  <data name="SavedSemanticModel" xml:space="preserve">
-    <value>Semantic model saved successfully to '{ProjectPath}'</value>
+  <data name="ConnectingSQLDatabase" xml:space="preserve">
+    <value>Connecting to SQL database</value>
   </data>
   <data name="GeneratedSemanticDescriptionForStoredProcedure" xml:space="preserve">
     <value>Completed generation of semantic description for stored procedure '{Schema}.{Name}'</value>
-  </data>
-  <data name="GeneratedSemanticDescriptionForTable" xml:space="preserve">
-    <value>Completed generation of semantic description for table '{Schema}.{Name}'</value>
   </data>
   <data name="GeneratedSemanticDescriptionForView" xml:space="preserve">
     <value>Completed generation of semantic description for view '{Schema}.{Name}'</value>
@@ -170,5 +158,8 @@
   </data>
   <data name="GenerateSemanticDescriptionForView" xml:space="preserve">
     <value>Generating semantic description for view '{Schema}.{Name}'</value>
+  </data>
+  <data name="GeneratedSemanticDescriptionForTable" xml:space="preserve">
+    <value>Completed generation of semantic description for table '{Schema}.{Name}'</value>
   </data>
 </root>

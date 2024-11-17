@@ -1,10 +1,8 @@
+using GenAIDBExplorer.Core.Data.DatabaseProviders;
+using GenAIDBExplorer.Core.Models.Project;
+using GenAIDBExplorer.Core.SemanticModelProviders;
+using GenAIDBExplorer.Core.SemanticProviders;
 using Microsoft.Extensions.Logging;
-using GenAIDBExplorer.AI.SemanticProviders;
-using GenAIDBExplorer.Models.Project;
-using GenAIDBExplorer.Data.SemanticModelProviders;
-using GenAIDBExplorer.Data.DatabaseProviders;
-using System.CommandLine;
-using Microsoft.Extensions.Hosting;
 
 namespace GenAIDBExplorer.Console.CommandHandlers;
 
