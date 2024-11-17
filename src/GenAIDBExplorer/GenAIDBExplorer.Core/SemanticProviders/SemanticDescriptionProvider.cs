@@ -2,6 +2,7 @@ using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.Models.SemanticModel;
 using GenAIDBExplorer.Core.SemanticKernel;
 using GenAIDBExplorer.Core.SemanticModelProviders;
+using GenAIDBExplorer.Core.ProjectLogger;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using System.Resources;
@@ -18,7 +19,8 @@ public class SemanticDescriptionProvider(
         ISemanticModelProvider semanticModelProvider,
         ISemanticKernelFactory semanticKernelFactory,
         ISchemaRepository schemaRepository,
-        ILogger<SemanticDescriptionProvider> logger
+        ILogger<SemanticDescriptionProvider> logger,
+        IProjectLoggerProvider projectLoggerProvider
     ) : ISemanticDescriptionProvider
 {
     private readonly IProject _project = project;
@@ -26,6 +28,7 @@ public class SemanticDescriptionProvider(
     private readonly ISemanticKernelFactory _semanticKernelFactory = semanticKernelFactory;
     private readonly ISchemaRepository _schemaRepository = schemaRepository;
     private readonly ILogger<SemanticDescriptionProvider> _logger = logger;
+    private readonly IProjectLoggerProvider _projectLoggerProvider = projectLoggerProvider;
     private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Core.Resources.LogMessages", typeof(SemanticDescriptionProvider).Assembly);
 
     private const string _promptyFolder = "Prompty";
