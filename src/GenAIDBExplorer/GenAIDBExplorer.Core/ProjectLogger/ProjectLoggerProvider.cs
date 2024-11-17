@@ -9,8 +9,8 @@ public class ProjectLoggerProvider(
 {
     private readonly IProject _project = project;
 
-    public ILogger CreateLogger(string categoryName)
+    public ILogger CreateLogger(string categoryName, string logName)
     {
-        return new ProjectLogger(_project, categoryName);
+        return new ProjectLogger(_project, categoryName, logName);
     }
 }
