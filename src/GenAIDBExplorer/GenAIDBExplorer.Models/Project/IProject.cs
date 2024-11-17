@@ -4,9 +4,10 @@ namespace GenAIDBExplorer.Models.Project;
 
 public interface IProject
 {
+    DirectoryInfo ProjectDirectory { get; }
     ProjectSettings Settings { get; }
 
     public void InitializeProjectDirectory(DirectoryInfo projectDirectory);
 
-    public void LoadConfiguration(string projectPath);
+    public void LoadProjectConfiguration(DirectoryInfo projectDirectory);
 }

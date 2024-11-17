@@ -68,8 +68,7 @@ public class QueryCommandHandler(
     {
         var projectPath = commandOptions.ProjectPath;
 
-
-        _project.LoadConfiguration(projectPath.FullName);
+        _project.LoadProjectConfiguration(projectPath);
 
         // Load the Semantic Model
         _logger.LogInformation(_resourceManagerLogMessages.GetString("LoadingSemanticModel"), projectPath.FullName);

@@ -4,7 +4,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace GenAIDBExplorer.Models.Project;
 
-public class Project(ILogger<Project> logger) : IProject
+public class Project(
+    ILogger<Project> logger
+) : IProject
 {
     /// <summary>
     /// Logger instance for logging information, warnings, and errors.
@@ -22,11 +24,18 @@ public class Project(ILogger<Project> logger) : IProject
     public ProjectSettings Settings { get; private set; }
 
     /// <summary>
+    /// Gets the project directory.
+    /// </summary>
+    public DirectoryInfo ProjectDirectory { get; private set; }
+
+    /// <summary>
     /// Initializes the project directory by copying the default project structure.
     /// </summary>
     /// <param name="projectDirectory">The directory path of the project to initialize.</param>
     public void InitializeProjectDirectory(DirectoryInfo projectDirectory)
     {
+        ProjectDirectory = projectDirectory;
+
         if (ProjectUtils.IsDirectoryNotEmpty(projectDirectory))
         {
             _logger.LogError(LogMessages.ProjectFolderNotEmpty);
@@ -42,12 +51,14 @@ public class Project(ILogger<Project> logger) : IProject
     /// <summary>
     /// Loads the configuration from the specified project path.
     /// </summary>
-    /// <param name="projectPath">The directory path of the project to load the configuration from.</param>
-    public void LoadConfiguration(string projectPath)
+    /// <param name="projectDirectory">The directory path of the project to load the configuration from.</param>
+    public void LoadProjectConfiguration(DirectoryInfo projectDirectory)
     {
+        ProjectDirectory = projectDirectory;
+
         // Create IConfiguration from the projectPath
         var configurationBuilder = new ConfigurationBuilder()
-            .SetBasePath(projectPath)
+            .SetBasePath(projectDirectory.FullName)
             .AddJsonFile("settings.json", optional: false, reloadOnChange: false);
 
         _configuration = configurationBuilder.Build();

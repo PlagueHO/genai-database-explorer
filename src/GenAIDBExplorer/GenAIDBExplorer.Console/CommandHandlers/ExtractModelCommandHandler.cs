@@ -98,7 +98,7 @@ public class ExtractModelCommandHandler(
 
         _logger.LogInformation(_resourceManagerLogMessages.GetString("ExtractingSemanticModel"), projectPath.FullName);
 
-        _project.LoadConfiguration(projectPath.FullName);
+        _project.LoadProjectConfiguration(projectPath);
 
         // Extract the Semantic Model
         var semanticModel = await _semanticModelProvider.ExtractSemanticModelAsync().ConfigureAwait(false);
