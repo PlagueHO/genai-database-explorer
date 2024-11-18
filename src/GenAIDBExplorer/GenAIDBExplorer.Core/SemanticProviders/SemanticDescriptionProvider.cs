@@ -16,7 +16,6 @@ namespace GenAIDBExplorer.Core.SemanticProviders;
 /// <typeparam name="TEntity">The type of semantic model entity.</typeparam>
 public class SemanticDescriptionProvider(
         IProject project,
-        ISemanticModelProvider semanticModelProvider,
         ISemanticKernelFactory semanticKernelFactory,
         ISchemaRepository schemaRepository,
         ILogger<SemanticDescriptionProvider> logger,
@@ -24,7 +23,6 @@ public class SemanticDescriptionProvider(
     ) : ISemanticDescriptionProvider
 {
     private readonly IProject _project = project;
-    private readonly ISemanticModelProvider _semanticModelProvider = semanticModelProvider;
     private readonly ISemanticKernelFactory _semanticKernelFactory = semanticKernelFactory;
     private readonly ISchemaRepository _schemaRepository = schemaRepository;
     private readonly ILogger<SemanticDescriptionProvider> _logger = logger;
@@ -37,7 +35,7 @@ public class SemanticDescriptionProvider(
     /// Generates a semantic description for the specified table using Semantic Kernel.
     /// </summary>
     /// <param name="table">The semantic model table for which to generate the description.</param>
-    public async Task UpdateSemanticDescriptionAsync(SemanticModelTable table)
+    public async Task UpdateSemanticDescriptionAsync(SemanticModel semanticModel, SemanticModelTable table)
     {
         _logger.LogInformation(_resourceManagerLogMessages.GetString("GenerateSemanticDescriptionForTable"), table.Schema, table.Name);
 
@@ -85,12 +83,24 @@ public class SemanticDescriptionProvider(
     /// Generates a semantic description for the specified view using Semantic Kernel.
     /// </summary>
     /// <param name="view">The semantic model view for which to generate the description.</param>
-    public async Task UpdateSemanticDescriptionAsync(SemanticModelView view)
+    public async Task UpdateSemanticDescriptionAsync(SemanticModel semanticModel, SemanticModelView view)
     {
         _logger.LogInformation(_resourceManagerLogMessages.GetString("GenerateSemanticDescriptionForView"), view.Schema, view.Name);
 
         // First get the list of tables used in the view definition
-        var tableList = await GetTableListFromViewDefinitionAsync(view);
+        var tableList = await GetTableListFromViewDefinitionAsync(semanticModel, view);
+
+        // TODO: Refactor this into a separate method that can be used to update the semantic description for all tables in the model
+        // For each table, find the table in the Semantic Model and check if it has a semantic description
+        foreach (var table in tableList)
+        {
+            var semanticModelTable = semanticModel.Tables.FirstOrDefault(t => t.Schema == table.SchemaName && t.Name == table.TableName);
+            if (semanticModelTable != null && string.IsNullOrEmpty(semanticModelTable.SemanticDescription))
+            {
+                _logger.LogInformation(_resourceManagerLogMessages.GetString("TableMissingSemanticDescription"), table.SchemaName, table.TableName);
+                await UpdateSemanticDescriptionAsync(semanticModel, semanticModelTable);
+            }
+        }
 
         var promptyFilename = "semantic_model_describe_view.prompty";
         promptyFilename = Path.Combine(_promptyFolder, promptyFilename);
@@ -118,8 +128,7 @@ public class SemanticDescriptionProvider(
         var arguments = new KernelArguments()
         {
             { "view", viewInfo },
-            { "project", projectInfo },
-            { "tables", tableList }
+            { "project", projectInfo }
         };
 
 #pragma warning disable SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
@@ -137,7 +146,7 @@ public class SemanticDescriptionProvider(
     /// Generates a semantic description for the specified stored procedure using Semantic Kernel.
     /// </summary>
     /// <param name="storedProcedure">The semantic model stored procedure for which to generate the description.</param>
-    public async Task UpdateSemanticDescriptionAsync(SemanticModelStoredProcedure storedProcedure)
+    public async Task UpdateSemanticDescriptionAsync(SemanticModel semanticModel, SemanticModelStoredProcedure storedProcedure)
     {
         _logger.LogInformation(_resourceManagerLogMessages.GetString("GenerateSemanticDescriptionForStoredProcedure"), storedProcedure.Schema, storedProcedure.Name);
 
@@ -177,7 +186,7 @@ public class SemanticDescriptionProvider(
     /// </summary>
     /// <param name="view"></param>
     /// <returns></returns>
-    public async Task<List<TableInfo>> GetTableListFromViewDefinitionAsync(SemanticModelView view)
+    public async Task<List<TableInfo>> GetTableListFromViewDefinitionAsync(SemanticModel semanticModel, SemanticModelView view)
     {
         _logger.LogInformation(_resourceManagerLogMessages.GetString("GetTableListFromViewDefinition"), view.Schema, view.Name);
         var promptyFilename = "get_tables_from_view_definition.prompty";

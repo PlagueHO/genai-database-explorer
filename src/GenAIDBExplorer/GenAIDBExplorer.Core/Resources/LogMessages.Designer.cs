@@ -61,7 +61,7 @@ namespace GenAIDBExplorer.Core.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Adding table &apos;{SchemaName}.{TableName}&apos; to the semantic model.
+        ///   Looks up a localized string similar to Adding table [{schemaName}].[{tableName}] to the semantic model.
         /// </summary>
         internal static string AddingTableToSemanticModel {
             get {
@@ -70,7 +70,7 @@ namespace GenAIDBExplorer.Core.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Adding view &apos;{SchemaName}.{ViewName}&apos; to the semantic model.
+        ///   Looks up a localized string similar to Adding view [{schemaName}].[{viewName}] to the semantic model.
         /// </summary>
         internal static string AddingViewToSemanticModel {
             get {
@@ -124,7 +124,7 @@ namespace GenAIDBExplorer.Core.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Completed generation of semantic description for stored procedure &apos;{SchemaName}.{StoredProcedureName}&apos;.
+        ///   Looks up a localized string similar to Completed generation of semantic description for stored procedure [{schemaName}].[{storedProcedureName}].
         /// </summary>
         internal static string GeneratedSemanticDescriptionForStoredProcedure {
             get {
@@ -133,7 +133,7 @@ namespace GenAIDBExplorer.Core.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Completed generation of semantic description for table &apos;{SchemaName}.{TableName}&apos;.
+        ///   Looks up a localized string similar to Completed generation of semantic description for table [{schemaName}].[{tableName}].
         /// </summary>
         internal static string GeneratedSemanticDescriptionForTable {
             get {
@@ -142,7 +142,7 @@ namespace GenAIDBExplorer.Core.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Completed generation of semantic description for view &apos;{SchemaName}.{ViewName}&apos;.
+        ///   Looks up a localized string similar to Completed generation of semantic description for view [{schemaName}].[{viewName}].
         /// </summary>
         internal static string GeneratedSemanticDescriptionForView {
             get {
@@ -151,7 +151,7 @@ namespace GenAIDBExplorer.Core.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Generating semantic description for stored procedure &apos;{SchemaName}.{StoredProcedureName}&apos;.
+        ///   Looks up a localized string similar to Generating semantic description for stored procedure [{schemaName}].[{storedProcedureName}].
         /// </summary>
         internal static string GenerateSemanticDescriptionForStoredProcedure {
             get {
@@ -160,7 +160,7 @@ namespace GenAIDBExplorer.Core.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Generating semantic description for table &apos;{SchemaName}.{TableName}&apos;.
+        ///   Looks up a localized string similar to Generating semantic description for table [{schemaName}].[{tableName}].
         /// </summary>
         internal static string GenerateSemanticDescriptionForTable {
             get {
@@ -169,7 +169,7 @@ namespace GenAIDBExplorer.Core.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Generating semantic description for view &apos;{SchemaName}.{ViewName}&apos;.
+        ///   Looks up a localized string similar to Generating semantic description for view [{schemaName}].[{viewName}].
         /// </summary>
         internal static string GenerateSemanticDescriptionForView {
             get {
@@ -178,7 +178,7 @@ namespace GenAIDBExplorer.Core.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Getting list of tables from view definition for &apos;{Schema}.{ViewName}&apos;.
+        ///   Looks up a localized string similar to Getting list of tables from view definition for [{schemaName}].[{viewName}].
         /// </summary>
         internal static string GetTableListFromViewDefinition {
             get {
@@ -187,7 +187,7 @@ namespace GenAIDBExplorer.Core.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Completed getting list of {TableCount} tables from view definition for &apos;{SchemaName}.{ViewName}&apos;..
+        ///   Looks up a localized string similar to Completed getting list of {TableCount} tables from view definition for [{schemaName}].[{viewName}].
         /// </summary>
         internal static string GotTableListFromViewDefinition {
             get {
@@ -210,6 +210,15 @@ namespace GenAIDBExplorer.Core.Resources {
         internal static string LoadingSemanticModel {
             get {
                 return ResourceManager.GetString("LoadingSemanticModel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Table [{schemaName}].[{tableName}] used by the view is missing a semantic description. It will be generated before view semantic description can be produced..
+        /// </summary>
+        internal static string TableMissingSemanticDescription {
+            get {
+                return ResourceManager.GetString("TableMissingSemanticDescription", resourceCulture);
             }
         }
     }

@@ -127,25 +127,25 @@
     <value>Error getting views from database</value>
   </data>
   <data name="ErrorGettingViewDefinitionFromDatabase" xml:space="preserve">
-    <value>Error getting definition for view {SchemaName}.{ViewName}</value>
+    <value>Error getting definition for view [{schemaName}].[{viewName}]</value>
   </data>
   <data name="ErrorGettingColumnsForTable" xml:space="preserve">
-    <value>Error getting columns for table {schemaName}.{tableName}</value>
+    <value>Error getting columns for table [{schemaName}].[{tableName}]</value>
   </data>
   <data name="ErrorGettingReferencesForTable" xml:space="preserve">
-    <value>Error getting references for table {schemaName}.{tableName}</value>
+    <value>Error getting references for table [{schemaName}].[{tableName}]</value>
   </data>
   <data name="ErrorGettingColumnsForView" xml:space="preserve">
-    <value>Error getting columns for view {schemaName}.{viewName}</value>
+    <value>Error getting columns for view [{schemaName}].[{viewName}]</value>
   </data>
   <data name="ErrorGettingIndexesForTable" xml:space="preserve">
-    <value>Error getting indexes for table {schemaName}.{tableName}</value>
+    <value>Error getting indexes for table [{schemaName}].[{tableName}]</value>
   </data>
   <data name="ErrorGettingSampleDataForTable" xml:space="preserve">
-    <value>Error getting sample data for table {SchemaName}.{TableName}</value>
+    <value>Error getting sample data for table [{schemaName}].[{tableName}]</value>
   </data>
   <data name="ErrorGettingSampleDataForView" xml:space="preserve">
-    <value>Error getting sample data for view {SchemaName}.{TableName}</value>
+    <value>Error getting sample data for view [{schemaName}].[{viewName}]</value>
   </data>
   <data name="ErrorConnectingToDatabase" xml:space="preserve">
     <value>Error connecting to database</value>

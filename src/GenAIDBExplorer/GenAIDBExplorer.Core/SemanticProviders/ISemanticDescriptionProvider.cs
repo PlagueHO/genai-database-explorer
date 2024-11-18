@@ -9,8 +9,8 @@ namespace GenAIDBExplorer.Core.SemanticProviders;
 /// <typeparam name="TEntity">The type of semantic model entity.</typeparam>
 public interface ISemanticDescriptionProvider
 {
-    Task UpdateSemanticDescriptionAsync(SemanticModelTable table);
-    Task UpdateSemanticDescriptionAsync(SemanticModelView view);
-    Task UpdateSemanticDescriptionAsync(SemanticModelStoredProcedure storedProcedure);
-    Task<List<TableInfo>> GetTableListFromViewDefinitionAsync(SemanticModelView view);
+    Task UpdateSemanticDescriptionAsync(SemanticModel semanticModel, SemanticModelTable table);
+    Task UpdateSemanticDescriptionAsync(SemanticModel semanticModel, SemanticModelView view);
+    Task UpdateSemanticDescriptionAsync(SemanticModel semanticModel, SemanticModelStoredProcedure storedProcedure);
+    Task<List<TableInfo>> GetTableListFromViewDefinitionAsync(SemanticModel semanticModel, SemanticModelView view);
 }

@@ -97,7 +97,7 @@ namespace GenAIDBExplorer.Console.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Completed generation of semantic description for stored procedure &apos;{Schema}.{Name}&apos;.
+        ///   Looks up a localized string similar to Completed generation of semantic description for stored procedure [{schemaName}].[{storedProcedureName}].
         /// </summary>
         internal static string GeneratedSemanticDescriptionForStoredProcedure {
             get {
@@ -106,7 +106,7 @@ namespace GenAIDBExplorer.Console.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Completed generation of semantic description for table &apos;{Schema}.{Name}&apos;.
+        ///   Looks up a localized string similar to Completed generation of semantic description for table [{schemaName}].[{tableName}].
         /// </summary>
         internal static string GeneratedSemanticDescriptionForTable {
             get {
@@ -115,7 +115,7 @@ namespace GenAIDBExplorer.Console.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Completed generation of semantic description for view &apos;{Schema}.{Name}&apos;.
+        ///   Looks up a localized string similar to Completed generation of semantic description for view [{schemaName}].[{viewName}].
         /// </summary>
         internal static string GeneratedSemanticDescriptionForView {
             get {
@@ -124,7 +124,7 @@ namespace GenAIDBExplorer.Console.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Generating semantic description for stored procedure &apos;{Schema}.{Name}&apos;.
+        ///   Looks up a localized string similar to Generating semantic description for stored procedure [{schemaName}].[{storedProcedureName}].
         /// </summary>
         internal static string GenerateSemanticDescriptionForStoredProcedure {
             get {
@@ -133,7 +133,7 @@ namespace GenAIDBExplorer.Console.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Generating semantic description for table &apos;{Schema}.{Name}&apos;.
+        ///   Looks up a localized string similar to Generating semantic description for table[{schemaName}].[{tableName}].
         /// </summary>
         internal static string GenerateSemanticDescriptionForTable {
             get {

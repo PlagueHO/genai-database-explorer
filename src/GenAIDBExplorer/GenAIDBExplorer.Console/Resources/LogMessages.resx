@@ -154,19 +154,19 @@
     <value>Semantic model saved successfully to '{ProjectPath}'</value>
   </data>
   <data name="GeneratedSemanticDescriptionForStoredProcedure" xml:space="preserve">
-    <value>Completed generation of semantic description for stored procedure '{Schema}.{Name}'</value>
+    <value>Completed generation of semantic description for stored procedure [{schemaName}].[{storedProcedureName}]</value>
   </data>
   <data name="GeneratedSemanticDescriptionForTable" xml:space="preserve">
-    <value>Completed generation of semantic description for table '{Schema}.{Name}'</value>
+    <value>Completed generation of semantic description for table [{schemaName}].[{tableName}]</value>
   </data>
   <data name="GeneratedSemanticDescriptionForView" xml:space="preserve">
-    <value>Completed generation of semantic description for view '{Schema}.{Name}'</value>
+    <value>Completed generation of semantic description for view [{schemaName}].[{viewName}]</value>
   </data>
   <data name="GenerateSemanticDescriptionForStoredProcedure" xml:space="preserve">
-    <value>Generating semantic description for stored procedure '{Schema}.{Name}'</value>
+    <value>Generating semantic description for stored procedure [{schemaName}].[{storedProcedureName}]</value>
   </data>
   <data name="GenerateSemanticDescriptionForTable" xml:space="preserve">
-    <value>Generating semantic description for table '{Schema}.{Name}'</value>
+    <value>Generating semantic description for table[{schemaName}].[{tableName}]</value>
   </data>
   <data name="GenerateSemanticDescriptionForView" xml:space="preserve">
     <value>Generating semantic description for view '{Schema}.{Name}'</value>

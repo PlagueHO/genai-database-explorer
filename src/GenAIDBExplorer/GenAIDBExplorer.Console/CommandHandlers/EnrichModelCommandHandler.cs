@@ -1,5 +1,6 @@
 using GenAIDBExplorer.Core.Data.DatabaseProviders;
 using GenAIDBExplorer.Core.Models.Project;
+using GenAIDBExplorer.Core.Models.SemanticModel;
 using GenAIDBExplorer.Core.SemanticModelProviders;
 using GenAIDBExplorer.Core.SemanticProviders;
 using Microsoft.Extensions.DependencyInjection;
@@ -108,7 +109,7 @@ public class EnrichModelCommandHandler(
             // For each table generate the Semantic Description using the Semantic Description Provider
             foreach (var table in semanticModel.Tables)
             {
-                await _semanticDescriptionProvider.UpdateSemanticDescriptionAsync(table).ConfigureAwait(false);
+                await _semanticDescriptionProvider.UpdateSemanticDescriptionAsync(semanticModel, table).ConfigureAwait(false);
             }
         }
 
@@ -117,7 +118,7 @@ public class EnrichModelCommandHandler(
             // For each view generate the Semantic Description using the Semantic Description Provider
             foreach (var view in semanticModel.Views)
             {
-                await _semanticDescriptionProvider.UpdateSemanticDescriptionAsync(view).ConfigureAwait(false);
+                await _semanticDescriptionProvider.UpdateSemanticDescriptionAsync(semanticModel, view).ConfigureAwait(false);
             }
         }
 
@@ -126,7 +127,7 @@ public class EnrichModelCommandHandler(
             // For each stored procedure generate the Semantic Description using the Semantic Description Provider
             foreach (var storedProcedure in semanticModel.StoredProcedures)
             {
-                await _semanticDescriptionProvider.UpdateSemanticDescriptionAsync(storedProcedure).ConfigureAwait(false);
+                await _semanticDescriptionProvider.UpdateSemanticDescriptionAsync(semanticModel, storedProcedure).ConfigureAwait(false);
             }
         }
 
