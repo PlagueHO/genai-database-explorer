@@ -1,4 +1,5 @@
 using GenAIDBExplorer.Core.Models.SemanticModel;
+using GenAIDBExplorer.Core.Models.Database;
 
 namespace GenAIDBExplorer.Core.SemanticModelProviders;
 

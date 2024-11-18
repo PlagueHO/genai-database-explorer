@@ -2,6 +2,7 @@ using GenAIDBExplorer.Core.Data.DatabaseProviders;
 using GenAIDBExplorer.Core.Models.SemanticModel;
 using Microsoft.Extensions.Logging;
 using System.Resources;
+using GenAIDBExplorer.Core.Models.Database;
 
 namespace GenAIDBExplorer.Core.SemanticModelProviders;
 
@@ -542,32 +543,3 @@ public sealed class SchemaRepository(
         }
     }
 }
-
-// Represents a table in the database
-public record TableInfo(
-    string SchemaName,
-    string TableName
-);
-
-// Represents a view in the database
-public record ViewInfo(
-    string SchemaName,
-    string ViewName
-);
-
-// Represents a stored procedure in the database
-public record StoredProcedureInfo(
-    string SchemaName,
-    string ProcedureName,
-    string ProcedureType,
-    string? Parameters,
-    string Definition
-);
-
-public record ReferenceInfo(
-    string SchemaName,
-    string TableName,
-    string ColumnName,
-    string ReferencedTableName,
-    string ReferencedColumnName
-);

@@ -1,5 +1,6 @@
 using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.Models.SemanticModel;
+using GenAIDBExplorer.Core.Models.Database;
 using GenAIDBExplorer.Core.SemanticKernel;
 using GenAIDBExplorer.Core.SemanticModelProviders;
 using GenAIDBExplorer.Core.ProjectLogger;
@@ -30,6 +31,25 @@ public class SemanticDescriptionProvider(
     private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Core.Resources.LogMessages", typeof(SemanticDescriptionProvider).Assembly);
 
     private const string _promptyFolder = "Prompty";
+
+    /// <summary>
+    /// Generates semantic descriptions for the specified list of tables using Semantic Kernel.
+    /// </summary>
+    /// <param name="semanticModel"></param>
+    /// <param name="tables"></param>
+    /// <returns></returns>
+    public async Task UpdateSemanticDescriptionAsync(SemanticModel semanticModel, List<TableInfo> tables)
+    {
+        foreach (var table in tables)
+        {
+            var semanticModelTable = semanticModel.Tables.FirstOrDefault(t => t.Schema == table.SchemaName && t.Name == table.TableName);
+            if (semanticModelTable != null && string.IsNullOrEmpty(semanticModelTable.SemanticDescription))
+            {
+                _logger.LogInformation(_resourceManagerLogMessages.GetString("TableMissingSemanticDescription"), table.SchemaName, table.TableName);
+                await UpdateSemanticDescriptionAsync(semanticModel, semanticModelTable);
+            }
+        }
+    }
 
     /// <summary>
     /// Generates a semantic description for the specified table using Semantic Kernel.
@@ -77,6 +97,25 @@ public class SemanticDescriptionProvider(
 
         table.SemanticDescription = result.ToString();
         _logger.LogInformation(_resourceManagerLogMessages.GetString("GeneratedSemanticDescriptionForTable"), table.Schema, table.Name);
+    }
+
+    /// <summary>
+    /// Generates semantic descriptions for the specified list of views using Semantic Kernel.
+    /// </summary>
+    /// <param name="semanticModel"></param>
+    /// <param name="views"></param>
+    /// <returns></returns>
+    public async Task UpdateSemanticDescriptionAsync(SemanticModel semanticModel, List<ViewInfo> views)
+    {
+        foreach (var view in views)
+        {
+            var semanticModelView = semanticModel.Views.FirstOrDefault(v => v.Schema == view.SchemaName && v.Name == view.ViewName);
+            if (semanticModelView != null && string.IsNullOrEmpty(semanticModelView.SemanticDescription))
+            {
+                _logger.LogInformation(_resourceManagerLogMessages.GetString("ViewMissingSemanticDescription"), view.SchemaName, view.ViewName);
+                await UpdateSemanticDescriptionAsync(semanticModel, semanticModelView);
+            }
+        }
     }
 
     /// <summary>
@@ -179,6 +218,26 @@ public class SemanticDescriptionProvider(
 
         storedProcedure.SemanticDescription = result.ToString();
         _logger.LogInformation(_resourceManagerLogMessages.GetString("GeneratedSemanticDescriptionForStoredProcedure"), storedProcedure.Schema, storedProcedure.Name);
+    }
+
+
+    /// <summary>
+    /// Generates semantic descriptions for the specified list of stored procedures using Semantic Kernel.
+    /// </summary>
+    /// <param name="semanticModel"></param>
+    /// <param name="storedProcedures"></param>
+    /// <returns></returns>
+    public async Task UpdateSemanticDescriptionAsync(SemanticModel semanticModel, List<StoredProcedureInfo> storedProcedures)
+    {
+        foreach (var storedProcedure in storedProcedures)
+        {
+            var semanticModelStoredProcedure = semanticModel.StoredProcedures.FirstOrDefault(sp => sp.Schema == storedProcedure.SchemaName && sp.Name == storedProcedure.ProcedureName);
+            if (semanticModelStoredProcedure != null && string.IsNullOrEmpty(semanticModelStoredProcedure.SemanticDescription))
+            {
+                _logger.LogInformation(_resourceManagerLogMessages.GetString("StoredProcedureMissingSemanticDescription"), storedProcedure.SchemaName, storedProcedure.ProcedureName);
+                await UpdateSemanticDescriptionAsync(semanticModel, semanticModelStoredProcedure);
+            }
+        }
     }
 
     /// <summary>
