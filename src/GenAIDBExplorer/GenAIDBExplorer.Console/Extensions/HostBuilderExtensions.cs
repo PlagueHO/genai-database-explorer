@@ -71,7 +71,7 @@ public static class HostBuilderExtensions
                 services.AddSingleton<ISchemaRepository, SchemaRepository>();
 
                 // Register the Semantic Model provider
-                services.AddSingleton<ISemanticModelProvider, SqlSemanticModelProvider>();
+                services.AddSingleton<ISemanticModelProvider, SemanticModelProvider>();
 
                 // Register the Semantic Description provider
                 services.AddSingleton<ISemanticDescriptionProvider, SemanticDescriptionProvider>();

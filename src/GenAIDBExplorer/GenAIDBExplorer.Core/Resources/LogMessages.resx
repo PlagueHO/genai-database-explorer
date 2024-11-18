@@ -171,4 +171,7 @@
   <data name="TableMissingSemanticDescription" xml:space="preserve">
     <value>Table [{schemaName}].[{tableName}] used by the view is missing a semantic description. It will be generated before view semantic description can be produced.</value>
   </data>
+  <data name="AddingStoredProcedureToSemanticModel" xml:space="preserve">
+    <value>Adding stored procedure [{schemaName}].[{storedProcedureName}] to the semantic model</value>
+  </data>
 </root>

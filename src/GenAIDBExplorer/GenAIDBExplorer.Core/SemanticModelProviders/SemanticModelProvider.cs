@@ -6,15 +6,15 @@ using System.Resources;
 
 namespace GenAIDBExplorer.Core.SemanticModelProviders;
 
-public sealed class SqlSemanticModelProvider(
+public sealed class SemanticModelProvider(
     IProject project,
     ISchemaRepository schemaRepository,
-    ILogger<SqlSemanticModelProvider> logger
+    ILogger<SemanticModelProvider> logger
 ) : ISemanticModelProvider
 {
     private readonly IProject _project = project;
     private readonly ILogger _logger = logger;
-    private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Core.Resources.LogMessages", typeof(SqlSemanticModelProvider).Assembly);
+    private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Core.Resources.LogMessages", typeof(SemanticModelProvider).Assembly);
 
     /// <inheritdoc/>
     public SemanticModel CreateSemanticModel()
@@ -49,17 +49,36 @@ public sealed class SqlSemanticModelProvider(
         // Create the new SemanticModel instance to build
         var semanticModel = CreateSemanticModel();
 
-        // Configure the parallel options for the operation
-        var options = new ParallelOptions {
+        // Configure the parallel parallelOptions for the operation
+        var parallelOptions = new ParallelOptions
+        {
             MaxDegreeOfParallelism = _project.Settings.Database.MaxDegreeOfParallelism
         };
 
+        await ExtractSemanticModelTablesAsync(semanticModel, parallelOptions);
+
+        await ExtractSemanticModelViewsAsync(semanticModel, parallelOptions);
+
+        await ExtractSemanticModelStoredProceduresAsync(semanticModel, parallelOptions);
+
+        // return the semantic model Task
+        return semanticModel;
+    }
+
+    /// <summary>
+    /// Extracts the tables from the database and adds them to the semantic model asynchronously.
+    /// </summary>
+    /// <param name="semanticModel">The semantic model to which the tables will be added.</param>
+    /// <param name="parallelOptions">The parallel options for configuring the degree of parallelism.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    private async Task ExtractSemanticModelTablesAsync(SemanticModel semanticModel, ParallelOptions parallelOptions)
+    {
         // Get the tables from the database
         var tablesDictionary = await schemaRepository.GetTablesAsync(_project.Settings.Database.Schema).ConfigureAwait(false);
         var semanticModelTables = new ConcurrentBag<SemanticModelTable>();
 
         // Construct the semantic model tables
-        await Parallel.ForEachAsync(tablesDictionary.Values, options, async (table, cancellationToken) =>
+        await Parallel.ForEachAsync(tablesDictionary.Values, parallelOptions, async (table, cancellationToken) =>
         {
             _logger.LogInformation(_resourceManagerLogMessages.GetString("AddingTableToSemanticModel"), table.SchemaName, table.TableName);
 
@@ -69,13 +88,22 @@ public sealed class SqlSemanticModelProvider(
 
         // Add the tables to the semantic model
         semanticModel.Tables.AddRange(semanticModelTables);
+    }
 
+    /// <summary>
+    /// Extracts the views from the database and adds them to the semantic model asynchronously.
+    /// </summary>
+    /// <param name="semanticModel">The semantic model to which the views will be added.</param>
+    /// <param name="parallelOptions">The parallel options for configuring the degree of parallelism.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    private async Task ExtractSemanticModelViewsAsync(SemanticModel semanticModel, ParallelOptions parallelOptions)
+    {
         // Get the views from the database
         var viewsDictionary = await schemaRepository.GetViewsAsync(_project.Settings.Database.Schema).ConfigureAwait(false);
         var semanticModelViews = new ConcurrentBag<SemanticModelView>();
 
         // Construct the semantic model views
-        await Parallel.ForEachAsync(viewsDictionary.Values, options, async (view, cancellationToken) =>
+        await Parallel.ForEachAsync(viewsDictionary.Values, parallelOptions, async (view, cancellationToken) =>
         {
             _logger.LogInformation(_resourceManagerLogMessages.GetString("AddingViewToSemanticModel"), view.SchemaName, view.ViewName);
 
@@ -85,13 +113,22 @@ public sealed class SqlSemanticModelProvider(
 
         // Add the view to the semantic model
         semanticModel.Views.AddRange(semanticModelViews);
+    }
 
+    /// <summary>
+    /// Extracts the stored procedures from the database and adds them to the semantic model asynchronously.
+    /// </summary>
+    /// <param name="semanticModel">The semantic model to which the stored procedures will be added.</param>
+    /// <param name="parallelOptions">The parallel options for configuring the degree of parallelism.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    private async Task ExtractSemanticModelStoredProceduresAsync(SemanticModel semanticModel, ParallelOptions parallelOptions)
+    {
         // Get the stored procedures from the database
         var storedProceduresDictionary = await schemaRepository.GetStoredProceduresAsync(_project.Settings.Database.Schema).ConfigureAwait(false);
         var semanticModelStoredProcedures = new ConcurrentBag<SemanticModelStoredProcedure>();
 
         // Construct the semantic model views
-        await Parallel.ForEachAsync(storedProceduresDictionary.Values, options, async (storedProcedure, cancellationToken) =>
+        await Parallel.ForEachAsync(storedProceduresDictionary.Values, parallelOptions, async (storedProcedure, cancellationToken) =>
         {
             _logger.LogInformation(_resourceManagerLogMessages.GetString("AddingStoredProcedureToSemanticModel"), storedProcedure.SchemaName, storedProcedure.ProcedureName);
 
@@ -101,8 +138,5 @@ public sealed class SqlSemanticModelProvider(
 
         // Add the stored procedures to the semantic model
         semanticModel.StoredProcedures.AddRange(semanticModelStoredProcedures);
-
-        // return the semantic model Task
-        return semanticModel;
     }
 }

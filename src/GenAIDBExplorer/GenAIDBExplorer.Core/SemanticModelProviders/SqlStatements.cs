@@ -1,7 +1,7 @@
 ﻿namespace GenAIDBExplorer.Core.SemanticModelProviders;
 
 /// <summary>
-/// Contains SQL statements used by the <see cref="SqlSemanticModelProvider"/>.
+/// Contains SQL statements used by the <see cref="SemanticModelProvider"/>.
 /// </summary>
 internal static class SqlStatements
 {

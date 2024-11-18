@@ -61,6 +61,15 @@ namespace GenAIDBExplorer.Core.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Adding stored procedure [{schemaName}].[{storedProcedureName}] to the semantic model.
+        /// </summary>
+        internal static string AddingStoredProcedureToSemanticModel {
+            get {
+                return ResourceManager.GetString("AddingStoredProcedureToSemanticModel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Adding table [{schemaName}].[{tableName}] to the semantic model.
         /// </summary>
         internal static string AddingTableToSemanticModel {
