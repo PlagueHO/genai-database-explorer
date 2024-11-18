@@ -1,4 +1,5 @@
 using GenAIDBExplorer.Core.Models.SemanticModel;
+using GenAIDBExplorer.Core.SemanticModelProviders;
 
 namespace GenAIDBExplorer.Core.SemanticProviders;
 
@@ -11,4 +12,5 @@ public interface ISemanticDescriptionProvider
     Task UpdateSemanticDescriptionAsync(SemanticModelTable table);
     Task UpdateSemanticDescriptionAsync(SemanticModelView view);
     Task UpdateSemanticDescriptionAsync(SemanticModelStoredProcedure storedProcedure);
+    Task<List<TableInfo>> GetTableListFromViewDefinitionAsync(SemanticModelView view);
 }

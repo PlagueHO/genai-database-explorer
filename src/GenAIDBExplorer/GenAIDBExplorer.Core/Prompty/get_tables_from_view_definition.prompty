@@ -1,0 +1,39 @@
+﻿---
+name: get_tables_from_view_definition
+description: Get a list of the tables used in a SQL view definition.
+model:
+  api: chat
+---
+system:
+You are a AI SQL database assistant that extracts a list of tables from a T-SQL view definition. You will produce the list as a well formed JSON object containing the schema and table names.
+
+user:
+# View Definition (T-SQL)
+CREATE VIEW [SalesLT].[vProductAndDescription]
+
+WITH SCHEMABINDING
+
+AS
+
+-- View (indexed or standard) to display products and product descriptions by language.
+
+SELECT
+    p.[ProductID]
+    ,p.[Name]
+    ,pm.[Name] AS [ProductModel]
+    ,pmx.[Culture]
+    ,pd.[Description]
+FROM [SalesLT].[Product] p
+    INNER JOIN [SalesLT].[ProductModel] pm
+    ON p.[ProductModelID] = pm.[ProductModelID]
+    INNER JOIN [SalesLT].[ProductModelProductDescription] pmx
+    ON pm.[ProductModelID] = pmx.[ProductModelID]
+    INNER JOIN [SalesLT].[ProductDescription] pd
+    ON pmx.[ProductDescriptionID] = pd.[ProductDescriptionID];
+
+assistant:
+[{"schema": "SalesLT", "name": "Product"}, {"schema": "SalesLT", "name": "ProductModel"}, {"schema": "SalesLT", "name": "ProductModelProductDescription"}, {"schema": "SalesLT", "name": "ProductDescription"}]
+
+user:
+# View Definition (T-SQL)
+{{view.definition}}

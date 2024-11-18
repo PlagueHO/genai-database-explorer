@@ -130,10 +130,10 @@
     <value>Executing SQL query '{query}'</value>
   </data>
   <data name="ExtractingModelForDatabase" xml:space="preserve">
-    <value>Extracting semantic model for database '{Database}'</value>
+    <value>Extracting semantic model for database '{DatabaseName}'</value>
   </data>
   <data name="LoadedSemanticModelForDatabase" xml:space="preserve">
-    <value>Semantic model loaded successfully for database '{Database}'</value>
+    <value>Semantic model loaded successfully for database '{DatabaseName}'</value>
   </data>
   <data name="LoadingSemanticModel" xml:space="preserve">
     <value>Loading semantic model from '{ModelPath}'</value>
@@ -145,21 +145,27 @@
     <value>Connecting to SQL database</value>
   </data>
   <data name="GeneratedSemanticDescriptionForStoredProcedure" xml:space="preserve">
-    <value>Completed generation of semantic description for stored procedure '{Schema}.{Name}'</value>
+    <value>Completed generation of semantic description for stored procedure '{SchemaName}.{StoredProcedureName}'</value>
   </data>
   <data name="GeneratedSemanticDescriptionForView" xml:space="preserve">
-    <value>Completed generation of semantic description for view '{Schema}.{Name}'</value>
+    <value>Completed generation of semantic description for view '{SchemaName}.{ViewName}'</value>
   </data>
   <data name="GenerateSemanticDescriptionForStoredProcedure" xml:space="preserve">
-    <value>Generating semantic description for stored procedure '{Schema}.{Name}'</value>
+    <value>Generating semantic description for stored procedure '{SchemaName}.{StoredProcedureName}'</value>
   </data>
   <data name="GenerateSemanticDescriptionForTable" xml:space="preserve">
-    <value>Generating semantic description for table '{Schema}.{Name}'</value>
+    <value>Generating semantic description for table '{SchemaName}.{TableName}'</value>
   </data>
   <data name="GenerateSemanticDescriptionForView" xml:space="preserve">
-    <value>Generating semantic description for view '{Schema}.{Name}'</value>
+    <value>Generating semantic description for view '{SchemaName}.{ViewName}'</value>
   </data>
   <data name="GeneratedSemanticDescriptionForTable" xml:space="preserve">
-    <value>Completed generation of semantic description for table '{Schema}.{Name}'</value>
+    <value>Completed generation of semantic description for table '{SchemaName}.{TableName}'</value>
+  </data>
+  <data name="GetTableListFromViewDefinition" xml:space="preserve">
+    <value>Getting list of tables from view definition for '{Schema}.{ViewName}'</value>
+  </data>
+  <data name="GotTableListFromViewDefinition" xml:space="preserve">
+    <value>Completed getting list of {TableCount} tables from view definition for '{SchemaName}.{ViewName}'.</value>
   </data>
 </root>

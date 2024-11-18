@@ -69,6 +69,9 @@
     <None Update="Prompty\semantic_model_describe_stored_procedure.prompty">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Prompty\get_tables_from_view_definition.prompty">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Prompty\semantic_model_describe_table.prompty">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

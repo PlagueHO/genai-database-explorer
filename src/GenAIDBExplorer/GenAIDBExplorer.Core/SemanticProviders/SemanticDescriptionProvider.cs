@@ -34,7 +34,7 @@ public class SemanticDescriptionProvider(
     private const string _promptyFolder = "Prompty";
 
     /// <summary>
-    /// Generates a semantic description for the specified table using the Semantic Kernel.
+    /// Generates a semantic description for the specified table using Semantic Kernel.
     /// </summary>
     /// <param name="table">The semantic model table for which to generate the description.</param>
     public async Task UpdateSemanticDescriptionAsync(SemanticModelTable table)
@@ -82,12 +82,15 @@ public class SemanticDescriptionProvider(
     }
 
     /// <summary>
-    /// Generates a semantic description for the specified view using the Semantic Kernel.
+    /// Generates a semantic description for the specified view using Semantic Kernel.
     /// </summary>
     /// <param name="view">The semantic model view for which to generate the description.</param>
     public async Task UpdateSemanticDescriptionAsync(SemanticModelView view)
     {
         _logger.LogInformation(_resourceManagerLogMessages.GetString("GenerateSemanticDescriptionForView"), view.Schema, view.Name);
+
+        // First get the list of tables used in the view definition
+        var tableList = await GetTableListFromViewDefinitionAsync(view);
 
         var promptyFilename = "semantic_model_describe_view.prompty";
         promptyFilename = Path.Combine(_promptyFolder, promptyFilename);
@@ -115,7 +118,8 @@ public class SemanticDescriptionProvider(
         var arguments = new KernelArguments()
         {
             { "view", viewInfo },
-            { "project", projectInfo }
+            { "project", projectInfo },
+            { "tables", tableList }
         };
 
 #pragma warning disable SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
@@ -130,7 +134,7 @@ public class SemanticDescriptionProvider(
     }
 
     /// <summary>
-    /// Generates a semantic description for the specified stored procedure using the Semantic Kernel.
+    /// Generates a semantic description for the specified stored procedure using Semantic Kernel.
     /// </summary>
     /// <param name="storedProcedure">The semantic model stored procedure for which to generate the description.</param>
     public async Task UpdateSemanticDescriptionAsync(SemanticModelStoredProcedure storedProcedure)
@@ -166,5 +170,43 @@ public class SemanticDescriptionProvider(
 
         storedProcedure.SemanticDescription = result.ToString();
         _logger.LogInformation(_resourceManagerLogMessages.GetString("GeneratedSemanticDescriptionForStoredProcedure"), storedProcedure.Schema, storedProcedure.Name);
+    }
+
+    /// <summary>
+    /// Gets a list of tables from the specified view definition using Semantic Kernel.
+    /// </summary>
+    /// <param name="view"></param>
+    /// <returns></returns>
+    public async Task<List<TableInfo>> GetTableListFromViewDefinitionAsync(SemanticModelView view)
+    {
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("GetTableListFromViewDefinition"), view.Schema, view.Name);
+        var promptyFilename = "get_tables_from_view_definition.prompty";
+        promptyFilename = Path.Combine(_promptyFolder, promptyFilename);
+        var semanticKernel = _semanticKernelFactory.CreateSemanticKernel();
+        var viewInfo = new
+        {
+            definition = view.Definition
+        };
+        var arguments = new KernelArguments()
+        {
+            { "view", viewInfo }
+        };
+
+#pragma warning disable SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+        var function = semanticKernel.CreateFunctionFromPromptyFile(promptyFilename);
+#pragma warning restore SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+
+        // Invoke the semantic kernel function to get the list of tables from the view definition
+        var result = await semanticKernel.InvokeAsync(function, arguments);
+        var tableList = JsonSerializer.Deserialize<List<TableInfo>>(result.ToString());
+        if (tableList == null)
+        {
+            _logger.LogWarning(_resourceManagerLogMessages.GetString("FailedToGetTableListFromViewDefinition"), view.Schema, view.Name);
+            tableList = [];
+        }
+
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("GotTableListFromViewDefinition"), tableList.Count, view.Schema, view.Name);
+
+        return tableList;
     }
 }

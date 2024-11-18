@@ -115,7 +115,7 @@ namespace GenAIDBExplorer.Core.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Extracting semantic model for database &apos;{Database}&apos;.
+        ///   Looks up a localized string similar to Extracting semantic model for database &apos;{DatabaseName}&apos;.
         /// </summary>
         internal static string ExtractingModelForDatabase {
             get {
@@ -124,7 +124,7 @@ namespace GenAIDBExplorer.Core.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Completed generation of semantic description for stored procedure &apos;{Schema}.{Name}&apos;.
+        ///   Looks up a localized string similar to Completed generation of semantic description for stored procedure &apos;{SchemaName}.{StoredProcedureName}&apos;.
         /// </summary>
         internal static string GeneratedSemanticDescriptionForStoredProcedure {
             get {
@@ -133,7 +133,7 @@ namespace GenAIDBExplorer.Core.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Completed generation of semantic description for table &apos;{Schema}.{Name}&apos;.
+        ///   Looks up a localized string similar to Completed generation of semantic description for table &apos;{SchemaName}.{TableName}&apos;.
         /// </summary>
         internal static string GeneratedSemanticDescriptionForTable {
             get {
@@ -142,7 +142,7 @@ namespace GenAIDBExplorer.Core.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Completed generation of semantic description for view &apos;{Schema}.{Name}&apos;.
+        ///   Looks up a localized string similar to Completed generation of semantic description for view &apos;{SchemaName}.{ViewName}&apos;.
         /// </summary>
         internal static string GeneratedSemanticDescriptionForView {
             get {
@@ -151,7 +151,7 @@ namespace GenAIDBExplorer.Core.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Generating semantic description for stored procedure &apos;{Schema}.{Name}&apos;.
+        ///   Looks up a localized string similar to Generating semantic description for stored procedure &apos;{SchemaName}.{StoredProcedureName}&apos;.
         /// </summary>
         internal static string GenerateSemanticDescriptionForStoredProcedure {
             get {
@@ -160,7 +160,7 @@ namespace GenAIDBExplorer.Core.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Generating semantic description for table &apos;{Schema}.{Name}&apos;.
+        ///   Looks up a localized string similar to Generating semantic description for table &apos;{SchemaName}.{TableName}&apos;.
         /// </summary>
         internal static string GenerateSemanticDescriptionForTable {
             get {
@@ -169,7 +169,7 @@ namespace GenAIDBExplorer.Core.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Generating semantic description for view &apos;{Schema}.{Name}&apos;.
+        ///   Looks up a localized string similar to Generating semantic description for view &apos;{SchemaName}.{ViewName}&apos;.
         /// </summary>
         internal static string GenerateSemanticDescriptionForView {
             get {
@@ -178,7 +178,25 @@ namespace GenAIDBExplorer.Core.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Semantic model loaded successfully for database &apos;{Database}&apos;.
+        ///   Looks up a localized string similar to Getting list of tables from view definition for &apos;{Schema}.{ViewName}&apos;.
+        /// </summary>
+        internal static string GetTableListFromViewDefinition {
+            get {
+                return ResourceManager.GetString("GetTableListFromViewDefinition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Completed getting list of {TableCount} tables from view definition for &apos;{SchemaName}.{ViewName}&apos;..
+        /// </summary>
+        internal static string GotTableListFromViewDefinition {
+            get {
+                return ResourceManager.GetString("GotTableListFromViewDefinition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Semantic model loaded successfully for database &apos;{DatabaseName}&apos;.
         /// </summary>
         internal static string LoadedSemanticModelForDatabase {
             get {

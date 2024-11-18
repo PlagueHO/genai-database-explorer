@@ -64,6 +64,17 @@ public sealed class SemanticModel(
     }
 
     /// <summary>
+    /// Finds a table in the semantic model by name and schema.
+    /// </summary>
+    /// <param name="schemaName">The schema name of the table.</param>
+    /// <param name="tableName">The name of the table.</param>
+    /// <returns>The table if found; otherwise, null.</returns>
+    public SemanticModelTable? FindTable(string schemaName, string tableName)
+    {
+        return Tables.FirstOrDefault(t => t.Schema == schemaName && t.Name == tableName);
+    }
+
+    /// <summary>
     /// Adds a view to the semantic model.
     /// </summary>
     /// <param name="view">The view to add.</param>
@@ -83,6 +94,17 @@ public sealed class SemanticModel(
     }
 
     /// <summary>
+    /// Finds a view in the semantic model by name and schema.
+    /// </summary>
+    /// <param name="schemaName">The schema name of the view.</param>
+    /// <param name="viewName">The name of the view.</param>
+    /// <returns>The view if found; otherwise, null.</returns></returns>
+    public SemanticModelView? FindView(string schemaName, string viewName)
+    {
+        return Views.FirstOrDefault(v => v.Schema == schemaName && v.Name == viewName);
+    }
+
+    /// <summary>
     /// Adds a stored procedure to the semantic model.
     /// </summary>
     /// <param name="storedProcedure">The stored procedure to add.</param>
@@ -99,6 +121,17 @@ public sealed class SemanticModel(
     public bool RemoveStoredProcedure(SemanticModelStoredProcedure storedProcedure)
     {
         return StoredProcedures.Remove(storedProcedure);
+    }
+
+    /// <summary>
+    /// Finds a stored procedure in the semantic model by name and schema.
+    /// </summary>
+    /// <param name="schemaName">The schema name of the stored procedure.</param>
+    /// <param name="storedProcedureName">The name of the stored procedure.</param>
+    /// <returns>The stored procedure if found; otherwise, null.</returns>
+    public SemanticModelStoredProcedure? FindStoredProcedure(string schemaName, string storedProcedureName)
+    {
+        return StoredProcedures.FirstOrDefault(sp => sp.Schema == schemaName && sp.Name == storedProcedureName);
     }
 
     /// <summary>

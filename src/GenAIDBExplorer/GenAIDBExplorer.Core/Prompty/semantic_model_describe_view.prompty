@@ -96,6 +96,7 @@ The view is likely used to display product information in different languages, a
 # Uses Tables
 
 - `SalesLT.Product`
+- `SalesLT.ProductModel`
 - `SalesLT.ProductModelProductDescription`
 - `SalesLT.ProductDescription`
 
