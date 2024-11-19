@@ -50,7 +50,7 @@ It is intended to be used as a starting point for your own project and not as a 
 
 ## License
 
-Copyright (c) Microsoft Corporation. All rights reserved.
+Copyright (c) 2024 Daniel Scott-Raynsford
 
 Licensed under the [MIT](LICENSE) license.
 
