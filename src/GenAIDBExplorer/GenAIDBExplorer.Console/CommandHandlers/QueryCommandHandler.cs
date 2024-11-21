@@ -66,6 +66,8 @@ public class QueryCommandHandler(
     /// <param name="commandOptions">The options for the command.</param>
     public override async Task HandleAsync(QueryCommandHandlerOptions commandOptions)
     {
+        AssertCommandOptionsValid(commandOptions);
+
         var projectPath = commandOptions.ProjectPath;
 
         _project.LoadProjectConfiguration(projectPath);

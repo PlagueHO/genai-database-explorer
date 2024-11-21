@@ -61,6 +61,24 @@ public abstract class CommandHandler<TOptions>(
     public abstract Task HandleAsync(TOptions commandOptions);
 
     /// <summary>
+    /// Asserts that the command options and its properties are valid.
+    /// </summary>
+    /// <param name="commandOptions">The command options to validate.</param>
+    /// <exception cref="ArgumentNullException">Thrown when the command options or its properties are null.</exception>
+    protected void AssertCommandOptionsValid(TOptions commandOptions)
+    {
+        if (commandOptions == null)
+        {
+            throw new ArgumentNullException(nameof(commandOptions), "Command options cannot be null.");
+        }
+
+        if (commandOptions.ProjectPath == null)
+        {
+            throw new ArgumentNullException(nameof(commandOptions.ProjectPath), "Project path cannot be null.");
+        }
+    }
+
+    /// <summary>
     /// Validates the specified project path.
     /// </summary>
     /// <param name="projectPath">The project path to validate.</param>

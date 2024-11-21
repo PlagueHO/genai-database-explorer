@@ -66,6 +66,8 @@ public class InitProjectCommandHandler(
     /// <param name="commandOptions">The options for the command.</param>
     public override async Task HandleAsync(InitProjectCommandHandlerOptions commandOptions)
     {
+        AssertCommandOptionsValid(commandOptions);
+
         var projectPath = commandOptions.ProjectPath;
 
         _logger.LogInformation(_resourceManagerLogMessages.GetString("InitializingProject"), projectPath.FullName);
