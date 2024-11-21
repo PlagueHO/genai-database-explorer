@@ -150,7 +150,10 @@
   <data name="ErrorConnectingToDatabase" xml:space="preserve">
     <value>Error connecting to database</value>
   </data>
-  <data name="ErrorConnectingToDatabaseSql" xml:space="preserve">
+  <data name="ErrorConnectingToDatabaseSQL" xml:space="preserve">
     <value>Error connecting to database (SQL)</value>
+  </data>
+  <data name="ErrorDeserializingTableListFromViewDefinition" xml:space="preserve">
+    <value>Error deserializing table list result from call to model. Retrying...</value>
   </data>
 </root>

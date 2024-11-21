@@ -29,6 +29,7 @@ public class SemanticDescriptionProvider(
     private readonly ILogger<SemanticDescriptionProvider> _logger = logger;
     private readonly IProjectLoggerProvider _projectLoggerProvider = projectLoggerProvider;
     private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Core.Resources.LogMessages", typeof(SemanticDescriptionProvider).Assembly);
+    private static readonly ResourceManager _resourceManagerErrorMessages = new("GenAIDBExplorer.Core.Resources.ErrorMessages", typeof(SemanticDescriptionProvider).Assembly);
 
     private const string _promptyFolder = "Prompty";
 
@@ -65,12 +66,7 @@ public class SemanticDescriptionProvider(
 
         // Retrieve sample data for the table
         var sampleData = await _schemaRepository.GetSampleTableDataAsync(new TableInfo(table.Schema, table.Name));
-        var sampleDataJson = "No sample data available";
-        if (sampleData.Count > 0)
-        {
-            // Serialize sample data to JSON
-            sampleDataJson = JsonSerializer.Serialize(sampleData);
-        }
+        var sampleDataSerialized = SerializeSampleData(sampleData);
 
         var projectInfo = new
         {
@@ -79,7 +75,7 @@ public class SemanticDescriptionProvider(
         var tableInfo = new
         {
             structure = table.ToYaml(),
-            data = sampleDataJson
+            data = sampleDataSerialized
         };
 
         var arguments = new KernelArguments()
@@ -147,12 +143,7 @@ public class SemanticDescriptionProvider(
 
         // Retrieve sample data for the view
         var sampleData = await _schemaRepository.GetSampleViewDataAsync(new ViewInfo(view.Schema, view.Name));
-        var sampleDataJson = "No sample data available";
-        if (sampleData.Count > 0)
-        {
-            // Serialize sample data to JSON
-            sampleDataJson = JsonSerializer.Serialize(sampleData);
-        }
+        var sampleDataSerialized = SerializeSampleData(sampleData);
 
         var projectInfo = new
         {
@@ -161,7 +152,7 @@ public class SemanticDescriptionProvider(
         var viewInfo = new
         {
             structure = view.ToYaml(),
-            data = sampleDataJson
+            data = sampleDataSerialized
         };
 
         var arguments = new KernelArguments()
@@ -265,16 +256,45 @@ public class SemanticDescriptionProvider(
 #pragma warning restore SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
         // Invoke the semantic kernel function to get the list of tables from the view definition
-        var result = await semanticKernel.InvokeAsync(function, arguments);
-        var tableList = JsonSerializer.Deserialize<List<TableInfo>>(result.ToString());
-        if (tableList == null)
+        // and then try to serialize the result. If the JSON deserialization fails, log the error and retry
+        // the prompty call up to 3 times.
+        List<TableInfo> tableList = [];
+        for (int i = 0; i < 3; i++)
         {
-            _logger.LogWarning(_resourceManagerLogMessages.GetString("FailedToGetTableListFromViewDefinition"), view.Schema, view.Name);
-            tableList = [];
+            var result = await semanticKernel.InvokeAsync(function, arguments);
+            var resultString = result?.ToString();
+
+            try
+            {
+                if (!string.IsNullOrEmpty(resultString))
+                {
+                    tableList = JsonSerializer.Deserialize<List<TableInfo>>(resultString);
+                }
+                break;
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex, _resourceManagerErrorMessages.GetString("ErrorDeserializingTableListFromViewDefinition"), view.Schema, view.Name);
+                _logger.LogInformation(resultString);
+            }
         }
 
         _logger.LogInformation(_resourceManagerLogMessages.GetString("GotTableListFromViewDefinition"), tableList.Count, view.Schema, view.Name);
 
         return tableList;
+    }
+
+    /// <summary>
+    /// Serializes sample data.
+    /// </summary>
+    /// <param name="sampleData">The sample data to serialize.</param>
+    /// <returns>The serialized data.</returns>
+    private static string SerializeSampleData(List<Dictionary<string, object>> sampleData)
+    {
+        if (sampleData.Count > 0)
+        {
+            return JsonSerializer.Serialize(sampleData);
+        }
+        return "No sample data available";
     }
 }

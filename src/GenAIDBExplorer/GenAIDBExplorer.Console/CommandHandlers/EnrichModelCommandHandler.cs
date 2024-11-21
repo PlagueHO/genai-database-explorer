@@ -1,6 +1,5 @@
 using GenAIDBExplorer.Core.Data.DatabaseProviders;
 using GenAIDBExplorer.Core.Models.Project;
-using GenAIDBExplorer.Core.Models.SemanticModel;
 using GenAIDBExplorer.Core.SemanticModelProviders;
 using GenAIDBExplorer.Core.SemanticProviders;
 using Microsoft.Extensions.DependencyInjection;

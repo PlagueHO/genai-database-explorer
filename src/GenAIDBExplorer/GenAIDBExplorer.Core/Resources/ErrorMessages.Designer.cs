@@ -72,9 +72,18 @@ namespace GenAIDBExplorer.Core.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Error connecting to database (SQL).
         /// </summary>
-        internal static string ErrorConnectingToDatabaseSql {
+        internal static string ErrorConnectingToDatabaseSQL {
             get {
-                return ResourceManager.GetString("ErrorConnectingToDatabaseSql", resourceCulture);
+                return ResourceManager.GetString("ErrorConnectingToDatabaseSQL", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error deserializing table list result from call to model. Retrying....
+        /// </summary>
+        internal static string ErrorDeserializingTableListFromViewDefinition {
+            get {
+                return ResourceManager.GetString("ErrorDeserializingTableListFromViewDefinition", resourceCulture);
             }
         }
         
