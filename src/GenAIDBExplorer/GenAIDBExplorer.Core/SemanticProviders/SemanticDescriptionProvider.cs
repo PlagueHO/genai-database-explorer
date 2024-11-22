@@ -242,6 +242,7 @@ public class SemanticDescriptionProvider(
         var promptyFilename = "get_tables_from_view_definition.prompty";
         promptyFilename = Path.Combine(_promptyFolder, promptyFilename);
         var semanticKernel = _semanticKernelFactory.CreateSemanticKernel();
+
         var viewInfo = new
         {
             definition = view.Definition

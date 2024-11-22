@@ -21,24 +21,38 @@ public class SemanticKernelFactory(
         var kernelBuilder = Kernel.CreateBuilder();
 
         kernelBuilder.Services.AddSingleton(_logger);
-        kernelBuilder.Services.AddLogging();
+        kernelBuilder.Services.AddLogging(c => c.AddConsole());
 
-        if (_project.Settings.ChatCompletion.ServiceType == "AzureOpenAI")
+        AddChatCompletionService(kernelBuilder, _project.Settings.ChatCompletion, "ChatCompletion");
+        AddChatCompletionService(kernelBuilder, _project.Settings.ChatCompletionStructured, "ChatCompletionStructured");
+
+        return kernelBuilder.Build();
+    }
+
+    /// <summary>
+    /// Adds the appropriate chat completion service to the kernel builder based on the settings.
+    /// </summary>
+    /// <param name="kernelBuilder">The kernel builder.</param>
+    /// <param name="settings">The chat completion settings.</param>
+    /// <param name="serviceId">The service ID.</param>
+    private void AddChatCompletionService(IKernelBuilder kernelBuilder, IChatCompletionSettings settings, string serviceId)
+    {
+        if (settings.ServiceType == "AzureOpenAI")
         {
             kernelBuilder.AddAzureOpenAIChatCompletion(
-                deploymentName: _project.Settings.ChatCompletion.AzureOpenAIDeploymentId,
-                endpoint: _project.Settings.ChatCompletion.AzureOpenAIEndpoint,
-                apiKey: _project.Settings.ChatCompletion.AzureOpenAIKey
+                deploymentName: settings.AzureOpenAIDeploymentId,
+                endpoint: settings.AzureOpenAIEndpoint,
+                apiKey: settings.AzureOpenAIKey,
+                serviceId: serviceId
             );
         }
         else
         {
             kernelBuilder.AddOpenAIChatCompletion(
-                modelId: _project.Settings.ChatCompletion.Model,
-                apiKey: _project.Settings.ChatCompletion.OpenAIKey
+                modelId: settings.ModelId,
+                apiKey: settings.OpenAIKey,
+                serviceId: serviceId
             );
         }
-        
-        return kernelBuilder.Build();
     }
 }

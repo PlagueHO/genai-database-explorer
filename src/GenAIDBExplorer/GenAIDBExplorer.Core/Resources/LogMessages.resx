@@ -174,4 +174,13 @@
   <data name="AddingStoredProcedureToSemanticModel" xml:space="preserve">
     <value>Adding stored procedure [{schemaName}].[{storedProcedureName}] to the semantic model</value>
   </data>
+  <data name="ProjectSettingsValidationStarted" xml:space="preserve">
+    <value>Project settings validation started</value>
+  </data>
+  <data name="ProjectSettingsValidationSuccessful" xml:space="preserve">
+    <value>Project settings '{Section}' validated successfully.</value>
+  </data>
+  <data name="ProjectSettingsValidationCompleted" xml:space="preserve">
+    <value>Project settings validation completed</value>
+  </data>
 </root>

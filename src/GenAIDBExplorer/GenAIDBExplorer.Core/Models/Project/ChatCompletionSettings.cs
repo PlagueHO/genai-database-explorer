@@ -2,19 +2,19 @@
 
 namespace GenAIDBExplorer.Core.Models.Project;
 
-public class ChatCompletionSettings
+public class ChatCompletionSettings : IChatCompletionSettings
 {
     // The settings key that contains the ChatCompletion settings
     public const string PropertyName = "ChatCompletion";
 
     /// <summary>
-    /// The service type to use for ChatCompletion
+    /// The service type to use for Chat Completion
     /// </summary>
     [Required, NotEmptyOrWhitespace]
     public string ServiceType { get; set; } = "AzureOpenAI";
 
-    [NotEmptyOrWhitespace]
-    public string Model { get; set; } = "gpt-4o";
+    [RequiredOnPropertyValue(nameof(ServiceType), "OpenAI")]
+    public string ModelId { get; set; } = "gpt-4o";
 
     [RequiredOnPropertyValue(nameof(ServiceType), "OpenAI")]
     public string? OpenAIKey { get; set; }

@@ -1,5 +1,4 @@
 ﻿using GenAIDBExplorer.Console.CommandHandlers;
-using GenAIDBExplorer.Console.Logger;
 using GenAIDBExplorer.Core.Data.ConnectionManager;
 using GenAIDBExplorer.Core.Data.DatabaseProviders;
 using GenAIDBExplorer.Core.KernelMemory;
@@ -41,8 +40,7 @@ public static class HostBuilderExtensions
                 config
                     .ClearProviders()
                     .AddConfiguration(context.Configuration.GetSection("Logging"))
-                    // .AddConsole()
-                    .AddProvider(new RedactingLoggerProvider());
+                    .AddConsole();
             })
             .ConfigureServices((context, services) =>
             {

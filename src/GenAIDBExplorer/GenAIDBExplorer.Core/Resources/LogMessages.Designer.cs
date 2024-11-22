@@ -223,6 +223,33 @@ namespace GenAIDBExplorer.Core.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Project settings validation completed.
+        /// </summary>
+        internal static string ProjectSettingsValidationCompleted {
+            get {
+                return ResourceManager.GetString("ProjectSettingsValidationCompleted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project settings validation started.
+        /// </summary>
+        internal static string ProjectSettingsValidationStarted {
+            get {
+                return ResourceManager.GetString("ProjectSettingsValidationStarted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project settings &apos;{Section}&apos; validated successfully..
+        /// </summary>
+        internal static string ProjectSettingsValidationSuccessful {
+            get {
+                return ResourceManager.GetString("ProjectSettingsValidationSuccessful", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Table [{schemaName}].[{tableName}] used by the view is missing a semantic description. It will be generated before view semantic description can be produced..
         /// </summary>
         internal static string TableMissingSemanticDescription {

@@ -1,28 +1,38 @@
 {
-  "SettingsVersion": "1.0.0",
-  "Database": {
-    "Name": "AdventureWorksLT",
-    "Description": "Product, sales, and customer data for the AdventureWorks company.", // This helps ground the AI on the context of the database.
-    "ConnectionString": "Server=.;Database=AdventureWorks2017;Trusted_Connection=True;",
-    "Schema": "dbo", // If omitted will get all schemas.
-    "MaxDegreeOfParallelism": 10 // Number of parallel SQL tasks to run.
-  },
-  "ChatCompletion": {
-    "ServiceType": "AzureOpenAI", // AzureOpenAI, OpenAI
-    "Model": "gpt-4o", // gpt-4o-mini
-    // "OpenAIKey": "<Set your OpenAI API key>"
-    "AzureOpenAIKey": "<Set your Azure OpenAI API key>", // Azure OpenAI key
-    "AzureOpenAIEndpoint": "https://<Set your Azure OpenAI endpoint>.cognitiveservices.azure.com/", // Azure OpenAI endpoint
-    // "AzureOpenAIAppId": "", // Azure OpenAI App Id
-    "AzureOpenAIDeploymentId": "<Set your Azure OpenAI deployment id>" // Azure OpenAI deployment id
-  },
-  "Embedding": {
-    "ServiceType": "AzureOpenAI", // AzureOpenAI, OpenAI
-    "Model": "text-embedding-3-large", // text-embedding-3-small, text-embedding-ada-002
-    // "OpenAIKey": "<Set your OpenAI API key>"
-    "AzureOpenAIKey": "<Set your Azure OpenAI API key>", // Azure OpenAI key
-    "AzureOpenAIEndpoint": "https://<Set your Azure OpenAI endpoint>.cognitiveservices.azure.com/", // Azure OpenAI endpoint
-    // "AzureOpenAIAppId": "", // Azure OpenAI App Id
-    "AzureOpenAIDeploymentId": "<Set your Azure OpenAI deployment id>" // Azure OpenAI deployment id
-  }
+    "SettingsVersion": "1.0.0",
+    "Database": {
+        "Name": "AdventureWorksLT",
+        "Description": "Product, sales, and customer data for the AdventureWorks company.", // This helps ground the AI on the context of the database.
+        "ConnectionString": "Server=.;Database=AdventureWorks2017;Trusted_Connection=True;",
+        "Schema": "dbo", // If omitted will get all schemas.
+        "MaxDegreeOfParallelism": 10 // Number of parallel SQL tasks to run.
+    },
+    "ChatCompletion": {
+        "ServiceType": "AzureOpenAI", // AzureOpenAI, OpenAI
+        // "ModelId": "gpt-4o-mini-2024-07-18", // Recommend gpt-4o-2024-08-06 or gpt-4o-mini-2024-07-18
+        // "OpenAIKey": "<Set your OpenAI API key>"
+        "AzureOpenAIKey": "<Set your Azure OpenAI API key>", // Azure OpenAI key
+        "AzureOpenAIEndpoint": "https://<Set your Azure OpenAI endpoint>.cognitiveservices.azure.com/", // Azure OpenAI endpoint
+        // "AzureOpenAIAppId": "", // Azure OpenAI App Id
+        "AzureOpenAIDeploymentId": "<Set your Azure OpenAI deployment id>" // gpt-4o or gpt-4o-mini
+    },
+    // Required for structured chat completion to reliably extract entity lists. Must be a model that supports structured output.
+    "ChatCompletionStructured": {
+        "ServiceType": "AzureOpenAI", // AzureOpenAI, OpenAI
+        // "ModelId": "gpt-4o-mini-2024-07-18", // Must be gpt-4o-2024-08-06 (or later) or gpt-4o-mini-2024-07-18 (or later)
+        // "OpenAIKey": "<Set your OpenAI API key>"
+        "AzureOpenAIKey": "<Set your Azure OpenAI API key>", // Azure OpenAI key
+        "AzureOpenAIEndpoint": "https://<Set your Azure OpenAI endpoint>.cognitiveservices.azure.com/", // Azure OpenAI endpoint
+        // "AzureOpenAIAppId": "", // Azure OpenAI App Id
+        "AzureOpenAIDeploymentId": "<Set your Azure OpenAI deployment id>" // gpt-4o (2024-08-06 or later)
+    },
+    "Embedding": {
+        "ServiceType": "AzureOpenAI", // AzureOpenAI, OpenAI
+        // "ModelId": "text-embedding-3-large", // text-embedding-3-large, text-embedding-3-small or text-embedding-ada-002
+        // "OpenAIKey": "<Set your OpenAI API key>"
+        "AzureOpenAIKey": "<Set your Azure OpenAI API key>", // Azure OpenAI key
+        "AzureOpenAIEndpoint": "https://<Set your Azure OpenAI endpoint>.cognitiveservices.azure.com/", // Azure OpenAI endpoint
+        // "AzureOpenAIAppId": "", // Azure OpenAI App Id
+        "AzureOpenAIDeploymentId": "<Set your Azure OpenAI deployment id>" // text-embedding-3-large, text-embedding-3-small or text-embedding-ada-002
+    }
 }

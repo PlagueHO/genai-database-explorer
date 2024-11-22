@@ -29,6 +29,11 @@ public class ProjectSettings
     public required ChatCompletionSettings ChatCompletion { get; set; }
 
     /// <summary>
+    /// Gets or sets the chat completion settings.
+    /// </summary>
+    public required ChatCompletionStructuredSettings ChatCompletionStructured { get; set; }
+
+    /// <summary>
     /// Gets or sets the embedding settings.
     /// </summary>
     public required EmbeddingSettings Embedding { get; set; }

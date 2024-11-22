@@ -1,6 +1,8 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using GenAIDBExplorer.Core.SemanticProviders;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.ComponentModel.DataAnnotations;
+using System.Resources;
 
 namespace GenAIDBExplorer.Core.Models.Project;
 
@@ -8,6 +10,9 @@ public class Project(
     ILogger<Project> logger
 ) : IProject
 {
+    private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Core.Resources.LogMessages", typeof(Project).Assembly);
+    private static readonly ResourceManager _resourceManagerErrorMessages = new("GenAIDBExplorer.Core.Resources.ErrorMessages", typeof(Project).Assembly);
+
     /// <summary>
     /// Logger instance for logging information, warnings, and errors.
     /// </summary>
@@ -38,10 +43,10 @@ public class Project(
 
         if (ProjectUtils.IsDirectoryNotEmpty(projectDirectory))
         {
-            _logger.LogError(LogMessages.ProjectFolderNotEmpty);
+            _logger.LogError(_resourceManagerErrorMessages.GetString("ErrorProjectFolderNotEmpty"));
 
             // Throw exception directory is not empty
-            throw new InvalidOperationException(LogMessages.ProjectFolderNotEmpty);
+            throw new InvalidOperationException(_resourceManagerErrorMessages.GetString("ErrorProjectFolderNotEmpty"));
         }
 
         var defaultProjectDirectory = new DirectoryInfo("DefaultProject");
@@ -76,6 +81,7 @@ public class Project(
         {
             Database = new DatabaseSettings(),
             ChatCompletion = new ChatCompletionSettings(),
+            ChatCompletionStructured = new ChatCompletionStructuredSettings(),
             Embedding = new EmbeddingSettings()
         };
 
@@ -84,6 +90,7 @@ public class Project(
 
         _configuration.GetSection(DatabaseSettings.PropertyName).Bind(Settings.Database);
         _configuration.GetSection(ChatCompletionSettings.PropertyName).Bind(Settings.ChatCompletion);
+        _configuration.GetSection(ChatCompletionStructuredSettings.PropertyName).Bind(Settings.ChatCompletionStructured);
         _configuration.GetSection(EmbeddingSettings.PropertyName).Bind(Settings.Embedding);
 
         ValidateSettings();
@@ -94,36 +101,24 @@ public class Project(
     /// </summary>
     private void ValidateSettings()
     {
-        _logger.LogInformation(LogMessages.StartingProjectSettingsValidation);
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("ProjectSettingsValidationStarted"));
 
         var validationContext = new ValidationContext(Settings.Database);
         Validator.ValidateObject(Settings.Database, validationContext, validateAllProperties: true);
-
-        _logger.LogInformation(LogMessages.DatabaseProjectSettingsValidated);
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "Database");
 
         validationContext = new ValidationContext(Settings.ChatCompletion);
         Validator.ValidateObject(Settings.ChatCompletion, validationContext, validateAllProperties: true);
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "ChatCompletion");
 
-        _logger.LogInformation(LogMessages.ChatCompletionProjectSettingsValidated);
+        validationContext = new ValidationContext(Settings.ChatCompletionStructured);
+        Validator.ValidateObject(Settings.ChatCompletionStructured, validationContext, validateAllProperties: true);
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "ChatCompletionStructured");
 
         validationContext = new ValidationContext(Settings.Embedding);
         Validator.ValidateObject(Settings.Embedding, validationContext, validateAllProperties: true);
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "Embedding");
 
-        _logger.LogInformation(LogMessages.EmbeddingProjectSettingsValidated);
-
-        _logger.LogInformation(LogMessages.ProjectSettingsValidationCompleted);
-    }
-
-    /// <summary>
-    /// Contains log messages used in the <see cref="Project"/> class.
-    /// </summary>
-    internal static class LogMessages
-    {
-        internal const string ProjectFolderNotEmpty = "The project folder is not empty. Please specify an empty folder.";
-        internal const string StartingProjectSettingsValidation = "Starting project settings validation.";
-        internal const string DatabaseProjectSettingsValidated = "Database project settings validated successfully.";
-        internal const string ChatCompletionProjectSettingsValidated = "ChatCompletion project settings validated successfully.";
-        internal const string EmbeddingProjectSettingsValidated = "Embedding project settings validated successfully.";
-        internal const string ProjectSettingsValidationCompleted = "Project settings validation completed.";
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("ProjectSettingsValidationCompleted"));
     }
 }

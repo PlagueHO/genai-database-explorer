@@ -7,4 +7,3 @@ namespace GenAIDBExplorer.Core.SemanticKernel
         Kernel CreateSemanticKernel();
     }
 }
-
