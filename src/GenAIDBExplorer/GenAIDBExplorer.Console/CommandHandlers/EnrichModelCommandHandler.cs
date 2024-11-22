@@ -107,29 +107,20 @@ public class EnrichModelCommandHandler(
 
         if (!commandOptions.SkipTables)
         {
-            // For each table generate the Semantic Description using the Semantic Description Provider
-            foreach (var table in semanticModel.Tables)
-            {
-                await _semanticDescriptionProvider.UpdateSemanticDescriptionAsync(semanticModel, table).ConfigureAwait(false);
-            }
+            // Generate the Semantic Description for all tables
+            await _semanticDescriptionProvider.UpdateTableSemanticDescriptionAsync(semanticModel).ConfigureAwait(false);
         }
 
         if (!commandOptions.SkipViews)
         {
-            // For each view generate the Semantic Description using the Semantic Description Provider
-            foreach (var view in semanticModel.Views)
-            {
-                await _semanticDescriptionProvider.UpdateSemanticDescriptionAsync(semanticModel, view).ConfigureAwait(false);
-            }
+            // Generate the Semantic Description for all views
+            await _semanticDescriptionProvider.UpdateViewSemanticDescriptionAsync(semanticModel).ConfigureAwait(false);
         }
 
         if (!commandOptions.SkipStoredProcedures)
         {
-            // For each stored procedure generate the Semantic Description using the Semantic Description Provider
-            foreach (var storedProcedure in semanticModel.StoredProcedures)
-            {
-                await _semanticDescriptionProvider.UpdateSemanticDescriptionAsync(semanticModel, storedProcedure).ConfigureAwait(false);
-            }
+            // Generate the Semantic Description for all stored procedures
+            await _semanticDescriptionProvider.UpdateStoredProcedureSemanticDescriptionAsync(semanticModel).ConfigureAwait(false);
         }
 
         // Save the semantic model

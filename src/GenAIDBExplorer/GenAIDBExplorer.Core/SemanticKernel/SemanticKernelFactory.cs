@@ -21,7 +21,14 @@ public class SemanticKernelFactory(
         var kernelBuilder = Kernel.CreateBuilder();
 
         kernelBuilder.Services.AddSingleton(_logger);
-        kernelBuilder.Services.AddLogging(c => c.AddConsole());
+        kernelBuilder.Services.AddLogging(
+            c => c.AddSimpleConsole(
+                options =>
+                {
+                    options.IncludeScopes = true;
+                    options.SingleLine = true;
+                    options.TimestampFormat = "HH:mm:ss ";
+                }));
 
         AddChatCompletionService(kernelBuilder, _project.Settings.ChatCompletion, "ChatCompletion");
         AddChatCompletionService(kernelBuilder, _project.Settings.ChatCompletionStructured, "ChatCompletionStructured");

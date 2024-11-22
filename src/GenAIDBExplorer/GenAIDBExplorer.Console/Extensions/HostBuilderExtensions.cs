@@ -40,7 +40,12 @@ public static class HostBuilderExtensions
                 config
                     .ClearProviders()
                     .AddConfiguration(context.Configuration.GetSection("Logging"))
-                    .AddConsole();
+                    .AddSimpleConsole(options =>
+                    {
+                        options.IncludeScopes = true;
+                        options.SingleLine = true;
+                        options.TimestampFormat = "HH:mm:ss ";
+                    });
             })
             .ConfigureServices((context, services) =>
             {
