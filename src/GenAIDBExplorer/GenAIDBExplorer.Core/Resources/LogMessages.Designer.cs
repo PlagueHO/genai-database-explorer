@@ -250,7 +250,7 @@ namespace GenAIDBExplorer.Core.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Table [{schemaName}].[{tableName}] used by the view is missing a semantic description. It will be generated before view semantic description can be produced..
+        ///   Looks up a localized string similar to Table [{schemaName}].[{tableName}] used by the view does not have a semantic description..
         /// </summary>
         internal static string TableMissingSemanticDescription {
             get {

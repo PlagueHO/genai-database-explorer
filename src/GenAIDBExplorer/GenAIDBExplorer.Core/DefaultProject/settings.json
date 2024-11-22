@@ -7,6 +7,9 @@
         "Schema": "dbo", // If omitted will get all schemas.
         "MaxDegreeOfParallelism": 10 // Number of parallel SQL tasks to run.
     },
+    "SemanticModel": {
+        "MaxDegreeOfParallelism": 10 // Number of parallel semantic model tasks to run.
+    },
     "ChatCompletion": {
         "ServiceType": "AzureOpenAI", // AzureOpenAI, OpenAI
         // "ModelId": "gpt-4o-mini-2024-07-18", // Recommend gpt-4o-2024-08-06 or gpt-4o-mini-2024-07-18

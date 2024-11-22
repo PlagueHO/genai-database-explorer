@@ -24,6 +24,11 @@ public class ProjectSettings
     public required DatabaseSettings Database { get; set; }
 
     /// <summary>
+    /// Gets or sets the semantic model settings.
+    /// </summary>
+    public required SemanticModelSettings SemanticModel { get; set; }
+
+    /// <summary>
     /// Gets or sets the chat completion settings.
     /// </summary>
     public required ChatCompletionSettings ChatCompletion { get; set; }

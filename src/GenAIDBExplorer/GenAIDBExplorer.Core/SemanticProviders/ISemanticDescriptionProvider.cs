@@ -9,11 +9,16 @@ namespace GenAIDBExplorer.Core.SemanticProviders;
 /// <typeparam name="TEntity">The type of semantic model entity.</typeparam>
 public interface ISemanticDescriptionProvider
 {
-    Task UpdateSemanticDescriptionAsync(SemanticModel semanticModel, List<TableInfo> tables);
-    Task UpdateSemanticDescriptionAsync(SemanticModel semanticModel, SemanticModelTable table);
-    Task UpdateSemanticDescriptionAsync(SemanticModel semanticModel, List<ViewInfo> views);
-    Task UpdateSemanticDescriptionAsync(SemanticModel semanticModel, SemanticModelView view);
-    Task UpdateSemanticDescriptionAsync(SemanticModel semanticModel, List<StoredProcedureInfo> storedProcedures);
-    Task UpdateSemanticDescriptionAsync(SemanticModel semanticModel, SemanticModelStoredProcedure storedProcedure);
-    Task<List<TableInfo>> GetTableListFromViewDefinitionAsync(SemanticModel semanticModel, SemanticModelView view);
+    Task UpdateTableSemanticDescriptionAsync(SemanticModel semanticModel);
+    Task UpdateTableSemanticDescriptionAsync(SemanticModel semanticModel, TableList tables);
+    Task UpdateTableSemanticDescriptionAsync(SemanticModel semanticModel, SemanticModelTable table);
+    Task UpdateViewSemanticDescriptionAsync(SemanticModel semanticModel);
+    Task UpdateViewSemanticDescriptionAsync(SemanticModel semanticModel, ViewList views);
+    Task UpdateViewSemanticDescriptionAsync(SemanticModel semanticModel, SemanticModelView view);
+    Task UpdateStoredProcedureSemanticDescriptionAsync(SemanticModel semanticModel);
+    Task UpdateStoredProcedureSemanticDescriptionAsync(SemanticModel semanticModel, StoredProcedureList storedProcedures);
+    Task UpdateStoredProcedureSemanticDescriptionAsync(SemanticModel semanticModel, SemanticModelStoredProcedure storedProcedure);
+    Task<TableList> GetTableListFromViewDefinitionAsync(SemanticModel semanticModel, SemanticModelView view);
+    Task<TableList> GetTableListFromStoredProcedureDefinitionAsync(SemanticModel semanticModel, SemanticModelStoredProcedure storedProcedure);
+    Task<ViewList> GetViewListFromStoredProcedureDefinitionAsync(SemanticModel semanticModel, SemanticModelStoredProcedure storedProcedure);
 }

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -30,8 +30,8 @@
     <PackageReference Include="Microsoft.SemanticKernel.Connectors.OpenAI" Version="1.30.0" />
     <PackageReference Include="Microsoft.SemanticKernel.Core" Version="1.30.0" />
     <PackageReference Include="Microsoft.SemanticKernel.PromptTemplates.Handlebars" Version="1.30.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.PromptTemplates.Liquid" Version="1.28.0-alpha" />
-    <PackageReference Include="Microsoft.SemanticKernel.Prompty" Version="1.28.0-alpha" />
+    <PackageReference Include="Microsoft.SemanticKernel.PromptTemplates.Liquid" Version="1.30.0-preview" />
+    <PackageReference Include="Microsoft.SemanticKernel.Prompty" Version="1.30.0-alpha" />
     <PackageReference Include="Microsoft.SemanticKernel.Yaml" Version="1.30.0" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
     <PackageReference Include="YamlDotNet" Version="16.2.0" />
