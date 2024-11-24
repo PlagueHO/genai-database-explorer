@@ -14,7 +14,7 @@ namespace GenAIDBExplorer.Console.CommandHandlers;
 /// Command handler for querying a project.
 /// </summary>
 /// <remarks>
-/// Initializes a new instance of the <see cref="QueryCommandHandler"/> class.
+/// Initializes a new instance of the <see cref="QueryModelCommandHandler"/> class.
 /// </remarks>
 /// <param name="project">The project instance to query.</param>
 /// <param name="connectionProvider">The database connection provider instance for connecting to a SQL database.</param>
@@ -22,16 +22,16 @@ namespace GenAIDBExplorer.Console.CommandHandlers;
 /// <param name="semanticDescriptionProvider">The semantic description provider instance for generating semantic descriptions.</param>
 /// <param name="serviceProvider">The service provider instance for resolving dependencies.</param>
 /// <param name="logger">The logger instance for logging information, warnings, and errors.</param>
-public class QueryCommandHandler(
+public class QueryModelCommandHandler(
     IProject project,
     ISemanticModelProvider semanticModelProvider,
     IDatabaseConnectionProvider connectionProvider,
     ISemanticDescriptionProvider semanticDescriptionProvider,
     IServiceProvider serviceProvider,
-    ILogger<ICommandHandler<QueryCommandHandlerOptions>> logger
-) : CommandHandler<QueryCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, semanticDescriptionProvider, serviceProvider, logger)
+    ILogger<ICommandHandler<QueryModelCommandHandlerOptions>> logger
+) : CommandHandler<QueryModelCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, semanticDescriptionProvider, serviceProvider, logger)
 {
-    private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Console.Resources.LogMessages", typeof(QueryCommandHandler).Assembly);
+    private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Console.Resources.LogMessages", typeof(QueryModelCommandHandler).Assembly);
 
     /// <summary>
     /// Sets up the query command.
@@ -48,12 +48,12 @@ public class QueryCommandHandler(
             IsRequired = true
         };
 
-        var queryCommand = new Command("query", "Query a GenAI Database Explorer project.");
+        var queryCommand = new Command("query-model", "Answer questions based on the semantic model by using Generative AI.");
         queryCommand.AddOption(projectPathOption);
         queryCommand.SetHandler(async (DirectoryInfo projectPath) =>
         {
-            var handler = host.Services.GetRequiredService<QueryCommandHandler>();
-            var options = new QueryCommandHandlerOptions(projectPath);
+            var handler = host.Services.GetRequiredService<QueryModelCommandHandler>();
+            var options = new QueryModelCommandHandlerOptions(projectPath);
             await handler.HandleAsync(options);
         }, projectPathOption);
 
@@ -64,7 +64,7 @@ public class QueryCommandHandler(
     /// Handles the query command with the specified project path.
     /// </summary>
     /// <param name="commandOptions">The options for the command.</param>
-    public override async Task HandleAsync(QueryCommandHandlerOptions commandOptions)
+    public override async Task HandleAsync(QueryModelCommandHandlerOptions commandOptions)
     {
         AssertCommandOptionsValid(commandOptions);
 
