@@ -59,5 +59,41 @@ namespace GenAIDBExplorer.Console.Resources {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid object type specified. Must be &apos;table&apos;,&apos;view&apos; or &apos;storedprocedure&apos;..
+        /// </summary>
+        internal static string InvalidObjectType {
+            get {
+                return ResourceManager.GetString("InvalidObjectType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stored Procedure [{schema}].[{name}] not found..
+        /// </summary>
+        internal static string StoredProcedureNotFound {
+            get {
+                return ResourceManager.GetString("StoredProcedureNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Table [{schema}].[{name}] not found..
+        /// </summary>
+        internal static string TableNotFound {
+            get {
+                return ResourceManager.GetString("TableNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to View [{schema}].[{name}] not found..
+        /// </summary>
+        internal static string ViewNotFound {
+            get {
+                return ResourceManager.GetString("ViewNotFound", resourceCulture);
+            }
+        }
     }
 }

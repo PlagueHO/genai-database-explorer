@@ -96,14 +96,7 @@ public class EnrichModelCommandHandler(
         AssertCommandOptionsValid(commandOptions);
 
         var projectPath = commandOptions.ProjectPath;
-
-        _project.LoadProjectConfiguration(projectPath);
-
-        // Load the Semantic Model
-        _logger.LogInformation(_resourceManagerLogMessages.GetString("LoadingSemanticModel"), projectPath.FullName);
-        var semanticModelDirectory = new DirectoryInfo(Path.Combine(projectPath.FullName, _project.Settings.Database.Name));
-        var semanticModel = await _semanticModelProvider.LoadSemanticModelAsync(semanticModelDirectory);
-        _logger.LogInformation(_resourceManagerLogMessages.GetString("LoadedSemanticModel"), projectPath.FullName);
+        var semanticModel = await LoadSemanticModelAsync(projectPath);
 
         if (!commandOptions.SkipTables)
         {
@@ -125,6 +118,7 @@ public class EnrichModelCommandHandler(
 
         // Save the semantic model
         _logger.LogInformation(_resourceManagerLogMessages.GetString("SavingSemanticModel"), projectPath.FullName);
+        var semanticModelDirectory = GetSemanticModelDirectory(projectPath);
         await semanticModel.SaveModelAsync(semanticModelDirectory, !commandOptions.SingleModelFile);
         _logger.LogInformation(_resourceManagerLogMessages.GetString("SavedSemanticModel"), projectPath.FullName);
 

@@ -1,3 +1,4 @@
+using GenAIDBExplorer.Core.Models.SemanticModel;
 using Microsoft.Extensions.Hosting;
 using System.CommandLine;
 

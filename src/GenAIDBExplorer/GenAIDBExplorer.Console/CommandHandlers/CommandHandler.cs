@@ -1,5 +1,6 @@
 using GenAIDBExplorer.Core.Data.DatabaseProviders;
 using GenAIDBExplorer.Core.Models.Project;
+using GenAIDBExplorer.Core.Models.SemanticModel;
 using GenAIDBExplorer.Core.SemanticModelProviders;
 using GenAIDBExplorer.Core.SemanticProviders;
 using Microsoft.Extensions.Logging;
@@ -120,5 +121,33 @@ public abstract class CommandHandler<TOptions>(
         System.Console.ForegroundColor = ConsoleColor.Red;
         System.Console.WriteLine(message);
         System.Console.ResetColor();
+    }
+
+    /// <summary>
+    /// Loads the semantic model from the specified project path.
+    /// </summary>
+    /// <param name="projectPath">The project path.</param>
+    /// <returns>The loaded semantic model.</returns>
+    protected async Task<SemanticModel> LoadSemanticModelAsync(DirectoryInfo projectPath)
+    {
+        _project.LoadProjectConfiguration(projectPath);
+
+        // Load the Semantic Model
+        _logger.LogInformation("Loading semantic model from {ProjectPath}", projectPath.FullName);
+        var semanticModelDirectory = GetSemanticModelDirectory(projectPath);
+        var semanticModel = await _semanticModelProvider.LoadSemanticModelAsync(semanticModelDirectory);
+        _logger.LogInformation("Loaded semantic model from {ProjectPath}", projectPath.FullName);
+
+        return semanticModel;
+    }
+
+    /// <summary>
+    /// Gets the semantic model directory for the specified project path.
+    /// </summary>
+    /// <param name="projectPath"></param>
+    /// <returns></returns>
+    protected DirectoryInfo GetSemanticModelDirectory(DirectoryInfo projectPath)
+    {
+        return new DirectoryInfo(Path.Combine(projectPath.FullName, _project.Settings.Database.Name));
     }
 }

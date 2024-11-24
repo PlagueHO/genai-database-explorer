@@ -19,6 +19,10 @@
     "GenAIDBExplorer.Console init-project": {
       "commandName": "Project",
       "commandLineArgs": "init-project\r\n-p d:\\temp"
+    },
+    "GenAIDBExplorer.Console show-object": {
+      "commandName": "Project",
+      "commandLineArgs": "show-object table \r\n-p d:\\temp -s SalesLT -n Product"
     }
   }
 }

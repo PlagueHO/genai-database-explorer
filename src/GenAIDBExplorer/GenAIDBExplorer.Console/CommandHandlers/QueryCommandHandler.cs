@@ -69,14 +69,7 @@ public class QueryCommandHandler(
         AssertCommandOptionsValid(commandOptions);
 
         var projectPath = commandOptions.ProjectPath;
-
-        _project.LoadProjectConfiguration(projectPath);
-
-        // Load the Semantic Model
-        _logger.LogInformation(_resourceManagerLogMessages.GetString("LoadingSemanticModel"), projectPath.FullName);
-        var semanticModelDirectory = new DirectoryInfo(Path.Combine(projectPath.FullName, _project.Settings.Database.Name));
-        var semanticModel = await _semanticModelProvider.LoadSemanticModelAsync(semanticModelDirectory);
-        _logger.LogInformation(_resourceManagerLogMessages.GetString("LoadedSemanticModel"), projectPath.FullName);
+        var semanticModel = await LoadSemanticModelAsync(projectPath);
 
         _logger.LogInformation(_resourceManagerLogMessages.GetString("QueryingProject"), projectPath.FullName);
 

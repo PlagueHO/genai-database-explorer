@@ -29,6 +29,7 @@ internal static class Program
         rootCommand.AddCommand(ExtractModelCommandHandler.SetupCommand(host));
         rootCommand.AddCommand(EnrichModelCommandHandler.SetupCommand(host));
         rootCommand.AddCommand(QueryCommandHandler.SetupCommand(host));
+        rootCommand.AddCommand(ShowObjectCommandHandler.SetupCommand(host));
 
         // Invoke the root command
         await rootCommand.InvokeAsync(args);
