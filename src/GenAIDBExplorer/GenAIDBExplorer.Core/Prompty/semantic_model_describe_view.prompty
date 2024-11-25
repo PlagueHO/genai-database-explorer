@@ -6,13 +6,16 @@ model:
 ---
 system:
 You are a AI SQL database assistant that generates thorough and technically relevant descriptions for SQL database views, based on the view and underlying tables and columns and some sample content.
-Generate a description for the following SQL database view, including how the view is likely used within an application. The view is described using YAML and contains columns.
+Generate a description for the following SQL database view, including how the view is likely used within an application. The view is described using YAML and contains the T-SQL definition and columns.
             
 - If description can't be generated because missing information, say "Unable to generate description".
 - If a view or column has IsIgnore set to true, do not consider it when creating the description.
 - If there is no sample data, still generate a description based on the view structure, but note that there is no sample data.
 
-The View Structure (YAML) including Definiion will contain the schema, view name, column definitions as well as as the view definition as T-SQL. You must consider all of these elements when describing the view.
+The View Structure (YAML) including Definition will contain the schema, view name, column definitions as well as as the view definition as T-SQL.
+You must consider all of these elements when describing the view.
+You will also consider the tables and columns that the view is based on from the Dependent Object section and how these will affect the view
+You will and how the view is likely used within the application.
 
 user:
 # Database Purpose
@@ -78,6 +81,12 @@ name: vProductAndDescription
 # Sample Data
 [{"ProductID":680,"Name":"HL Road Frame - Black, 58","ProductModel":"HL Road Frame","Culture":"ar    ","Description":"\u0644\u0642\u062F \u062A\u0645 \u0635\u0646\u0627\u0639\u0629 \u0647\u064A\u0643\u0644 \u062F\u0631\u0627\u062C\u062A\u0646\u0627 \u0627\u0644\u0623\u0644\u0648\u0645\u0646\u064A\u0648\u0645 \u0627\u0644\u0623\u062E\u0641 \u0648\u0632\u0646\u064B\u0627 \u0648\u0627\u0644\u0623\u0639\u0644\u0649 \u062C\u0648\u062F\u0629\u060C \u0645\u0646 \u0623\u062D\u062F\u062B \u0627\u0644\u0633\u0628\u0627\u0626\u0643 \u0627\u0644\u0645\u062A\u0648\u0641\u0631\u0629\u060C \u0648\u062A\u0645 \u0644\u062D\u0627\u0645\u0647 \u0648\u0645\u0639\u0627\u0644\u062C\u062A\u0647 \u062D\u0631\u0627\u0631\u064A\u064B\u0627 \u0644\u0632\u064A\u0627\u062F\u0629 \u0642\u0648\u062A\u0647. \u0648\u064A\u0648\u0641\u0631 \u062A\u0635\u0645\u064A\u0645\u0646\u0627 \u0627\u0644\u0625\u0628\u062F\u0627\u0639\u064A \u0623\u0642\u0635\u0649 \u062F\u0631\u062C\u0627\u062A \u0627\u0644\u0631\u0627\u062D\u0629 \u0648\u0627\u0644\u0623\u062F\u0627\u0621.","RowNum":1},{"ProductID":706,"Name":"HL Road Frame - Red, 58","ProductModel":"HL Road Frame","Culture":"ar    ","Description":"\u0644\u0642\u062F \u062A\u0645 \u0635\u0646\u0627\u0639\u0629 \u0647\u064A\u0643\u0644 \u062F\u0631\u0627\u062C\u062A\u0646\u0627 \u0627\u0644\u0623\u0644\u0648\u0645\u0646\u064A\u0648\u0645 \u0627\u0644\u0623\u062E\u0641 \u0648\u0632\u0646\u064B\u0627 \u0648\u0627\u0644\u0623\u0639\u0644\u0649 \u062C\u0648\u062F\u0629\u060C \u0645\u0646 \u0623\u062D\u062F\u062B \u0627\u0644\u0633\u0628\u0627\u0626\u0643 \u0627\u0644\u0645\u062A\u0648\u0641\u0631\u0629\u060C \u0648\u062A\u0645 \u0644\u062D\u0627\u0645\u0647 \u0648\u0645\u0639\u0627\u0644\u062C\u062A\u0647 \u062D\u0631\u0627\u0631\u064A\u064B\u0627 \u0644\u0632\u064A\u0627\u062F\u0629 \u0642\u0648\u062A\u0647. \u0648\u064A\u0648\u0641\u0631 \u062A\u0635\u0645\u064A\u0645\u0646\u0627 \u0627\u0644\u0625\u0628\u062F\u0627\u0639\u064A \u0623\u0642\u0635\u0649 \u062F\u0631\u062C\u0627\u062A \u0627\u0644\u0631\u0627\u062D\u0629 \u0648\u0627\u0644\u0623\u062F\u0627\u0621.","RowNum":2},{"ProductID":707,"Name":"Sport-100 Helmet, Red","ProductModel":"Sport-100","Culture":"ar    ","Description":"\u0645\u0644\u0627\u0626\u0645\u0629 \u0628\u0634\u0643\u0644 \u0639\u0627\u0645\u060C \u0648\u062C\u064A\u062F\u0629 \u0627\u0644\u062A\u0647\u0648\u064A\u0629\u060C \u0648\u062E\u0641\u064A\u0641\u0629 \u0627\u0644\u0648\u0632\u0646 \u0628\u0642\u0646\u0627\u0639 \u0648\u0627\u0642 \u0645\u0646 \u0627\u0644\u0634\u0645\u0633 \u0645\u0632\u0648\u062F \u0628\u062E\u0627\u0635\u064A\u0629 \u0627\u0644\u0627\u0644\u062A\u0635\u0627\u0642 \u0627\u0644\u062A\u0644\u0642\u0627\u0626\u064A.","RowNum":3},{"ProductID":708,"Name":"Sport-100 Helmet, Black","ProductModel":"Sport-100","Culture":"ar    ","Description":"\u0645\u0644\u0627\u0626\u0645\u0629 \u0628\u0634\u0643\u0644 \u0639\u0627\u0645\u060C \u0648\u062C\u064A\u062F\u0629 \u0627\u0644\u062A\u0647\u0648\u064A\u0629\u060C \u0648\u062E\u0641\u064A\u0641\u0629 \u0627\u0644\u0648\u0632\u0646 \u0628\u0642\u0646\u0627\u0639 \u0648\u0627\u0642 \u0645\u0646 \u0627\u0644\u0634\u0645\u0633 \u0645\u0632\u0648\u062F \u0628\u062E\u0627\u0635\u064A\u0629 \u0627\u0644\u0627\u0644\u062A\u0635\u0627\u0642 \u0627\u0644\u062A\u0644\u0642\u0627\u0626\u064A.","RowNum":4},{"ProductID":709,"Name":"Mountain Bike Socks, M","ProductModel":"Mountain Bike Socks","Culture":"ar    ","Description":"\u062A\u0631\u0643\u064A\u0628\u0629 \u0645\u0646 \u0627\u0644\u0641\u064A\u0628\u0631 \u0627\u0644\u0637\u0628\u064A\u0639\u064A \u0648\u0627\u0644\u0635\u0646\u0627\u0639\u064A \u062A\u0638\u0644 \u0645\u062D\u062A\u0641\u0638\u0629 \u0628\u062C\u0641\u0627\u0641\u0647\u0627 \u0648\u062A\u0639\u0645\u0644 \u0643\u0648\u0633\u0627\u0626\u062F \u0645\u0644\u0627\u0626\u0645\u0629.","RowNum":5}]
 
+# Dependent Objects
+## Table [SalesLT].[Product]
+## Table [SalesLT].[ProductModel]
+## Table [SalesLT].[ProductModelProductDescription]
+## Table [SalesLT].[ProductDescription]
+
 assistant:
 The [SalesLT].[vProductAndDescription] view the provides a list of products and their descriptions in different languages.
 It is used to display products and product descriptions by language.
@@ -92,13 +101,6 @@ The view is likely used to display product information in different languages, a
 - `ProductModel` is the model of the product.
 - `Culture` is the language culture of the product description. It is a 2 letter code.
 - `Description` is the description of the product in the specified language. It may contain Unicode characters for different languages.
-
-# Uses Tables
-
-- [SalesLT].[Product]
-- [SalesLT].[ProductModel]
-- [SalesLT].[ProductModelProductDescription]
-- [SalesLT].[ProductDescription]
 
 user:
 # Database Purpose
