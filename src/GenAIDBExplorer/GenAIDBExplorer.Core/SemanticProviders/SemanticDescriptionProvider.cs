@@ -359,14 +359,57 @@ public class SemanticDescriptionProvider(
     }
 
     /// <summary>
-    /// Gets a list of tables from the specified stored procedure using Semantic Kernel.
+    /// Gets a list of tables from the specified stored procedure definition using Semantic Kernel.
     /// </summary>
     /// <param name="semanticModel">The semantic model</param>
     /// <param name="storedProcedure">The stored procedure to get the list of tables from</param>
     /// <returns>A task representing the asynchronous operation. The task result contains the list of tables.</returns>
     public async Task<TableList> GetTableListFromStoredProcedureDefinitionAsync(SemanticModel semanticModel, SemanticModelStoredProcedure storedProcedure)
     {
-        throw new NotImplementedException();
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("GetTableListFromStoredProcedureDefinition"), storedProcedure.Schema, storedProcedure.Name);
+
+        var promptyFilename = "get_tables_from_stored_procedure_definition.prompty";
+        promptyFilename = Path.Combine(_promptyFolder, promptyFilename);
+        var semanticKernel = _semanticKernelFactory.CreateSemanticKernel();
+
+#pragma warning disable SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+        var function = semanticKernel.CreateFunctionFromPromptyFile(promptyFilename);
+#pragma warning restore SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+
+        var promptExecutionSettings = new OpenAIPromptExecutionSettings
+        {
+#pragma warning disable SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+            ServiceId = "ChatCompletionStructured",
+#pragma warning restore SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+#pragma warning disable SKEXP0010 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+            ResponseFormat = typeof(TableList)
+#pragma warning restore SKEXP0010 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+        };
+
+        var storedProcedureInfo = new
+        {
+            definition = storedProcedure.Definition
+        };
+        var arguments = new KernelArguments(promptExecutionSettings)
+            {
+                { "storedProcedure", storedProcedureInfo }
+            };
+
+        var result = await semanticKernel.InvokeAsync(function, arguments);
+        var resultString = result?.ToString();
+        var tableList = new TableList();
+        if (string.IsNullOrEmpty(resultString))
+        {
+            _logger.LogWarning(_resourceManagerLogMessages.GetString("SemanticKernelReturnedEmptyResult"));
+        }
+        else
+        {
+            tableList = JsonSerializer.Deserialize<TableList>(resultString);
+        }
+
+        _logger.LogInformation(_resourceManagerLogMessages.GetString("GotTableListFromStoredProcedureDefinition"), tableList.Tables.Count, storedProcedure.Schema, storedProcedure.Name);
+
+        return tableList;
     }
 
     /// <summary>

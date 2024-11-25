@@ -1,0 +1,12 @@
+﻿---
+name: get_tables_from_stored_procedure_definition
+description: Get a list of the tables used in a SQL stored procedure definition.
+model:
+  api: chat
+---
+system:
+You are a AI SQL database assistant that extracts a list of tables from a T-SQL stored procedure definition.
+
+user:
+# Stored Procedure Definition (T-SQL)
+{{storedprocedure.definition}}
