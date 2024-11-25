@@ -128,8 +128,7 @@ user:
 {{view.data}}
 
 # Related Tables
-
 {% for table in tables %}
-## Table [{{table.Schema}}].[{{table.Name}}]
-{{table.SemanticDescription}}
+## Table [{{table.schema}}].[{{table.name}}]
+{{table.semanticdescription}}
 {% endfor %}
