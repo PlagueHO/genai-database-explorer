@@ -120,7 +120,8 @@ public class SemanticDescriptionProvider(
             // Invoke the semantic kernel function to generate the description
             var result = await semanticKernel.InvokeAsync(function, arguments);
 
-            table.SemanticDescription = result.ToString();
+            table.SetSemanticDescription(result.ToString());
+
             _logger.LogInformation(_resourceManagerLogMessages.GetString("GeneratedSemanticDescriptionForTable"), table.Schema, table.Name);
         }
     }
@@ -170,17 +171,11 @@ public class SemanticDescriptionProvider(
             // First get the list of tables used in the view definition
             var tableList = await GetTableListFromViewDefinitionAsync(semanticModel, view);
 
-            // TODO: Refactor this into a separate method that can be used to update the semantic description for all tables in the model
-            // For each table, find the table in the Semantic Model and check if it has a semantic description
-            foreach (var table in tableList.Tables)
-            {
-                var semanticModelTable = semanticModel.Tables.FirstOrDefault(t => t.Schema == table.SchemaName && t.Name == table.TableName);
-                if (semanticModelTable != null && string.IsNullOrEmpty(semanticModelTable.SemanticDescription))
-                {
-                    _logger.LogInformation(_resourceManagerLogMessages.GetString("TableMissingSemanticDescription"), table.SchemaName, table.TableName);
-                    await UpdateTableSemanticDescriptionAsync(semanticModel, semanticModelTable);
-                }
-            }
+            // Update the semantic descriptions for the tables used in the view
+            await UpdateTableSemanticDescriptionAsync(semanticModel, tableList);
+
+            // Select the tables from the semantic model
+            var tables = semanticModel.SelectTables(tableList);
 
             // Retrieve sample data for the view
             var sampleData = await _schemaRepository.GetSampleViewDataAsync(new ViewInfo(view.Schema, view.Name));
@@ -204,10 +199,11 @@ public class SemanticDescriptionProvider(
             };
 
             var arguments = new KernelArguments(promptExecutionSettings)
-        {
-            { "view", viewInfo },
-            { "project", projectInfo }
-        };
+            {
+                { "view", viewInfo },
+                { "tables", tables },
+                { "project", projectInfo }
+            };
 
             var promptyFilename = "semantic_model_describe_view.prompty";
             promptyFilename = Path.Combine(_promptyFolder, promptyFilename);
@@ -220,7 +216,8 @@ public class SemanticDescriptionProvider(
             // Invoke the semantic kernel function to generate the description
             var result = await semanticKernel.InvokeAsync(function, arguments);
 
-            view.SemanticDescription = result.ToString();
+            view.SetSemanticDescription(result.ToString());
+
             _logger.LogInformation(_resourceManagerLogMessages.GetString("GeneratedSemanticDescriptionForView"), view.Schema, view.Name);
         }
     }
@@ -301,7 +298,8 @@ public class SemanticDescriptionProvider(
             // Invoke the semantic kernel function to generate the description
             var result = await semanticKernel.InvokeAsync(function, arguments);
 
-            storedProcedure.SemanticDescription = result.ToString();
+            storedProcedure.SetSemanticDescription(result.ToString());
+
             _logger.LogInformation(_resourceManagerLogMessages.GetString("GeneratedSemanticDescriptionForStoredProcedure"), storedProcedure.Schema, storedProcedure.Name);
         }
     }

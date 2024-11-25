@@ -37,6 +37,12 @@ public abstract class SemanticModelEntity(
     public string? SemanticDescription { get; set; }
 
     /// <summary>
+    /// Gets or sets the last update date of the semantic description.
+    /// </summary>    
+    [YamlDotNet.Serialization.YamlIgnore]
+    public DateTime? SemanticDescriptionLastUpdate { get; set; }
+
+    /// <summary>
     /// Gets or sets a value indicating whether the entity should be ignored.
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
@@ -48,7 +54,10 @@ public abstract class SemanticModelEntity(
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? IgnoreReason { get; set; }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Saves the semantic model entity to the specified folder.
+    /// </summary>
+    /// <param name="folderPath">The folder path where the entity will be saved.</param>
     public async Task SaveModelAsync(DirectoryInfo folderPath)
     {
         var fileName = $"{Schema}.{Name}.json";
@@ -57,7 +66,10 @@ public abstract class SemanticModelEntity(
         await File.WriteAllTextAsync(filePath, JsonSerializer.Serialize<object>(this, _jsonSerializerOptions));
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Loads the semantic model entity from the specified folder.
+    /// </summary>
+    /// <param name="folderPath">The folder path where the entity will be loaded from.</param>
     public async Task LoadModelAsync(DirectoryInfo folderPath)
     {
         var fileName = $"{Schema}.{Name}.json";
@@ -75,12 +87,28 @@ public abstract class SemanticModelEntity(
         }
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the filename of the model entity if the model is split.
+    /// </summary>
+    /// <returns>The filename of the model entity.</returns>
     public FileInfo GetModelEntityFilename()
     {
         return new FileInfo($"{Schema}.{Name}.json");
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the path to the model entity if the model is split.
+    /// </summary>
+    /// <returns>The relative path to the model entity.</returns>
     public abstract DirectoryInfo GetModelPath();
+
+    /// <summary>
+    /// Sets the semantic description of the entity.
+    /// </summary>
+    /// <param name="semanticDescription"></param>
+    public void SetSemanticDescription(string semanticDescription)
+    {
+        SemanticDescription = semanticDescription;
+        SemanticDescriptionLastUpdate = DateTime.Now;
+    }
 }

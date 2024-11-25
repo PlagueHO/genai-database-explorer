@@ -10,7 +10,7 @@
     },
     "GenAIDBExplorer.Console extract-model": {
       "commandName": "Project",
-      "commandLineArgs": "extract-model \r\n-p d:\\temp --skipTables --skipViews"
+      "commandLineArgs": "extract-model \r\n-p d:\\temp"
     },
     "GenAIDBExplorer.Console enrich-model": {
       "commandName": "Project",
