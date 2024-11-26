@@ -82,8 +82,8 @@ It has a composite primary key of `CustomerID` and `AddressID` columns.
 
 # Notable Columns
 
-- `AddressType` the type of address
-- `ModifiedDate` the date the record was last modified.
+- `AddressType` the type of address.
+- `ModifiedDate` the date the record was last modified and is a datetime field.
 - `rowguid` is a unique identifier for each row. It has a unique non-clustered index.
 - `CustomerID` is a foreign key to the `SalesLT.Customer` table on the `CustomerID` column. It has a unique clustered index.
 - `AddressID` is a foreign key to the `SalesLT.Address` table on the `AddressID` column.
