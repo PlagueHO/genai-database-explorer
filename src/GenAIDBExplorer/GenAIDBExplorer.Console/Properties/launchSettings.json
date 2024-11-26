@@ -14,7 +14,7 @@
     },
     "GenAIDBExplorer.Console enrich-model": {
       "commandName": "Project",
-      "commandLineArgs": "enrich-model \r\n-p d:\\temp --skipTables"
+      "commandLineArgs": "enrich-model \r\n-p d:\\temp --skipTables --skipStoredProcedures"
     },
     "GenAIDBExplorer.Console init-project": {
       "commandName": "Project",

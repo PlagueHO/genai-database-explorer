@@ -9,9 +9,6 @@ using Microsoft.SemanticKernel;
 using System.Resources;
 using System.Text.Json;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
-using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
-using DocumentFormat.OpenXml.Wordprocessing;
-using DocumentFormat.OpenXml.Drawing.Charts;
 
 namespace GenAIDBExplorer.Core.SemanticProviders;
 
@@ -264,6 +261,15 @@ public class SemanticDescriptionProvider(
         {
             _logger.LogInformation(_resourceManagerLogMessages.GetString("GenerateSemanticDescriptionForStoredProcedure"), storedProcedure.Schema, storedProcedure.Name);
 
+            // First get the list of tables used in the stored procedure
+            var tableList = await GetTableListFromStoredProcedureDefinitionAsync(semanticModel, storedProcedure);
+
+            // Update the semantic descriptions for the tables used in the stored procedure
+            await UpdateTableSemanticDescriptionAsync(semanticModel, tableList);
+
+            // Select the tables from the semantic model
+            var tables = semanticModel.SelectTables(tableList);
+
             var promptyFilename = "semantic_model_describe_stored_procedure.prompty";
             promptyFilename = Path.Combine(_promptyFolder, promptyFilename);
             var semanticKernel = _semanticKernelFactory.CreateSemanticKernel();
@@ -288,6 +294,7 @@ public class SemanticDescriptionProvider(
             var arguments = new KernelArguments(promptExecutionSettings)
         {
             { "storedProcedure", storedProcedureInfo },
+            { "tables", tables },
             { "project", projectInfo }
         };
 
@@ -423,18 +430,60 @@ public class SemanticDescriptionProvider(
         throw new NotImplementedException();
     }
 
-    /// <summary>
-    /// Serializes sample data.
-    /// </summary>
-    /// <param name="sampleData">The sample data to serialize.</param>
-    /// <returns>The serialized data.</returns>
     private static string SerializeSampleData(List<Dictionary<string, object>> sampleData)
     {
+        const int MaxColumnLength = 200; // Adjust the maximum length as needed
+
         if (sampleData.Count > 0)
         {
-            return JsonSerializer.Serialize(sampleData);
+            var truncatedData = sampleData.Select(row =>
+            {
+                var truncatedRow = new Dictionary<string, object>();
+                foreach (var kvp in row)
+                {
+                    truncatedRow[kvp.Key] = TruncateValue(kvp.Value, MaxColumnLength);
+                }
+                return truncatedRow;
+            }).ToList();
+
+            return JsonSerializer.Serialize(truncatedData);
         }
         return "No sample data available";
+    }
+
+    /// <summary>
+    /// Truncates the value to the specified maximum length.
+    /// </summary>
+    /// <param name="value"></param>
+    /// <param name="maxLength"></param>
+    /// <returns></returns>
+    private static object TruncateValue(object value, int maxLength)
+    {
+        if (value is string strValue)
+        {
+            if (strValue.Length > maxLength)
+                return strValue.Substring(0, maxLength) + "...";
+            return strValue;
+        }
+        else if (value is byte[] byteArray)
+        {
+            // Convert byte array to base64 string
+            string base64Str = Convert.ToBase64String(byteArray);
+            if (base64Str.Length > maxLength)
+                return base64Str.Substring(0, maxLength) + "...";
+            return base64Str;
+        }
+        else if (value != null)
+        {
+            string valueStr = value.ToString() ?? string.Empty;
+            if (valueStr.Length > maxLength)
+                return valueStr.Substring(0, maxLength) + "...";
+            return value;
+        }
+        else
+        {
+            return null;
+        }
     }
 
     // <summary>
