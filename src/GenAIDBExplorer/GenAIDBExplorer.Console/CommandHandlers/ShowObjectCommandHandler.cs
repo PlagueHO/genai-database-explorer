@@ -152,7 +152,7 @@ namespace GenAIDBExplorer.Console.CommandHandlers
             }
             else
             {
-                OutputInformation($"Table: {table.Schema}.{table.Name}");
+                OutputInformation(table.ToString());
             }
             return Task.CompletedTask;
         }
@@ -166,7 +166,7 @@ namespace GenAIDBExplorer.Console.CommandHandlers
             }
             else
             {
-                OutputInformation($"View: {view.Schema}.{view.Name}");
+                OutputInformation(view.ToString());
             }
             return Task.CompletedTask;
         }

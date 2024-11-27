@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -110,5 +111,20 @@ public abstract class SemanticModelEntity(
     {
         SemanticDescription = semanticDescription;
         SemanticDescriptionLastUpdate = DateTime.Now;
+    }
+
+    /// <summary>
+    /// Output the entity as a string.
+    /// </summary>
+    /// <returns></returns>
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine($"Entity: [{Schema}].[{Name}]");
+        if (!string.IsNullOrWhiteSpace(Description))
+        {
+            builder.AppendLine($"Description: {Description}");
+        }
+        return builder.ToString();
     }
 }

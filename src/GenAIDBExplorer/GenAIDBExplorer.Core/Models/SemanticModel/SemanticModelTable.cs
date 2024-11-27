@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Text;
+using System.Text.Json;
 
 namespace GenAIDBExplorer.Core.Models.SemanticModel;
 
@@ -87,5 +88,50 @@ public sealed class SemanticModelTable(
     public override DirectoryInfo GetModelPath()
     {
         return new DirectoryInfo(Path.Combine("tables", GetModelEntityFilename().Name));
+    }
+
+    /// <inheritdoc/>
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(base.ToString());
+
+        if (Columns.Any())
+        {
+            builder.AppendLine("");
+            builder.AppendLine("Columns:");
+            foreach (var column in Columns)
+            {
+                builder.AppendLine($"  - {column.Name} ({column.Type})");
+                if (column.IsPrimaryKey) builder.AppendLine("    Primary Key");
+                if (column.IsNullable) builder.AppendLine("    Nullable");
+                if (column.IsIdentity) builder.AppendLine("    Identity");
+                if (column.IsComputed) builder.AppendLine("    Computed");
+                if (column.IsXmlDocument) builder.AppendLine("    XML Document");
+                if (column.MaxLength.HasValue) builder.AppendLine($"    Max Length: {column.MaxLength}");
+                if (column.Precision.HasValue) builder.AppendLine($"    Precision: {column.Precision}");
+                if (column.Scale.HasValue) builder.AppendLine($"    Scale: {column.Scale}");
+                if (!string.IsNullOrWhiteSpace(column.ReferencedTable)) builder.AppendLine($"    References: {column.ReferencedTable}({column.ReferencedColumn})");
+            }
+        }
+
+        if (Indexes.Any())
+        {
+            builder.AppendLine("");
+            builder.AppendLine("Indexes:");
+            foreach (var index in Indexes)
+            {
+                builder.AppendLine($"  - {index.Name}");
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(SemanticDescription))
+        {
+            builder.AppendLine("");
+            builder.AppendLine($"Semantic Description:");
+            builder.AppendLine($"{SemanticDescription}");
+        }
+
+        return builder.ToString();
     }
 }
