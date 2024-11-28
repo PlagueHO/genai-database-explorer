@@ -180,7 +180,7 @@ namespace GenAIDBExplorer.Console.CommandHandlers
             }
             else
             {
-                OutputInformation($"Stored Procedure: {storedProcedure.Schema}.{storedProcedure.Name}");
+                OutputInformation(storedProcedure.ToString());
             }
             return Task.CompletedTask;
         }

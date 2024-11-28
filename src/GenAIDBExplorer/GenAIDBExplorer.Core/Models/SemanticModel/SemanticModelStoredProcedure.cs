@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Text;
 
 namespace GenAIDBExplorer.Core.Models.SemanticModel;
 
@@ -50,5 +51,35 @@ public sealed class SemanticModelStoredProcedure(
     public override DirectoryInfo GetModelPath()
     {
         return new DirectoryInfo(Path.Combine("storedprocedures", GetModelEntityFilename().Name));
+    }
+
+    /// <inheritdoc/>
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(base.ToString());
+
+        if (!string.IsNullOrWhiteSpace(Parameters))
+        {
+            builder.AppendLine("");
+            builder.AppendLine("Parameters:");
+            builder.AppendLine(Parameters);
+        }
+
+        if (!string.IsNullOrWhiteSpace(Definition))
+        {
+            builder.AppendLine("");
+            builder.AppendLine("Definition:");
+            builder.AppendLine(Definition);
+        }
+
+        if (!string.IsNullOrWhiteSpace(SemanticDescription))
+        {
+            builder.AppendLine("");
+            builder.AppendLine("Semantic Description:");
+            builder.AppendLine(SemanticDescription);
+        }
+
+        return builder.ToString();
     }
 }
