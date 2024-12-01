@@ -88,7 +88,7 @@ namespace GenAIDBExplorer.Core.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error getting columns for table [{schemaName}].[{tableName}].
+        ///   Looks up a localized string similar to Error getting columns for table.
         /// </summary>
         internal static string ErrorGettingColumnsForTable {
             get {
@@ -97,7 +97,7 @@ namespace GenAIDBExplorer.Core.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error getting columns for view [{schemaName}].[{viewName}].
+        ///   Looks up a localized string similar to Error getting columns for view.
         /// </summary>
         internal static string ErrorGettingColumnsForView {
             get {
@@ -106,7 +106,7 @@ namespace GenAIDBExplorer.Core.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error getting indexes for table [{schemaName}].[{tableName}].
+        ///   Looks up a localized string similar to Error getting indexes for table.
         /// </summary>
         internal static string ErrorGettingIndexesForTable {
             get {
@@ -115,7 +115,7 @@ namespace GenAIDBExplorer.Core.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error getting references for table [{schemaName}].[{tableName}].
+        ///   Looks up a localized string similar to Error getting references for table.
         /// </summary>
         internal static string ErrorGettingReferencesForTable {
             get {
@@ -124,7 +124,7 @@ namespace GenAIDBExplorer.Core.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error getting sample data for table [{schemaName}].[{tableName}].
+        ///   Looks up a localized string similar to Error getting sample data for table.
         /// </summary>
         internal static string ErrorGettingSampleDataForTable {
             get {
@@ -133,7 +133,7 @@ namespace GenAIDBExplorer.Core.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error getting sample data for view [{schemaName}].[{viewName}].
+        ///   Looks up a localized string similar to Error getting sample data for view.
         /// </summary>
         internal static string ErrorGettingSampleDataForView {
             get {
@@ -160,7 +160,7 @@ namespace GenAIDBExplorer.Core.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error getting definition for view [{schemaName}].[{viewName}].
+        ///   Looks up a localized string similar to Error getting definition for view.
         /// </summary>
         internal static string ErrorGettingViewDefinitionFromDatabase {
             get {

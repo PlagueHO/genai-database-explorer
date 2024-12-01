@@ -3,7 +3,6 @@ using GenAIDBExplorer.Core.Data.ConnectionManager;
 using GenAIDBExplorer.Core.Data.DatabaseProviders;
 using GenAIDBExplorer.Core.KernelMemory;
 using GenAIDBExplorer.Core.Models.Project;
-using GenAIDBExplorer.Core.ProjectLogger;
 using GenAIDBExplorer.Core.SemanticKernel;
 using GenAIDBExplorer.Core.SemanticModelProviders;
 using GenAIDBExplorer.Core.SemanticProviders;
@@ -58,9 +57,6 @@ public static class HostBuilderExtensions
 
                 // Register the Project service
                 services.AddSingleton<IProject, Project>();
-
-                // Register the ProjectLoggerProvider
-                services.AddSingleton<IProjectLoggerProvider, ProjectLoggerProvider>();
 
                 // Register the database connection provider
                 services.AddSingleton<IDatabaseConnectionProvider, SqlConnectionProvider>();

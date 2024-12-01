@@ -97,7 +97,7 @@ public sealed class SemanticModelColumn(
     /// </summary>
     /// <param name="folderPath"></param>
     /// <exception cref="NotImplementedException"></exception>
-    public new void SaveModel(DirectoryInfo folderPath)
+    public void SaveModel(DirectoryInfo folderPath)
     {
         throw new NotImplementedException();
     }

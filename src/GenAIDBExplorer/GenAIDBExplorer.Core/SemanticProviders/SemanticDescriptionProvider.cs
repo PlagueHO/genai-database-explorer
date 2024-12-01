@@ -3,7 +3,6 @@ using GenAIDBExplorer.Core.Models.SemanticModel;
 using GenAIDBExplorer.Core.Models.Database;
 using GenAIDBExplorer.Core.SemanticKernel;
 using GenAIDBExplorer.Core.SemanticModelProviders;
-using GenAIDBExplorer.Core.ProjectLogger;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using System.Resources;
@@ -20,15 +19,13 @@ public class SemanticDescriptionProvider(
         IProject project,
         ISemanticKernelFactory semanticKernelFactory,
         ISchemaRepository schemaRepository,
-        ILogger<SemanticDescriptionProvider> logger,
-        IProjectLoggerProvider projectLoggerProvider
+        ILogger<SemanticDescriptionProvider> logger
     ) : ISemanticDescriptionProvider
 {
     private readonly IProject _project = project;
     private readonly ISemanticKernelFactory _semanticKernelFactory = semanticKernelFactory;
     private readonly ISchemaRepository _schemaRepository = schemaRepository;
     private readonly ILogger<SemanticDescriptionProvider> _logger = logger;
-    private readonly IProjectLoggerProvider _projectLoggerProvider = projectLoggerProvider;
     private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Core.Resources.LogMessages", typeof(SemanticDescriptionProvider).Assembly);
     private static readonly ResourceManager _resourceManagerErrorMessages = new("GenAIDBExplorer.Core.Resources.ErrorMessages", typeof(SemanticDescriptionProvider).Assembly);
 
@@ -438,7 +435,7 @@ public class SemanticDescriptionProvider(
         {
             var truncatedData = sampleData.Select(row =>
             {
-                var truncatedRow = new Dictionary<string, object>();
+                var truncatedRow = new Dictionary<string, object?>();
                 foreach (var kvp in row)
                 {
                     truncatedRow[kvp.Key] = TruncateValue(kvp.Value, MaxColumnLength);
@@ -457,7 +454,7 @@ public class SemanticDescriptionProvider(
     /// <param name="value"></param>
     /// <param name="maxLength"></param>
     /// <returns></returns>
-    private static object TruncateValue(object value, int maxLength)
+    private static object? TruncateValue(object value, int maxLength)
     {
         if (value is string strValue)
         {

@@ -47,7 +47,7 @@ public sealed class SchemaRepository(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, _resourceManagerErrorMessages.GetString("ErrorGettingTablesFromDatabase"));
+            _logger.LogError(ex, "{ErrorMessage}", _resourceManagerErrorMessages.GetString("ErrorGettingTablesFromDatabase"));
             throw;
         }
 
@@ -87,7 +87,7 @@ public sealed class SchemaRepository(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, _resourceManagerErrorMessages.GetString("ErrorGettingViewsFromDatabase"));
+            _logger.LogError(ex, "{ErrorMessage}", _resourceManagerErrorMessages.GetString("ErrorGettingViewsFromDatabase"));
             throw;
         }
 
@@ -130,7 +130,7 @@ public sealed class SchemaRepository(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, _resourceManagerErrorMessages.GetString("ErrorGettingStoredProceduresFromDatabase"));
+            _logger.LogError(ex, "{ErrorMessage}", _resourceManagerErrorMessages.GetString("ErrorGettingStoredProceduresFromDatabase"));
             throw;
         }
 
@@ -167,7 +167,7 @@ public sealed class SchemaRepository(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, _resourceManagerErrorMessages.GetString("ErrorGettingViewDefinitionFromDatabase"), view.SchemaName, view.ViewName);
+            _logger.LogError(ex, "{ErrorMessage} [{SchemaName}].[{ViewName}]", _resourceManagerErrorMessages.GetString("ErrorGettingViewDefinitionFromDatabase"), view.SchemaName, view.ViewName);
             throw;
         }
     }
@@ -283,7 +283,7 @@ public sealed class SchemaRepository(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, _resourceManagerErrorMessages.GetString("ErrorGettingColumnsForTable"), table.SchemaName, table.TableName);
+            _logger.LogError(ex, "{ErrorMessage} [{SchemaName}].[{TableName}]", _resourceManagerErrorMessages.GetString("ErrorGettingColumnsForTable"), table.SchemaName, table.TableName);
             throw;
 
         }
@@ -330,7 +330,7 @@ public sealed class SchemaRepository(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, _resourceManagerErrorMessages.GetString("ErrorGettingReferencesForTable"), table.SchemaName, table.TableName);
+            _logger.LogError(ex, "{ErrorMessage} [{SchemaName}].[{TableName}]", _resourceManagerErrorMessages.GetString("ErrorGettingReferencesForTable"), table.SchemaName, table.TableName);
             throw;
         }
 
@@ -375,7 +375,7 @@ public sealed class SchemaRepository(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, _resourceManagerErrorMessages.GetString("ErrorGettingColumnsForView"), view.SchemaName, view.ViewName);
+            _logger.LogError(ex, "{ErrorMessage} [{SchemaName}].[{ViewName}]", _resourceManagerErrorMessages.GetString("ErrorGettingColumnsForView"), view.SchemaName, view.ViewName);
             throw;
         }
 
@@ -427,7 +427,7 @@ public sealed class SchemaRepository(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, _resourceManagerErrorMessages.GetString("ErrorGettingIndexesForTable"), table.SchemaName, table.TableName);
+            _logger.LogError(ex, "{ErrorMessage} [{SchemaName}].[{TableName}]", _resourceManagerErrorMessages.GetString("ErrorGettingIndexesForTable"), table.SchemaName, table.TableName);
             throw;
         }
 
@@ -441,7 +441,11 @@ public sealed class SchemaRepository(
     /// <param name="numberOfRecords">The number of records to retrieve.</param>
     /// <param name="selectRandom">Whether to select a random sample of records.</param>
     /// <returns></returns>
-    public async Task<List<Dictionary<string, object>>> GetSampleTableDataAsync(TableInfo tableInfo, int numberOfRecords = 5, bool selectRandom = false)
+    public async Task<List<Dictionary<string, object>>> GetSampleTableDataAsync(
+        TableInfo tableInfo,
+        int numberOfRecords = 5,
+        bool selectRandom = false
+    )
     {
         try
         {
@@ -468,7 +472,7 @@ public sealed class SchemaRepository(
 
             using var reader = await _sqlQueryExecutor.ExecuteReaderAsync(query, parameters).ConfigureAwait(false);
 
-            var results = new List<Dictionary<string, object>>();
+            var rows = new List<Dictionary<string, object>>();
 
             while (await reader.ReadAsync().ConfigureAwait(false))
             {
@@ -479,14 +483,14 @@ public sealed class SchemaRepository(
                     row[reader.GetName(i)] = reader.IsDBNull(i) ? null : reader.GetValue(i);
                 }
 
-                results.Add(row);
+                rows.Add(row);
             }
 
-            return results;
+            return rows;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, _resourceManagerErrorMessages.GetString("ErrorGettingSampleDataForTable"), tableInfo.SchemaName, tableInfo.TableName);
+            _logger.LogError(ex, "{ErrorMessage} [{SchemaName}].[{TableName}]", _resourceManagerErrorMessages.GetString("ErrorGettingSampleDataForTable"), tableInfo.SchemaName, tableInfo.TableName);
             throw;
         }
     }
@@ -497,7 +501,11 @@ public sealed class SchemaRepository(
     /// <param name="viewInfo">The view info for the view to retrieve sample data for.</param>
     /// <param name="numberOfRecords">The number of records to retrieve.</param>
     /// <param name="selectRandom">Whether to select a random sample of records.</param>
-    public async Task<List<Dictionary<string, object>>> GetSampleViewDataAsync(ViewInfo viewInfo, int numberOfRecords = 5, bool selectRandom = false)
+    public async Task<List<Dictionary<string, object>>> GetSampleViewDataAsync(
+        ViewInfo viewInfo,
+        int numberOfRecords = 5,
+        bool selectRandom = false
+    )
     {
         try
         {
@@ -520,8 +528,11 @@ public sealed class SchemaRepository(
             {
                 { "@NumberOfRecords", numberOfRecords }
             };
+
             using var reader = await _sqlQueryExecutor.ExecuteReaderAsync(query, parameters).ConfigureAwait(false);
-            var results = new List<Dictionary<string, object>>();
+            
+            var rows = new List<Dictionary<string, object>>();
+            
             while (await reader.ReadAsync().ConfigureAwait(false))
             {
                 var row = new Dictionary<string, object>();
@@ -531,14 +542,14 @@ public sealed class SchemaRepository(
                     row[reader.GetName(i)] = reader.IsDBNull(i) ? null : reader.GetValue(i);
                 }
 
-                results.Add(row);
+                rows.Add(row);
             }
 
-            return results;
+            return rows;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, _resourceManagerErrorMessages.GetString("ErrorGettingSampleDataForView"), viewInfo.SchemaName, viewInfo.ViewName);
+            _logger.LogError(ex, "{ErrorMessage} [{SchemaName}].[{ViewName}]", _resourceManagerErrorMessages.GetString("ErrorGettingSampleDataForView"), viewInfo.SchemaName, viewInfo.ViewName);
             throw;
         }
     }
