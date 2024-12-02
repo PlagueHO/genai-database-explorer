@@ -118,25 +118,25 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AddingTableToSemanticModel" xml:space="preserve">
-    <value>Adding table [{schemaName}].[{tableName}] to the semantic model</value>
+    <value>Adding table to the semantic model.</value>
   </data>
   <data name="AddingViewToSemanticModel" xml:space="preserve">
-    <value>Adding view [{schemaName}].[{viewName}] to the semantic model</value>
+    <value>Adding view to the semantic model.</value>
   </data>
   <data name="DatabaseConnectionState" xml:space="preserve">
-    <value>Database connection state '{ConnectionState}'</value>
+    <value>Database connection state.</value>
   </data>
   <data name="ExecutingSQLQuery" xml:space="preserve">
-    <value>Executing SQL query '{query}'</value>
+    <value>Executing SQL query.</value>
   </data>
   <data name="ExtractingModelForDatabase" xml:space="preserve">
-    <value>Extracting semantic model for database '{DatabaseName}'</value>
+    <value>Extracting semantic model for database.</value>
   </data>
   <data name="LoadedSemanticModelForDatabase" xml:space="preserve">
-    <value>Semantic model loaded successfully for database '{DatabaseName}'</value>
+    <value>Semantic model loaded successfully for database.</value>
   </data>
   <data name="LoadingSemanticModel" xml:space="preserve">
-    <value>Loading semantic model from '{ModelPath}'</value>
+    <value>Loading semantic model from model path.</value>
   </data>
   <data name="ConnectSQLSuccessful" xml:space="preserve">
     <value>Connection to SQL database opened successfully</value>
@@ -145,42 +145,42 @@
     <value>Connecting to SQL database</value>
   </data>
   <data name="GeneratedSemanticDescriptionForStoredProcedure" xml:space="preserve">
-    <value>Completed generation of semantic description for stored procedure [{schemaName}].[{storedProcedureName}]</value>
+    <value>Completed generation of semantic description for stored procedure.</value>
   </data>
   <data name="GeneratedSemanticDescriptionForView" xml:space="preserve">
-    <value>Completed generation of semantic description for view [{schemaName}].[{viewName}]</value>
+    <value>Completed generation of semantic description for view.</value>
   </data>
   <data name="GenerateSemanticDescriptionForStoredProcedure" xml:space="preserve">
-    <value>Generating semantic description for stored procedure [{schemaName}].[{storedProcedureName}]</value>
+    <value>Generating semantic description for stored procedure.</value>
   </data>
   <data name="GenerateSemanticDescriptionForTable" xml:space="preserve">
-    <value>Generating semantic description for table [{schemaName}].[{tableName}]</value>
+    <value>Generating semantic description for table.</value>
   </data>
   <data name="GenerateSemanticDescriptionForView" xml:space="preserve">
-    <value>Generating semantic description for view [{schemaName}].[{viewName}]</value>
+    <value>Generating semantic description for view.</value>
   </data>
   <data name="GeneratedSemanticDescriptionForTable" xml:space="preserve">
-    <value>Completed generation of semantic description for table [{schemaName}].[{tableName}]</value>
+    <value>Completed generation of semantic description for table.</value>
   </data>
   <data name="GetTableListFromViewDefinition" xml:space="preserve">
-    <value>Getting list of tables from view definition for [{schemaName}].[{viewName}]</value>
+    <value>Getting list of tables from view definition.</value>
   </data>
   <data name="GotTableListFromViewDefinition" xml:space="preserve">
-    <value>Completed getting list of {TableCount} tables from view definition for [{schemaName}].[{viewName}]</value>
+    <value>Completed getting list of tables from view definition.</value>
   </data>
   <data name="TableMissingSemanticDescription" xml:space="preserve">
-    <value>Table [{schemaName}].[{tableName}] used by the view does not have a semantic description.</value>
+    <value>Semantic description for table is not available. It will be generated.</value>
   </data>
   <data name="AddingStoredProcedureToSemanticModel" xml:space="preserve">
-    <value>Adding stored procedure [{schemaName}].[{storedProcedureName}] to the semantic model</value>
+    <value>Adding stored procedure to the semantic model.</value>
   </data>
   <data name="ProjectSettingsValidationStarted" xml:space="preserve">
-    <value>Project settings validation started</value>
+    <value>Project settings validation started.</value>
   </data>
   <data name="ProjectSettingsValidationSuccessful" xml:space="preserve">
-    <value>Project settings '{Section}' validated successfully.</value>
+    <value>Project settings validated successfully.</value>
   </data>
   <data name="ProjectSettingsValidationCompleted" xml:space="preserve">
-    <value>Project settings validation completed</value>
+    <value>Project settings validation completed.</value>
   </data>
 </root>

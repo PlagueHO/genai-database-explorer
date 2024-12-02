@@ -43,7 +43,7 @@ public class Project(
 
         if (ProjectUtils.IsDirectoryNotEmpty(projectDirectory))
         {
-            _logger.LogError(_resourceManagerErrorMessages.GetString("ErrorProjectFolderNotEmpty"));
+            _logger.LogError("{ErrorMessage}", _resourceManagerErrorMessages.GetString("ErrorProjectFolderNotEmpty"));
 
             // Throw exception directory is not empty
             throw new InvalidOperationException(_resourceManagerErrorMessages.GetString("ErrorProjectFolderNotEmpty"));
@@ -103,28 +103,28 @@ public class Project(
     /// </summary>
     private void ValidateSettings()
     {
-        _logger.LogInformation(_resourceManagerLogMessages.GetString("ProjectSettingsValidationStarted"));
+        _logger.LogInformation("{Message}", _resourceManagerLogMessages.GetString("ProjectSettingsValidationStarted"));
 
         var validationContext = new ValidationContext(Settings.Database);
         Validator.ValidateObject(Settings.Database, validationContext, validateAllProperties: true);
-        _logger.LogInformation(_resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "Database");
+        _logger.LogInformation("{Message} '{Section}'", _resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "Database");
 
         validationContext = new ValidationContext(Settings.SemanticModel);
         Validator.ValidateObject(Settings.SemanticModel, validationContext, validateAllProperties: true);
-        _logger.LogInformation(_resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "SemanticModel");
+        _logger.LogInformation("{Message} '{Section}'", _resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "SemanticModel");
 
         validationContext = new ValidationContext(Settings.ChatCompletion);
         Validator.ValidateObject(Settings.ChatCompletion, validationContext, validateAllProperties: true);
-        _logger.LogInformation(_resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "ChatCompletion");
+        _logger.LogInformation("{Message} '{Section}'", _resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "ChatCompletion");
 
         validationContext = new ValidationContext(Settings.ChatCompletionStructured);
         Validator.ValidateObject(Settings.ChatCompletionStructured, validationContext, validateAllProperties: true);
-        _logger.LogInformation(_resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "ChatCompletionStructured");
+        _logger.LogInformation("{Message} '{Section}'", _resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "ChatCompletionStructured");
 
         validationContext = new ValidationContext(Settings.Embedding);
         Validator.ValidateObject(Settings.Embedding, validationContext, validateAllProperties: true);
-        _logger.LogInformation(_resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "Embedding");
+        _logger.LogInformation("{Message} '{Section}'", _resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "Embedding");
 
-        _logger.LogInformation(_resourceManagerLogMessages.GetString("ProjectSettingsValidationCompleted"));
+        _logger.LogInformation("{Message}", _resourceManagerLogMessages.GetString("ProjectSettingsValidationCompleted"));
     }
 }

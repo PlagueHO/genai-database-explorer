@@ -71,7 +71,7 @@ public class QueryModelCommandHandler(
         var projectPath = commandOptions.ProjectPath;
         var semanticModel = await LoadSemanticModelAsync(projectPath);
 
-        _logger.LogInformation(_resourceManagerLogMessages.GetString("QueryingProject"), projectPath.FullName);
+        _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("QueryingProject"), projectPath.FullName);
 
         await Task.CompletedTask;
     }

@@ -117,11 +117,11 @@ public class EnrichModelCommandHandler(
         }
 
         // Save the semantic model
-        _logger.LogInformation(_resourceManagerLogMessages.GetString("SavingSemanticModel"), projectPath.FullName);
+        _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("SavingSemanticModel"), projectPath.FullName);
         var semanticModelDirectory = GetSemanticModelDirectory(projectPath);
         await semanticModel.SaveModelAsync(semanticModelDirectory, !commandOptions.SingleModelFile);
-        _logger.LogInformation(_resourceManagerLogMessages.GetString("SavedSemanticModel"), projectPath.FullName);
+        _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("SavedSemanticModel"), projectPath.FullName);
 
-        _logger.LogInformation(_resourceManagerLogMessages.GetString("EnrichSemanticModelComplete"), projectPath.FullName);
+        _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("EnrichSemanticModelComplete"), projectPath.FullName);
     }
 }

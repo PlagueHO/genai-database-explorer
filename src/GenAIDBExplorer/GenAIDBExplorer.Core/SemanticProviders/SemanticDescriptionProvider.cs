@@ -27,7 +27,6 @@ public class SemanticDescriptionProvider(
     private readonly ISchemaRepository _schemaRepository = schemaRepository;
     private readonly ILogger<SemanticDescriptionProvider> _logger = logger;
     private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Core.Resources.LogMessages", typeof(SemanticDescriptionProvider).Assembly);
-    private static readonly ResourceManager _resourceManagerErrorMessages = new("GenAIDBExplorer.Core.Resources.ErrorMessages", typeof(SemanticDescriptionProvider).Assembly);
 
     private const string _promptyFolder = "Prompty";
 
@@ -57,7 +56,7 @@ public class SemanticDescriptionProvider(
             var semanticModelTable = semanticModel.Tables.FirstOrDefault(t => t.Schema == table.SchemaName && t.Name == table.TableName);
             if (semanticModelTable != null && string.IsNullOrEmpty(semanticModelTable.SemanticDescription))
             {
-                _logger.LogInformation(_resourceManagerLogMessages.GetString("TableMissingSemanticDescription"), table.SchemaName, table.TableName);
+                _logger.LogInformation("{Message} [{SchemaName}].[{TableName}]", _resourceManagerLogMessages.GetString("TableMissingSemanticDescription"), table.SchemaName, table.TableName);
                 await UpdateTableSemanticDescriptionAsync(semanticModel, semanticModelTable).ConfigureAwait(false);
             }
         });
@@ -72,7 +71,7 @@ public class SemanticDescriptionProvider(
     {
         using (_logger.BeginScope("Table [{Schema}.{Name}]", table.Name, table.Schema))
         {
-            _logger.LogInformation(_resourceManagerLogMessages.GetString("GenerateSemanticDescriptionForTable"), table.Schema, table.Name);
+            _logger.LogInformation("{Message} [{SchemaName}].[{TableName}]", _resourceManagerLogMessages.GetString("GenerateSemanticDescriptionForTable"), table.Schema, table.Name);
 
             // Retrieve sample data for the table
             var sampleData = await _schemaRepository.GetSampleTableDataAsync(
@@ -116,7 +115,7 @@ public class SemanticDescriptionProvider(
 
             table.SetSemanticDescription(result.ToString());
 
-            _logger.LogInformation(_resourceManagerLogMessages.GetString("GeneratedSemanticDescriptionForTable"), table.Schema, table.Name);
+            _logger.LogInformation("{Message} [{SchemaName}].[{TableName}]", _resourceManagerLogMessages.GetString("GeneratedSemanticDescriptionForTable"), table.Schema, table.Name);
         }
     }
 
@@ -146,7 +145,7 @@ public class SemanticDescriptionProvider(
             var semanticModelView = semanticModel.Views.FirstOrDefault(v => v.Schema == view.SchemaName && v.Name == view.ViewName);
             if (semanticModelView != null && string.IsNullOrEmpty(semanticModelView.SemanticDescription))
             {
-                _logger.LogInformation(_resourceManagerLogMessages.GetString("ViewMissingSemanticDescription"), view.SchemaName, view.ViewName);
+                _logger.LogInformation("{Message} [{SchemaName}].[{ViewName}]", _resourceManagerLogMessages.GetString("ViewMissingSemanticDescription"), view.SchemaName, view.ViewName);
                 await UpdateViewSemanticDescriptionAsync(semanticModel, semanticModelView).ConfigureAwait(false);
             }
         });
@@ -160,7 +159,7 @@ public class SemanticDescriptionProvider(
     {
         using (_logger.BeginScope("View [{Schema}.{Name}]", view.Name, view.Schema))
         {
-            _logger.LogInformation(_resourceManagerLogMessages.GetString("GenerateSemanticDescriptionForView"), view.Schema, view.Name);
+            _logger.LogInformation("{Message} [{SchemaName}].[{ViewName}]", _resourceManagerLogMessages.GetString("GenerateSemanticDescriptionForView"), view.Schema, view.Name);
 
             // First get the list of tables used in the view definition
             var tableList = await GetTableListFromViewDefinitionAsync(semanticModel, view);
@@ -212,7 +211,7 @@ public class SemanticDescriptionProvider(
 
             view.SetSemanticDescription(result.ToString());
 
-            _logger.LogInformation(_resourceManagerLogMessages.GetString("GeneratedSemanticDescriptionForView"), view.Schema, view.Name);
+            _logger.LogInformation("{Message} [{SchemaName}].[{ViewName}]", _resourceManagerLogMessages.GetString("GeneratedSemanticDescriptionForView"), view.Schema, view.Name);
         }
     }
 
@@ -242,7 +241,7 @@ public class SemanticDescriptionProvider(
             var semanticModelStoredProcedure = semanticModel.StoredProcedures.FirstOrDefault(sp => sp.Schema == storedProcedure.SchemaName && sp.Name == storedProcedure.ProcedureName);
             if (semanticModelStoredProcedure != null && string.IsNullOrEmpty(semanticModelStoredProcedure.SemanticDescription))
             {
-                _logger.LogInformation(_resourceManagerLogMessages.GetString("StoredProcedureMissingSemanticDescription"), storedProcedure.SchemaName, storedProcedure.ProcedureName);
+                _logger.LogInformation("{Message} [{SchemaName}].[{StoredProcedureName}]", _resourceManagerLogMessages.GetString("StoredProcedureMissingSemanticDescription"), storedProcedure.SchemaName, storedProcedure.ProcedureName);
                 await UpdateStoredProcedureSemanticDescriptionAsync(semanticModel, semanticModelStoredProcedure).ConfigureAwait(false);
             }
         });
@@ -256,7 +255,7 @@ public class SemanticDescriptionProvider(
     {
         using (_logger.BeginScope("Stored Procedure [{Schema}.{Name}]", storedProcedure.Name, storedProcedure.Schema))
         {
-            _logger.LogInformation(_resourceManagerLogMessages.GetString("GenerateSemanticDescriptionForStoredProcedure"), storedProcedure.Schema, storedProcedure.Name);
+            _logger.LogInformation("{Message} [{SchemaName}].[{StoredProcedureName}]", _resourceManagerLogMessages.GetString("GenerateSemanticDescriptionForStoredProcedure"), storedProcedure.Schema, storedProcedure.Name);
 
             // First get the list of tables used in the stored procedure
             var tableList = await GetTableListFromStoredProcedureDefinitionAsync(semanticModel, storedProcedure);
@@ -304,7 +303,7 @@ public class SemanticDescriptionProvider(
 
             storedProcedure.SetSemanticDescription(result.ToString());
 
-            _logger.LogInformation(_resourceManagerLogMessages.GetString("GeneratedSemanticDescriptionForStoredProcedure"), storedProcedure.Schema, storedProcedure.Name);
+            _logger.LogInformation("{Message} [{SchemaName}].[{StoredProcedureName}]", _resourceManagerLogMessages.GetString("GeneratedSemanticDescriptionForStoredProcedure"), storedProcedure.Schema, storedProcedure.Name);
         }
     }
 
@@ -316,7 +315,7 @@ public class SemanticDescriptionProvider(
     /// <returns>A task representing the asynchronous operation. The task result contains the list of tables.</returns>
     public async Task<TableList> GetTableListFromViewDefinitionAsync(SemanticModel semanticModel, SemanticModelView view)
     {
-        _logger.LogInformation(_resourceManagerLogMessages.GetString("GetTableListFromViewDefinition"), view.Schema, view.Name);
+        _logger.LogInformation("{Message} [{SchemaName}].[{ViewName}]", _resourceManagerLogMessages.GetString("GetTableListFromViewDefinition"), view.Schema, view.Name);
 
         var promptyFilename = "get_tables_from_view_definition.prompty";
         promptyFilename = Path.Combine(_promptyFolder, promptyFilename);
@@ -350,14 +349,14 @@ public class SemanticDescriptionProvider(
         var tableList = new TableList();
         if (string.IsNullOrEmpty(resultString))
         {
-            _logger.LogWarning(_resourceManagerLogMessages.GetString("SemanticKernelReturnedEmptyResult"));
+            _logger.LogWarning("{Message}", _resourceManagerLogMessages.GetString("SemanticKernelReturnedEmptyResult"));
         }
         else
         {
             tableList = JsonSerializer.Deserialize<TableList>(resultString);
         }
 
-        _logger.LogInformation(_resourceManagerLogMessages.GetString("GotTableListFromViewDefinition"), tableList.Tables.Count, view.Schema, view.Name);
+        _logger.LogInformation("{Message} [{SchemaName}].[{ViewName}]. Table Count={Count}", _resourceManagerLogMessages.GetString("GotTableListFromViewDefinition"), tableList.Tables.Count, view.Schema, view.Name);
 
         return tableList;
     }
@@ -370,7 +369,7 @@ public class SemanticDescriptionProvider(
     /// <returns>A task representing the asynchronous operation. The task result contains the list of tables.</returns>
     public async Task<TableList> GetTableListFromStoredProcedureDefinitionAsync(SemanticModel semanticModel, SemanticModelStoredProcedure storedProcedure)
     {
-        _logger.LogInformation(_resourceManagerLogMessages.GetString("GetTableListFromStoredProcedureDefinition"), storedProcedure.Schema, storedProcedure.Name);
+        _logger.LogInformation("{Message} [{SchemaName}].[{ViewName}]", _resourceManagerLogMessages.GetString("GetTableListFromStoredProcedureDefinition"), storedProcedure.Schema, storedProcedure.Name);
 
         var promptyFilename = "get_tables_from_stored_procedure_definition.prompty";
         promptyFilename = Path.Combine(_promptyFolder, promptyFilename);
@@ -404,14 +403,14 @@ public class SemanticDescriptionProvider(
         var tableList = new TableList();
         if (string.IsNullOrEmpty(resultString))
         {
-            _logger.LogWarning(_resourceManagerLogMessages.GetString("SemanticKernelReturnedEmptyResult"));
+            _logger.LogWarning("{Message}]", _resourceManagerLogMessages.GetString("SemanticKernelReturnedEmptyResult"));
         }
         else
         {
             tableList = JsonSerializer.Deserialize<TableList>(resultString);
         }
 
-        _logger.LogInformation(_resourceManagerLogMessages.GetString("GotTableListFromStoredProcedureDefinition"), tableList.Tables.Count, storedProcedure.Schema, storedProcedure.Name);
+        _logger.LogInformation("{Message} [{SchemaName}].[{StoredProcedureName}]. Table Count={Count}", _resourceManagerLogMessages.GetString("GotTableListFromStoredProcedureDefinition"), storedProcedure.Schema, storedProcedure.Name, tableList.Tables.Count);
 
         return tableList;
     }

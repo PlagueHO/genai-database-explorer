@@ -61,7 +61,7 @@ namespace GenAIDBExplorer.Console.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Enriching semantic model with descriptions for project at &apos;{ProjectPath}&apos;.
+        ///   Looks up a localized string similar to Enriching semantic model with descriptions for project..
         /// </summary>
         internal static string EnrichingSemanticModel {
             get {
@@ -70,7 +70,7 @@ namespace GenAIDBExplorer.Console.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Semantic model enrichment complete for &apos;{ProjectPath}&apos;.
+        ///   Looks up a localized string similar to Semantic model enrichment complete..
         /// </summary>
         internal static string EnrichSemanticModelComplete {
             get {
@@ -79,7 +79,7 @@ namespace GenAIDBExplorer.Console.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Extracting semantic model for project for &apos;{ProjectPath}&apos;.
+        ///   Looks up a localized string similar to Extracting semantic model for project..
         /// </summary>
         internal static string ExtractingSemanticModel {
             get {
@@ -88,7 +88,7 @@ namespace GenAIDBExplorer.Console.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Semantic model extraction complete for &apos;{ProjectPath}&apos;.
+        ///   Looks up a localized string similar to Semantic model extraction complete..
         /// </summary>
         internal static string ExtractSemanticModelComplete {
             get {
@@ -97,7 +97,7 @@ namespace GenAIDBExplorer.Console.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Completed generation of semantic description for stored procedure [{schemaName}].[{storedProcedureName}].
+        ///   Looks up a localized string similar to Completed generation of semantic description for stored procedure..
         /// </summary>
         internal static string GeneratedSemanticDescriptionForStoredProcedure {
             get {
@@ -106,7 +106,7 @@ namespace GenAIDBExplorer.Console.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Completed generation of semantic description for table [{schemaName}].[{tableName}].
+        ///   Looks up a localized string similar to Completed generation of semantic description for table..
         /// </summary>
         internal static string GeneratedSemanticDescriptionForTable {
             get {
@@ -115,7 +115,7 @@ namespace GenAIDBExplorer.Console.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Completed generation of semantic description for view [{schemaName}].[{viewName}].
+        ///   Looks up a localized string similar to Completed generation of semantic description for view..
         /// </summary>
         internal static string GeneratedSemanticDescriptionForView {
             get {
@@ -124,7 +124,7 @@ namespace GenAIDBExplorer.Console.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Generating semantic description for stored procedure [{schemaName}].[{storedProcedureName}].
+        ///   Looks up a localized string similar to Generating semantic description for stored procedure..
         /// </summary>
         internal static string GenerateSemanticDescriptionForStoredProcedure {
             get {
@@ -133,7 +133,7 @@ namespace GenAIDBExplorer.Console.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Generating semantic description for table[{schemaName}].[{tableName}].
+        ///   Looks up a localized string similar to Generating semantic description for table..
         /// </summary>
         internal static string GenerateSemanticDescriptionForTable {
             get {
@@ -142,7 +142,7 @@ namespace GenAIDBExplorer.Console.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Generating semantic description for view &apos;{Schema}.{Name}&apos;.
+        ///   Looks up a localized string similar to Generating semantic description for view..
         /// </summary>
         internal static string GenerateSemanticDescriptionForView {
             get {
@@ -151,7 +151,7 @@ namespace GenAIDBExplorer.Console.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Project initialized successfully in &apos;{ProjectPath}&apos;.
+        ///   Looks up a localized string similar to Project initialized successfully..
         /// </summary>
         internal static string InitializeProjectComplete {
             get {
@@ -160,7 +160,7 @@ namespace GenAIDBExplorer.Console.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Initializing project at &apos;{ProjectPath}&apos;.
+        ///   Looks up a localized string similar to Initializing project..
         /// </summary>
         internal static string InitializingProject {
             get {
@@ -169,7 +169,7 @@ namespace GenAIDBExplorer.Console.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Semantic model loaded successfully from &apos;{ProjectPath}&apos;.
+        ///   Looks up a localized string similar to Semantic model loaded successfully..
         /// </summary>
         internal static string LoadedSemanticModel {
             get {
@@ -178,7 +178,7 @@ namespace GenAIDBExplorer.Console.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Loading semantic model from &apos;{ProjectPath}&apos;.
+        ///   Looks up a localized string similar to Loading semantic model..
         /// </summary>
         internal static string LoadingSemanticModel {
             get {
@@ -187,7 +187,7 @@ namespace GenAIDBExplorer.Console.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The project folder is not empty. Please specify an empty folder.
+        ///   Looks up a localized string similar to The project folder is not empty. Please specify an empty folder..
         /// </summary>
         internal static string ProjectFolderNotEmpty {
             get {
@@ -196,7 +196,7 @@ namespace GenAIDBExplorer.Console.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Querying project at &apos;{ProjectPath}&apos;.
+        ///   Looks up a localized string similar to Querying project..
         /// </summary>
         internal static string QueryingProject {
             get {
@@ -205,7 +205,7 @@ namespace GenAIDBExplorer.Console.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Semantic model saved successfully to &apos;{ProjectPath}&apos;.
+        ///   Looks up a localized string similar to Semantic model saved successfully..
         /// </summary>
         internal static string SavedSemanticModel {
             get {
@@ -214,7 +214,7 @@ namespace GenAIDBExplorer.Console.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Saving semantic model to &apos;{SemanticModelName}&apos;.
+        ///   Looks up a localized string similar to Saving semantic model..
         /// </summary>
         internal static string SavingSemanticModel {
             get {

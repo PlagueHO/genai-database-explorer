@@ -70,7 +70,7 @@ public class InitProjectCommandHandler(
 
         var projectPath = commandOptions.ProjectPath;
 
-        _logger.LogInformation(_resourceManagerLogMessages.GetString("InitializingProject"), projectPath.FullName);
+        _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("InitializingProject"), projectPath.FullName);
 
         ValidateProjectPath(projectPath);
 
@@ -85,7 +85,7 @@ public class InitProjectCommandHandler(
             return;
         }
 
-        _logger.LogInformation(_resourceManagerLogMessages.GetString("InitializeProjectComplete"), projectPath.FullName);
+        _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("InitializeProjectComplete"), projectPath.FullName);
         await Task.CompletedTask;
     }
 }

@@ -148,7 +148,7 @@ namespace GenAIDBExplorer.Console.CommandHandlers
             var table = semanticModel.FindTable(schemaName, tableName);
             if (table == null)
             {
-                _logger.LogError(_resourceManagerErrorMessages.GetString("TableNotFound"), schemaName, tableName);
+                _logger.LogError("{ErrorMessage} [{SchemaName}].[{TableName}]", _resourceManagerErrorMessages.GetString("TableNotFound"), schemaName, tableName);
             }
             else
             {
@@ -162,7 +162,7 @@ namespace GenAIDBExplorer.Console.CommandHandlers
             var view = semanticModel.FindView(schemaName, viewName);
             if (view == null)
             {
-                _logger.LogError(_resourceManagerErrorMessages.GetString("ViewNotFound"), schemaName, viewName);
+                _logger.LogError("{ErrorMessage} [{SchemaName}].[{ViewName}]", _resourceManagerErrorMessages.GetString("ViewNotFound"), schemaName, viewName);
             }
             else
             {
@@ -176,7 +176,7 @@ namespace GenAIDBExplorer.Console.CommandHandlers
             var storedProcedure = semanticModel.FindStoredProcedure(schemaName, storedProcedureName);
             if (storedProcedure == null)
             {
-                _logger.LogError(_resourceManagerErrorMessages.GetString("StoredProcedureNotFound"), schemaName, storedProcedureName);
+                _logger.LogError("{ErrorMessage} [{SchemaName}].[{StoredProcedureName}]", _resourceManagerErrorMessages.GetString("StoredProcedureNotFound"), schemaName, storedProcedureName);
             }
             else
             {

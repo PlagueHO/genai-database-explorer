@@ -70,7 +70,7 @@ namespace GenAIDBExplorer.Console.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Stored Procedure [{schema}].[{name}] not found..
+        ///   Looks up a localized string similar to Stored Procedure not found..
         /// </summary>
         internal static string StoredProcedureNotFound {
             get {
@@ -79,7 +79,7 @@ namespace GenAIDBExplorer.Console.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Table [{schema}].[{name}] not found..
+        ///   Looks up a localized string similar to Table not found..
         /// </summary>
         internal static string TableNotFound {
             get {
@@ -88,7 +88,7 @@ namespace GenAIDBExplorer.Console.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to View [{schema}].[{name}] not found..
+        ///   Looks up a localized string similar to View not found..
         /// </summary>
         internal static string ViewNotFound {
             get {

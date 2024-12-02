@@ -118,57 +118,57 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="EnrichingSemanticModel" xml:space="preserve">
-    <value>Enriching semantic model with descriptions for project at '{ProjectPath}'</value>
+    <value>Enriching semantic model with descriptions for project.</value>
   </data>
   <data name="EnrichSemanticModelComplete" xml:space="preserve">
-    <value>Semantic model enrichment complete for '{ProjectPath}'</value>
+    <value>Semantic model enrichment complete.</value>
   </data>
   <data name="ExtractingSemanticModel" xml:space="preserve">
-    <value>Extracting semantic model for project for '{ProjectPath}'</value>
+    <value>Extracting semantic model for project.</value>
   </data>
   <data name="ExtractSemanticModelComplete" xml:space="preserve">
-    <value>Semantic model extraction complete for '{ProjectPath}'</value>
+    <value>Semantic model extraction complete.</value>
   </data>
   <data name="InitializingProject" xml:space="preserve">
-    <value>Initializing project at '{ProjectPath}'</value>
+    <value>Initializing project.</value>
   </data>
   <data name="ProjectFolderNotEmpty" xml:space="preserve">
-    <value>The project folder is not empty. Please specify an empty folder</value>
+    <value>The project folder is not empty. Please specify an empty folder.</value>
   </data>
   <data name="InitializeProjectComplete" xml:space="preserve">
-    <value>Project initialized successfully in '{ProjectPath}'</value>
+    <value>Project initialized successfully.</value>
   </data>
   <data name="SavingSemanticModel" xml:space="preserve">
-    <value>Saving semantic model to '{SemanticModelName}'</value>
+    <value>Saving semantic model.</value>
   </data>
   <data name="QueryingProject" xml:space="preserve">
-    <value>Querying project at '{ProjectPath}'</value>
+    <value>Querying project.</value>
   </data>
   <data name="LoadingSemanticModel" xml:space="preserve">
-    <value>Loading semantic model from '{ProjectPath}'</value>
+    <value>Loading semantic model.</value>
   </data>
   <data name="LoadedSemanticModel" xml:space="preserve">
-    <value>Semantic model loaded successfully from '{ProjectPath}'</value>
+    <value>Semantic model loaded successfully.</value>
   </data>
   <data name="SavedSemanticModel" xml:space="preserve">
-    <value>Semantic model saved successfully to '{ProjectPath}'</value>
+    <value>Semantic model saved successfully.</value>
   </data>
   <data name="GeneratedSemanticDescriptionForStoredProcedure" xml:space="preserve">
-    <value>Completed generation of semantic description for stored procedure [{schemaName}].[{storedProcedureName}]</value>
+    <value>Completed generation of semantic description for stored procedure.</value>
   </data>
   <data name="GeneratedSemanticDescriptionForTable" xml:space="preserve">
-    <value>Completed generation of semantic description for table [{schemaName}].[{tableName}]</value>
+    <value>Completed generation of semantic description for table.</value>
   </data>
   <data name="GeneratedSemanticDescriptionForView" xml:space="preserve">
-    <value>Completed generation of semantic description for view [{schemaName}].[{viewName}]</value>
+    <value>Completed generation of semantic description for view.</value>
   </data>
   <data name="GenerateSemanticDescriptionForStoredProcedure" xml:space="preserve">
-    <value>Generating semantic description for stored procedure [{schemaName}].[{storedProcedureName}]</value>
+    <value>Generating semantic description for stored procedure.</value>
   </data>
   <data name="GenerateSemanticDescriptionForTable" xml:space="preserve">
-    <value>Generating semantic description for table[{schemaName}].[{tableName}]</value>
+    <value>Generating semantic description for table.</value>
   </data>
   <data name="GenerateSemanticDescriptionForView" xml:space="preserve">
-    <value>Generating semantic description for view '{Schema}.{Name}'</value>
+    <value>Generating semantic description for view.</value>
   </data>
 </root>

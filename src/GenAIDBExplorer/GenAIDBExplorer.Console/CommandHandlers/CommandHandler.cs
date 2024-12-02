@@ -4,6 +4,7 @@ using GenAIDBExplorer.Core.Models.SemanticModel;
 using GenAIDBExplorer.Core.SemanticModelProviders;
 using GenAIDBExplorer.Core.SemanticProviders;
 using Microsoft.Extensions.Logging;
+using System.Resources;
 
 namespace GenAIDBExplorer.Console.CommandHandlers;
 
@@ -25,6 +26,8 @@ public abstract class CommandHandler<TOptions>(
     ILogger<ICommandHandler<TOptions>> logger
 ) : ICommandHandler<TOptions> where TOptions : ICommandHandlerOptions
 {
+    private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Console.Resources.LogMessages", typeof(EnrichModelCommandHandler).Assembly);
+
     /// <summary>
     /// Project instance to handle.
     /// </summary>
@@ -75,9 +78,9 @@ public abstract class CommandHandler<TOptions>(
 
         if (commandOptions.ProjectPath == null)
         {
-            throw new ArgumentNullException(nameof(commandOptions.ProjectPath), "Project path cannot be null.");
+            throw new ArgumentNullException(nameof(commandOptions), "Project path cannot be null.");
         }
-    }
+    }   
 
     /// <summary>
     /// Validates the specified project path.
@@ -133,10 +136,10 @@ public abstract class CommandHandler<TOptions>(
         _project.LoadProjectConfiguration(projectPath);
 
         // Load the Semantic Model
-        _logger.LogInformation("Loading semantic model from {ProjectPath}", projectPath.FullName);
+        _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("LoadingSemanticModel"), projectPath.FullName);
         var semanticModelDirectory = GetSemanticModelDirectory(projectPath);
         var semanticModel = await _semanticModelProvider.LoadSemanticModelAsync(semanticModelDirectory);
-        _logger.LogInformation("Loaded semantic model from {ProjectPath}", projectPath.FullName);
+        _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("LoadedSemanticModel"), projectPath.FullName);
 
         return semanticModel;
     }

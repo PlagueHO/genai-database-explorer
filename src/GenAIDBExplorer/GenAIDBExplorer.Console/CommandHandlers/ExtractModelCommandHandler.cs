@@ -98,7 +98,7 @@ public class ExtractModelCommandHandler(
 
         var projectPath = commandOptions.ProjectPath;
 
-        _logger.LogInformation(_resourceManagerLogMessages.GetString("ExtractingSemanticModel"), projectPath.FullName);
+        _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("ExtractingSemanticModel"), projectPath.FullName);
 
         _project.LoadProjectConfiguration(projectPath);
 
@@ -112,9 +112,9 @@ public class ExtractModelCommandHandler(
             semanticModelDirectory.Create();
         }
 
-        _logger.LogInformation(_resourceManagerLogMessages.GetString("SavingSemanticModel"), semanticModelDirectory);
+        _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("SavingSemanticModel"), semanticModelDirectory);
         await semanticModel.SaveModelAsync(semanticModelDirectory, !commandOptions.SingleModelFile);
 
-        _logger.LogInformation(_resourceManagerLogMessages.GetString("ExtractSemanticModelComplete"), projectPath.FullName);
+        _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("ExtractSemanticModelComplete"), projectPath.FullName);
     }
 }

@@ -20,7 +20,7 @@ public sealed class SqlQueryExecutor(
         using var command = connection.CreateCommand();
 
         command.CommandText = query;
-        _logger.LogDebug(_resourceManagerLogMessages.GetString("ExecutingSQLQuery"), query);
+        _logger.LogDebug("{Message} '{Query}'", _resourceManagerLogMessages.GetString("ExecutingSQLQuery"), query);
 
         if (parameters != null)
         {

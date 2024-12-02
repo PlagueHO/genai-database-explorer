@@ -121,12 +121,12 @@
     <value>Invalid object type specified. Must be 'table','view' or 'storedprocedure'.</value>
   </data>
   <data name="StoredProcedureNotFound" xml:space="preserve">
-    <value>Stored Procedure [{schema}].[{name}] not found.</value>
+    <value>Stored Procedure not found.</value>
   </data>
   <data name="TableNotFound" xml:space="preserve">
-    <value>Table [{schema}].[{name}] not found.</value>
+    <value>Table not found.</value>
   </data>
   <data name="ViewNotFound" xml:space="preserve">
-    <value>View [{schema}].[{name}] not found.</value>
+    <value>View not found.</value>
   </data>
 </root>
