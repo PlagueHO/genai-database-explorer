@@ -42,7 +42,7 @@ public class SemanticKernelFactory(
     /// <param name="kernelBuilder">The kernel builder.</param>
     /// <param name="settings">The chat completion settings.</param>
     /// <param name="serviceId">The service ID.</param>
-    private void AddChatCompletionService(IKernelBuilder kernelBuilder, IChatCompletionSettings settings, string serviceId)
+    private static void AddChatCompletionService(IKernelBuilder kernelBuilder, IChatCompletionSettings settings, string serviceId)
     {
         if (settings.ServiceType == "AzureOpenAI")
         {

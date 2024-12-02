@@ -356,7 +356,7 @@ public class SemanticDescriptionProvider(
             tableList = JsonSerializer.Deserialize<TableList>(resultString);
         }
 
-        _logger.LogInformation("{Message} [{SchemaName}].[{ViewName}]. Table Count={Count}", _resourceManagerLogMessages.GetString("GotTableListFromViewDefinition"), tableList.Tables.Count, view.Schema, view.Name);
+        _logger.LogInformation("{Message} [{SchemaName}].[{ViewName}]. Table Count={Count}", _resourceManagerLogMessages.GetString("GotTableListFromViewDefinition"), view.Schema, view.Name, tableList.Tables.Count);
 
         return tableList;
     }
