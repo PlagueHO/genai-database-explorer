@@ -79,12 +79,15 @@ public abstract class SemanticModelEntity(
         {
             await using var stream = File.OpenRead(filePath);
             var entity = await JsonSerializer.DeserializeAsync<SemanticModelEntity>(stream, _jsonSerializerOptions);
-            Schema = entity.Schema;
-            Name = entity.Name;
-            Description = entity.Description;
-            SemanticDescription = entity.SemanticDescription;
-            IsIgnored = entity.IsIgnored;
-            IgnoreReason = entity.IgnoreReason;
+            if (entity != null)
+            {
+                Schema = entity.Schema;
+                Name = entity.Name;
+                Description = entity.Description;
+                SemanticDescription = entity.SemanticDescription;
+                IsIgnored = entity.IsIgnored;
+                IgnoreReason = entity.IgnoreReason;
+            }
         }
     }
 

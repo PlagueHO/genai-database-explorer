@@ -19,22 +19,22 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.0" />
-    <PackageReference Include="Microsoft.KernelMemory.AI.AzureOpenAI" Version="0.93.241118.1" />
-    <PackageReference Include="Microsoft.KernelMemory.AI.OpenAI" Version="0.93.241118.1" />
-    <PackageReference Include="Microsoft.KernelMemory.Core" Version="0.93.241118.1" />
-    <PackageReference Include="Microsoft.KernelMemory.MemoryDb.AzureAISearch" Version="0.93.241118.1" />
-    <PackageReference Include="Microsoft.KernelMemory.SemanticKernelPlugin" Version="0.93.241118.1" />
-    <PackageReference Include="Microsoft.SemanticKernel" Version="1.30.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.Abstractions" Version="1.30.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.Connectors.AzureOpenAI" Version="1.30.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.Connectors.OpenAI" Version="1.30.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.Core" Version="1.30.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.PromptTemplates.Handlebars" Version="1.30.0" />
+    <PackageReference Include="Microsoft.KernelMemory.AI.AzureOpenAI" Version="0.94.241201.1" />
+    <PackageReference Include="Microsoft.KernelMemory.AI.OpenAI" Version="0.94.241201.1" />
+    <PackageReference Include="Microsoft.KernelMemory.Core" Version="0.94.241201.1" />
+    <PackageReference Include="Microsoft.KernelMemory.MemoryDb.AzureAISearch" Version="0.94.241201.1" />
+    <PackageReference Include="Microsoft.KernelMemory.SemanticKernelPlugin" Version="0.94.241201.1" />
+    <PackageReference Include="Microsoft.SemanticKernel" Version="1.31.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Abstractions" Version="1.31.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Connectors.AzureOpenAI" Version="1.31.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Connectors.OpenAI" Version="1.31.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Core" Version="1.31.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.PromptTemplates.Handlebars" Version="1.31.0" />
     <PackageReference Include="Microsoft.SemanticKernel.PromptTemplates.Liquid" Version="1.30.0-preview" />
     <PackageReference Include="Microsoft.SemanticKernel.Prompty" Version="1.30.0-alpha" />
-    <PackageReference Include="Microsoft.SemanticKernel.Yaml" Version="1.30.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Yaml" Version="1.31.0" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
-    <PackageReference Include="YamlDotNet" Version="16.2.0" />
+    <PackageReference Include="YamlDotNet" Version="16.2.1" />
   </ItemGroup>
 
   <ItemGroup>
