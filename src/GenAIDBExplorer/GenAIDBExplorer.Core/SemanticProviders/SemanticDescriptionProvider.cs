@@ -8,6 +8,7 @@ using Microsoft.SemanticKernel;
 using System.Resources;
 using System.Text.Json;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
+using DocumentFormat.OpenXml.Drawing;
 
 namespace GenAIDBExplorer.Core.SemanticProviders;
 
@@ -35,17 +36,17 @@ public class SemanticDescriptionProvider(
     /// </summary>
     /// <param name="semanticModel"></param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the semantic process summary.</returns>
-    public async Task<SemanticProcessSummary> UpdateTableSemanticDescriptionAsync(SemanticModel semanticModel)
+    public async Task<SemanticProcessResult> UpdateTableSemanticDescriptionAsync(SemanticModel semanticModel)
     {
-        var processSummary = new SemanticProcessSummary();
+        var processResult = new SemanticProcessResult();
 
         await Parallel.ForEachAsync(semanticModel.Tables, GetParallelismOptions(), async (table, cancellationToken) =>
         {
-            var stepSummary = await UpdateTableSemanticDescriptionAsync(semanticModel, table).ConfigureAwait(false);
-            processSummary.AddSummary(stepSummary);
+            var result = await UpdateTableSemanticDescriptionAsync(semanticModel, table).ConfigureAwait(false);
+            processResult.AddRange(result);
         });
 
-        return processSummary;
+        return processResult;
     }
 
     /// <summary>
@@ -54,9 +55,9 @@ public class SemanticDescriptionProvider(
     /// <param name="semanticModel"></param>
     /// <param name="tables"></param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the semantic process summary.</returns>
-    public async Task<SemanticProcessSummary> UpdateTableSemanticDescriptionAsync(SemanticModel semanticModel, TableList tables)
+    public async Task<SemanticProcessResult> UpdateTableSemanticDescriptionAsync(SemanticModel semanticModel, TableList tables)
     {
-        var processSummary = new SemanticProcessSummary();
+        var processResult = new SemanticProcessResult();
 
         await Parallel.ForEachAsync(tables.Tables, GetParallelismOptions(), async (table, cancellationToken) =>
         {
@@ -64,12 +65,12 @@ public class SemanticDescriptionProvider(
             if (semanticModelTable != null && string.IsNullOrEmpty(semanticModelTable.SemanticDescription))
             {
                 _logger.LogInformation("{Message} [{SchemaName}].[{TableName}]", _resourceManagerLogMessages.GetString("TableMissingSemanticDescription"), table.SchemaName, table.TableName);
-                var stepSummary = await UpdateTableSemanticDescriptionAsync(semanticModel, semanticModelTable).ConfigureAwait(false);
-                processSummary.AddSummary(stepSummary);
+                var result = await UpdateTableSemanticDescriptionAsync(semanticModel, semanticModelTable).ConfigureAwait(false);
+                processResult.AddRange(result);
             }
         });
 
-        return processSummary;
+        return processResult;
     }
 
     /// <summary>
@@ -77,13 +78,14 @@ public class SemanticDescriptionProvider(
     /// </summary>
     /// <param name="table">The semantic model table for which to generate the description.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the semantic process summary.</returns>
-    public async Task<SemanticProcessSummary> UpdateTableSemanticDescriptionAsync(SemanticModel semanticModel, SemanticModelTable table)
+    public async Task<SemanticProcessResult> UpdateTableSemanticDescriptionAsync(SemanticModel semanticModel, SemanticModelTable table)
     {
-        var processSummary = new SemanticProcessSummary();
+        var startTime = DateTime.UtcNow;
+        var processResult = new SemanticProcessResult();
+        var scope = $"Table [{table.Name}].[{table.Schema}]";
 
-        using (_logger.BeginScope("Table [{Schema}.{Name}]", table.Name, table.Schema))
+        using (_logger.BeginScope(scope, table.Name, table.Schema))
         {
-            var startTime = DateTime.UtcNow;
             _logger.LogInformation("{Message} [{SchemaName}].[{TableName}]", _resourceManagerLogMessages.GetString("GenerateSemanticDescriptionForTable"), table.Schema, table.Name);
 
             // Retrieve sample data for the table
@@ -117,7 +119,7 @@ public class SemanticDescriptionProvider(
 
             var semanticKernel = _semanticKernelFactory.CreateSemanticKernel();
             var promptyFilename = "semantic_model_describe_table.prompty";
-            promptyFilename = Path.Combine(_promptyFolder, promptyFilename);
+            promptyFilename = System.IO.Path.Combine(_promptyFolder, promptyFilename);
 
 #pragma warning disable SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
             var function = semanticKernel.CreateFunctionFromPromptyFile(promptyFilename);
@@ -128,20 +130,17 @@ public class SemanticDescriptionProvider(
 
             table.SetSemanticDescription(result.ToString());
 
-            _logger.LogInformation("{Message} [{SchemaName}].[{TableName}]", _resourceManagerLogMessages.GetString("GeneratedSemanticDescriptionForTable"), table.Schema, table.Name);
-
             // The time taken for the request calculated from the startTime as a TimeSpan object
             var timeTaken = DateTime.UtcNow - startTime;
 
-            // Update process result
+            // Add the process result
             var usage = result.Metadata!["Usage"] as OpenAI.Chat.ChatTokenUsage;
+            processResult.Add(new SemanticProcessResultItem(scope, "ChatCompletion", usage, timeTaken));
 
-            var semanticResult = new SemanticProcessResult("ChatCompletion", 1, usage.InputTokenCount, usage.OutputTokenCount, timeTaken);
-
-            processSummary.AddResult(semanticResult);
+            _logger.LogInformation("{Message} [{SchemaName}].[{TableName}]", _resourceManagerLogMessages.GetString("GeneratedSemanticDescriptionForTable"), table.Schema, table.Name);
         }
 
-        return processSummary;
+        return processResult;
     }
 
     /// <summary>
@@ -149,12 +148,17 @@ public class SemanticDescriptionProvider(
     /// </summary>
     /// <param name="semanticModel"></param>
     /// <returns></returns>
-    public async Task UpdateViewSemanticDescriptionAsync(SemanticModel semanticModel)
+    public async Task<SemanticProcessResult> UpdateViewSemanticDescriptionAsync(SemanticModel semanticModel)
     {
+        var processResult = new SemanticProcessResult();
+
         await Parallel.ForEachAsync(semanticModel.Views, GetParallelismOptions(), async (view, cancellationToken) =>
         {
-            await UpdateViewSemanticDescriptionAsync(semanticModel, view).ConfigureAwait(false);
+            var result = await UpdateViewSemanticDescriptionAsync(semanticModel, view).ConfigureAwait(false);
+            processResult.AddRange(result);
         });
+
+        return processResult;
     }
 
     /// <summary>
@@ -163,26 +167,35 @@ public class SemanticDescriptionProvider(
     /// <param name="semanticModel"></param>
     /// <param name="views"></param>
     /// <returns></returns>
-    public async Task UpdateViewSemanticDescriptionAsync(SemanticModel semanticModel, ViewList views)
+    public async Task<SemanticProcessResult> UpdateViewSemanticDescriptionAsync(SemanticModel semanticModel, ViewList views)
     {
+        var processResult = new SemanticProcessResult();
+
         await Parallel.ForEachAsync(views.Views, GetParallelismOptions(), async (view, cancellationToken) =>
         {
             var semanticModelView = semanticModel.Views.FirstOrDefault(v => v.Schema == view.SchemaName && v.Name == view.ViewName);
             if (semanticModelView != null && string.IsNullOrEmpty(semanticModelView.SemanticDescription))
             {
                 _logger.LogInformation("{Message} [{SchemaName}].[{ViewName}]", _resourceManagerLogMessages.GetString("ViewMissingSemanticDescription"), view.SchemaName, view.ViewName);
-                await UpdateViewSemanticDescriptionAsync(semanticModel, semanticModelView).ConfigureAwait(false);
+                var result = await UpdateViewSemanticDescriptionAsync(semanticModel, semanticModelView).ConfigureAwait(false);
+                processResult.AddRange(result);
             }
         });
+
+        return processResult;
     }
 
     /// <summary>
     /// Generates a semantic description for the specified view using Semantic Kernel.
     /// </summary>
     /// <param name="view">The semantic model view for which to generate the description.</param>
-    public async Task UpdateViewSemanticDescriptionAsync(SemanticModel semanticModel, SemanticModelView view)
+    public async Task<SemanticProcessResult> UpdateViewSemanticDescriptionAsync(SemanticModel semanticModel, SemanticModelView view)
     {
-        using (_logger.BeginScope("View [{Schema}.{Name}]", view.Name, view.Schema))
+        var startTime = DateTime.UtcNow;
+        var processResult = new SemanticProcessResult();
+        var scope = $"View [{view.Name}].[{view.Schema}]";
+
+        using (_logger.BeginScope(scope, view.Name, view.Schema))
         {
             _logger.LogInformation("{Message} [{SchemaName}].[{ViewName}]", _resourceManagerLogMessages.GetString("GenerateSemanticDescriptionForView"), view.Schema, view.Name);
 
@@ -224,7 +237,7 @@ public class SemanticDescriptionProvider(
             };
 
             var promptyFilename = "semantic_model_describe_view.prompty";
-            promptyFilename = Path.Combine(_promptyFolder, promptyFilename);
+            promptyFilename = System.IO.Path.Combine(_promptyFolder, promptyFilename);
             var semanticKernel = _semanticKernelFactory.CreateSemanticKernel();
 
 #pragma warning disable SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
@@ -236,8 +249,17 @@ public class SemanticDescriptionProvider(
 
             view.SetSemanticDescription(result.ToString());
 
+            // The time taken for the request calculated from the startTime as a TimeSpan object
+            var timeTaken = DateTime.UtcNow - startTime;
+
+            // Add the process result
+            var usage = result.Metadata!["Usage"] as OpenAI.Chat.ChatTokenUsage;
+            processResult.Add(new SemanticProcessResultItem(scope, "ChatCompletion", usage, timeTaken));
+
             _logger.LogInformation("{Message} [{SchemaName}].[{ViewName}]", _resourceManagerLogMessages.GetString("GeneratedSemanticDescriptionForView"), view.Schema, view.Name);
         }
+
+        return processResult;
     }
 
     /// <summary>
@@ -245,12 +267,17 @@ public class SemanticDescriptionProvider(
     /// </summary>
     /// <param name="semanticModel"></param>
     /// <returns></returns>
-    public async Task UpdateStoredProcedureSemanticDescriptionAsync(SemanticModel semanticModel)
+    public async Task<SemanticProcessResult> UpdateStoredProcedureSemanticDescriptionAsync(SemanticModel semanticModel)
     {
+        var processResult = new SemanticProcessResult();
+
         await Parallel.ForEachAsync(semanticModel.StoredProcedures, GetParallelismOptions(), async (storedProcedure, cancellationToken) =>
         {
-            await UpdateStoredProcedureSemanticDescriptionAsync(semanticModel, storedProcedure).ConfigureAwait(false);
+            var result = await UpdateStoredProcedureSemanticDescriptionAsync(semanticModel, storedProcedure).ConfigureAwait(false);
+            processResult.AddRange(result);
         });
+
+        return processResult;
     }
 
     /// <summary>
@@ -259,26 +286,35 @@ public class SemanticDescriptionProvider(
     /// <param name="semanticModel"></param>
     /// <param name="storedProcedures"></param>
     /// <returns></returns>
-    public async Task UpdateStoredProcedureSemanticDescriptionAsync(SemanticModel semanticModel, StoredProcedureList storedProcedureList)
+    public async Task<SemanticProcessResult> UpdateStoredProcedureSemanticDescriptionAsync(SemanticModel semanticModel, StoredProcedureList storedProcedureList)
     {
+        var processResult = new SemanticProcessResult();
+
         await Parallel.ForEachAsync(storedProcedureList.StoredProcedures, GetParallelismOptions(), async (storedProcedure, cancellationToken) =>
         {
             var semanticModelStoredProcedure = semanticModel.StoredProcedures.FirstOrDefault(sp => sp.Schema == storedProcedure.SchemaName && sp.Name == storedProcedure.ProcedureName);
             if (semanticModelStoredProcedure != null && string.IsNullOrEmpty(semanticModelStoredProcedure.SemanticDescription))
             {
                 _logger.LogInformation("{Message} [{SchemaName}].[{StoredProcedureName}]", _resourceManagerLogMessages.GetString("StoredProcedureMissingSemanticDescription"), storedProcedure.SchemaName, storedProcedure.ProcedureName);
-                await UpdateStoredProcedureSemanticDescriptionAsync(semanticModel, semanticModelStoredProcedure).ConfigureAwait(false);
+                var result = await UpdateStoredProcedureSemanticDescriptionAsync(semanticModel, semanticModelStoredProcedure).ConfigureAwait(false);
+                processResult.AddRange(result);
             }
         });
+
+        return processResult;
     }
 
     /// <summary>
     /// Generates a semantic description for the specified stored procedure using Semantic Kernel.
     /// </summary>
     /// <param name="storedProcedure">The semantic model stored procedure for which to generate the description.</param>
-    public async Task UpdateStoredProcedureSemanticDescriptionAsync(SemanticModel semanticModel, SemanticModelStoredProcedure storedProcedure)
+    public async Task<SemanticProcessResult> UpdateStoredProcedureSemanticDescriptionAsync(SemanticModel semanticModel, SemanticModelStoredProcedure storedProcedure)
     {
-        using (_logger.BeginScope("Stored Procedure [{Schema}.{Name}]", storedProcedure.Name, storedProcedure.Schema))
+        var startTime = DateTime.UtcNow;
+        var processResult = new SemanticProcessResult();
+        var scope = $"Table [{storedProcedure.Name}].[{storedProcedure.Schema}]";
+
+        using (_logger.BeginScope(scope, storedProcedure.Name, storedProcedure.Schema))
         {
             _logger.LogInformation("{Message} [{SchemaName}].[{StoredProcedureName}]", _resourceManagerLogMessages.GetString("GenerateSemanticDescriptionForStoredProcedure"), storedProcedure.Schema, storedProcedure.Name);
 
@@ -292,7 +328,7 @@ public class SemanticDescriptionProvider(
             var tables = semanticModel.SelectTables(tableList);
 
             var promptyFilename = "semantic_model_describe_stored_procedure.prompty";
-            promptyFilename = Path.Combine(_promptyFolder, promptyFilename);
+            promptyFilename = System.IO.Path.Combine(_promptyFolder, promptyFilename);
             var semanticKernel = _semanticKernelFactory.CreateSemanticKernel();
 
             var projectInfo = new
@@ -328,8 +364,17 @@ public class SemanticDescriptionProvider(
 
             storedProcedure.SetSemanticDescription(result.ToString());
 
+            // The time taken for the request calculated from the startTime as a TimeSpan object
+            var timeTaken = DateTime.UtcNow - startTime;
+
+            // Add the process result
+            var usage = result.Metadata!["Usage"] as OpenAI.Chat.ChatTokenUsage;
+            processResult.Add(new SemanticProcessResultItem(scope, "ChatCompletion", usage, timeTaken));
+
             _logger.LogInformation("{Message} [{SchemaName}].[{StoredProcedureName}]", _resourceManagerLogMessages.GetString("GeneratedSemanticDescriptionForStoredProcedure"), storedProcedure.Schema, storedProcedure.Name);
         }
+
+        return processResult;
     }
 
     /// <summary>
@@ -343,7 +388,7 @@ public class SemanticDescriptionProvider(
         _logger.LogInformation("{Message} [{SchemaName}].[{ViewName}]", _resourceManagerLogMessages.GetString("GetTableListFromViewDefinition"), view.Schema, view.Name);
 
         var promptyFilename = "get_tables_from_view_definition.prompty";
-        promptyFilename = Path.Combine(_promptyFolder, promptyFilename);
+        promptyFilename = System.IO.Path.Combine(_promptyFolder, promptyFilename);
         var semanticKernel = _semanticKernelFactory.CreateSemanticKernel();
 
 #pragma warning disable SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
@@ -397,7 +442,7 @@ public class SemanticDescriptionProvider(
         _logger.LogInformation("{Message} [{SchemaName}].[{ViewName}]", _resourceManagerLogMessages.GetString("GetTableListFromStoredProcedureDefinition"), storedProcedure.Schema, storedProcedure.Name);
 
         var promptyFilename = "get_tables_from_stored_procedure_definition.prompty";
-        promptyFilename = Path.Combine(_promptyFolder, promptyFilename);
+        promptyFilename = System.IO.Path.Combine(_promptyFolder, promptyFilename);
         var semanticKernel = _semanticKernelFactory.CreateSemanticKernel();
 
 #pragma warning disable SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.

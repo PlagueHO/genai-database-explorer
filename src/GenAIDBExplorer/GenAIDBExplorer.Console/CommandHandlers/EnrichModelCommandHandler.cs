@@ -216,20 +216,7 @@ public class EnrichModelCommandHandler(
         else
         {
             // Enrich all objects
-            if (!commandOptions.SkipTables)
-            {
-                await _semanticDescriptionProvider.UpdateTableSemanticDescriptionAsync(semanticModel).ConfigureAwait(false);
-            }
-
-            if (!commandOptions.SkipViews)
-            {
-                await _semanticDescriptionProvider.UpdateViewSemanticDescriptionAsync(semanticModel).ConfigureAwait(false);
-            }
-
-            if (!commandOptions.SkipStoredProcedures)
-            {
-                await _semanticDescriptionProvider.UpdateStoredProcedureSemanticDescriptionAsync(semanticModel).ConfigureAwait(false);
-            }
+            await EnrichAllObjectsAsync(semanticModel, commandOptions);
         }
 
         // Save the semantic model
@@ -241,6 +228,37 @@ public class EnrichModelCommandHandler(
         _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("EnrichSemanticModelComplete"), projectPath.FullName);
     }
 
+    /// <summary>
+    /// Enriches all objects in the semantic model.
+    /// </summary>
+    /// <param name="semanticModel"></param>
+    /// <param name="commandOptions"></param>
+    /// <returns></returns>
+    private async Task EnrichAllObjectsAsync(SemanticModel semanticModel, EnrichModelCommandHandlerOptions commandOptions)
+    {
+        if (!commandOptions.SkipTables)
+        {
+            await _semanticDescriptionProvider.UpdateTableSemanticDescriptionAsync(semanticModel).ConfigureAwait(false);
+        }
+
+        if (!commandOptions.SkipViews)
+        {
+            await _semanticDescriptionProvider.UpdateViewSemanticDescriptionAsync(semanticModel).ConfigureAwait(false);
+        }
+
+        if (!commandOptions.SkipStoredProcedures)
+        {
+            await _semanticDescriptionProvider.UpdateStoredProcedureSemanticDescriptionAsync(semanticModel).ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    /// Enriches the table with the specified schema name and table name.
+    /// </summary>
+    /// <param name="semanticModel"></param>
+    /// <param name="schemaName"></param>
+    /// <param name="tableName"></param>
+    /// <returns></returns>
     private async Task EnrichTableAsync(SemanticModel semanticModel, string schemaName, string tableName)
     {
         var table = semanticModel.FindTable(schemaName, tableName);
@@ -254,6 +272,13 @@ public class EnrichModelCommandHandler(
         _logger.LogInformation("{Message} [{SchemaName}].[{TableName}]", _resourceManagerLogMessages.GetString("EnrichedTable"), schemaName, tableName);
     }
 
+    /// <summary>
+    /// Enriches the view with the specified schema name and view name.
+    /// </summary>
+    /// <param name="semanticModel"></param>
+    /// <param name="schemaName"></param>
+    /// <param name="viewName"></param>
+    /// <returns></returns>
     private async Task EnrichViewAsync(SemanticModel semanticModel, string schemaName, string viewName)
     {
         var view = semanticModel.FindView(schemaName, viewName);
@@ -267,6 +292,13 @@ public class EnrichModelCommandHandler(
         _logger.LogInformation("{Message} [{SchemaName}].[{ViewName}]", _resourceManagerLogMessages.GetString("EnrichedView"), schemaName, viewName);
     }
 
+    /// <summary>
+    /// Enriches the stored procedure with the specified schema name and stored procedure name.
+    /// </summary>
+    /// <param name="semanticModel"></param>
+    /// <param name="schemaName"></param>
+    /// <param name="storedProcedureName"></param>
+    /// <returns></returns>
     private async Task EnrichStoredProcedureAsync(SemanticModel semanticModel, string schemaName, string storedProcedureName)
     {
         var storedProcedure = semanticModel.FindStoredProcedure(schemaName, storedProcedureName);
