@@ -1,5 +1,6 @@
 using GenAIDBExplorer.Core.Data.DatabaseProviders;
 using GenAIDBExplorer.Core.Models.Project;
+using GenAIDBExplorer.Core.Models.SemanticModel;
 using GenAIDBExplorer.Core.SemanticModelProviders;
 using GenAIDBExplorer.Core.SemanticProviders;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,7 +10,6 @@ using System.CommandLine;
 using System.Resources;
 
 namespace GenAIDBExplorer.Console.CommandHandlers;
-
 /// <summary>
 /// Command handler for enriching the model for a project.
 /// </summary>
@@ -71,12 +71,108 @@ public class EnrichModelCommandHandler(
             getDefaultValue: () => false
         );
 
-        var enrichModelCommand = new Command("enrich-model", "Enrich an existing semantic model with descriptions in a GenAI Database Explorer project.");
-        enrichModelCommand.AddOption(projectPathOption);
-        enrichModelCommand.AddOption(skipTablesOption);
-        enrichModelCommand.AddOption(skipViewsOption);
-        enrichModelCommand.AddOption(skipStoredProceduresOption);
-        enrichModelCommand.AddOption(singleModelFileOption);
+        var schemaNameOption = new Option<string>(
+            aliases: ["--schema", "-s"],
+            description: "The schema name of the object to enrich."
+        )
+        {
+            ArgumentHelpName = "schemaName"
+        };
+
+        var nameOption = new Option<string>(
+            aliases: ["--name", "-n"],
+            description: "The name of the object to enrich."
+        )
+        {
+            ArgumentHelpName = "name"
+        };
+
+        // Create the base 'enrich-model' command
+        var enrichModelCommand = new Command("enrich-model", "Enrich an existing semantic model with descriptions in a GenAI Database Explorer project.")
+        {
+            projectPathOption,
+            skipTablesOption,
+            skipViewsOption,
+            skipStoredProceduresOption,
+            singleModelFileOption
+        };
+
+        // Create subcommands
+        var tableCommand = new Command("table", "Enrich a specific table.")
+        {
+            projectPathOption,
+            schemaNameOption,
+            nameOption,
+            singleModelFileOption
+        };
+        tableCommand.SetHandler(async (DirectoryInfo projectPath, string schemaName, string name, bool singleModelFile) =>
+        {
+            var handler = host.Services.GetRequiredService<EnrichModelCommandHandler>();
+            var options = new EnrichModelCommandHandlerOptions(
+                projectPath,
+                skipTables: false,
+                skipViews: true,
+                skipStoredProcedures: true,
+                singleModelFile,
+                objectType: "table",
+                schemaName,
+                objectName: name
+            );
+            await handler.HandleAsync(options);
+        }, projectPathOption, schemaNameOption, nameOption, singleModelFileOption);
+
+        var viewCommand = new Command("view", "Enrich a specific view.")
+        {
+            projectPathOption,
+            schemaNameOption,
+            nameOption,
+            singleModelFileOption
+        };
+        viewCommand.SetHandler(async (DirectoryInfo projectPath, string schemaName, string name, bool singleModelFile) =>
+        {
+            var handler = host.Services.GetRequiredService<EnrichModelCommandHandler>();
+            var options = new EnrichModelCommandHandlerOptions(
+                projectPath,
+                skipTables: true,
+                skipViews: false,
+                skipStoredProcedures: true,
+                singleModelFile,
+                objectType: "view",
+                schemaName,
+                objectName: name
+            );
+            await handler.HandleAsync(options);
+        }, projectPathOption, schemaNameOption, nameOption, singleModelFileOption);
+
+        var storedProcedureCommand = new Command("storedprocedure", "Enrich a specific stored procedure.")
+        {
+            projectPathOption,
+            schemaNameOption,
+            nameOption,
+            singleModelFileOption
+        };
+        storedProcedureCommand.SetHandler(async (DirectoryInfo projectPath, string schemaName, string name, bool singleModelFile) =>
+        {
+            var handler = host.Services.GetRequiredService<EnrichModelCommandHandler>();
+            var options = new EnrichModelCommandHandlerOptions(
+                projectPath,
+                skipTables: true,
+                skipViews: true,
+                skipStoredProcedures: false,
+                singleModelFile,
+                objectType: "storedprocedure",
+                schemaName,
+                objectName: name
+            );
+            await handler.HandleAsync(options);
+        }, projectPathOption, schemaNameOption, nameOption, singleModelFileOption);
+
+        // Add subcommands to the 'enrich-model' command
+        enrichModelCommand.AddCommand(tableCommand);
+        enrichModelCommand.AddCommand(viewCommand);
+        enrichModelCommand.AddCommand(storedProcedureCommand);
+
+        // Set default handler if no subcommand is provided
         enrichModelCommand.SetHandler(async (DirectoryInfo projectPath, bool skipTables, bool skipViews, bool skipStoredProcedures, bool singleModelFile) =>
         {
             var handler = host.Services.GetRequiredService<EnrichModelCommandHandler>();
@@ -98,22 +194,42 @@ public class EnrichModelCommandHandler(
         var projectPath = commandOptions.ProjectPath;
         var semanticModel = await LoadSemanticModelAsync(projectPath);
 
-        if (!commandOptions.SkipTables)
+        if (!string.IsNullOrEmpty(commandOptions.ObjectType))
         {
-            // Generate the Semantic Description for all tables
-            await _semanticDescriptionProvider.UpdateTableSemanticDescriptionAsync(semanticModel).ConfigureAwait(false);
+            // Enrich specific object
+            switch (commandOptions.ObjectType.ToLower())
+            {
+                case "table":
+                    await EnrichTableAsync(semanticModel, commandOptions.SchemaName, commandOptions.ObjectName);
+                    break;
+                case "view":
+                    await EnrichViewAsync(semanticModel, commandOptions.SchemaName, commandOptions.ObjectName);
+                    break;
+                case "storedprocedure":
+                    await EnrichStoredProcedureAsync(semanticModel, commandOptions.SchemaName, commandOptions.ObjectName);
+                    break;
+                default:
+                    _logger.LogError("{Message}", _resourceManagerLogMessages.GetString("InvalidObjectType"));
+                    break;
+            }
         }
-
-        if (!commandOptions.SkipViews)
+        else
         {
-            // Generate the Semantic Description for all views
-            await _semanticDescriptionProvider.UpdateViewSemanticDescriptionAsync(semanticModel).ConfigureAwait(false);
-        }
+            // Enrich all objects
+            if (!commandOptions.SkipTables)
+            {
+                await _semanticDescriptionProvider.UpdateTableSemanticDescriptionAsync(semanticModel).ConfigureAwait(false);
+            }
 
-        if (!commandOptions.SkipStoredProcedures)
-        {
-            // Generate the Semantic Description for all stored procedures
-            await _semanticDescriptionProvider.UpdateStoredProcedureSemanticDescriptionAsync(semanticModel).ConfigureAwait(false);
+            if (!commandOptions.SkipViews)
+            {
+                await _semanticDescriptionProvider.UpdateViewSemanticDescriptionAsync(semanticModel).ConfigureAwait(false);
+            }
+
+            if (!commandOptions.SkipStoredProcedures)
+            {
+                await _semanticDescriptionProvider.UpdateStoredProcedureSemanticDescriptionAsync(semanticModel).ConfigureAwait(false);
+            }
         }
 
         // Save the semantic model
@@ -123,5 +239,44 @@ public class EnrichModelCommandHandler(
         _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("SavedSemanticModel"), projectPath.FullName);
 
         _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("EnrichSemanticModelComplete"), projectPath.FullName);
+    }
+
+    private async Task EnrichTableAsync(SemanticModel semanticModel, string schemaName, string tableName)
+    {
+        var table = semanticModel.FindTable(schemaName, tableName);
+        if (table == null)
+        {
+            _logger.LogError("{Message} [{SchemaName}].[{TableName}]", _resourceManagerLogMessages.GetString("TableNotFound"), schemaName, tableName);
+            return;
+        }
+
+        await _semanticDescriptionProvider.UpdateTableSemanticDescriptionAsync(semanticModel, table).ConfigureAwait(false);
+        _logger.LogInformation("{Message} [{SchemaName}].[{TableName}]", _resourceManagerLogMessages.GetString("EnrichedTable"), schemaName, tableName);
+    }
+
+    private async Task EnrichViewAsync(SemanticModel semanticModel, string schemaName, string viewName)
+    {
+        var view = semanticModel.FindView(schemaName, viewName);
+        if (view == null)
+        {
+            _logger.LogError("{Message} [{SchemaName}].[{ViewName}]", _resourceManagerLogMessages.GetString("ViewNotFound"), schemaName, viewName);
+            return;
+        }
+
+        await _semanticDescriptionProvider.UpdateViewSemanticDescriptionAsync(semanticModel, view).ConfigureAwait(false);
+        _logger.LogInformation("{Message} [{SchemaName}].[{ViewName}]", _resourceManagerLogMessages.GetString("EnrichedView"), schemaName, viewName);
+    }
+
+    private async Task EnrichStoredProcedureAsync(SemanticModel semanticModel, string schemaName, string storedProcedureName)
+    {
+        var storedProcedure = semanticModel.FindStoredProcedure(schemaName, storedProcedureName);
+        if (storedProcedure == null)
+        {
+            _logger.LogError("{Message} [{SchemaName}].[{StoredProcedureName}]", _resourceManagerLogMessages.GetString("StoredProcedureNotFound"), schemaName, storedProcedureName);
+            return;
+        }
+
+        await _semanticDescriptionProvider.UpdateStoredProcedureSemanticDescriptionAsync(semanticModel, storedProcedure).ConfigureAwait(false);
+        _logger.LogInformation("{Message} [{SchemaName}].[{StoredProcedureName}]", _resourceManagerLogMessages.GetString("EnrichedStoredProcedure"), schemaName, storedProcedureName);
     }
 }

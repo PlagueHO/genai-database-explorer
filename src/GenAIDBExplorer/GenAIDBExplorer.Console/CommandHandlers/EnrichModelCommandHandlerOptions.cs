@@ -1,4 +1,4 @@
-namespace GenAIDBExplorer.Console.CommandHandlers;
+using GenAIDBExplorer.Console.CommandHandlers;
 
 /// <summary>
 /// Represents the options for the Enrich Model command handler.
@@ -11,16 +11,25 @@ namespace GenAIDBExplorer.Console.CommandHandlers;
 /// <param name="skipViews">Flag to skip views during the description generation process.</param>
 /// <param name="skipStoredProcedures">Flag to skip stored procedures during the description generation process.</param>
 /// <param name="singleModelFile">Flag to save the semantic model as a single file.</param>
+/// <param name="objectType">The type of the object to enrich (table, view, or storedprocedure).</param>
+/// <param name="schemaName">The schema name of the object to enrich.</param>
+/// <param name="objectName">The name of the object to enrich.</param>
 public class EnrichModelCommandHandlerOptions(
     DirectoryInfo projectPath,
     bool skipTables = false,
     bool skipViews = false,
     bool skipStoredProcedures = false,
-    bool singleModelFile = false
+    bool singleModelFile = false,
+    string? objectType = null,
+    string? schemaName = null,
+    string? objectName = null
 ) : CommandHandlerOptions(projectPath)
 {
     public bool SkipTables { get; } = skipTables;
     public bool SkipViews { get; } = skipViews;
     public bool SkipStoredProcedures { get; } = skipStoredProcedures;
     public bool SingleModelFile { get; } = singleModelFile;
+    public string? ObjectType { get; } = objectType;
+    public string? SchemaName { get; } = schemaName;
+    public string? ObjectName { get; } = objectName;
 }
