@@ -34,13 +34,18 @@ public class SemanticDescriptionProvider(
     /// Generates semantic descriptions for all tables using Semantic Kernel.
     /// </summary>
     /// <param name="semanticModel"></param>
-    /// <returns></returns>
-    public async Task UpdateTableSemanticDescriptionAsync(SemanticModel semanticModel)
+    /// <returns>A task that represents the asynchronous operation. The task result contains the semantic process summary.</returns>
+    public async Task<SemanticProcessSummary> UpdateTableSemanticDescriptionAsync(SemanticModel semanticModel)
     {
+        var processSummary = new SemanticProcessSummary();
+
         await Parallel.ForEachAsync(semanticModel.Tables, GetParallelismOptions(), async (table, cancellationToken) =>
         {
-            await UpdateTableSemanticDescriptionAsync(semanticModel, table).ConfigureAwait(false);
+            var stepSummary = await UpdateTableSemanticDescriptionAsync(semanticModel, table).ConfigureAwait(false);
+            processSummary.AddSummary(stepSummary);
         });
+
+        return processSummary;
     }
 
     /// <summary>
@@ -48,29 +53,37 @@ public class SemanticDescriptionProvider(
     /// </summary>
     /// <param name="semanticModel"></param>
     /// <param name="tables"></param>
-    /// <returns></returns>
-    public async Task UpdateTableSemanticDescriptionAsync(SemanticModel semanticModel, TableList tables)
+    /// <returns>A task that represents the asynchronous operation. The task result contains the semantic process summary.</returns>
+    public async Task<SemanticProcessSummary> UpdateTableSemanticDescriptionAsync(SemanticModel semanticModel, TableList tables)
     {
+        var processSummary = new SemanticProcessSummary();
+
         await Parallel.ForEachAsync(tables.Tables, GetParallelismOptions(), async (table, cancellationToken) =>
         {
             var semanticModelTable = semanticModel.Tables.FirstOrDefault(t => t.Schema == table.SchemaName && t.Name == table.TableName);
             if (semanticModelTable != null && string.IsNullOrEmpty(semanticModelTable.SemanticDescription))
             {
                 _logger.LogInformation("{Message} [{SchemaName}].[{TableName}]", _resourceManagerLogMessages.GetString("TableMissingSemanticDescription"), table.SchemaName, table.TableName);
-                await UpdateTableSemanticDescriptionAsync(semanticModel, semanticModelTable).ConfigureAwait(false);
+                var stepSummary = await UpdateTableSemanticDescriptionAsync(semanticModel, semanticModelTable).ConfigureAwait(false);
+                processSummary.AddSummary(stepSummary);
             }
         });
+
+        return processSummary;
     }
 
     /// <summary>
     /// Generates a semantic description for the specified table using Semantic Kernel.
     /// </summary>
     /// <param name="table">The semantic model table for which to generate the description.</param>
-    /// <returns></returns>
-    public async Task UpdateTableSemanticDescriptionAsync(SemanticModel semanticModel, SemanticModelTable table)
+    /// <returns>A task that represents the asynchronous operation. The task result contains the semantic process summary.</returns>
+    public async Task<SemanticProcessSummary> UpdateTableSemanticDescriptionAsync(SemanticModel semanticModel, SemanticModelTable table)
     {
+        var processSummary = new SemanticProcessSummary();
+
         using (_logger.BeginScope("Table [{Schema}.{Name}]", table.Name, table.Schema))
         {
+            var startTime = DateTime.UtcNow;
             _logger.LogInformation("{Message} [{SchemaName}].[{TableName}]", _resourceManagerLogMessages.GetString("GenerateSemanticDescriptionForTable"), table.Schema, table.Name);
 
             // Retrieve sample data for the table
@@ -97,10 +110,10 @@ public class SemanticDescriptionProvider(
             };
 
             var arguments = new KernelArguments(promptExecutionSettings)
-            {
-                { "table", tableInfo },
-                { "project", projectInfo }
-            };
+        {
+            { "table", tableInfo },
+            { "project", projectInfo }
+        };
 
             var semanticKernel = _semanticKernelFactory.CreateSemanticKernel();
             var promptyFilename = "semantic_model_describe_table.prompty";
@@ -116,7 +129,19 @@ public class SemanticDescriptionProvider(
             table.SetSemanticDescription(result.ToString());
 
             _logger.LogInformation("{Message} [{SchemaName}].[{TableName}]", _resourceManagerLogMessages.GetString("GeneratedSemanticDescriptionForTable"), table.Schema, table.Name);
+
+            // The time taken for the request calculated from the startTime as a TimeSpan object
+            var timeTaken = DateTime.UtcNow - startTime;
+
+            // Update process result
+            var usage = result.Metadata!["Usage"] as OpenAI.Chat.ChatTokenUsage;
+
+            var semanticResult = new SemanticProcessResult("ChatCompletion", 1, usage.InputTokenCount, usage.OutputTokenCount, timeTaken);
+
+            processSummary.AddResult(semanticResult);
         }
+
+        return processSummary;
     }
 
     /// <summary>
