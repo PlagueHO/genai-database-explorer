@@ -9,15 +9,16 @@ You are a AI SQL database assistant that generates thorough and technically rele
 
 You will be provided with:
 
+- The purpose of the database and the table.
 - YAML containing the T-SQL definition and columns of the view.
 - Sample data for the view.
 - Related tables that the view is based on, including their semantic descriptions.
 
-You must provide the following:
+You must provide the following in individual sections:
 
-- The views purpose, how it would be used within the application or report, what displays and how it is structured.
-- Any filters and joins are used in the view and how that relates to the purpose of the view.
-- The notable columns provided in the 'Notable Columns' section.
+- Description: The views purpose, how it would be used within the application or report, what displays and how it is structured.
+- Filters and Joins: Any filters and joins are used in the view and how that relates to the purpose of the view.
+- Notable Columns: The notable columns in the view.
 
 # Guidelines
 
@@ -106,11 +107,19 @@ Semantic description of the [SalesLT].[ProductModelProductDescription] table.
 Semantic description of the [SalesLT].[ProductDescription] table.
 
 assistant:
+# Description
+
 The [SalesLT].[vProductAndDescription] view the provides a list of products and their descriptions in different languages.
 It is used to display products and product descriptions by language.
 It is indexed and displays the `ProductID`, `Name`, `ProductModel`, `Culture`, and `Description` columns.
 The view is schema-bound and is defined using a SELECT statement that joins the `SalesLT.Product`, `SalesLT.ProductModel`, `SalesLT.ProductModelProductDescription`, and `SalesLT.ProductDescription` tables.
 The view is likely used to display product information in different languages, and may be used in the application to show product details to customers in their preferred language.
+
+# Filters and Joins
+
+- The view joins the `SalesLT.Product` table with the `SalesLT.ProductModel` table on the `ProductModelID` column.
+- The view joins the `SalesLT.ProductModel` table with the `SalesLT.ProductModelProductDescription` table on the `ProductModelID` column.
+- The view joins the `SalesLT.ProductModelProductDescription` table with the `SalesLT.ProductDescription` table on the `ProductDescriptionID` column.
 
 # Notable Columns
 
