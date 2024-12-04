@@ -34,49 +34,45 @@ public sealed class SemanticModel(
     /// Saves the semantic model to the specified folder.
     /// </summary>
     /// <param name="modelPath">The folder path where the model will be saved.</param>
-    /// <param name="splitModel">Flag to split the model into separate files.</param>
-    public async Task SaveModelAsync(DirectoryInfo modelPath, bool splitModel = false)
+    public async Task SaveModelAsync(DirectoryInfo modelPath)
     {
         JsonSerializerOptions jsonSerializerOptions = new() { WriteIndented = true };
 
         // Save the semantic model to a JSON file.
         Directory.CreateDirectory(modelPath.FullName);
 
-        if (splitModel)
+        // Save the tables to separate files in a subfolder called "tables".
+        var tablesFolderPath = new DirectoryInfo(Path.Combine(modelPath.FullName, "tables"));
+        Directory.CreateDirectory(tablesFolderPath.FullName);
+
+        foreach (var table in Tables)
         {
-            // Save the tables to separate files in a subfolder called "tables".
-            var tablesFolderPath = new DirectoryInfo(Path.Combine(modelPath.FullName, "tables"));
-            Directory.CreateDirectory(tablesFolderPath.FullName);
-
-            foreach (var table in Tables)
-            {
-                await table.SaveModelAsync(tablesFolderPath);
-            }
-
-            // Save the views to separate files in a subfolder called "views".
-            var viewsFolderPath = new DirectoryInfo(Path.Combine(modelPath.FullName, "views"));
-            Directory.CreateDirectory(viewsFolderPath.FullName);
-
-            foreach (var view in Views)
-            {
-                await view.SaveModelAsync(viewsFolderPath);
-            }
-
-            // Save the stored procedures to separate files in a subfolder called "storedprocedures".
-            var storedProceduresFolderPath = new DirectoryInfo(Path.Combine(modelPath.FullName, "storedprocedures"));
-            Directory.CreateDirectory(storedProceduresFolderPath.FullName);
-
-            foreach (var storedProcedure in StoredProcedures)
-            {
-                await storedProcedure.SaveModelAsync(storedProceduresFolderPath);
-            }
-
-            // Add custom converters for the tables, views, and stored procedures
-            // to only serialize the name, schema and relative path of the entity.
-            jsonSerializerOptions.Converters.Add(new SemanticModelTableJsonConverter());
-            jsonSerializerOptions.Converters.Add(new SemanticModelViewJsonConverter());
-            jsonSerializerOptions.Converters.Add(new SemanticModelStoredProcedureJsonConverter());
+            await table.SaveModelAsync(tablesFolderPath);
         }
+
+        // Save the views to separate files in a subfolder called "views".
+        var viewsFolderPath = new DirectoryInfo(Path.Combine(modelPath.FullName, "views"));
+        Directory.CreateDirectory(viewsFolderPath.FullName);
+
+        foreach (var view in Views)
+        {
+            await view.SaveModelAsync(viewsFolderPath);
+        }
+
+        // Save the stored procedures to separate files in a subfolder called "storedprocedures".
+        var storedProceduresFolderPath = new DirectoryInfo(Path.Combine(modelPath.FullName, "storedprocedures"));
+        Directory.CreateDirectory(storedProceduresFolderPath.FullName);
+
+        foreach (var storedProcedure in StoredProcedures)
+        {
+            await storedProcedure.SaveModelAsync(storedProceduresFolderPath);
+        }
+
+        // Add custom converters for the tables, views, and stored procedures
+        // to only serialize the name, schema and relative path of the entity.
+        jsonSerializerOptions.Converters.Add(new SemanticModelTableJsonConverter());
+        jsonSerializerOptions.Converters.Add(new SemanticModelViewJsonConverter());
+        jsonSerializerOptions.Converters.Add(new SemanticModelStoredProcedureJsonConverter());
 
         var semanticModelJsonPath = Path.Combine(modelPath.FullName, "semanticmodel.json");
         await File.WriteAllTextAsync(semanticModelJsonPath, JsonSerializer.Serialize(this, jsonSerializerOptions));

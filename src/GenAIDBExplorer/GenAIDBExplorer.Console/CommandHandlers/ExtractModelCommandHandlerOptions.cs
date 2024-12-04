@@ -14,12 +14,10 @@ public class ExtractModelCommandHandlerOptions(
     DirectoryInfo projectPath,
     bool skipTables = false,
     bool skipViews = false,
-    bool skipStoredProcedures = false,
-    bool singleModelFile = false
+    bool skipStoredProcedures = false
 ) : CommandHandlerOptions(projectPath)
 {
     public bool SkipTables { get; } = skipTables;
     public bool SkipViews { get; } = skipViews;
     public bool SkipStoredProcedures { get; } = skipStoredProcedures;
-    public bool SingleModelFile { get; } = singleModelFile;
 }

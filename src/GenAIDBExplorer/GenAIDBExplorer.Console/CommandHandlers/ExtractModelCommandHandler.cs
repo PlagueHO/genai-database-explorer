@@ -66,24 +66,17 @@ public class ExtractModelCommandHandler(
             getDefaultValue: () => false
         );
 
-        var singleModelFileOption = new Option<bool>(
-            aliases: ["--singleModelFile"],
-            description: "Flag to produce the model as a single file.",
-            getDefaultValue: () => false
-        );
-
         var extractModelCommand = new Command("extract-model", "Extract a semantic model from a SQL database for a GenAI Database Explorer project.");
         extractModelCommand.AddOption(projectPathOption);
         extractModelCommand.AddOption(skipTablesOption);
         extractModelCommand.AddOption(skipViewsOption);
         extractModelCommand.AddOption(skipStoredProceduresOption);
-        extractModelCommand.AddOption(singleModelFileOption);
-        extractModelCommand.SetHandler(async (DirectoryInfo projectPath, bool skipTables, bool skipViews, bool skipStoredProcedures, bool singleModelFile) =>
+        extractModelCommand.SetHandler(async (DirectoryInfo projectPath, bool skipTables, bool skipViews, bool skipStoredProcedures) =>
         {
             var handler = host.Services.GetRequiredService<ExtractModelCommandHandler>();
-            var options = new ExtractModelCommandHandlerOptions(projectPath, skipTables, skipViews, skipStoredProcedures, singleModelFile);
+            var options = new ExtractModelCommandHandlerOptions(projectPath, skipTables, skipViews, skipStoredProcedures);
             await handler.HandleAsync(options);
-        }, projectPathOption, skipTablesOption, skipViewsOption, skipStoredProceduresOption, singleModelFileOption);
+        }, projectPathOption, skipTablesOption, skipViewsOption, skipStoredProceduresOption);
 
         return extractModelCommand;
     }
@@ -113,7 +106,7 @@ public class ExtractModelCommandHandler(
         }
 
         _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("SavingSemanticModel"), semanticModelDirectory);
-        await semanticModel.SaveModelAsync(semanticModelDirectory, !commandOptions.SingleModelFile);
+        await semanticModel.SaveModelAsync(semanticModelDirectory);
 
         _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("ExtractSemanticModelComplete"), projectPath.FullName);
     }

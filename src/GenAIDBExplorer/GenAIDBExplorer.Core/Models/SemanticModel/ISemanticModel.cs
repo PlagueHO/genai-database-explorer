@@ -10,7 +10,7 @@ public interface ISemanticModel
     string Name { get; set; }
     string Source { get; set; }
     string? Description { get; set; }
-    Task SaveModelAsync(DirectoryInfo modelPath, bool splitModel = false);
+    Task SaveModelAsync(DirectoryInfo modelPath);
     Task<SemanticModel> LoadModelAsync(DirectoryInfo modelPath);
     List<SemanticModelTable> Tables { get; set; }
     void AddTable(SemanticModelTable table);

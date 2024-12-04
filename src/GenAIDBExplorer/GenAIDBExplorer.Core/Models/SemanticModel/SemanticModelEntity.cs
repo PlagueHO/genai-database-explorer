@@ -92,7 +92,7 @@ public abstract class SemanticModelEntity(
     }
 
     /// <summary>
-    /// Gets the filename of the model entity if the model is split.
+    /// Gets the filename of the model entity.
     /// </summary>
     /// <returns>The filename of the model entity.</returns>
     public FileInfo GetModelEntityFilename()
@@ -101,7 +101,7 @@ public abstract class SemanticModelEntity(
     }
 
     /// <summary>
-    /// Gets the path to the model entity if the model is split.
+    /// Gets the path to the model entity.
     /// </summary>
     /// <returns>The relative path to the model entity.</returns>
     public abstract DirectoryInfo GetModelPath();

@@ -65,12 +65,6 @@ public class EnrichModelCommandHandler(
             getDefaultValue: () => false
         );
 
-        var singleModelFileOption = new Option<bool>(
-            aliases: ["--singleModelFile"],
-            description: "Flag to save the semantic model as a single file.",
-            getDefaultValue: () => false
-        );
-
         var schemaNameOption = new Option<string>(
             aliases: ["--schema", "-s"],
             description: "The schema name of the object to enrich."
@@ -93,8 +87,7 @@ public class EnrichModelCommandHandler(
             projectPathOption,
             skipTablesOption,
             skipViewsOption,
-            skipStoredProceduresOption,
-            singleModelFileOption
+            skipStoredProceduresOption
         };
 
         // Create subcommands
@@ -102,10 +95,9 @@ public class EnrichModelCommandHandler(
         {
             projectPathOption,
             schemaNameOption,
-            nameOption,
-            singleModelFileOption
+            nameOption
         };
-        tableCommand.SetHandler(async (DirectoryInfo projectPath, string schemaName, string name, bool singleModelFile) =>
+        tableCommand.SetHandler(async (DirectoryInfo projectPath, string schemaName, string name) =>
         {
             var handler = host.Services.GetRequiredService<EnrichModelCommandHandler>();
             var options = new EnrichModelCommandHandlerOptions(
@@ -113,22 +105,20 @@ public class EnrichModelCommandHandler(
                 skipTables: false,
                 skipViews: true,
                 skipStoredProcedures: true,
-                singleModelFile,
                 objectType: "table",
                 schemaName,
                 objectName: name
             );
             await handler.HandleAsync(options);
-        }, projectPathOption, schemaNameOption, nameOption, singleModelFileOption);
+        }, projectPathOption, schemaNameOption, nameOption);
 
         var viewCommand = new Command("view", "Enrich a specific view.")
         {
             projectPathOption,
             schemaNameOption,
-            nameOption,
-            singleModelFileOption
+            nameOption
         };
-        viewCommand.SetHandler(async (DirectoryInfo projectPath, string schemaName, string name, bool singleModelFile) =>
+        viewCommand.SetHandler(async (DirectoryInfo projectPath, string schemaName, string name) =>
         {
             var handler = host.Services.GetRequiredService<EnrichModelCommandHandler>();
             var options = new EnrichModelCommandHandlerOptions(
@@ -136,22 +126,20 @@ public class EnrichModelCommandHandler(
                 skipTables: true,
                 skipViews: false,
                 skipStoredProcedures: true,
-                singleModelFile,
                 objectType: "view",
                 schemaName,
                 objectName: name
             );
             await handler.HandleAsync(options);
-        }, projectPathOption, schemaNameOption, nameOption, singleModelFileOption);
+        }, projectPathOption, schemaNameOption, nameOption);
 
         var storedProcedureCommand = new Command("storedprocedure", "Enrich a specific stored procedure.")
         {
             projectPathOption,
             schemaNameOption,
-            nameOption,
-            singleModelFileOption
+            nameOption
         };
-        storedProcedureCommand.SetHandler(async (DirectoryInfo projectPath, string schemaName, string name, bool singleModelFile) =>
+        storedProcedureCommand.SetHandler(async (DirectoryInfo projectPath, string schemaName, string name) =>
         {
             var handler = host.Services.GetRequiredService<EnrichModelCommandHandler>();
             var options = new EnrichModelCommandHandlerOptions(
@@ -159,13 +147,12 @@ public class EnrichModelCommandHandler(
                 skipTables: true,
                 skipViews: true,
                 skipStoredProcedures: false,
-                singleModelFile,
                 objectType: "storedprocedure",
                 schemaName,
                 objectName: name
             );
             await handler.HandleAsync(options);
-        }, projectPathOption, schemaNameOption, nameOption, singleModelFileOption);
+        }, projectPathOption, schemaNameOption, nameOption);
 
         // Add subcommands to the 'enrich-model' command
         enrichModelCommand.AddCommand(tableCommand);
@@ -173,12 +160,12 @@ public class EnrichModelCommandHandler(
         enrichModelCommand.AddCommand(storedProcedureCommand);
 
         // Set default handler if no subcommand is provided
-        enrichModelCommand.SetHandler(async (DirectoryInfo projectPath, bool skipTables, bool skipViews, bool skipStoredProcedures, bool singleModelFile) =>
+        enrichModelCommand.SetHandler(async (DirectoryInfo projectPath, bool skipTables, bool skipViews, bool skipStoredProcedures) =>
         {
             var handler = host.Services.GetRequiredService<EnrichModelCommandHandler>();
-            var options = new EnrichModelCommandHandlerOptions(projectPath, skipTables, skipViews, skipStoredProcedures, singleModelFile);
+            var options = new EnrichModelCommandHandlerOptions(projectPath, skipTables, skipViews, skipStoredProcedures);
             await handler.HandleAsync(options);
-        }, projectPathOption, skipTablesOption, skipViewsOption, skipStoredProceduresOption, singleModelFileOption);
+        }, projectPathOption, skipTablesOption, skipViewsOption, skipStoredProceduresOption);
 
         return enrichModelCommand;
     }
@@ -222,7 +209,7 @@ public class EnrichModelCommandHandler(
         // Save the semantic model
         _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("SavingSemanticModel"), projectPath.FullName);
         var semanticModelDirectory = GetSemanticModelDirectory(projectPath);
-        await semanticModel.SaveModelAsync(semanticModelDirectory, !commandOptions.SingleModelFile);
+        await semanticModel.SaveModelAsync(semanticModelDirectory);
         _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("SavedSemanticModel"), projectPath.FullName);
 
         _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("EnrichSemanticModelComplete"), projectPath.FullName);
