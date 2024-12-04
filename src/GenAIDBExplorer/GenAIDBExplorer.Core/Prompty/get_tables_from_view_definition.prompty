@@ -3,10 +3,12 @@ name: get_tables_from_view_definition
 description: Get a list of the tables used in a SQL view definition.
 model:
   api: chat
+  parameters:
+    temperature: 0.1
 ---
 system:
 You are a AI SQL database assistant that extracts a list of tables from a T-SQL view definition.
 
 user:
 # View Definition (T-SQL)
-{{view.definition}}
+{{entity.definition}}

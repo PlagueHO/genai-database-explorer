@@ -133,56 +133,20 @@ namespace GenAIDBExplorer.Core.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Completed generation of semantic description for stored procedure..
+        ///   Looks up a localized string similar to Completed generation of semantic description for entity..
         /// </summary>
-        internal static string GeneratedSemanticDescriptionForStoredProcedure {
+        internal static string GeneratedSemanticDescriptionForEntity {
             get {
-                return ResourceManager.GetString("GeneratedSemanticDescriptionForStoredProcedure", resourceCulture);
+                return ResourceManager.GetString("GeneratedSemanticDescriptionForEntity", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Completed generation of semantic description for table..
+        ///   Looks up a localized string similar to Generating semantic description for entity..
         /// </summary>
-        internal static string GeneratedSemanticDescriptionForTable {
+        internal static string GenerateSemanticDescriptionForEntity {
             get {
-                return ResourceManager.GetString("GeneratedSemanticDescriptionForTable", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Completed generation of semantic description for view..
-        /// </summary>
-        internal static string GeneratedSemanticDescriptionForView {
-            get {
-                return ResourceManager.GetString("GeneratedSemanticDescriptionForView", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Generating semantic description for stored procedure..
-        /// </summary>
-        internal static string GenerateSemanticDescriptionForStoredProcedure {
-            get {
-                return ResourceManager.GetString("GenerateSemanticDescriptionForStoredProcedure", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Generating semantic description for table..
-        /// </summary>
-        internal static string GenerateSemanticDescriptionForTable {
-            get {
-                return ResourceManager.GetString("GenerateSemanticDescriptionForTable", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Generating semantic description for view..
-        /// </summary>
-        internal static string GenerateSemanticDescriptionForView {
-            get {
-                return ResourceManager.GetString("GenerateSemanticDescriptionForView", resourceCulture);
+                return ResourceManager.GetString("GenerateSemanticDescriptionForEntity", resourceCulture);
             }
         }
         

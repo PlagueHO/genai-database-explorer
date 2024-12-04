@@ -144,23 +144,11 @@
   <data name="ConnectingSQLDatabase" xml:space="preserve">
     <value>Connecting to SQL database</value>
   </data>
-  <data name="GeneratedSemanticDescriptionForStoredProcedure" xml:space="preserve">
-    <value>Completed generation of semantic description for stored procedure.</value>
+  <data name="GeneratedSemanticDescriptionForEntity" xml:space="preserve">
+    <value>Completed generation of semantic description for entity.</value>
   </data>
-  <data name="GeneratedSemanticDescriptionForView" xml:space="preserve">
-    <value>Completed generation of semantic description for view.</value>
-  </data>
-  <data name="GenerateSemanticDescriptionForStoredProcedure" xml:space="preserve">
-    <value>Generating semantic description for stored procedure.</value>
-  </data>
-  <data name="GenerateSemanticDescriptionForTable" xml:space="preserve">
-    <value>Generating semantic description for table.</value>
-  </data>
-  <data name="GenerateSemanticDescriptionForView" xml:space="preserve">
-    <value>Generating semantic description for view.</value>
-  </data>
-  <data name="GeneratedSemanticDescriptionForTable" xml:space="preserve">
-    <value>Completed generation of semantic description for table.</value>
+  <data name="GenerateSemanticDescriptionForEntity" xml:space="preserve">
+    <value>Generating semantic description for entity.</value>
   </data>
   <data name="GetTableListFromViewDefinition" xml:space="preserve">
     <value>Getting list of tables from view definition.</value>

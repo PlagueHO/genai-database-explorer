@@ -14,7 +14,7 @@
     },
     "GenAIDBExplorer.Console enrich-model": {
       "commandName": "Project",
-      "commandLineArgs": "enrich-model \r\n-p d:\\temp --skipViews --skipStoredProcedures"
+      "commandLineArgs": "enrich-model table -p d:\\temp -s dbo -n tblFilmMarathon"
     },
     "GenAIDBExplorer.Console init-project": {
       "commandName": "Project",

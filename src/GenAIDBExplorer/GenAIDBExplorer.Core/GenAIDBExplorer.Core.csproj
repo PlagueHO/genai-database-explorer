@@ -66,19 +66,19 @@
     <None Update="DefaultProject\settings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Prompty\get_tables_from_stored_procedure_definition.prompty">
+    <None Update="Prompty\get_tables_from_storedprocedure_definition.prompty">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Prompty\semantic_model_describe_stored_procedure.prompty">
+    <None Update="Prompty\describe_semanticmodelstoredprocedure.prompty">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Prompty\get_tables_from_view_definition.prompty">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Prompty\semantic_model_describe_table.prompty">
+    <None Update="Prompty\describe_semanticmodeltable.prompty">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Prompty\semantic_model_describe_view.prompty">
+    <None Update="Prompty\describe_semanticmodelview.prompty">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

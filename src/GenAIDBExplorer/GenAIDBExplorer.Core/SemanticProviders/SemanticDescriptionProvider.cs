@@ -8,7 +8,6 @@ using Microsoft.SemanticKernel;
 using System.Resources;
 using System.Text.Json;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
-using DocumentFormat.OpenXml.Drawing;
 
 namespace GenAIDBExplorer.Core.SemanticProviders;
 
@@ -30,6 +29,128 @@ public class SemanticDescriptionProvider(
     private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Core.Resources.LogMessages", typeof(SemanticDescriptionProvider).Assembly);
 
     private const string _promptyFolder = "Prompty";
+
+    public async Task<SemanticProcessResult> UpdateSemanticDescriptionAsync<T>(
+        SemanticModel semanticModel,
+        IEnumerable<T> entities
+    ) where T : SemanticModelEntity
+    {
+        var processResult = new SemanticProcessResult();
+
+        await Parallel.ForEachAsync(entities, GetParallelismOptions(), async (entity, cancellationToken) =>
+        {
+            var result = await UpdateSemanticDescriptionAsync(semanticModel, entity).ConfigureAwait(false);
+            processResult.AddRange(result);
+        });
+
+        return processResult;
+    }
+
+    public async Task<SemanticProcessResult> UpdateSemanticDescriptionAsync(
+        SemanticModel semanticModel,
+        SemanticModelEntity entity
+    )
+    {
+        var startTime = DateTime.UtcNow;
+        var processResult = new SemanticProcessResult();
+        var entityType = entity.GetType().Name;
+        var scope = $"{entityType} [{entity.Schema}].[{entity.Name}]";
+
+        using (_logger.BeginScope(scope))
+        {
+            _logger.LogInformation(
+                "{Message}. {Type} [{Schema}].[{Name}]",
+                _resourceManagerLogMessages.GetString("GenerateSemanticDescriptionForEntity"),
+                entityType, entity.Schema, entity.Name);
+
+            // Fetch sample data based on entity type
+            List<Dictionary<string, object>> sampleData = [];
+            IEnumerable<SemanticModelTable> relatedTables = Enumerable.Empty<SemanticModelTable>();
+
+            switch (entity)
+            {
+                case SemanticModelTable table:
+                    sampleData = await _schemaRepository.GetSampleTableDataAsync(
+                        new TableInfo(table.Schema, table.Name));
+                    break;
+
+                case SemanticModelView view:
+                    // Fetch tables used in the view
+                    var vwtableList = await GetTableListFromViewDefinitionAsync(semanticModel, view);
+                    await UpdateTableSemanticDescriptionAsync(semanticModel, vwtableList);
+                    relatedTables = semanticModel.SelectTables(vwtableList);
+
+                    sampleData = await _schemaRepository.GetSampleViewDataAsync(
+                        new ViewInfo(view.Schema, view.Name));
+                    break;
+
+                case SemanticModelStoredProcedure storedProcedure:
+                    // Fetch tables used in the stored procedure
+                    var spTableList = await GetTableListFromStoredProcedureDefinitionAsync(semanticModel, storedProcedure);
+                    await UpdateTableSemanticDescriptionAsync(semanticModel, spTableList);
+                    relatedTables = semanticModel.SelectTables(spTableList);
+
+                    // Stored procedures may not have sample data, so we can skip sample data fetching
+                    break;
+            }
+
+            var sampleDataSerialized = SerializeSampleData(sampleData);
+
+            var projectInfo = new
+            {
+                description = _project.Settings.Database.Description
+            };
+
+            var entityInfo = new
+            {
+                structure = entity.ToYaml(),
+                data = sampleDataSerialized,
+                definition = (entity as SemanticModelStoredProcedure)?.Definition,
+                parameters = (entity as SemanticModelStoredProcedure)?.Parameters
+            };
+
+            var promptExecutionSettings = new PromptExecutionSettings
+            {
+#pragma warning disable SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+                ServiceId = "ChatCompletion"
+#pragma warning restore SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+            };
+
+            var arguments = new KernelArguments(promptExecutionSettings)
+            {
+                { "entity", entityInfo },
+                { "project", projectInfo }
+            };
+
+            if (relatedTables.Any())
+            {
+                arguments.Add("tables", relatedTables);
+            }
+
+            var promptyFilename = $"describe_{entityType.ToLower()}.prompty";
+            promptyFilename = Path.Combine(_promptyFolder, promptyFilename);
+
+            var semanticKernel = _semanticKernelFactory.CreateSemanticKernel();
+#pragma warning disable SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+            var function = semanticKernel.CreateFunctionFromPromptyFile(promptyFilename);
+#pragma warning restore SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+
+            var result = await semanticKernel.InvokeAsync(function, arguments);
+
+            entity.SetSemanticDescription(result.ToString());
+
+            var timeTaken = DateTime.UtcNow - startTime;
+            var usage = result.Metadata?["Usage"] as OpenAI.Chat.ChatTokenUsage;
+            processResult.Add(new SemanticProcessResultItem(scope, "ChatCompletion", usage, timeTaken));
+
+            _logger.LogInformation(
+                "{Message}. {Type} [{Schema}].[{Name}]", 
+                _resourceManagerLogMessages.GetString("GeneratedSemanticDescriptionForEntity"),
+                entityType, entity.Schema, entity.Name);
+        }
+
+        return processResult;
+    }
 
     /// <summary>
     /// Generates semantic descriptions for all tables using Semantic Kernel.
@@ -78,69 +199,12 @@ public class SemanticDescriptionProvider(
     /// </summary>
     /// <param name="table">The semantic model table for which to generate the description.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the semantic process summary.</returns>
-    public async Task<SemanticProcessResult> UpdateTableSemanticDescriptionAsync(SemanticModel semanticModel, SemanticModelTable table)
+    public async Task<SemanticProcessResult> UpdateTableSemanticDescriptionAsync(
+        SemanticModel semanticModel,
+        SemanticModelTable table
+    )
     {
-        var startTime = DateTime.UtcNow;
-        var processResult = new SemanticProcessResult();
-        var scope = $"Table [{table.Name}].[{table.Schema}]";
-
-        using (_logger.BeginScope(scope, table.Name, table.Schema))
-        {
-            _logger.LogInformation("{Message} [{SchemaName}].[{TableName}]", _resourceManagerLogMessages.GetString("GenerateSemanticDescriptionForTable"), table.Schema, table.Name);
-
-            // Retrieve sample data for the table
-            var sampleData = await _schemaRepository.GetSampleTableDataAsync(
-                new TableInfo(table.Schema, table.Name)
-            );
-            var sampleDataSerialized = SerializeSampleData(sampleData);
-
-            var projectInfo = new
-            {
-                description = _project.Settings.Database.Description
-            };
-            var tableInfo = new
-            {
-                structure = table.ToYaml(),
-                data = sampleDataSerialized
-            };
-
-            var promptExecutionSettings = new PromptExecutionSettings
-            {
-#pragma warning disable SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-                ServiceId = "ChatCompletion"
-#pragma warning restore SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-            };
-
-            var arguments = new KernelArguments(promptExecutionSettings)
-        {
-            { "table", tableInfo },
-            { "project", projectInfo }
-        };
-
-            var semanticKernel = _semanticKernelFactory.CreateSemanticKernel();
-            var promptyFilename = "semantic_model_describe_table.prompty";
-            promptyFilename = System.IO.Path.Combine(_promptyFolder, promptyFilename);
-
-#pragma warning disable SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-            var function = semanticKernel.CreateFunctionFromPromptyFile(promptyFilename);
-#pragma warning restore SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-
-            // Invoke the semantic kernel function to generate the description
-            var result = await semanticKernel.InvokeAsync(function, arguments);
-
-            table.SetSemanticDescription(result.ToString());
-
-            // The time taken for the request calculated from the startTime as a TimeSpan object
-            var timeTaken = DateTime.UtcNow - startTime;
-
-            // Add the process result
-            var usage = result.Metadata!["Usage"] as OpenAI.Chat.ChatTokenUsage;
-            processResult.Add(new SemanticProcessResultItem(scope, "ChatCompletion", usage, timeTaken));
-
-            _logger.LogInformation("{Message} [{SchemaName}].[{TableName}]", _resourceManagerLogMessages.GetString("GeneratedSemanticDescriptionForTable"), table.Schema, table.Name);
-        }
-
-        return processResult;
+        return await UpdateSemanticDescriptionAsync(semanticModel, table);
     }
 
     /// <summary>
@@ -189,77 +253,12 @@ public class SemanticDescriptionProvider(
     /// Generates a semantic description for the specified view using Semantic Kernel.
     /// </summary>
     /// <param name="view">The semantic model view for which to generate the description.</param>
-    public async Task<SemanticProcessResult> UpdateViewSemanticDescriptionAsync(SemanticModel semanticModel, SemanticModelView view)
+    public async Task<SemanticProcessResult> UpdateViewSemanticDescriptionAsync(
+        SemanticModel semanticModel,
+        SemanticModelView view
+    )
     {
-        var startTime = DateTime.UtcNow;
-        var processResult = new SemanticProcessResult();
-        var scope = $"View [{view.Name}].[{view.Schema}]";
-
-        using (_logger.BeginScope(scope, view.Name, view.Schema))
-        {
-            _logger.LogInformation("{Message} [{SchemaName}].[{ViewName}]", _resourceManagerLogMessages.GetString("GenerateSemanticDescriptionForView"), view.Schema, view.Name);
-
-            // First get the list of tables used in the view definition
-            var tableList = await GetTableListFromViewDefinitionAsync(semanticModel, view);
-
-            // Update the semantic descriptions for the tables used in the view
-            await UpdateTableSemanticDescriptionAsync(semanticModel, tableList);
-
-            // Select the tables from the semantic model
-            var tables = semanticModel.SelectTables(tableList);
-
-            // Retrieve sample data for the view
-            var sampleData = await _schemaRepository.GetSampleViewDataAsync(new ViewInfo(view.Schema, view.Name));
-            var sampleDataSerialized = SerializeSampleData(sampleData);
-
-            var projectInfo = new
-            {
-                description = _project.Settings.Database.Description
-            };
-            var viewInfo = new
-            {
-                structure = view.ToYaml(),
-                data = sampleDataSerialized
-            };
-
-            var promptExecutionSettings = new PromptExecutionSettings
-            {
-#pragma warning disable SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-                ServiceId = "ChatCompletion"
-#pragma warning restore SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-            };
-
-            var arguments = new KernelArguments(promptExecutionSettings)
-            {
-                { "view", viewInfo },
-                { "tables", tables },
-                { "project", projectInfo }
-            };
-
-            var promptyFilename = "semantic_model_describe_view.prompty";
-            promptyFilename = System.IO.Path.Combine(_promptyFolder, promptyFilename);
-            var semanticKernel = _semanticKernelFactory.CreateSemanticKernel();
-
-#pragma warning disable SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-            var function = semanticKernel.CreateFunctionFromPromptyFile(promptyFilename);
-#pragma warning restore SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-
-            // Invoke the semantic kernel function to generate the description
-            var result = await semanticKernel.InvokeAsync(function, arguments);
-
-            view.SetSemanticDescription(result.ToString());
-
-            // The time taken for the request calculated from the startTime as a TimeSpan object
-            var timeTaken = DateTime.UtcNow - startTime;
-
-            // Add the process result
-            var usage = result.Metadata!["Usage"] as OpenAI.Chat.ChatTokenUsage;
-            processResult.Add(new SemanticProcessResultItem(scope, "ChatCompletion", usage, timeTaken));
-
-            _logger.LogInformation("{Message} [{SchemaName}].[{ViewName}]", _resourceManagerLogMessages.GetString("GeneratedSemanticDescriptionForView"), view.Schema, view.Name);
-        }
-
-        return processResult;
+        return await UpdateSemanticDescriptionAsync(semanticModel, view);
     }
 
     /// <summary>
@@ -308,73 +307,12 @@ public class SemanticDescriptionProvider(
     /// Generates a semantic description for the specified stored procedure using Semantic Kernel.
     /// </summary>
     /// <param name="storedProcedure">The semantic model stored procedure for which to generate the description.</param>
-    public async Task<SemanticProcessResult> UpdateStoredProcedureSemanticDescriptionAsync(SemanticModel semanticModel, SemanticModelStoredProcedure storedProcedure)
+    public async Task<SemanticProcessResult> UpdateStoredProcedureSemanticDescriptionAsync(
+        SemanticModel semanticModel,
+        SemanticModelStoredProcedure storedProcedure
+    )
     {
-        var startTime = DateTime.UtcNow;
-        var processResult = new SemanticProcessResult();
-        var scope = $"Table [{storedProcedure.Name}].[{storedProcedure.Schema}]";
-
-        using (_logger.BeginScope(scope, storedProcedure.Name, storedProcedure.Schema))
-        {
-            _logger.LogInformation("{Message} [{SchemaName}].[{StoredProcedureName}]", _resourceManagerLogMessages.GetString("GenerateSemanticDescriptionForStoredProcedure"), storedProcedure.Schema, storedProcedure.Name);
-
-            // First get the list of tables used in the stored procedure
-            var tableList = await GetTableListFromStoredProcedureDefinitionAsync(semanticModel, storedProcedure);
-
-            // Update the semantic descriptions for the tables used in the stored procedure
-            await UpdateTableSemanticDescriptionAsync(semanticModel, tableList);
-
-            // Select the tables from the semantic model
-            var tables = semanticModel.SelectTables(tableList);
-
-            var promptyFilename = "semantic_model_describe_stored_procedure.prompty";
-            promptyFilename = System.IO.Path.Combine(_promptyFolder, promptyFilename);
-            var semanticKernel = _semanticKernelFactory.CreateSemanticKernel();
-
-            var projectInfo = new
-            {
-                description = _project.Settings.Database.Description
-            };
-            var storedProcedureInfo = new
-            {
-                definition = storedProcedure.Definition,
-                parameters = storedProcedure.Parameters
-            };
-
-            var promptExecutionSettings = new PromptExecutionSettings
-            {
-#pragma warning disable SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-                ServiceId = "ChatCompletion"
-#pragma warning restore SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-            };
-
-            var arguments = new KernelArguments(promptExecutionSettings)
-        {
-            { "storedProcedure", storedProcedureInfo },
-            { "tables", tables },
-            { "project", projectInfo }
-        };
-
-#pragma warning disable SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-            var function = semanticKernel.CreateFunctionFromPromptyFile(promptyFilename);
-#pragma warning restore SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-
-            // Invoke the semantic kernel function to generate the description
-            var result = await semanticKernel.InvokeAsync(function, arguments);
-
-            storedProcedure.SetSemanticDescription(result.ToString());
-
-            // The time taken for the request calculated from the startTime as a TimeSpan object
-            var timeTaken = DateTime.UtcNow - startTime;
-
-            // Add the process result
-            var usage = result.Metadata!["Usage"] as OpenAI.Chat.ChatTokenUsage;
-            processResult.Add(new SemanticProcessResultItem(scope, "ChatCompletion", usage, timeTaken));
-
-            _logger.LogInformation("{Message} [{SchemaName}].[{StoredProcedureName}]", _resourceManagerLogMessages.GetString("GeneratedSemanticDescriptionForStoredProcedure"), storedProcedure.Schema, storedProcedure.Name);
-        }
-
-        return processResult;
+        return await UpdateSemanticDescriptionAsync(semanticModel, storedProcedure);
     }
 
     /// <summary>
@@ -411,7 +349,7 @@ public class SemanticDescriptionProvider(
         };
         var arguments = new KernelArguments(promptExecutionSettings)
         {
-            { "view", viewInfo }
+            { "entity", viewInfo }
         };
 
         var result = await semanticKernel.InvokeAsync(function, arguments);
@@ -441,7 +379,7 @@ public class SemanticDescriptionProvider(
     {
         _logger.LogInformation("{Message} [{SchemaName}].[{ViewName}]", _resourceManagerLogMessages.GetString("GetTableListFromStoredProcedureDefinition"), storedProcedure.Schema, storedProcedure.Name);
 
-        var promptyFilename = "get_tables_from_stored_procedure_definition.prompty";
+        var promptyFilename = "get_tables_from_storedprocedure_definition.prompty";
         promptyFilename = System.IO.Path.Combine(_promptyFolder, promptyFilename);
         var semanticKernel = _semanticKernelFactory.CreateSemanticKernel();
 
@@ -464,9 +402,9 @@ public class SemanticDescriptionProvider(
             definition = storedProcedure.Definition
         };
         var arguments = new KernelArguments(promptExecutionSettings)
-            {
-                { "storedProcedure", storedProcedureInfo }
-            };
+        {
+            { "entity", storedProcedureInfo }
+        };
 
         var result = await semanticKernel.InvokeAsync(function, arguments);
         var resultString = result?.ToString();
