@@ -148,7 +148,8 @@ public class EnrichModelCommandHandler(
         {
             projectPathOption,
             schemaNameOption,
-            nameOption
+            nameOption,
+            showOption
         };
         storedProcedureCommand.SetHandler(async (DirectoryInfo projectPath, string schemaName, string name, bool show) =>
         {
