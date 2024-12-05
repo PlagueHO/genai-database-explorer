@@ -81,6 +81,13 @@ public class EnrichModelCommandHandler(
             ArgumentHelpName = "name"
         };
 
+        var showOption = new Option<bool>(
+            aliases: ["--show"],
+            description: "Display the entity after enrichment.",
+            getDefaultValue: () => false
+        );
+
+
         // Create the base 'enrich-model' command
         var enrichModelCommand = new Command("enrich-model", "Enrich an existing semantic model with descriptions in a GenAI Database Explorer project.")
         {
@@ -95,9 +102,10 @@ public class EnrichModelCommandHandler(
         {
             projectPathOption,
             schemaNameOption,
-            nameOption
+            nameOption,
+            showOption
         };
-        tableCommand.SetHandler(async (DirectoryInfo projectPath, string schemaName, string name) =>
+        tableCommand.SetHandler(async (DirectoryInfo projectPath, string schemaName, string name, bool show) =>
         {
             var handler = host.Services.GetRequiredService<EnrichModelCommandHandler>();
             var options = new EnrichModelCommandHandlerOptions(
@@ -107,18 +115,20 @@ public class EnrichModelCommandHandler(
                 skipStoredProcedures: true,
                 objectType: "table",
                 schemaName,
-                objectName: name
+                objectName: name,
+                show: show
             );
             await handler.HandleAsync(options);
-        }, projectPathOption, schemaNameOption, nameOption);
+        }, projectPathOption, schemaNameOption, nameOption, showOption);
 
         var viewCommand = new Command("view", "Enrich a specific view.")
         {
             projectPathOption,
             schemaNameOption,
-            nameOption
+            nameOption,
+            showOption
         };
-        viewCommand.SetHandler(async (DirectoryInfo projectPath, string schemaName, string name) =>
+        viewCommand.SetHandler(async (DirectoryInfo projectPath, string schemaName, string name, bool show) =>
         {
             var handler = host.Services.GetRequiredService<EnrichModelCommandHandler>();
             var options = new EnrichModelCommandHandlerOptions(
@@ -128,10 +138,11 @@ public class EnrichModelCommandHandler(
                 skipStoredProcedures: true,
                 objectType: "view",
                 schemaName,
-                objectName: name
+                objectName: name,
+                show: show
             );
             await handler.HandleAsync(options);
-        }, projectPathOption, schemaNameOption, nameOption);
+        }, projectPathOption, schemaNameOption, nameOption, showOption);
 
         var storedProcedureCommand = new Command("storedprocedure", "Enrich a specific stored procedure.")
         {
@@ -139,7 +150,7 @@ public class EnrichModelCommandHandler(
             schemaNameOption,
             nameOption
         };
-        storedProcedureCommand.SetHandler(async (DirectoryInfo projectPath, string schemaName, string name) =>
+        storedProcedureCommand.SetHandler(async (DirectoryInfo projectPath, string schemaName, string name, bool show) =>
         {
             var handler = host.Services.GetRequiredService<EnrichModelCommandHandler>();
             var options = new EnrichModelCommandHandlerOptions(
@@ -149,10 +160,11 @@ public class EnrichModelCommandHandler(
                 skipStoredProcedures: false,
                 objectType: "storedprocedure",
                 schemaName,
-                objectName: name
+                objectName: name,
+                show: show
             );
             await handler.HandleAsync(options);
-        }, projectPathOption, schemaNameOption, nameOption);
+        }, projectPathOption, schemaNameOption, nameOption, showOption);
 
         // Add subcommands to the 'enrich-model' command
         enrichModelCommand.AddCommand(tableCommand);
@@ -188,12 +200,24 @@ public class EnrichModelCommandHandler(
             {
                 case "table":
                     await EnrichTableAsync(semanticModel, commandOptions.SchemaName, commandOptions.ObjectName);
+                    if (commandOptions.Show)
+                    {
+                        await ShowTableDetailsAsync(semanticModel, commandOptions.SchemaName, commandOptions.ObjectName);
+                    }
                     break;
                 case "view":
                     await EnrichViewAsync(semanticModel, commandOptions.SchemaName, commandOptions.ObjectName);
+                    if (commandOptions.Show)
+                    {
+                        await ShowViewDetailsAsync(semanticModel, commandOptions.SchemaName, commandOptions.ObjectName);
+                    }
                     break;
                 case "storedprocedure":
                     await EnrichStoredProcedureAsync(semanticModel, commandOptions.SchemaName, commandOptions.ObjectName);
+                    if (commandOptions.Show)
+                    {
+                        await ShowStoredProcedureDetailsAsync(semanticModel, commandOptions.SchemaName, commandOptions.ObjectName);
+                    }
                     break;
                 default:
                     _logger.LogError("{Message}", _resourceManagerLogMessages.GetString("InvalidObjectType"));

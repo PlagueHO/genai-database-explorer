@@ -23,30 +23,141 @@ You must complete each of the sections on the stored procedure:
 - Logic: The logic and operations performed.
 - Bugs: Identify any logic bugs or security problems.
 
-# Guidelines
+# Important Instructions
 
 - The description should be clear, concise, and technically relevant.
 - Do not speculate or make up information.
 - Do not use any information that is not provided except in the case of standard system SQL Stored Procedures or Views.
-- If the description can't be generated because missing information, say "Unable to generate description".
- 
+- If the description can't be generated because missing information, say "Unable to generate description because ..." and say why.
+- Entity names must be in the format [Schema].[TableName].
+- Column names must be enclosed in backticks (`) to differentiate them from other text.
+
 user:
 # Database Purpose
 Product, sales, and customer data for the CRM application used by the AdventureWorks company.
 
 # Stored Procedure Definition (T-SQL)
+CREATE PROCEDURE [SalesLT].[GetCustomerAddresses]
+    @CustomerID INT = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        c.CustomerID,
+        c.FirstName,
+        c.MiddleName,
+        c.LastName,
+        c.CompanyName,
+        c.EmailAddress,
+        c.Phone,
+        ca.AddressType,
+        a.AddressLine1,
+        a.AddressLine2,
+        a.City,
+        a.StateProvince,
+        a.CountryRegion,
+        a.PostalCode
+    FROM 
+        [SalesLT].[Customer] c
+    INNER JOIN 
+        [SalesLT].[CustomerAddress] ca ON c.CustomerID = ca.CustomerID
+    INNER JOIN 
+        [SalesLT].[Address] a ON ca.AddressID = a.AddressID
+    WHERE 
+        (@CustomerID IS NULL AND c.CustomerID = @CustomerID)
+    ORDER BY 
+        c.CustomerID, ca.AddressType;
+
+    SET NOCOUNT OFF;
+END
 
 # Stored Procedure Parameters
+@CustomerID INT
 
 # Used Tables
+### Table SalesLT.Address
 
-## Table [SalesLT].[Address]
-Address information for customers.
-## Table [SalesLT].[Customer]
-Customer information for the CRM application.
+#### Description
+The [SalesLT].[Address] table is used to store physical address information for different entities, such as customers and locations, within the AdventureWorks CRM application. This table provides structure to hold complete address details which include street, city, state or province, and country/region information essential for shipping, billing, and contact purposes. Each record is uniquely identified by the `AddressID`, which is an identity column, auto-incremented to generate unique values for new entries. The table supports potential usage in various application modules or reports that require geographical or locational data, like shipment tracking, demographic analysis, and other location-based analyses.
+
+#### Notable Columns
+- `AddressID`: This is the primary key column, uniquely identifying each address record. It is of type `int` and is set as an identity column, ensuring automatic sequential generation of IDs upon insertion of new records.
+- `AddressLine1`: Contains the primary address line, such as a street address or P.O. Box number. It is an `nvarchar` type with a maximum length of 120 characters.
+- `AddressLine2`: Stores the secondary address line information, like an apartment or suite number. This field is `nullable` and is of the `nvarchar` type with a maximum length of 120 characters.
+- `City`: Captures the city information where the address is located. It is an `nvarchar` type with a constraint of 60 characters maximum length.
+- `StateProvince`: Holds the state or province information. This is important for regional categorization and mail routing, stored as an `nvarchar` type with a maximum length of 100 characters.
+- `CountryRegion`: Specifies the country or region pertaining to the address. It is an `nvarchar` type with a 100-character limit.
+- `PostalCode`: Stores postal or ZIP codes for the address, aiding institutions such as mail services in locating the delivery area. This is an `nvarchar` with a maximum length of 30 characters.
+- `ModifiedDate`: Reflects the date and time when the record was last updated, important for auditing and tracking changes. This field is of type `datetime`.
+- `rowguid`: Contains a globally unique identifier for each row, used in scenarios where unique identification across distributed systems is required. This field has a unique non-clustered index for ensuring its uniqueness across the database.
+
+#### Referenced Tables
+This table does not have any direct foreign key relationships with other tables in the database as per the provided structure. Therefore, any relationships involving address data are maintained externally, likely through join operations in queries with tables like `CustomerAddress`.
+
+### Table SalesLT.Customer
+
+#### Description
+The [SalesLT].[Customer] table is an essential part of the AdventureWorks CRM database, storing detailed information about each customer. This includes personal details, company affiliation, contact information, and authentication data (such as password hashes and salts). This table is crucial for customer management, providing authentication and personalization features of the CRM application. The information is likely used for customer identification, sales tracking, and targeted marketing campaigns. It includes an identity column `CustomerID` to uniquely identify each customer.
+
+#### Notable Columns
+- `CustomerID`: An identity integer column that serves as the primary key for the table, uniquely identifying each customer.
+- `FirstName`, `MiddleName`, `LastName`: The customer's name components. `MiddleName` is nullable, allowing for customers without a middle name.
+- `CompanyName`: Represents the company with which the customer is associated. This column is nullable, suggesting that not all customers have a company affiliation.
+- `EmailAddress`: Stores the customer's email address, with a non-clustered index, indicating frequent query filtering or lookups based on email.
+- `Phone`: The customer's phone number, stored as a nullable nvarchar with a maximum length of 50.
+- `SalesPerson`: Identifies which salesperson is associated with the customer, stored as an nvarchar.
+- `PasswordHash`, `PasswordSalt`: Security fields used for storing the hashed password and its corresponding salt for authentication purposes.
+- `NameStyle`: A bit field indicating whether the name is stored in a particular format or style (e.g., Western or Eastern name order).
+- `Title`: Includes any prefixes to the customer's name, such as 'Mr.' or 'Ms.', and is nullable.
+- `Suffix`: Stores suffixes to the name, such as 'Jr.' or 'Sr.', and is nullable.
+- `ModifiedDate`: A datetime indicating when the record was last updated, supporting data integrity and audit trails.
+- `rowguid`: A uniqueidentifier used to uniquely identify each row for operations requiring a globally unique identifier.
+
+#### Referenced Tables
+No direct references to other tables are indicated, as the purpose of this table is to consolidate customer-specific information within the CRM system.
+
+### Table SalesLT.CustomerAddress
+
+#### Description
+The [SalesLT].[CustomerAddress] table establishes a mapping between customers and their respective addresses. It serves a pivotal role in the AdventureWorks CRM by representing the various types of addresses (e.g., main office) associated with a customer, which is crucial for communications, billing, shipping processes, and customer management. By linking each customer to one or more addresses, it facilitates accurate and efficient customer interactions and transaction operations.
+
+#### Notable Columns
+- `CustomerID`: Serves as part of the composite primary key and a foreign key referencing the `CustomerID` in the [SalesLT].[Customer] table. It identifies the customer associated with the address.
+- `AddressID`: Also a part of the composite primary key and a foreign key referencing the `AddressID` in the [SalesLT].[Address] table. It indicates the specific address associated with the customer.
+- `AddressType`: A descriptive column illustrating the category of the address (e.g., 'Main Office'). It is a nvarchar field allowing up to 100 characters.
+- `ModifiedDate`: Records the date and time when the record was last updated, aiding in tracking data changes over time. This is stored as a datetime field.
+- `rowguid`: A system-generated unique identifier (GUID) for each row, ensured to be unique by the non-clustered unique index.
+
+#### Referenced Tables
+- [SalesLT].[Customer]: The `CustomerID` column references this table, linking each address record to a specific customer.
+- [SalesLT].[Address]: The `AddressID` column references this table, associating each customer with their address details.
 
 assistant:
+### Stored Procedure [SalesLT].[GetCustomerAddresses]
 
+#### Description
+The `[SalesLT].[GetCustomerAddresses]` stored procedure retrieves customer address information based on the provided `@CustomerID` parameter. It is designed to return a list of customers along with their associated addresses, including details such as the customer's name, contact information, and address specifics. The procedure is structured to filter the results based on the input `@CustomerID` parameter, allowing for targeted address retrieval for a specific customer. The output is ordered by `CustomerID` and `AddressType`, providing a structured view of customer-address relationships.
+
+#### Parameters
+- `@CustomerID`: An integer parameter that filters the results based on the provided customer ID. If `@CustomerID` is `NULL`, the procedure retrieves address information for all customers. When a specific `@CustomerID` is provided, the procedure fetches address details for the corresponding customer.
+
+#### Used Tables
+- [SalesLT].[Customer]: Provides customer-specific details such as name, contact information, and company affiliation. The procedure joins this table to associate customers with their addresses.
+- [SalesLT].[CustomerAddress]: Establishes the relationship between customers and addresses, allowing the procedure to link customers to their address types.
+
+#### Logic
+1. The procedure begins by setting `NOCOUNT` to `ON` to suppress the "n rows affected" message.
+2. It selects columns from the `[SalesLT].[Customer]` table, `[SalesLT].[CustomerAddress]` table, and `[SalesLT].[Address]` table to retrieve customer and address information.
+3. The procedure performs an inner join between `[SalesLT].[Customer]` and `[SalesLT].[CustomerAddress]` on the `CustomerID` column to associate customers with their addresses.
+4. It further joins the `[SalesLT].[CustomerAddress]` table with the `[SalesLT].[Address]` table based on the `AddressID` to fetch detailed address information.
+5. The `WHERE` clause filters the results based on the provided `@CustomerID` parameter, ensuring that only the address information for the specified customer is returned.
+6. The output is ordered by `CustomerID` and `AddressType` to present the results in a structured manner.
+
+#### Bugs
+- Logic Bug: The WHERE clause contains a condition (@CustomerID IS NULL AND c.CustomerID = @CustomerID), which will always evaluate to FALSE when @CustomerID is NULL. This means that no rows will be returned if @CustomerID is NULL. The correct condition should be (@CustomerID IS NULL OR c.CustomerID = @CustomerID) to handle both cases where @CustomerID is NULL or a specific value.
+- Security Issue: The procedure does not implement any form of input validation or sanitization for the @CustomerID parameter. Although SQL Server handles parameterized queries securely, it is a good practice to validate input parameters to ensure they meet expected formats and ranges.
+- Performance Issue: The procedure does not include any indexes on the CustomerID and AddressID columns in the WHERE and JOIN clauses. Adding appropriate indexes can improve the performance of the query, especially when dealing with large datasets.
 
 user:
 # Database Purpose

@@ -22,13 +22,15 @@ You must provide the following in individual sections:
 - Filters and Joins: Any filters and joins are used in the view and how that relates to the purpose of the view.
 - Notable Columns: The notable columns in the view.
 
-# Guidelines
+# Important Instructions
 
 - The description should be clear, concise, and technically relevant.
 - Do not use decorative language or marketing jargon.
-- If the description can't be generated because missing information, say "Unable to generate description".
+- If the description can't be generated because missing information, say "Unable to generate description because ..." and say why.
 - If a view or column has IsIgnore set to true, do not consider it when creating the description.
 - If there is no sample data, still generate a description based on the view structure, but note that there is no sample data.
+- Entity names must be in the format [Schema].[TableName].
+- Column names must be enclosed in backticks (`) to differentiate them from other text.
 
 user:
 # Database Containing View
@@ -96,35 +98,34 @@ name: vProductAndDescription
 
 # Related Tables
 
-## Table [SalesLT].[Product]
+### Table [SalesLT].[Product]
 Semantic description of the [SalesLT].[Product] table.
 
-## Table [SalesLT].[ProductModel]
+### Table [SalesLT].[ProductModel]
 Semantic description of the [SalesLT].[ProductModel] table.
 
-## Table [SalesLT].[ProductModelProductDescription]
+### Table [SalesLT].[ProductModelProductDescription]
 Semantic description of the [SalesLT].[ProductModelProductDescription] table.
 
-## Table [SalesLT].[ProductDescription]
+### Table [SalesLT].[ProductDescription]
 Semantic description of the [SalesLT].[ProductDescription] table.
 
 assistant:
-# Description
+### View [SalesLT].[vProductAndDescription]
 
+#### Description
 The [SalesLT].[vProductAndDescription] view the provides a list of products and their descriptions in different languages.
 It is used to display products and product descriptions by language.
 It is indexed and displays the `ProductID`, `Name`, `ProductModel`, `Culture`, and `Description` columns.
 The view is schema-bound and is defined using a SELECT statement that joins the `SalesLT.Product`, `SalesLT.ProductModel`, `SalesLT.ProductModelProductDescription`, and `SalesLT.ProductDescription` tables.
 The view is likely used to display product information in different languages, and may be used in the application to show product details to customers in their preferred language.
 
-# Filters and Joins
-
+#### Filters and Joins
 - The view joins the `SalesLT.Product` table with the `SalesLT.ProductModel` table on the `ProductModelID` column.
 - The view joins the `SalesLT.ProductModel` table with the `SalesLT.ProductModelProductDescription` table on the `ProductModelID` column.
 - The view joins the `SalesLT.ProductModelProductDescription` table with the `SalesLT.ProductDescription` table on the `ProductDescriptionID` column.
 
-# Notable Columns
-
+#### Notable Columns
 - `ProductID` is the unique identifier for the product.
 - `Name` is the name of the product.
 - `ProductModel` is the model of the product.
@@ -142,7 +143,8 @@ user:
 {{entity.data}}
 
 # Related Tables
+
 {% for table in tables %}
-## Table [{{table.schema}}].[{{table.name}}]
+### Table [{{table.schema}}].[{{table.name}}]
 {{table.semanticdescription}}
 {% endfor %}

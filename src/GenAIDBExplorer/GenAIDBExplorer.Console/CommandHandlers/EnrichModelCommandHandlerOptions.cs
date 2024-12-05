@@ -20,7 +20,8 @@ public class EnrichModelCommandHandlerOptions(
     bool skipStoredProcedures = false,
     string? objectType = null,
     string? schemaName = null,
-    string? objectName = null
+    string? objectName = null,
+    bool show = false
 ) : CommandHandlerOptions(projectPath)
 {
     public bool SkipTables { get; } = skipTables;
@@ -29,4 +30,5 @@ public class EnrichModelCommandHandlerOptions(
     public string? ObjectType { get; } = objectType;
     public string? SchemaName { get; } = schemaName;
     public string? ObjectName { get; } = objectName;
+    public bool Show { get; } = show;
 }

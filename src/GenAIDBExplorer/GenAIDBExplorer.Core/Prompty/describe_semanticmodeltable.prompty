@@ -20,12 +20,16 @@ You must provide the following in individual sections:
 - Description: Purpose of the table, how it would be used within the application or report. If the purpose of the table is not completely clear, provide a general description based on the columns and sample data.
 - Parameters: Input parameters to the stored procedure and how they are used by the stored procedure.
 - Notable Columns: The notable columns in the table and the specifics of the data they contain with examples where appropriate.
+- Referenced Tables: The tables that are referenced by columns in table. Only include tables that are directly referenced by columns.
 
-# Guidelines
+# Important Instructions
 
-- If description can't be generated because missing information, say "Unable to generate description".
+- If description can't be generated because missing information, say "Unable to generate description because ..." and say why.
 - If a table, column or index has IsIgnore set to true, do not consider it when creating the description.
+- Do not use any information that is not directly provided in the Database Purpose, Table Structure, or Sample Data sections.
 - If there is no sample data, still generate a description based on the table structure, but note that there is no sample data.
+- Entity names must be in the format [Schema].[TableName].
+- Column names must be enclosed in backticks (`) to differentiate them from other text.
 
 user:
 # Database Purpose
@@ -89,26 +93,25 @@ name: CustomerAddress
 [{"CustomerID":29485,"AddressID":1086,"AddressType":"Mailing","rowguid":"16765338-dbe4-4421-b5e9-3836b9278e63","ModifiedDate":"2007-09-01T00:00:00","RowNum":1},{"CustomerID":29486,"AddressID":621,"AddressType":"Home","rowguid":"22b3e910-14af-4ed5-8b4d-23bbe757414d","ModifiedDate":"2005-09-01T00:00:00","RowNum":2},{"CustomerID":29489,"AddressID":1069,"AddressType":"Work","rowguid":"a095c88b-d7e6-4178-a078-2eca44214801","ModifiedDate":"2005-07-01T00:00:00","RowNum":3},{"CustomerID":29490,"AddressID":887,"AddressType":"Home","rowguid":"f12e1702-d897-4035-b614-0fe2c72168a9","ModifiedDate":"2006-09-01T00:00:00","RowNum":4},{"CustomerID":29492,"AddressID":618,"AddressType":"Main Office","rowguid":"5b3b3eb2-3f43-47ed-a20c-23697dabf23b","ModifiedDate":"2006-12-01T00:00:00","RowNum":5}]
 
 assistant:
-# Description
+### Table SalesLT.CustomerAddress
 
-The [SalesLT].[CustomerAddress] table stores the relationship between customers (`SalesLT.Customer`) and addresses (`SalesLT.Address`).
+#### Description
+The [SalesLT].[CustomerAddress] table stores the relationship between customers ([SalesLT].[Customer]) and addresses ([SalesLT].[Address]).
 It is used to create invoice documents, shipping labels and documentation, send correspondance and marketing. 
 It is not likely to be used on it's own, but rather to link customers to their addresses, and so will appear in queries and application forms that involve customer information.
 It does not appear to contain any private or sensitive information, but may link to tables that do contain sensitive information.
 It has a composite primary key of `CustomerID` and `AddressID` columns.
 
-# Notable Columns
-
+#### Notable Columns
 - `AddressType` the type of address. E.g. 'Postal'. It is a nvarchar field with a maximum length of 100 characters.
 - `ModifiedDate` the date the record was last modified and is a datetime field.
 - `rowguid` is a unique identifier for each row. It has a unique non-clustered index.
 - `CustomerID` is a foreign key to the `SalesLT.Customer` table on the `CustomerID` column. It has a unique clustered index.
 - `AddressID` is a foreign key to the `SalesLT.Address` table on the `AddressID` column.
 
-# Related Tables
-
-- [SalesLT].[Customer]
-- [SalesLT].[Address]
+#### Referenced Tables
+- [SalesLT].[Customer] on `CustomerID`
+- [SalesLT].[Address] on `AddressID`
 
 user:
 # Database Purpose
@@ -118,4 +121,4 @@ user:
 {{entity.structure}}
 
 # Sample Data
-{{table.data}}
+{{entity.data}}

@@ -1,7 +1,5 @@
-using System;
 using System.CommandLine;
 using System.Resources;
-using GenAIDBExplorer.Core.Models.SemanticModel;
 using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.SemanticModelProviders;
 using Microsoft.Extensions.DependencyInjection;
@@ -141,48 +139,6 @@ namespace GenAIDBExplorer.Console.CommandHandlers
                     OutputStopError(errorMessage);
                     break;
             }
-        }
-
-        private Task ShowTableDetailsAsync(SemanticModel semanticModel, string schemaName, string tableName)
-        {
-            var table = semanticModel.FindTable(schemaName, tableName);
-            if (table == null)
-            {
-                _logger.LogError("{ErrorMessage} [{SchemaName}].[{TableName}]", _resourceManagerErrorMessages.GetString("TableNotFound"), schemaName, tableName);
-            }
-            else
-            {
-                OutputInformation(table.ToString());
-            }
-            return Task.CompletedTask;
-        }
-
-        private Task ShowViewDetailsAsync(SemanticModel semanticModel, string schemaName, string viewName)
-        {
-            var view = semanticModel.FindView(schemaName, viewName);
-            if (view == null)
-            {
-                _logger.LogError("{ErrorMessage} [{SchemaName}].[{ViewName}]", _resourceManagerErrorMessages.GetString("ViewNotFound"), schemaName, viewName);
-            }
-            else
-            {
-                OutputInformation(view.ToString());
-            }
-            return Task.CompletedTask;
-        }
-
-        private Task ShowStoredProcedureDetailsAsync(SemanticModel semanticModel, string schemaName, string storedProcedureName)
-        {
-            var storedProcedure = semanticModel.FindStoredProcedure(schemaName, storedProcedureName);
-            if (storedProcedure == null)
-            {
-                _logger.LogError("{ErrorMessage} [{SchemaName}].[{StoredProcedureName}]", _resourceManagerErrorMessages.GetString("StoredProcedureNotFound"), schemaName, storedProcedureName);
-            }
-            else
-            {
-                OutputInformation(storedProcedure.ToString());
-            }
-            return Task.CompletedTask;
         }
     }
 }
