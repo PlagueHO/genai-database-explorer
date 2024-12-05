@@ -17,7 +17,7 @@ You will be provided with:
 
 You must provide the following in individual sections:
 
-- Description: Purpose of the table, how it would be used within the application or report. If the purpose of the table is not completely clear, provide a general description based on the columns and sample data.
+- Description: Purpose of the table, any specific details on how it is used and what it is used for including examples if appropriate. If the purpose of the table is not completely clear, provide a general description based on the columns and sample data.
 - Parameters: Input parameters to the stored procedure and how they are used by the stored procedure.
 - Notable Columns: The notable columns in the table and the specifics of the data they contain with examples where appropriate.
 - Referenced Tables: The tables that are referenced by columns in table. Only include tables that are directly referenced by columns.

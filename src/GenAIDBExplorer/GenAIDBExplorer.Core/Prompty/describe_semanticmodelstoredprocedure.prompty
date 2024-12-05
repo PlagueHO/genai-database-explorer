@@ -21,7 +21,7 @@ You must complete each of the sections on the stored procedure:
 - Parameters: Input parameters and how they are used.
 - Tables: The tables that are used by the stored procedure and how they are used.
 - Logic: The logic and operations performed.
-- Bugs: Identify any logic bugs or security problems.
+- Bugs: Identify any logic bugs or security problems. Any bugs should be based on the provided T-SQL definition and indicate specific instance of the issue rather than general problems.
 
 # Important Instructions
 
