@@ -77,13 +77,14 @@ public sealed class SemanticModelView(
         var builder = new StringBuilder();
         builder.Append(base.ToString());
 
-        if (Columns.Any())
+        if (Columns.Count > 0)
         {
             builder.AppendLine("");
             builder.AppendLine("Columns:");
             foreach (var column in Columns)
             {
                 builder.AppendLine($"  - {column.Name} ({column.Type})");
+                if (!string.IsNullOrWhiteSpace(column.Description)) builder.AppendLine($"    Description: {column.Description}");
                 if (column.IsPrimaryKey) builder.AppendLine("    Primary Key");
                 if (column.IsNullable) builder.AppendLine("    Nullable");
                 if (column.IsIdentity) builder.AppendLine("    Identity");

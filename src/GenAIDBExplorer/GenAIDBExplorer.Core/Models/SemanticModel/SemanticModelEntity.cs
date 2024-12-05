@@ -27,7 +27,10 @@ public abstract class SemanticModelEntity(
 
     /// <summary>
     /// Gets or sets the description of the entity.
+    /// This is usually obtained manually from the an external data dictionary and
+    /// will be used to provide additional grounding when generating the semantic description.
     /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? Description { get; set; } = description;
 
     /// <summary>

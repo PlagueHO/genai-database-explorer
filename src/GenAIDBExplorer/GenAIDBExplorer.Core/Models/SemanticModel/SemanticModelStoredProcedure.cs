@@ -73,6 +73,13 @@ public sealed class SemanticModelStoredProcedure(
             builder.AppendLine(Definition);
         }
 
+        if (!string.IsNullOrWhiteSpace(Description))
+        {
+            builder.AppendLine("");
+            builder.AppendLine("Description:");
+            builder.AppendLine(Description);
+        }
+
         if (!string.IsNullOrWhiteSpace(SemanticDescription))
         {
             builder.AppendLine("");

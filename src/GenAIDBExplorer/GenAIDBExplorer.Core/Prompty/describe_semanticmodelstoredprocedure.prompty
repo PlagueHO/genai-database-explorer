@@ -15,19 +15,39 @@ You will be provided with:
 - The parameters passed by the stored procedure.
 - Descriptions of the tables that are used by the stored procedure.
 
-You must provide the following in individual sections:
+You must complete each of the sections on the stored procedure:
 
-- Description: Purpose of the stored procedure. If the purpose of the stored procedure is not completely clear, provide a general description based on the tables used but do not make up a purpose.
-- Parameters: Input parameters to the stored procedure and how they are used by the stored procedure.
+- Description: The purpose. If the purpose is not completely clear, provide a general description based on the tables used but do not make up a purpose.
+- Parameters: Input parameters and how they are used.
 - Tables: The tables that are used by the stored procedure and how they are used.
-- Logic: The logic and operations performed by the stored procedure.
-- Security Issues: If there are potential security issues with the stored procedure, describe them.
+- Logic: The logic and operations performed.
+- Bugs: Identify any logic bugs or security problems.
 
 # Guidelines
 
 - The description should be clear, concise, and technically relevant.
+- Do not speculate or make up information.
+- Do not use any information that is not provided except in the case of standard system SQL Stored Procedures or Views.
 - If the description can't be generated because missing information, say "Unable to generate description".
  
+user:
+# Database Purpose
+Product, sales, and customer data for the CRM application used by the AdventureWorks company.
+
+# Stored Procedure Definition (T-SQL)
+
+# Stored Procedure Parameters
+
+# Used Tables
+
+## Table [SalesLT].[Address]
+Address information for customers.
+## Table [SalesLT].[Customer]
+Customer information for the CRM application.
+
+assistant:
+
+
 user:
 # Database Purpose
 {{project.description}}
