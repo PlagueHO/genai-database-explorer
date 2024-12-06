@@ -1,4 +1,4 @@
-This is a .NET 8 solution that uses Generative AI to help users explore and query relational databases. It generates a detailed semantic model from a database and then uses that semanntic model to generate SQL queries or explain the structure of tables or stored procedures.
+This is a .NET 9 solution that uses Generative AI to help users explore and query relational databases. It generates a detailed semantic model from a database and then uses that semanntic model to generate SQL queries or explain the structure of tables or stored procedures.
 
 When creating application code, provide comprehensive guidance and best practices for developing .NET 8 applications that are designed to run in Azure. Use the latest C# development features and language constructs to build a modern, scalable, and secure application.
 

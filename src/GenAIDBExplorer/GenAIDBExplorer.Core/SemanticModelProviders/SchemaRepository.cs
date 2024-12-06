@@ -450,6 +450,7 @@ public sealed class SchemaRepository(
         try
         {
             string query;
+            // TODO: Move to SQLStatements
             if (selectRandom)
             {
                 query = $"SELECT TOP (@NumberOfRecords) * FROM [@{tableInfo.SchemaName}].[@{tableInfo.TableName}] ORDER BY NEWID()";
@@ -510,6 +511,7 @@ public sealed class SchemaRepository(
         try
         {
             string query;
+            // TODO: Move to SQLStatements
             if (selectRandom)
             {
                 query = $"SELECT TOP (@NumberOfRecords) * FROM [@{viewInfo.SchemaName}].[@{viewInfo.ViewName}] ORDER BY NEWID()";
