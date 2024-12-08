@@ -42,7 +42,8 @@ public sealed class SemanticModelStoredProcedure(
         Name = storedProcedure.Name;
         Description = storedProcedure.Description;
         SemanticDescription = storedProcedure.SemanticDescription;
-        IsIgnored = storedProcedure.IsIgnored;
+        NotUsed = storedProcedure.NotUsed;
+        NotUsedReason = storedProcedure.NotUsedReason;
         Parameters = storedProcedure.Parameters;
         Definition = storedProcedure.Definition;
     }

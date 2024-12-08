@@ -27,7 +27,7 @@ You must provide the following in individual sections:
 - The description should be clear, concise, and technically relevant.
 - Do not use decorative language or marketing jargon.
 - If the description can't be generated because missing information, say "Unable to generate description because ..." and say why.
-- If a view or column has IsIgnore set to true, do not consider it when creating the description.
+- If a view or column has NotUsed set to true, do not consider it when creating the description.
 - If there is no sample data, still generate a description based on the view structure, but note that there is no sample data.
 - Entity names must be in the format [Schema].[TableName].
 - Column names must be enclosed in backticks (`) to differentiate them from other text.

@@ -59,8 +59,8 @@ public sealed class SemanticModelView(
         Name = view.Name;
         Description = view.Description;
         SemanticDescription = view.SemanticDescription;
-        IsIgnored = view.IsIgnored;
-        IgnoreReason = view.IgnoreReason;
+        NotUsed = view.NotUsed;
+        NotUsedReason = view.NotUsedReason;
         Definition = view.Definition;
         Columns = view.Columns;
     }

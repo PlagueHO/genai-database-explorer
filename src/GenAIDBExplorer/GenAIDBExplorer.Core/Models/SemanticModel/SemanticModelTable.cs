@@ -78,8 +78,8 @@ public sealed class SemanticModelTable(
         Name = table.Name;
         Description = table.Description;
         SemanticDescription = table.SemanticDescription;
-        IsIgnored = table.IsIgnored;
-        IgnoreReason = table.IgnoreReason;
+        NotUsed = table.NotUsed;
+        NotUsedReason = table.NotUsedReason;
         Columns = table.Columns;
         Indexes = table.Indexes;
     }

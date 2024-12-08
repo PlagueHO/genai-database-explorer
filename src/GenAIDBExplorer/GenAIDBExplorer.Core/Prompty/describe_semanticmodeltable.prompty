@@ -25,7 +25,7 @@ You must provide the following in individual sections:
 # Important Instructions
 
 - If description can't be generated because missing information, say "Unable to generate description because ..." and say why.
-- If a table, column or index has IsIgnore set to true, do not consider it when creating the description.
+- If a table, column or index has NotUsed set to true, do not consider it when creating the description.
 - Do not use any information that is not directly provided in the Database Purpose, Table Structure, or Sample Data sections.
 - If there is no sample data, still generate a description based on the table structure, but note that there is no sample data.
 - Entity names must be in the format [Schema].[TableName].

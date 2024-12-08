@@ -10,8 +10,8 @@ public interface ISemanticModelEntity
     string? Description { get; set; }
     string? SemanticDescription { get; set; }
     DateTime? SemanticDescriptionLastUpdate { get; set; }
-    bool IsIgnored { get; set; }
-    string? IgnoreReason { get; set; }
+    bool NotUsed { get; set; }
+    string? NotUsedReason { get; set; }
     Task SaveModelAsync(DirectoryInfo folderPath);
     Task LoadModelAsync(DirectoryInfo folderPath);
     FileInfo GetModelEntityFilename();

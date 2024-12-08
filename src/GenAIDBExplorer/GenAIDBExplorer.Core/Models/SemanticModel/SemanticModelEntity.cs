@@ -47,16 +47,16 @@ public abstract class SemanticModelEntity(
     public DateTime? SemanticDescriptionLastUpdate { get; set; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether the entity should be ignored.
+    /// Gets or sets a value indicating whether the entity ise used.
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public bool IsIgnored { get; set; }
+    public bool NotUsed { get; set; }
 
     /// <summary>
-    /// Gets or sets a value indicating why the entity is ignored (if ignored).
+    /// Gets or sets a value indicating why the entity is not used.
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public string? IgnoreReason { get; set; }
+    public string? NotUsedReason { get; set; }
 
     /// <summary>
     /// Saves the semantic model entity to the specified folder.
@@ -88,8 +88,8 @@ public abstract class SemanticModelEntity(
                 Name = entity.Name;
                 Description = entity.Description;
                 SemanticDescription = entity.SemanticDescription;
-                IsIgnored = entity.IsIgnored;
-                IgnoreReason = entity.IgnoreReason;
+                NotUsed = entity.NotUsed;
+                NotUsedReason = entity.NotUsedReason;
             }
         }
     }
