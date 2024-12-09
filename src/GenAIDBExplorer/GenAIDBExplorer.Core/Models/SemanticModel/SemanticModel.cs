@@ -13,7 +13,9 @@ public sealed class SemanticModel(
     string source,
     string? description = null
     ) : ISemanticModel
-{   
+{
+    private static readonly JsonSerializerOptions CachedJsonSerializerOptions = new() { WriteIndented = true };
+
     /// <summary>
     /// Gets the name of the semantic model.
     /// </summary>
@@ -36,8 +38,6 @@ public sealed class SemanticModel(
     /// <param name="modelPath">The folder path where the model will be saved.</param>
     public async Task SaveModelAsync(DirectoryInfo modelPath)
     {
-        JsonSerializerOptions jsonSerializerOptions = new() { WriteIndented = true };
-
         // Save the semantic model to a JSON file.
         Directory.CreateDirectory(modelPath.FullName);
 
@@ -70,12 +70,12 @@ public sealed class SemanticModel(
 
         // Add custom converters for the tables, views, and stored procedures
         // to only serialize the name, schema and relative path of the entity.
-        jsonSerializerOptions.Converters.Add(new SemanticModelTableJsonConverter());
-        jsonSerializerOptions.Converters.Add(new SemanticModelViewJsonConverter());
-        jsonSerializerOptions.Converters.Add(new SemanticModelStoredProcedureJsonConverter());
+        CachedJsonSerializerOptions.Converters.Add(new SemanticModelTableJsonConverter());
+        CachedJsonSerializerOptions.Converters.Add(new SemanticModelViewJsonConverter());
+        CachedJsonSerializerOptions.Converters.Add(new SemanticModelStoredProcedureJsonConverter());
 
         var semanticModelJsonPath = Path.Combine(modelPath.FullName, "semanticmodel.json");
-        await File.WriteAllTextAsync(semanticModelJsonPath, JsonSerializer.Serialize(this, jsonSerializerOptions));
+        await File.WriteAllTextAsync(semanticModelJsonPath, JsonSerializer.Serialize(this, CachedJsonSerializerOptions));
     }
 
     /// <summary>
@@ -85,8 +85,6 @@ public sealed class SemanticModel(
     /// <returns>The loaded semantic model.</returns>
     public async Task<SemanticModel> LoadModelAsync(DirectoryInfo modelPath)
     {
-        JsonSerializerOptions jsonSerializerOptions = new() { WriteIndented = true };
-
         var semanticModelJsonPath = Path.Combine(modelPath.FullName, "semanticmodel.json");
         if (!File.Exists(semanticModelJsonPath))
         {
@@ -94,7 +92,7 @@ public sealed class SemanticModel(
         }
 
         await using var stream = File.OpenRead(semanticModelJsonPath);
-        var semanticModel = await JsonSerializer.DeserializeAsync<SemanticModel>(stream, jsonSerializerOptions)
+        var semanticModel = await JsonSerializer.DeserializeAsync<SemanticModel>(stream, CachedJsonSerializerOptions)
                ?? throw new InvalidOperationException("Failed to deserialize the semantic model.");
 
         // Load the tables listed in the model from the files in the "tables" subfolder.

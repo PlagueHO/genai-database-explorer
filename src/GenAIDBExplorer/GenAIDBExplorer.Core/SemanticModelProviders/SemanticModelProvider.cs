@@ -1,4 +1,5 @@
-﻿using GenAIDBExplorer.Core.Models.Project;
+﻿using GenAIDBExplorer.Core.DataDictionaryProviders;
+using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.Models.SemanticModel;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
@@ -13,6 +14,7 @@ public sealed class SemanticModelProvider(
 ) : ISemanticModelProvider
 {
     private readonly IProject _project = project;
+    private readonly ISchemaRepository _schemaRepository = schemaRepository;
     private readonly ILogger _logger = logger;
     private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Core.Resources.LogMessages", typeof(SemanticModelProvider).Assembly);
 
@@ -74,7 +76,7 @@ public sealed class SemanticModelProvider(
     private async Task ExtractSemanticModelTablesAsync(SemanticModel semanticModel, ParallelOptions parallelOptions)
     {
         // Get the tables from the database
-        var tablesDictionary = await schemaRepository.GetTablesAsync(_project.Settings.Database.Schema).ConfigureAwait(false);
+        var tablesDictionary = await _schemaRepository.GetTablesAsync(_project.Settings.Database.Schema).ConfigureAwait(false);
         var semanticModelTables = new ConcurrentBag<SemanticModelTable>();
 
         // Construct the semantic model tables
@@ -82,7 +84,7 @@ public sealed class SemanticModelProvider(
         {
             _logger.LogInformation("{Message} [{SchemaName}].[{TableName}]", _resourceManagerLogMessages.GetString("AddingTableToSemanticModel"), table.SchemaName, table.TableName);
 
-            var semanticModelTable = await schemaRepository.CreateSemanticModelTableAsync(table).ConfigureAwait(false);
+            var semanticModelTable = await _schemaRepository.CreateSemanticModelTableAsync(table).ConfigureAwait(false);
             semanticModelTables.Add(semanticModelTable);
         });
 
@@ -99,7 +101,7 @@ public sealed class SemanticModelProvider(
     private async Task ExtractSemanticModelViewsAsync(SemanticModel semanticModel, ParallelOptions parallelOptions)
     {
         // Get the views from the database
-        var viewsDictionary = await schemaRepository.GetViewsAsync(_project.Settings.Database.Schema).ConfigureAwait(false);
+        var viewsDictionary = await _schemaRepository.GetViewsAsync(_project.Settings.Database.Schema).ConfigureAwait(false);
         var semanticModelViews = new ConcurrentBag<SemanticModelView>();
 
         // Construct the semantic model views
@@ -107,7 +109,7 @@ public sealed class SemanticModelProvider(
         {
             _logger.LogInformation("{Message} [{SchemaName}].[{ViewName}]", _resourceManagerLogMessages.GetString("AddingViewToSemanticModel"), view.SchemaName, view.ViewName);
 
-            var semanticModelView = await schemaRepository.CreateSemanticModelViewAsync(view).ConfigureAwait(false);
+            var semanticModelView = await _schemaRepository.CreateSemanticModelViewAsync(view).ConfigureAwait(false);
             semanticModelViews.Add(semanticModelView);
         });
 
@@ -124,7 +126,7 @@ public sealed class SemanticModelProvider(
     private async Task ExtractSemanticModelStoredProceduresAsync(SemanticModel semanticModel, ParallelOptions parallelOptions)
     {
         // Get the stored procedures from the database
-        var storedProceduresDictionary = await schemaRepository.GetStoredProceduresAsync(_project.Settings.Database.Schema).ConfigureAwait(false);
+        var storedProceduresDictionary = await _schemaRepository.GetStoredProceduresAsync(_project.Settings.Database.Schema).ConfigureAwait(false);
         var semanticModelStoredProcedures = new ConcurrentBag<SemanticModelStoredProcedure>();
 
         // Construct the semantic model views
@@ -132,7 +134,7 @@ public sealed class SemanticModelProvider(
         {
             _logger.LogInformation("{Message} [{SchemaName}].[{StoredProcedureName}]", _resourceManagerLogMessages.GetString("AddingStoredProcedureToSemanticModel"), storedProcedure.SchemaName, storedProcedure.ProcedureName);
 
-            var semanticModeStoredProcedure = await schemaRepository.CreateSemanticModelStoredProcedureAsync(storedProcedure).ConfigureAwait(false);
+            var semanticModeStoredProcedure = await _schemaRepository.CreateSemanticModelStoredProcedureAsync(storedProcedure).ConfigureAwait(false);
             semanticModelStoredProcedures.Add(semanticModeStoredProcedure);
         });
 

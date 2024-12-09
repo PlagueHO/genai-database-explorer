@@ -171,4 +171,7 @@
   <data name="ProjectSettingsValidationCompleted" xml:space="preserve">
     <value>Project settings validation completed.</value>
   </data>
+  <data name="LoadingDataDictionaryTable" xml:space="preserve">
+    <value>Loading data dictionary information for tables into semantic model.</value>
+  </data>
 </root>

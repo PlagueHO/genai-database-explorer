@@ -178,6 +178,15 @@ namespace GenAIDBExplorer.Core.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Loading data dictionary information for tables into semantic model..
+        /// </summary>
+        internal static string LoadingDataDictionaryTable {
+            get {
+                return ResourceManager.GetString("LoadingDataDictionaryTable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Loading semantic model from model path..
         /// </summary>
         internal static string LoadingSemanticModel {

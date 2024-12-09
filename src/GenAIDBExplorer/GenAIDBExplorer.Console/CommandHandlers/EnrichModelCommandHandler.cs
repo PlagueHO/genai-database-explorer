@@ -87,7 +87,6 @@ public class EnrichModelCommandHandler(
             getDefaultValue: () => false
         );
 
-
         // Create the base 'enrich-model' command
         var enrichModelCommand = new Command("enrich-model", "Enrich an existing semantic model with descriptions in a GenAI Database Explorer project.")
         {

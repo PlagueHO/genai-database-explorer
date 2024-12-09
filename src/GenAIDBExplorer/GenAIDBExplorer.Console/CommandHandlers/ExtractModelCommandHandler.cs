@@ -1,4 +1,5 @@
 ﻿using GenAIDBExplorer.Core.Data.DatabaseProviders;
+using GenAIDBExplorer.Core.DataDictionaryProviders;
 using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.SemanticModelProviders;
 using GenAIDBExplorer.Core.SemanticProviders;
@@ -100,10 +101,6 @@ public class ExtractModelCommandHandler(
 
         // Save the Semantic Model into the project directory into a subdirectory with the name of the semanticModel.Name
         var semanticModelDirectory = new DirectoryInfo(Path.Combine(projectPath.FullName, semanticModel.Name));
-        if (!semanticModelDirectory.Exists)
-        {
-            semanticModelDirectory.Create();
-        }
 
         _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("SavingSemanticModel"), semanticModelDirectory);
         await semanticModel.SaveModelAsync(semanticModelDirectory);
