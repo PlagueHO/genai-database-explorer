@@ -61,6 +61,15 @@ namespace GenAIDBExplorer.Console.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The data dictionary source path does not exist..
+        /// </summary>
+        internal static string DataDictionarySourcePathDoesNotExist {
+            get {
+                return ResourceManager.GetString("DataDictionarySourcePathDoesNotExist", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid object type specified. Must be &apos;table&apos;,&apos;view&apos; or &apos;storedprocedure&apos;..
         /// </summary>
         internal static string InvalidObjectType {

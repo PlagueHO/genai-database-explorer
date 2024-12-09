@@ -36,7 +36,6 @@ public class InitProjectCommandHandlerTests
             _mockProject.Object,
             _mockSemanticModelProvider.Object,
             _mockConnectionProvider.Object,
-            _mockSemanticDescriptionProvider.Object,
             _mockServiceProvider.Object,
             _mockLogger.Object
         );

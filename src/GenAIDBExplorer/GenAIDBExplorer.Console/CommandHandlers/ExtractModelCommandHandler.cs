@@ -1,5 +1,5 @@
 ﻿using GenAIDBExplorer.Core.Data.DatabaseProviders;
-using GenAIDBExplorer.Core.DataDictionaryProviders;
+using GenAIDBExplorer.Core.DataDictionary;
 using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.SemanticModelProviders;
 using GenAIDBExplorer.Core.SemanticProviders;

@@ -1,7 +1,7 @@
 ﻿using GenAIDBExplorer.Console.CommandHandlers;
 using GenAIDBExplorer.Core.Data.ConnectionManager;
 using GenAIDBExplorer.Core.Data.DatabaseProviders;
-using GenAIDBExplorer.Core.DataDictionaryProviders;
+using GenAIDBExplorer.Core.DataDictionary;
 using GenAIDBExplorer.Core.KernelMemory;
 using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.SemanticKernel;

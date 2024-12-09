@@ -171,4 +171,7 @@
   <data name="GenerateSemanticDescriptionForView" xml:space="preserve">
     <value>Generating semantic description for view.</value>
   </data>
+  <data name="DataDictionaryComplete" xml:space="preserve">
+    <value>Data dictionary processing complete.</value>
+  </data>
 </root>

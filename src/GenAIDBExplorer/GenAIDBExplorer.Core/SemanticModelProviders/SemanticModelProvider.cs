@@ -1,5 +1,4 @@
-﻿using GenAIDBExplorer.Core.DataDictionaryProviders;
-using GenAIDBExplorer.Core.Models.Project;
+﻿using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.Models.SemanticModel;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;

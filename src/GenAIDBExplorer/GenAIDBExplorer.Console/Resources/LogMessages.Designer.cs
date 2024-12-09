@@ -61,6 +61,15 @@ namespace GenAIDBExplorer.Console.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Data dictionary processing complete..
+        /// </summary>
+        internal static string DataDictionaryComplete {
+            get {
+                return ResourceManager.GetString("DataDictionaryComplete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Enriching semantic model with descriptions for project..
         /// </summary>
         internal static string EnrichingSemanticModel {

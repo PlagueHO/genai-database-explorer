@@ -1,7 +1,7 @@
 // File: GenAIDBExplorer.Console/CommandHandlers/DataDictionaryCommandHandler.cs
 
 using GenAIDBExplorer.Core.Data.DatabaseProviders;
-using GenAIDBExplorer.Core.DataDictionaryProviders;
+using GenAIDBExplorer.Core.DataDictionary;
 using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.Models.SemanticModel;
 using GenAIDBExplorer.Core.SemanticModelProviders;
@@ -34,6 +34,7 @@ public class DataDictionaryCommandHandler(
 ) : CommandHandler<DataDictionaryCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, serviceProvider, logger)
 {
     private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Console.Resources.LogMessages", typeof(DataDictionaryCommandHandler).Assembly);
+    private static readonly ResourceManager _resourceManagerErrorMessages = new("GenAIDBExplorer.Console.Resources.ErrorMessages", typeof(DataDictionaryCommandHandler).Assembly);
     private readonly IDataDictionaryProvider _dataDictionaryProvider = serviceProvider.GetRequiredService<IDataDictionaryProvider>();
 
     /// <summary>
@@ -131,7 +132,7 @@ public class DataDictionaryCommandHandler(
 
         if (!sourcePath.Exists)
         {
-            _logger.LogError("The source path '{SourcePath}' does not exist.", sourcePath.FullName);
+            _logger.LogError("{ErrorMessage} '{SourcePath}'", _resourceManagerErrorMessages.GetString("DataDictionarySourcePathDoesNotExist"), sourcePath.FullName);
             return;
         }
 
@@ -142,7 +143,12 @@ public class DataDictionaryCommandHandler(
             switch (commandOptions.ObjectType.ToLower())
             {
                 case "table":
-                    await ProcessTableDataDictionaryAsync(semanticModel, sourcePath, commandOptions.SchemaName, commandOptions.ObjectName);
+
+                    await _dataDictionaryProvider.ProcessTableDataDictionaryAsync(
+                        semanticModel,
+                        sourcePath,
+                        commandOptions.SchemaName,
+                        commandOptions.ObjectName);
                     if (commandOptions.Show)
                     {
                         await ShowTableDetailsAsync(semanticModel, commandOptions.SchemaName, commandOptions.ObjectName);
@@ -159,60 +165,11 @@ public class DataDictionaryCommandHandler(
         }
 
         // Save the updated semantic model
-        _logger.LogInformation("Saving semantic model to '{ProjectPath}'", projectPath.FullName);
+        _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("SavingSemanticModel"), projectPath.FullName);
         var semanticModelDirectory = GetSemanticModelDirectory(projectPath);
         await semanticModel.SaveModelAsync(semanticModelDirectory);
-        _logger.LogInformation("Semantic model saved to '{ProjectPath}'", projectPath.FullName);
+        _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("SavedSemanticModel"), projectPath.FullName);
 
-        _logger.LogInformation("Data dictionary processing complete for project '{ProjectPath}'", projectPath.FullName);
-    }
-
-    /// <summary>
-    /// Processes table data dictionary files and updates the semantic model.
-    /// </summary>
-    /// <param name="semanticModel">The semantic model to update.</param>
-    /// <param name="sourcePath">The directory containing data dictionary files.</param>
-    /// <param name="schemaName">The schema name to filter tables.</param>
-    /// <param name="tableName">The table name to filter tables.</param>
-    private async Task ProcessTableDataDictionaryAsync(SemanticModel semanticModel, DirectoryInfo sourcePath, string? schemaName, string? tableName)
-    {
-        // Get list of markdown files from sourcePath
-        var markdownFiles = Directory.GetFiles(sourcePath.FullName, "*.md", SearchOption.AllDirectories);
-
-        if (markdownFiles.Length == 0)
-        {
-            _logger.LogWarning("No markdown files found in '{SourcePath}'", sourcePath.FullName);
-            return;
-        }
-
-        var tables = await _dataDictionaryProvider.GetTablesFromMarkdownFilesAsync(markdownFiles);
-
-        foreach (var table in tables)
-        {
-            if ((!string.IsNullOrEmpty(schemaName) && !table.Schema.Equals(schemaName, StringComparison.OrdinalIgnoreCase)) ||
-                (!string.IsNullOrEmpty(tableName) && !table.Name.Equals(tableName, StringComparison.OrdinalIgnoreCase)))
-            {
-                continue;
-            }
-
-            // Update or add the table in the semantic model
-            var existingTable = semanticModel.FindTable(table.Schema, table.Name);
-            if (existingTable != null)
-            {
-                _logger.LogInformation("Updating table '{Schema}.{Table}' in semantic model.", table.Schema, table.Name);
-                // Update existing table
-                existingTable.Description = table.Description;
-                existingTable.Details = table.Details;
-                existingTable.AdditionalInformation = table.AdditionalInformation;
-                // existingTable.Columns = table.Columns;
-                // existingTable.Indexes = table.Indexes;
-            }
-            else
-            {
-                _logger.LogInformation("Adding new table '{Schema}.{Table}' to semantic model.", table.Schema, table.Name);
-                // Add new table
-                semanticModel.AddTable(table);
-            }
-        }
+        _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("DataDictionaryProcessingComplete"), projectPath.FullName);
     }
 }

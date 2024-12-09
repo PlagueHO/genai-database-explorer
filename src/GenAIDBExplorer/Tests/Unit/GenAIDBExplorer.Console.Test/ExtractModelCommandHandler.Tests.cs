@@ -37,7 +37,6 @@ public class ExtractModelCommandHandlerTests
             _mockProject.Object,
             _mockConnectionProvider.Object,
             _mockSemanticModelProvider.Object,
-            _mockSemanticDescriptionProvider.Object,
             _mockServiceProvider.Object,
             _mockLogger.Object
         );
