@@ -21,10 +21,9 @@ namespace GenAIDBExplorer.Console.CommandHandlers
         IProject project,
         ISemanticModelProvider semanticModelProvider,
         IDatabaseConnectionProvider connectionProvider,
-        ISemanticDescriptionProvider semanticDescriptionProvider,
         IServiceProvider serviceProvider,
         ILogger<ICommandHandler<ShowObjectCommandHandlerOptions>> logger
-    ) : CommandHandler<ShowObjectCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, semanticDescriptionProvider, serviceProvider, logger)
+    ) : CommandHandler<ShowObjectCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, serviceProvider, logger)
     {
         private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Console.Resources.LogMessages", typeof(ShowObjectCommandHandler).Assembly);
         private static readonly ResourceManager _resourceManagerErrorMessages = new("GenAIDBExplorer.Console.Resources.ErrorMessages", typeof(ShowObjectCommandHandler).Assembly);

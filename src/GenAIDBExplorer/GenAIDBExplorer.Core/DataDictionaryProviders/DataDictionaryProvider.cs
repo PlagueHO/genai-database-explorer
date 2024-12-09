@@ -43,7 +43,7 @@ public class DataDictionaryProvider : IDataDictionaryProvider
         var semanticKernel = _semanticKernelFactory.CreateSemanticKernel();
 
         // Load the prompty function
-        var promptyFilename = Path.Combine(_promptyFolder, "extract_table_structure_from_markdown.prompty");
+        var promptyFilename = Path.Combine(_promptyFolder, "get_table_from_data_dictionary_markdown.prompty");
 #pragma warning disable SKEXP0040 // Experimental API
         var function = semanticKernel.CreateFunctionFromPromptyFile(promptyFilename);
 #pragma warning restore SKEXP0040 // Experimental API

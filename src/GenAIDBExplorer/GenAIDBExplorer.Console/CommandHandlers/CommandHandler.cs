@@ -21,7 +21,6 @@ public abstract class CommandHandler<TOptions>(
     IProject project,
     IDatabaseConnectionProvider connectionProvider,
     ISemanticModelProvider semanticModelProvider,
-    ISemanticDescriptionProvider semanticDescriptionProvider,
     IServiceProvider serviceProvider,
     ILogger<ICommandHandler<TOptions>> logger
 ) : ICommandHandler<TOptions> where TOptions : ICommandHandlerOptions
@@ -43,11 +42,6 @@ public abstract class CommandHandler<TOptions>(
     /// Semantic model provider instance for building a semantic model of the database.
     /// </summary>
     protected readonly ISemanticModelProvider _semanticModelProvider = semanticModelProvider ?? throw new ArgumentNullException(nameof(semanticModelProvider));
-
-    /// <summary>
-    /// Semantic description provider instance for generating semantic descriptions.
-    /// </summary>
-    protected readonly ISemanticDescriptionProvider _semanticDescriptionProvider = semanticDescriptionProvider ?? throw new ArgumentNullException(nameof(semanticDescriptionProvider));
 
     /// <summary>
     /// Service provider instance for resolving dependencies.

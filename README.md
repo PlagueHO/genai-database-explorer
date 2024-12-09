@@ -27,6 +27,7 @@ A console application that provides commands to manage Generative AI Database Ex
 
 - **init-project**: Initializing a new project folder with a `settings.json` file.
 - **extract-model**: Extract a representation of the database schema as a **semantic model** in the ((project folder** based on the `settings.json` file.
+- **data-dictionary**: Update an extracted semantic model with additional information provided from a set of data dictionary files.
 - **enrich-model**: Enrich an existing **semantic model** of a database schema in the project folder based on the `settings.json` file using Generative AI to produce an **enriched** semantic model.
 - **show-object**: Show the details of a table, column, or stored procedure in the **semantic model**.
 - **query-model**: Answer questions based on the semantic model by using Generative AI. This includes recommending SQL.

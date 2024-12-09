@@ -18,19 +18,18 @@ namespace GenAIDBExplorer.Console.CommandHandlers;
 /// </remarks>
 /// <param name="project">The project instance to enrich the model for.</param>
 /// <param name="semanticModelProvider">The semantic model provider instance for building a semantic model of the database.</param>
-/// <param name="semanticDescriptionProvider">The semantic description provider instance for generating semantic descriptions.</param>
 /// <param name="serviceProvider">The service provider instance for resolving dependencies.</param>
 /// <param name="logger">The logger instance for logging information, warnings, and errors.</param>
 public class EnrichModelCommandHandler(
     IProject project,
     IDatabaseConnectionProvider connectionProvider,
     ISemanticModelProvider semanticModelProvider,
-    ISemanticDescriptionProvider semanticDescriptionProvider,
     IServiceProvider serviceProvider,
     ILogger<ICommandHandler<EnrichModelCommandHandlerOptions>> logger
-) : CommandHandler<EnrichModelCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, semanticDescriptionProvider, serviceProvider, logger)
+) : CommandHandler<EnrichModelCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, serviceProvider, logger)
 {
     private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Console.Resources.LogMessages", typeof(EnrichModelCommandHandler).Assembly);
+    private readonly ISemanticDescriptionProvider _semanticDescriptionProvider = serviceProvider.GetRequiredService<ISemanticDescriptionProvider>();
 
     /// <summary>
     /// Sets up the enrich-model command.

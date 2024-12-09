@@ -423,17 +423,6 @@ public class SemanticDescriptionProvider(
         return tableList;
     }
 
-    /// <summary>
-    /// Gets a list of views from the specified stored procedure using Semantic Kernel.
-    /// </summary>
-    /// <param name="semanticModel">The semantic model</param>
-    /// <param name="storedProcedure">The stored procedure to get the list of views from</param>
-    /// <returns>A task representing the asynchronous operation. The task result contains the list of views.</returns>
-    public async Task<ViewList> GetViewListFromStoredProcedureDefinitionAsync(SemanticModel semanticModel, SemanticModelStoredProcedure storedProcedure)
-    {
-        throw new NotImplementedException();
-    }
-
     private static string SerializeSampleData(List<Dictionary<string, object>> sampleData)
     {
         const int MaxColumnLength = 200; // Adjust the maximum length as needed

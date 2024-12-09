@@ -19,17 +19,15 @@ namespace GenAIDBExplorer.Console.CommandHandlers;
 /// <param name="project">The project instance to initialize.</param>
 /// <param name="connectionProvider">The database connection provider instance for connecting to a SQL database.</param>
 /// <param name="semanticModelProvider">The semantic model provider instance for building a semantic model of the database.</param>
-/// <param name="semanticDescriptionProvider">The semantic description provider instance for generating semantic descriptions.</param>
 /// <param name="serviceProvider">The service provider instance for resolving dependencies.</param>
 /// <param name="logger">The logger instance for logging information, warnings, and errors.</param>
 public class InitProjectCommandHandler(
     IProject project,
     ISemanticModelProvider semanticModelProvider,
     IDatabaseConnectionProvider connectionProvider,
-    ISemanticDescriptionProvider semanticDescriptionProvider,
     IServiceProvider serviceProvider,
     ILogger<ICommandHandler<InitProjectCommandHandlerOptions>> logger
-) : CommandHandler<InitProjectCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, semanticDescriptionProvider, serviceProvider, logger)
+) : CommandHandler<InitProjectCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, serviceProvider, logger)
 {
     private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Console.Resources.LogMessages", typeof(InitProjectCommandHandler).Assembly);
 

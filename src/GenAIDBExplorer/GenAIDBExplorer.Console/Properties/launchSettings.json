@@ -14,7 +14,7 @@
     },
     "GenAIDBExplorer.Console enrich-model": {
       "commandName": "Project",
-      "commandLineArgs": "enrich-model -p d:\\temp --skipViews --skipStoredProcedures"
+      "commandLineArgs": "enrich-model table -p d:\\temp -s dbo -n tblAlert"
     },
     "GenAIDBExplorer.Console init-project": {
       "commandName": "Project",
@@ -23,6 +23,10 @@
     "GenAIDBExplorer.Console show-object": {
       "commandName": "Project",
       "commandLineArgs": "show-object table \r\n-p d:\\temp -s SalesLT -n Product"
+    },
+    "GenAIDBExplorer.Console data-dictionary table": {
+      "commandName": "Project",
+      "commandLineArgs": "data-dictionary table -p d:\\temp -d d:\\data_dictionary_tables"
     }
   }
 }

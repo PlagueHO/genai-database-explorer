@@ -26,10 +26,9 @@ public class QueryModelCommandHandler(
     IProject project,
     ISemanticModelProvider semanticModelProvider,
     IDatabaseConnectionProvider connectionProvider,
-    ISemanticDescriptionProvider semanticDescriptionProvider,
     IServiceProvider serviceProvider,
     ILogger<ICommandHandler<QueryModelCommandHandlerOptions>> logger
-) : CommandHandler<QueryModelCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, semanticDescriptionProvider, serviceProvider, logger)
+) : CommandHandler<QueryModelCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, serviceProvider, logger)
 {
     private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Console.Resources.LogMessages", typeof(QueryModelCommandHandler).Assembly);
 
