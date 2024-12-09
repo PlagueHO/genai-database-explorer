@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace GenAIDBExplorer.Core.Models.SemanticModel;
 
@@ -14,6 +15,13 @@ public sealed class SemanticModelStoredProcedure(
     string? description = null
     ) : SemanticModelEntity(schema, name, description)
 {
+    /// <summary>
+    /// Gets or sets additional information about the stored procedure.
+    /// This is usually obtained from the data dictionary.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public string AdditionalInformation { get; set; } = string.Empty;
+
     /// <summary>
     /// Gets or sets the parameters of the stored procedure.
     /// </summary>

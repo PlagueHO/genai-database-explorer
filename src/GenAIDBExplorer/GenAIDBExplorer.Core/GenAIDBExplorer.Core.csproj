@@ -72,6 +72,9 @@
     <None Update="Prompty\describe_semanticmodelstoredprocedure.prompty">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Prompty\get_table_from_data_dictionary_markdown.prompty">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Prompty\get_tables_from_view_definition.prompty">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -81,6 +84,10 @@
     <None Update="Prompty\describe_semanticmodelview.prompty">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="DataDictionaryProviders\" />
   </ItemGroup>
 
 </Project>

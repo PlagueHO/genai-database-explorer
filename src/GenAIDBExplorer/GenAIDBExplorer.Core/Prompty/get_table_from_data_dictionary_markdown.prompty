@@ -1,0 +1,14 @@
+﻿---
+name: get_table_from_data_dictionary_markdown
+description: Get a table from a data dictionary markdown file.
+model:
+  api: chat
+  parameters:
+    temperature: 0.1
+---
+system:
+You are a AI SQL database assistant that extracts a table from a markdown file containing data dictionary information.
+
+user:
+# Data Dictionary Table
+{{entity.markdown}}

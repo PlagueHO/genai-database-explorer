@@ -1,6 +1,7 @@
 ﻿using GenAIDBExplorer.Console.CommandHandlers;
 using GenAIDBExplorer.Core.Data.ConnectionManager;
 using GenAIDBExplorer.Core.Data.DatabaseProviders;
+using GenAIDBExplorer.Core.DataDictionaryProviders;
 using GenAIDBExplorer.Core.KernelMemory;
 using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.SemanticKernel;
@@ -75,6 +76,9 @@ public static class HostBuilderExtensions
 
                 // Register the Semantic Description provider
                 services.AddSingleton<ISemanticDescriptionProvider, SemanticDescriptionProvider>();
+
+                // Register the Data Dictionary provider
+                services.AddSingleton<IDataDictionaryProvider, DataDictionaryProvider>();
 
                 // Register the Semantic Kernel factory
                 services.AddSingleton<ISemanticKernelFactory, SemanticKernelFactory>();

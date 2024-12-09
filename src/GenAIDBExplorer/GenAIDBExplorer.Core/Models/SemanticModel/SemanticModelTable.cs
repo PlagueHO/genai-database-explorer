@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace GenAIDBExplorer.Core.Models.SemanticModel;
 
@@ -12,6 +13,20 @@ public sealed class SemanticModelTable(
     string? description = null
     ) : SemanticModelEntity(schema, name, description)
 {
+    /// <summary>
+    /// Gets or sets the details of the purpose of the table.
+    /// This is usually obtained from the data dictionary.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public string? Details { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets additional information about the table (such as business rules).
+    /// This is usually obtained from the data dictionary.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public string? AdditionalInformation { get; set; } = string.Empty;
+
     /// <summary>
     /// Gets the columns in the table.
     /// </summary>
