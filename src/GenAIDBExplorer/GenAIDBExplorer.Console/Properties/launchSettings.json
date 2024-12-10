@@ -26,7 +26,7 @@
     },
     "GenAIDBExplorer.Console data-dictionary table": {
       "commandName": "Project",
-      "commandLineArgs": "data-dictionary table -p d:\\temp -d d:\\data_dictionary_tables"
+      "commandLineArgs": "data-dictionary table -p d:\\temp -d d:\\data_dictionary_tables\\dbo.tblTrans_Inventory.md"
     }
   }
 }

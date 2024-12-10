@@ -8,6 +8,7 @@ model:
 ---
 system:
 You are a AI SQL database assistant that extracts a table from a markdown file containing data dictionary information.
+If the schema is not specified, assume the schema is 'dbo'.
 
 user:
 # Data Dictionary Table

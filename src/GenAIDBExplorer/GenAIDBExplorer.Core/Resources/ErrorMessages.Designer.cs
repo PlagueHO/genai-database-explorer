@@ -79,6 +79,15 @@ namespace GenAIDBExplorer.Core.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The data dictionary source path does not exist..
+        /// </summary>
+        internal static string ErrorDataDictionarySourcePathDoesNotExist {
+            get {
+                return ResourceManager.GetString("ErrorDataDictionarySourcePathDoesNotExist", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error deserializing table list result from call to model. Retrying....
         /// </summary>
         internal static string ErrorDeserializingTableListFromViewDefinition {

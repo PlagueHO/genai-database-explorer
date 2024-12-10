@@ -115,6 +115,24 @@ namespace GenAIDBExplorer.Core.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Data Dictionary files not found..
+        /// </summary>
+        internal static string DataDictionaryFilesNotFound {
+            get {
+                return ResourceManager.GetString("DataDictionaryFilesNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enriching table in semantic model from data dictionary..
+        /// </summary>
+        internal static string EnrichingTableFromDataDictionary {
+            get {
+                return ResourceManager.GetString("EnrichingTableFromDataDictionary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Executing SQL query..
         /// </summary>
         internal static string ExecutingSQLQuery {
@@ -219,6 +237,15 @@ namespace GenAIDBExplorer.Core.Resources {
         internal static string ProjectSettingsValidationSuccessful {
             get {
                 return ResourceManager.GetString("ProjectSettingsValidationSuccessful", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Table does not exist in Semantic Model..
+        /// </summary>
+        internal static string TableDoesNotExistInSemanticModel {
+            get {
+                return ResourceManager.GetString("TableDoesNotExistInSemanticModel", resourceCulture);
             }
         }
         

@@ -174,4 +174,13 @@
   <data name="LoadingDataDictionaryTable" xml:space="preserve">
     <value>Loading data dictionary information for tables into semantic model.</value>
   </data>
+  <data name="DataDictionaryFilesNotFound" xml:space="preserve">
+    <value>Data Dictionary files not found.</value>
+  </data>
+  <data name="EnrichingTableFromDataDictionary" xml:space="preserve">
+    <value>Enriching table in semantic model from data dictionary.</value>
+  </data>
+  <data name="TableDoesNotExistInSemanticModel" xml:space="preserve">
+    <value>Table does not exist in Semantic Model.</value>
+  </data>
 </root>

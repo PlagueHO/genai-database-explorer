@@ -7,6 +7,7 @@ using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using System.Text.Json;
 using DocumentFormat.OpenXml.Vml.Office;
+using System.Resources;
 
 namespace GenAIDBExplorer.Core.DataDictionary;
 
@@ -22,9 +23,129 @@ public class DataDictionaryProvider(
     private readonly IProject _project = project;
     private readonly ISemanticKernelFactory _semanticKernelFactory = semanticKernelFactory;
     private readonly ILogger<DataDictionaryProvider> _logger = logger;
+    private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Core.Resources.LogMessages", typeof(DataDictionaryProvider).Assembly);
+    private static readonly ResourceManager _resourceManagerErrorMessages = new("GenAIDBExplorer.Core.Resources.ErrorMessages", typeof(DataDictionaryProvider).Assembly);
     private const string _promptyFolder = "Prompty";
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Enriches the semantic model by adding information from a data dictionary.
+    /// </summary>
+    /// <param name="semanticModel">The semantic model to update.</param>
+    /// <param name="sourcePathPattern">The source path pattern to search for data dictionary files.</param>
+    /// <param name="schemaName">The schema name to filter tables.</param>
+    /// <param name="tableName">The table name to filter tables.</param>
+    public async Task EnrichSemanticModelFromDataDictionaryAsync(
+        SemanticModel semanticModel,
+        string sourcePathPattern,
+        string? schemaName,
+        string? tableName)
+    {
+        var directory = Path.GetDirectoryName(sourcePathPattern);
+        var searchPattern = Path.GetFileName(sourcePathPattern);
+
+        if (string.IsNullOrEmpty(directory))
+        {
+            directory = ".";
+        }
+
+        if (string.IsNullOrEmpty(searchPattern))
+        {
+            searchPattern = "*.md";
+        }
+
+        if (!Directory.Exists(directory))
+        {
+            _logger.LogError("{ErrorMessage} '{SourcePath}'", _resourceManagerErrorMessages.GetString("ErrorDataDictionarySourcePathDoesNotExist"), directory);
+            return;
+        }
+
+        var markdownFiles = Directory.GetFiles(directory, searchPattern, SearchOption.AllDirectories);
+
+        if (markdownFiles.Length == 0)
+        {
+            _logger.LogWarning("{Message} '{SourcePath}' with pattern '{SearchPattern}'", _resourceManagerLogMessages.GetString("DataDictionaryFilesNotFound"), directory, searchPattern);
+            return;
+        }
+
+        var tables = await GetTablesFromMarkdownFilesAsync(markdownFiles);
+
+        foreach (var table in tables)
+        {
+            if (!string.IsNullOrEmpty(schemaName) &&
+                !table.SchemaName.Equals(schemaName, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (!string.IsNullOrEmpty(tableName) &&
+                !table.TableName.Equals(tableName, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var semanticModelTable = semanticModel.FindTable(table.SchemaName, table.TableName);
+            if (semanticModelTable != null)
+            {
+                logger.LogInformation(
+                    "{Message} [{SchemaName}].[{TableName}]", _resourceManagerLogMessages.GetString("EnrichingTableFromDataDictionary"), table.SchemaName, table.TableName);
+
+                MergeDataDictionaryTableIntoSemanticModel(semanticModelTable, table);
+            }
+            else
+            {
+                _logger.LogWarning("{Message} [{SchemaName}].[{TableName}]", _resourceManagerLogMessages.GetString("TableDoesNotExistInSemanticModel"), table.SchemaName, table.TableName);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Merges a data dictionary table into a semantic model table.
+    /// </summary>
+    /// <param name="semanticModelTable"></param>
+    /// <param name="dataDictionaryTable"></param>
+    internal void MergeDataDictionaryTableIntoSemanticModel(SemanticModelTable semanticModelTable, TableDataDictionary dataDictionaryTable)
+    {
+        semanticModelTable.Description = dataDictionaryTable.Description;
+        semanticModelTable.Details = dataDictionaryTable.Details;
+        semanticModelTable.AdditionalInformation = dataDictionaryTable.AdditionalInformation;
+
+        var dataDictionaryColumnNames = dataDictionaryTable.Columns.Select(c => c.ColumnName).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var semanticModelColumnNames = semanticModelTable.Columns.Select(c => c.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        // Warn about columns in the data dictionary but not in the semantic model table
+        foreach (var column in dataDictionaryTable.Columns)
+        {
+            var semanticModelColumn = semanticModelTable.Columns.FirstOrDefault(c => c.Name.Equals(column.ColumnName, StringComparison.OrdinalIgnoreCase));
+            if (semanticModelColumn != null)
+            {
+                if (!semanticModelColumn.Type.Equals(column.Type, StringComparison.OrdinalIgnoreCase))
+                {
+                    _logger.LogWarning("Column type mismatch for column '{ColumnName}' in table '{TableName}'. Data dictionary type: '{DataType}', Semantic model type: '{SemanticType}'",
+                        column.ColumnName, semanticModelTable.Name, column.Type, semanticModelColumn.Type);
+                }
+                semanticModelColumn.Description = column.Description;
+            }
+            else
+            {
+                _logger.LogWarning("Column '{ColumnName}' from data dictionary not found in semantic model table '{TableName}'", column.ColumnName, semanticModelTable.Name);
+            }
+        }
+
+        // Warn about columns in the semantic model table but not in the data dictionary
+        foreach (var column in semanticModelTable.Columns)
+        {
+            if (!dataDictionaryColumnNames.Contains(column.Name))
+            {
+                _logger.LogWarning("Column '{ColumnName}' in semantic model table '{TableName}' not found in data dictionary", column.Name, semanticModelTable.Name);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Extracts tables from a collection of markdown files.
+    /// </summary>
+    /// <param name="markdownFiles"></param>
+    /// <returns></returns>
     internal async Task<List<TableDataDictionary>> GetTablesFromMarkdownFilesAsync(IEnumerable<string> markdownFiles)
     {
         var processResult = new List<TableDataDictionary>();
@@ -43,7 +164,12 @@ public class DataDictionaryProvider(
         return processResult;
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Extracts a table structure from the given markdown data dictionary file.
+    /// </summary>
+    /// <param name="markdownContent"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
     internal async Task<TableDataDictionary> GetTableFromMarkdownAsync(string markdownContent)
     {
         // Initialize Semantic Kernel
@@ -94,66 +220,6 @@ public class DataDictionaryProvider(
                 ?? throw new InvalidOperationException("Failed to deserialize table structure from markdown content.");
 
             return table;
-        }
-    }
-
-    /// <inheritdoc/>
-    public async Task ProcessTableDataDictionaryAsync(
-        SemanticModel semanticModel,
-        DirectoryInfo sourcePath,
-        string? schemaName,
-        string? tableName)
-    {
-        if (!sourcePath.Exists)
-        {
-            _logger.LogError("The source path '{SourcePath}' does not exist.", sourcePath.FullName);
-            return;
-        }
-
-        var markdownFiles = Directory.GetFiles(sourcePath.FullName, "*.md", SearchOption.AllDirectories);
-
-        if (markdownFiles.Length == 0)
-        {
-            _logger.LogWarning("No markdown files found in '{SourcePath}'", sourcePath.FullName);
-            return;
-        }
-
-        var tables = await GetTablesFromMarkdownFilesAsync(markdownFiles);
-
-        foreach (var table in tables)
-        {
-            if (!string.IsNullOrEmpty(schemaName) &&
-                !table.SchemaName.Equals(schemaName, StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-
-            if (!string.IsNullOrEmpty(tableName) &&
-                !table.TableName.Equals(tableName, StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-
-            var existingTable = semanticModel.FindTable(table.SchemaName, table.TableName);
-            if (existingTable != null)
-            {
-                _logger.LogInformation(
-                    "Updating table '{Schema}.{Table}' in semantic model.",
-                    table.SchemaName,
-                    table.TableName);
-
-                existingTable.Description = table.Description;
-                existingTable.Details = table.Details;
-                existingTable.AdditionalInformation = table.AdditionalInformation;
-                // Update other properties if needed
-            }
-            else
-            {
-                _logger.LogWarning(
-                    "Table '{Schema}.{Table}' does not exist in the semantic model.",
-                    table.SchemaName,
-                    table.TableName);
-            }
         }
     }
 

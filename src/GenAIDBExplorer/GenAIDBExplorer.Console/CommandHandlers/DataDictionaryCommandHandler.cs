@@ -52,9 +52,9 @@ public class DataDictionaryCommandHandler(
             IsRequired = true
         };
 
-        var sourcePathOption = new Option<DirectoryInfo>(
+        var sourcePathOption = new Option<string>(
             aliases: ["--source-path", "-d"],
-            description: "The path to the folder containing data dictionary files."
+            description: "The path to the source directory containing data dictionary files. Supports file masks."
         )
         {
             IsRequired = true
@@ -82,13 +82,11 @@ public class DataDictionaryCommandHandler(
             getDefaultValue: () => false
         );
 
-        // Create the base 'data-dictionary' command
         var dataDictionaryCommand = new Command("data-dictionary", "Process data dictionary files and update the semantic model.")
         {
             projectPathOption
         };
 
-        // Create subcommands
         var tableCommand = new Command("table", "Process table data dictionary files.")
         {
             projectPathOption,
@@ -97,12 +95,12 @@ public class DataDictionaryCommandHandler(
             nameOption,
             showOption
         };
-        tableCommand.SetHandler(async (DirectoryInfo projectPath, DirectoryInfo sourcePath, string schemaName, string name, bool show) =>
+        tableCommand.SetHandler(async (DirectoryInfo projectPath, string sourcePathPattern, string schemaName, string name, bool show) =>
         {
             var handler = host.Services.GetRequiredService<DataDictionaryCommandHandler>();
             var options = new DataDictionaryCommandHandlerOptions(
                 projectPath,
-                sourcePath,
+                sourcePathPattern,
                 objectType: "table",
                 schemaName: schemaName,
                 objectName: name,
@@ -111,7 +109,6 @@ public class DataDictionaryCommandHandler(
             await handler.HandleAsync(options);
         }, projectPathOption, sourcePathOption, schemaNameOption, nameOption, showOption);
 
-        // Add subcommands to the 'data-dictionary' command
         dataDictionaryCommand.AddCommand(tableCommand);
 
         return dataDictionaryCommand;
@@ -126,13 +123,20 @@ public class DataDictionaryCommandHandler(
         AssertCommandOptionsValid(commandOptions);
 
         var projectPath = commandOptions.ProjectPath;
-        var sourcePath = commandOptions.SourcePath;
+        var sourcePathPattern = commandOptions.SourcePathPattern;
 
         ValidateProjectPath(projectPath);
 
-        if (!sourcePath.Exists)
+        var directory = Path.GetDirectoryName(sourcePathPattern);
+
+        if (string.IsNullOrEmpty(directory))
         {
-            _logger.LogError("{ErrorMessage} '{SourcePath}'", _resourceManagerErrorMessages.GetString("DataDictionarySourcePathDoesNotExist"), sourcePath.FullName);
+            directory = ".";
+        }
+
+        if (!Directory.Exists(directory))
+        {
+            _logger.LogError("{ErrorMessage} '{SourcePath}'", _resourceManagerErrorMessages.GetString("DataDictionarySourcePathDoesNotExist"), directory);
             return;
         }
 
@@ -144,9 +148,9 @@ public class DataDictionaryCommandHandler(
             {
                 case "table":
 
-                    await _dataDictionaryProvider.ProcessTableDataDictionaryAsync(
+                    await _dataDictionaryProvider.EnrichSemanticModelFromDataDictionaryAsync(
                         semanticModel,
-                        sourcePath,
+                        sourcePathPattern,
                         commandOptions.SchemaName,
                         commandOptions.ObjectName);
                     if (commandOptions.Show)
@@ -164,7 +168,6 @@ public class DataDictionaryCommandHandler(
             _logger.LogError("No object type specified.");
         }
 
-        // Save the updated semantic model
         _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("SavingSemanticModel"), projectPath.FullName);
         var semanticModelDirectory = GetSemanticModelDirectory(projectPath);
         await semanticModel.SaveModelAsync(semanticModelDirectory);

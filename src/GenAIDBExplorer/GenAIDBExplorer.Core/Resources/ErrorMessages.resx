@@ -156,4 +156,7 @@
   <data name="ErrorDeserializingTableListFromViewDefinition" xml:space="preserve">
     <value>Error deserializing table list result from call to model. Retrying...</value>
   </data>
+  <data name="ErrorDataDictionarySourcePathDoesNotExist" xml:space="preserve">
+    <value>The data dictionary source path does not exist.</value>
+  </data>
 </root>

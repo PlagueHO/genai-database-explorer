@@ -14,14 +14,14 @@ using GenAIDBExplorer.Console.CommandHandlers;
 /// <param name="show">Flag to display the entity after processing.</param>
 public class DataDictionaryCommandHandlerOptions(
     DirectoryInfo projectPath,
-    DirectoryInfo sourcePath,
+    string sourcePathPattern,
     string? objectType = null,
     string? schemaName = null,
     string? objectName = null,
     bool show = false
 ) : CommandHandlerOptions(projectPath)
 {
-    public DirectoryInfo SourcePath { get; } = sourcePath;
+    public string SourcePathPattern { get; } = sourcePathPattern;
     public string? ObjectType { get; } = objectType;
     public string? SchemaName { get; } = schemaName;
     public string? ObjectName { get; } = objectName;
