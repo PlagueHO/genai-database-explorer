@@ -457,7 +457,7 @@ public sealed class SchemaRepository(
             var parameters = new Dictionary<string, object>
             {
                 { "@NumberOfRecords", numberOfRecords },
-                { "@EntityName", $"{tableInfo.SchemaName}.{tableInfo.TableName}" }
+                { "@EntityName", $"[{tableInfo.SchemaName}].[{tableInfo.TableName}]" }
             };
 
             using var reader = await _sqlQueryExecutor.ExecuteReaderAsync(query, parameters).ConfigureAwait(false);
@@ -503,7 +503,7 @@ public sealed class SchemaRepository(
             var parameters = new Dictionary<string, object>
             {
                 { "@NumberOfRecords", numberOfRecords },
-                { "@EntityName", $"{tableInfo.SchemaName}.{tableInfo.TableName}" }
+                { "@EntityName", $"[{viewInfo.SchemaName}].[{viewInfo.ViewName}]" }
             };
 
             using var reader = await _sqlQueryExecutor.ExecuteReaderAsync(query, parameters).ConfigureAwait(false);
