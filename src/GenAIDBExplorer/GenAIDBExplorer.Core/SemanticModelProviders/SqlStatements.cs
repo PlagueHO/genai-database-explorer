@@ -223,4 +223,53 @@ FROM
 WHERE
     obj.type in ('P', 'X')
 ";
+
+    public const string GetSampleTableData = @"
+SELECT
+    *
+FROM (
+    SELECT
+        *, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum
+    FROM
+        @EntityName
+    ) AS RowConstrainedResult
+WHERE
+    RowNum <= @NumberOfRecords
+ORDER BY
+    RowNum"";
+";
+
+    public const string GetSampleTableDataRandom = @"
+SELECT
+    TOP (@NumberOfRecords) *
+FROM
+    @EntityName
+ORDER BY
+    NEWID()
+";
+
+    public const string GetSampleViewData = @"
+SELECT
+    *
+FROM (
+    SELECT
+        *, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum
+    FROM
+        @EntityName
+    ) AS RowConstrainedResult
+WHERE
+    RowNum <= @NumberOfRecords
+ORDER BY
+    RowNum"";
+";
+
+    public const string GetSampleViewDataRandom = @"
+SELECT
+    TOP (@NumberOfRecords) *
+FROM
+    @EntityName
+ORDER BY
+    NEWID()
+";
+
 }

@@ -1,9 +1,9 @@
 using GenAIDBExplorer.Core.Data.DatabaseProviders;
+using GenAIDBExplorer.Core.Models.Database;
+using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.Models.SemanticModel;
 using Microsoft.Extensions.Logging;
 using System.Resources;
-using GenAIDBExplorer.Core.Models.Database;
-using GenAIDBExplorer.Core.Models.Project;
 
 namespace GenAIDBExplorer.Core.SemanticModelProviders;
 
@@ -307,9 +307,9 @@ public sealed class SchemaRepository(
         {
             var query = SqlStatements.DescribeReferences;
             var parameters = new Dictionary<string, object> {
-            { "@SchemaName", table.SchemaName },
-            { "@TableName", table.TableName }
-        };
+                { "@SchemaName", table.SchemaName },
+                { "@TableName", table.TableName }
+            };
             using var reader = await _sqlQueryExecutor.ExecuteReaderAsync(query, parameters).ConfigureAwait(false);
 
             while (await reader.ReadAsync().ConfigureAwait(false))
@@ -353,9 +353,9 @@ public sealed class SchemaRepository(
         {
             var query = SqlStatements.DescribeViewColumns;
             var parameters = new Dictionary<string, object> {
-            { "@SchemaName", view.SchemaName },
-            { "@ViewName", view.ViewName }
-        };
+                { "@SchemaName", view.SchemaName },
+                { "@ViewName", view.ViewName }
+            };
             using var reader = await _sqlQueryExecutor.ExecuteReaderAsync(query, parameters).ConfigureAwait(false);
 
             while (await reader.ReadAsync().ConfigureAwait(false))
@@ -452,26 +452,12 @@ public sealed class SchemaRepository(
     {
         try
         {
-            string query;
-            // TODO: Move to SQLStatements
-            if (selectRandom)
-            {
-                query = $"SELECT TOP (@NumberOfRecords) * FROM [@{tableInfo.SchemaName}].[@{tableInfo.TableName}] ORDER BY NEWID()";
-            }
-            else
-            {
-                query = $@"
-                    SELECT * FROM (
-                        SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum
-                        FROM [{tableInfo.SchemaName}].[{tableInfo.TableName}]
-                    ) AS RowConstrainedResult
-                    WHERE RowNum <= @NumberOfRecords
-                    ORDER BY RowNum";
-            }
+            var query = (selectRandom ? SqlStatements.GetSampleTableDataRandom : SqlStatements.GetSampleTableData);
 
             var parameters = new Dictionary<string, object>
             {
-                { "@NumberOfRecords", numberOfRecords }
+                { "@NumberOfRecords", numberOfRecords },
+                { "@EntityName", $"{tableInfo.SchemaName}.{tableInfo.TableName}" }
             };
 
             using var reader = await _sqlQueryExecutor.ExecuteReaderAsync(query, parameters).ConfigureAwait(false);
@@ -513,25 +499,11 @@ public sealed class SchemaRepository(
     {
         try
         {
-            string query;
-            // TODO: Move to SQLStatements
-            if (selectRandom)
-            {
-                query = $"SELECT TOP (@NumberOfRecords) * FROM [@{viewInfo.SchemaName}].[@{viewInfo.ViewName}] ORDER BY NEWID()";
-            }
-            else
-            {
-                query = $@"
-                    SELECT * FROM (
-                        SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum
-                        FROM [{viewInfo.SchemaName}].[{viewInfo.ViewName}]
-                    ) AS RowConstrainedResult
-                    WHERE RowNum <= @NumberOfRecords
-                    ORDER BY RowNum";
-            }
+            var query = (selectRandom ? SqlStatements.GetSampleViewDataRandom : SqlStatements.GetSampleViewData);
             var parameters = new Dictionary<string, object>
             {
-                { "@NumberOfRecords", numberOfRecords }
+                { "@NumberOfRecords", numberOfRecords },
+                { "@EntityName", $"{tableInfo.SchemaName}.{tableInfo.TableName}" }
             };
 
             using var reader = await _sqlQueryExecutor.ExecuteReaderAsync(query, parameters).ConfigureAwait(false);
