@@ -21,18 +21,18 @@ jobs:
 
       - name: Run unit tests on ${{ matrix.project }}
         run: |
-          dotnet test --configuration Release --logger "trx;LogFileName=TestResults.trx" --results-directory ./TestResults
-        working-directory: ./src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test/
+          dotnet test --configuration Release --logger trx --verbosity normal --results-directory "TestResults-${{ matrix.project }}"
 
       - name: Upload test results for ${{ matrix.project }}
         uses: actions/upload-artifact@v4
+        if: ${{ always() }}
         with:
-          name: ${{ matrix.project }}.Test
-          path: ./src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test/TestResults/TestResults.trx
+          name: dotnet-results-${{ matrix.project }}
+          path: TestResults-${{ matrix.project }}
 
       - name: Publish test results for ${{ matrix.project }}
         uses: EnricoMi/publish-unit-test-result-action@v2
-        if: always()
+        if: ${{ always() }}
         with:
             files: |
               ./src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test/TestResults/TestResults.trx
