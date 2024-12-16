@@ -1,3 +1,4 @@
+using GenAIDBExplorer.Console.Services;
 using GenAIDBExplorer.Core.Data.DatabaseProviders;
 using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.Models.SemanticModel;
@@ -21,6 +22,7 @@ public abstract class CommandHandler<TOptions>(
     IProject project,
     IDatabaseConnectionProvider connectionProvider,
     ISemanticModelProvider semanticModelProvider,
+    IOutputService outputService,
     IServiceProvider serviceProvider,
     ILogger<ICommandHandler<TOptions>> logger
 ) : ICommandHandler<TOptions> where TOptions : ICommandHandlerOptions
@@ -42,6 +44,11 @@ public abstract class CommandHandler<TOptions>(
     /// Semantic model provider instance for building a semantic model of the database.
     /// </summary>
     protected readonly ISemanticModelProvider _semanticModelProvider = semanticModelProvider ?? throw new ArgumentNullException(nameof(semanticModelProvider));
+
+    /// <summary>
+    /// Output service instance for outputting information, warnings, and errors.
+    /// </summary>
+    protected readonly IOutputService _outputService = outputService ?? throw new ArgumentNullException(nameof(outputService));
 
     /// <summary>
     /// Service provider instance for resolving dependencies.
@@ -94,31 +101,27 @@ public abstract class CommandHandler<TOptions>(
     /// Outputs an informational message to the console.
     /// </summary>
     /// <param name="message">The message to output.</param>
-    protected static void OutputInformation(string message)
+    protected void OutputInformation(string message)
     {
-        System.Console.WriteLine(message);
+        _outputService.WriteLine(message);
     }
 
     /// <summary>
     /// Outputs a warning message to the console in yellow text.
     /// </summary>
     /// <param name="message">The message to output.</param>
-    protected static void OutputWarning(string message)
+    protected void OutputWarning(string message)
     {
-        System.Console.ForegroundColor = ConsoleColor.Yellow;
-        System.Console.WriteLine(message);
-        System.Console.ResetColor();
+        _outputService.WriteWarning(message);
     }
 
     /// <summary>
     /// Output a stop error to the console as red text.
     /// </summary>
     /// <param name="message">The message to output.</param>
-    protected static void OutputStopError(string message)
+    protected void OutputStopError(string message)
     {
-        System.Console.ForegroundColor = ConsoleColor.Red;
-        System.Console.WriteLine(message);
-        System.Console.ResetColor();
+        _outputService.WriteError(message);
     }
 
     /// <summary>

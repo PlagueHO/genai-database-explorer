@@ -1,7 +1,7 @@
-﻿using GenAIDBExplorer.Core.Data.DatabaseProviders;
+﻿using GenAIDBExplorer.Console.Services;
+using GenAIDBExplorer.Core.Data.DatabaseProviders;
 using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.SemanticModelProviders;
-using GenAIDBExplorer.Core.SemanticProviders;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -25,9 +25,10 @@ public class InitProjectCommandHandler(
     IProject project,
     ISemanticModelProvider semanticModelProvider,
     IDatabaseConnectionProvider connectionProvider,
+    IOutputService outputService,
     IServiceProvider serviceProvider,
     ILogger<ICommandHandler<InitProjectCommandHandlerOptions>> logger
-) : CommandHandler<InitProjectCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, serviceProvider, logger)
+) : CommandHandler<InitProjectCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, outputService, serviceProvider, logger)
 {
     private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Console.Resources.LogMessages", typeof(InitProjectCommandHandler).Assembly);
 

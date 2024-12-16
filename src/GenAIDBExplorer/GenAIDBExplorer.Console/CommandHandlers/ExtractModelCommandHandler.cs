@@ -1,8 +1,7 @@
 ﻿using GenAIDBExplorer.Core.Data.DatabaseProviders;
-using GenAIDBExplorer.Core.DataDictionary;
 using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.SemanticModelProviders;
-using GenAIDBExplorer.Core.SemanticProviders;
+using GenAIDBExplorer.Console.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -26,9 +25,10 @@ public class ExtractModelCommandHandler(
     IProject project,
     IDatabaseConnectionProvider connectionProvider,
     ISemanticModelProvider semanticModelProvider,
+    IOutputService outputService,
     IServiceProvider serviceProvider,
     ILogger<ICommandHandler<ExtractModelCommandHandlerOptions>> logger
-) : CommandHandler<ExtractModelCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, serviceProvider, logger)
+) : CommandHandler<ExtractModelCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, outputService, serviceProvider, logger)
 {
     private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Console.Resources.LogMessages", typeof(ExtractModelCommandHandler).Assembly);
 

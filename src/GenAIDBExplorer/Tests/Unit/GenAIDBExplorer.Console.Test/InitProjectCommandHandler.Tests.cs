@@ -1,9 +1,9 @@
 using FluentAssertions;
 using GenAIDBExplorer.Console.CommandHandlers;
+using GenAIDBExplorer.Console.Services;
 using GenAIDBExplorer.Core.Data.DatabaseProviders;
 using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.SemanticModelProviders;
-using GenAIDBExplorer.Core.SemanticProviders;
 using Microsoft.Extensions.Logging;
 using Moq;
 
@@ -15,9 +15,9 @@ public class InitProjectCommandHandlerTests
     private Mock<IProject> _mockProject;
     private Mock<ISemanticModelProvider> _mockSemanticModelProvider;
     private Mock<IDatabaseConnectionProvider> _mockConnectionProvider;
-    private Mock<ISemanticDescriptionProvider> _mockSemanticDescriptionProvider;
     private Mock<IServiceProvider> _mockServiceProvider;
     private Mock<ILogger<ICommandHandler<InitProjectCommandHandlerOptions>>> _mockLogger;
+    private Mock<IOutputService> _mockOutputService;
     private InitProjectCommandHandler _handler;
 
     [TestInitialize]
@@ -27,15 +27,16 @@ public class InitProjectCommandHandlerTests
         _mockProject = new Mock<IProject>();
         _mockSemanticModelProvider = new Mock<ISemanticModelProvider>();
         _mockConnectionProvider = new Mock<IDatabaseConnectionProvider>();
-        _mockSemanticDescriptionProvider = new Mock<ISemanticDescriptionProvider>();
         _mockServiceProvider = new Mock<IServiceProvider>();
         _mockLogger = new Mock<ILogger<ICommandHandler<InitProjectCommandHandlerOptions>>>();
+        _mockOutputService = new Mock<IOutputService>();
 
         // Arrange: Initialize the handler with mock dependencies
         _handler = new InitProjectCommandHandler(
             _mockProject.Object,
             _mockSemanticModelProvider.Object,
             _mockConnectionProvider.Object,
+            _mockOutputService.Object,
             _mockServiceProvider.Object,
             _mockLogger.Object
         );
@@ -97,6 +98,8 @@ public class InitProjectCommandHandlerTests
                 null,
                 It.IsAny<Func<object, Exception, string>>()),
             Times.Never);
+
+        _mockOutputService.Verify(o => o.WriteError(It.Is<string>(s => s.Contains(exceptionMessage))), Times.Once);
     }
 
     [TestMethod]

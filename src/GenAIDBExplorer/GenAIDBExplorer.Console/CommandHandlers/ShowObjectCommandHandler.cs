@@ -7,6 +7,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using GenAIDBExplorer.Core.Data.DatabaseProviders;
 using GenAIDBExplorer.Core.SemanticProviders;
+using GenAIDBExplorer.Console.Services;
 
 namespace GenAIDBExplorer.Console.CommandHandlers
 {
@@ -21,9 +22,10 @@ namespace GenAIDBExplorer.Console.CommandHandlers
         IProject project,
         ISemanticModelProvider semanticModelProvider,
         IDatabaseConnectionProvider connectionProvider,
+        IOutputService outputService,
         IServiceProvider serviceProvider,
         ILogger<ICommandHandler<ShowObjectCommandHandlerOptions>> logger
-    ) : CommandHandler<ShowObjectCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, serviceProvider, logger)
+    ) : CommandHandler<ShowObjectCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, outputService, serviceProvider, logger)
     {
         private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Console.Resources.LogMessages", typeof(ShowObjectCommandHandler).Assembly);
         private static readonly ResourceManager _resourceManagerErrorMessages = new("GenAIDBExplorer.Console.Resources.ErrorMessages", typeof(ShowObjectCommandHandler).Assembly);

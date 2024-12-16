@@ -1,4 +1,5 @@
-﻿using GenAIDBExplorer.Console.CommandHandlers;
+﻿using GenAIDBExplorer.Console.Services;
+using GenAIDBExplorer.Console.CommandHandlers;
 using GenAIDBExplorer.Core.Data.ConnectionManager;
 using GenAIDBExplorer.Core.Data.DatabaseProviders;
 using GenAIDBExplorer.Core.DataDictionary;
@@ -56,6 +57,9 @@ public static class HostBuilderExtensions
                 services.AddSingleton<ExtractModelCommandHandler>();
                 services.AddSingleton<QueryModelCommandHandler>();
                 services.AddSingleton<ShowObjectCommandHandler>();
+
+                // Register the Output service
+                services.AddSingleton<IOutputService, OutputService>();
 
                 // Register the Project service
                 services.AddSingleton<IProject, Project>();

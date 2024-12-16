@@ -1,5 +1,6 @@
 // File: GenAIDBExplorer.Console/CommandHandlers/DataDictionaryCommandHandler.cs
 
+using GenAIDBExplorer.Console.Services;
 using GenAIDBExplorer.Core.Data.DatabaseProviders;
 using GenAIDBExplorer.Core.DataDictionary;
 using GenAIDBExplorer.Core.Models.Project;
@@ -29,9 +30,10 @@ public class DataDictionaryCommandHandler(
     IProject project,
     IDatabaseConnectionProvider connectionProvider,
     ISemanticModelProvider semanticModelProvider,
+    IOutputService outputService,
     IServiceProvider serviceProvider,
     ILogger<ICommandHandler<DataDictionaryCommandHandlerOptions>> logger
-) : CommandHandler<DataDictionaryCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, serviceProvider, logger)
+) : CommandHandler<DataDictionaryCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, outputService, serviceProvider, logger)
 {
     private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Console.Resources.LogMessages", typeof(DataDictionaryCommandHandler).Assembly);
     private static readonly ResourceManager _resourceManagerErrorMessages = new("GenAIDBExplorer.Console.Resources.ErrorMessages", typeof(DataDictionaryCommandHandler).Assembly);

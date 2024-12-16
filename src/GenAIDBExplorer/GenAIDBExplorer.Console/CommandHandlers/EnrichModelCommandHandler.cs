@@ -1,3 +1,4 @@
+using GenAIDBExplorer.Console.Services;
 using GenAIDBExplorer.Core.Data.DatabaseProviders;
 using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.Models.SemanticModel;
@@ -24,9 +25,10 @@ public class EnrichModelCommandHandler(
     IProject project,
     IDatabaseConnectionProvider connectionProvider,
     ISemanticModelProvider semanticModelProvider,
+    IOutputService outputService,
     IServiceProvider serviceProvider,
     ILogger<ICommandHandler<EnrichModelCommandHandlerOptions>> logger
-) : CommandHandler<EnrichModelCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, serviceProvider, logger)
+) : CommandHandler<EnrichModelCommandHandlerOptions>(project, connectionProvider, semanticModelProvider, outputService, serviceProvider, logger)
 {
     private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Console.Resources.LogMessages", typeof(EnrichModelCommandHandler).Assembly);
     private readonly ISemanticDescriptionProvider _semanticDescriptionProvider = serviceProvider.GetRequiredService<ISemanticDescriptionProvider>();
