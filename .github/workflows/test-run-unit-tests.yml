@@ -26,20 +26,20 @@ jobs:
 
       - name: Run unit tests on ${{ matrix.project }}
         run: |
-          dotnet test --configuration ${{ inputs.BUILD_CONFIGURATION }} --logger "trx;LogFileName=${{ matrix.project }}.trx" --verbosity normal
+          dotnet test ${{ matrix.project }}.Test.csproj --configuration ${{ inputs.BUILD_CONFIGURATION }} --logger "trx;LogFileName=${{ matrix.project }}.trx" --verbosity normal
         working-directory: ./src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test/
 
-      - name: Upload test results for ${{ matrix.project }}
+      - name: Upload unit test results for ${{ matrix.project }}
         uses: actions/upload-artifact@v4
         if: ${{ always() }}
         with:
           name: ${{ matrix.project }}.Test
-          path: ./src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test/bin/${{ inputs.BUILD_CONFIGURATION }}/net9.0/${{ matrix.project }}.trx
+          path: ./src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test/bin/${{ inputs.BUILD_CONFIGURATION }}/net9.0/TestResults/${{ matrix.project }}.trx
 
-      - name: Publish test results for ${{ matrix.project }}
+      - name: Publish unit test results for ${{ matrix.project }}
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: ${{ always() }}
         with:
             files: |
-              ./src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test/bin/${{ inputs.BUILD_CONFIGURATION }}/net9.0/${{ matrix.project }}.trx
+              ./src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test/bin/${{ inputs.BUILD_CONFIGURATION }}/net9.0/TestResults/${{ matrix.project }}.trx
             check_name: Unit tests ${{ matrix.project }}.Test
