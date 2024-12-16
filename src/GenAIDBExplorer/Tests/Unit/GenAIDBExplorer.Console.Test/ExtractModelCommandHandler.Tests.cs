@@ -65,7 +65,7 @@ public class ExtractModelCommandHandlerTests
             x => x.Log(
                 LogLevel.Information,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Extracting semantic model for project for '{projectPath.FullName}'")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Extracting semantic model for project. '{projectPath.FullName}'")),
                 null,
                 It.IsAny<Func<It.IsAnyType, Exception, string>>()),
             Times.Once);
@@ -74,7 +74,7 @@ public class ExtractModelCommandHandlerTests
             x => x.Log(
                 LogLevel.Information,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Saving semantic model to '{Path.Combine(projectPath.FullName, semanticModel.Name)}'")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Saving semantic model. '{Path.Combine(projectPath.FullName, semanticModel.Name)}'")),
                 null,
                 It.IsAny<Func<It.IsAnyType, Exception, string>>()),
             Times.Once);
@@ -83,7 +83,7 @@ public class ExtractModelCommandHandlerTests
             x => x.Log(
                 LogLevel.Information,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Semantic model extraction complete for '{projectPath.FullName}'")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Semantic model extraction complete. '{projectPath.FullName}'")),
                 null,
                 It.IsAny<Func<It.IsAnyType, Exception, string>>()),
             Times.Once);

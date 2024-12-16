@@ -58,7 +58,7 @@ public class InitProjectCommandHandlerTests
             x => x.Log(
                 LogLevel.Information,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Initializing project at '{projectPath.FullName}'")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Initializing project. '{projectPath.FullName}'")),
                 null,
                 It.IsAny<Func<It.IsAnyType, Exception, string>>()),
             Times.Once);
@@ -67,7 +67,7 @@ public class InitProjectCommandHandlerTests
             x => x.Log(
                 LogLevel.Information,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Project initialized successfully in '{projectPath.FullName}'")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Project initialized successfully. '{projectPath.FullName}'")),
                 null,
                 It.IsAny<Func<It.IsAnyType, Exception, string>>()),
             Times.Once);
