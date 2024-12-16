@@ -7,10 +7,10 @@
         "Schema": "dbo", // If omitted will get all schemas.
         "MaxDegreeOfParallelism": 10, // Number of parallel SQL tasks to run.
         "NotUsedTables": [ // Array of regex's to set NotUsed flag on tables in the database
-            "MSchange_tracking_history"
+            "^.*\\.MSchange_tracking_history$"
         ],
         "NotUsedColumns": [ // Array of regex's to set NotUsed flag on columns in the database
-            ".*_old$"
+            "*_old$"
         ],
         "NotUsedViews": [], // Array of regex's to set NotUsed flag on views in the database
         "NotUsedStoredProcedures": [] // Array of regex's to set NotUsed flag on stored procedures in the database

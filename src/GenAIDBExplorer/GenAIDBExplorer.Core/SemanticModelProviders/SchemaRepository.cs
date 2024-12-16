@@ -2,6 +2,7 @@ using GenAIDBExplorer.Core.Data.DatabaseProviders;
 using GenAIDBExplorer.Core.Models.Database;
 using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.Models.SemanticModel;
+using GenAIDBExplorer.Core.Models.SemanticModel.UsageStrategy;
 using Microsoft.Extensions.Logging;
 using System.Resources;
 
@@ -184,6 +185,11 @@ public sealed class SchemaRepository(
     {
         var semanticModelTable = new SemanticModelTable(table.SchemaName, table.TableName);
 
+        // Apply usage settings based on regex patterns from DatabaseSettings
+        var tableStrategy = new RegexTableUsageStrategy();
+        var tableRegexPatterns = _project.Settings.Database.NotUsedTables;
+        semanticModelTable.ApplyUsageSettings(tableStrategy, tableRegexPatterns);
+
         // Get the columns for the table
         var columns = await GetColumnsForTableAsync(table).ConfigureAwait(false);
 
@@ -282,6 +288,11 @@ public sealed class SchemaRepository(
                     IsXmlDocument = reader.GetBoolean(12)
                 };
                 semanticModelColumns.Add(column);
+
+                // Apply usage settings based on regex patterns from DatabaseSettings
+                var strategy = new RegexColumnUsageStrategy();
+                var regexPatterns = _project.Settings.Database.NotUsedColumns;
+                semanticModelColumns.ApplyUsageSettings(strategy, regexPatterns);
             }
         }
         catch (Exception ex)
