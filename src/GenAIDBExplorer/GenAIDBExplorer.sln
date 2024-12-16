@@ -23,6 +23,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 		..\..\.github\workflows\continuous-deployment.yml = ..\..\.github\workflows\continuous-deployment.yml
 		..\..\.github\workflows\continuous-integration.yml = ..\..\.github\workflows\continuous-integration.yml
 		..\..\.github\workflows\deploy-infrastructure.yml = ..\..\.github\workflows\deploy-infrastructure.yml
+		..\..\.github\workflows\publish-applications.yml = ..\..\.github\workflows\publish-applications.yml
 		..\..\.github\workflows\set-build-variables.yml = ..\..\.github\workflows\set-build-variables.yml
 		..\..\.github\workflows\test-run-unit-tests.yml = ..\..\.github\workflows\test-run-unit-tests.yml
 		..\..\.github\workflows\validate-infrastructure.yml = ..\..\.github\workflows\validate-infrastructure.yml

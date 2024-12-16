@@ -9,8 +9,8 @@ on:
         default: 'Debug'
 
 jobs:
-  build-app-client:
-    name: Build application client
+  build-console-app:
+    name: Build console app
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -20,3 +20,6 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9
+
+      - name: Build Console App
+        run: dotnet build GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj -c ${{ inputs.BUILD_CONFIGURATION }}

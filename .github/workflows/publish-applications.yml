@@ -1,0 +1,25 @@
+name: publish-applications
+
+on:
+  workflow_call:
+    inputs:
+      BUILD_CONFIGURATION:
+        description: 'The build configuration to use (e.g., Debug or Release)'
+        type: string
+        default: 'Debug'
+
+jobs:
+  publish-console-app:
+    name: Publish console app
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9
+
+      - name: Publish Console App
+        run: dotnet publish GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj -c ${{ inputs.BUILD_CONFIGURATION }} -r linux-x64 --self-contained true /p:PublishSingleFile=true /p:PublishTrimmed=true /p:EnableCompressionInSingleFile=true

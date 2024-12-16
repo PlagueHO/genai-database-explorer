@@ -35,7 +35,14 @@ jobs:
       - test-run-unit-tests
     uses: ./.github/workflows/build-applications.yml
     with:
-      BUILD_CONFIGURATION: Release  
+      BUILD_CONFIGURATION: Release
+
+  publish-applications:
+    needs:
+      - build-applications
+    uses: ./.github/workflows/publish-applications.yml
+    with:
+      BUILD_CONFIGURATION: Release
         
   validate-infrastructure-test:
     needs:
