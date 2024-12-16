@@ -186,7 +186,7 @@ public sealed class SchemaRepository(
         var semanticModelTable = new SemanticModelTable(table.SchemaName, table.TableName);
 
         // Apply usage settings based on regex patterns from DatabaseSettings
-        var tableStrategy = new RegexTableUsageStrategy();
+        var tableStrategy = new RegexEntityUsageStrategy<SemanticModelTable>();
         var tableRegexPatterns = _project.Settings.Database.NotUsedTables;
         semanticModelTable.ApplyUsageSettings(tableStrategy, tableRegexPatterns);
 
@@ -225,6 +225,11 @@ public sealed class SchemaRepository(
     {
         var semanticModelView = new SemanticModelView(view.SchemaName, view.ViewName);
 
+        // Apply usage settings based on regex patterns from DatabaseSettings
+        var viewStrategy = new RegexEntityUsageStrategy<SemanticModelView>();
+        var viewRegexPatterns = _project.Settings.Database.NotUsedViews;
+        semanticModelView.ApplyUsageSettings(viewStrategy, viewRegexPatterns);
+
         // Get the columns for the view
         var columns = await GetColumnsForViewAsync(view).ConfigureAwait(false);
         semanticModelView.Columns.AddRange(columns);
@@ -248,6 +253,11 @@ public sealed class SchemaRepository(
             storedProcedure.Definition,
             storedProcedure.Parameters
         );
+
+        // Apply usage settings based on regex patterns from DatabaseSettings
+        var storedProcedureStrategy = new RegexEntityUsageStrategy<SemanticModelStoredProcedure>();
+        var storedProcedureRegexPatterns = _project.Settings.Database.NotUsedStoredProcedures;
+        semanticModelStoredProcedure.ApplyUsageSettings(storedProcedureStrategy, storedProcedureRegexPatterns);
 
         return Task.FromResult(semanticModelStoredProcedure);
     }
