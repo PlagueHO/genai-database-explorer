@@ -22,4 +22,4 @@ jobs:
           dotnet-version: 9
 
       - name: Publish Console App
-        run: dotnet publish GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj -c ${{ inputs.BUILD_CONFIGURATION }} -r linux-x64 --self-contained true /p:PublishSingleFile=true /p:PublishTrimmed=true /p:EnableCompressionInSingleFile=true
+        run: dotnet publish ./src/GenAIDBExplorer/GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj -c ${{ inputs.BUILD_CONFIGURATION }} -r linux-x64 --self-contained true /p:PublishSingleFile=true /p:PublishTrimmed=true /p:EnableCompressionInSingleFile=true

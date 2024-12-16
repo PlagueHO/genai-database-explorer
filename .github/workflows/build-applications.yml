@@ -22,4 +22,4 @@ jobs:
           dotnet-version: 9
 
       - name: Build Console App
-        run: dotnet build GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj -c ${{ inputs.BUILD_CONFIGURATION }}
+        run: dotnet build ./src/GenAIDBExplorer/GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj -c ${{ inputs.BUILD_CONFIGURATION }}
