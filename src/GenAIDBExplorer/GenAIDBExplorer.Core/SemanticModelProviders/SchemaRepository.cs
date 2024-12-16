@@ -3,15 +3,18 @@ using GenAIDBExplorer.Core.Models.SemanticModel;
 using Microsoft.Extensions.Logging;
 using System.Resources;
 using GenAIDBExplorer.Core.Models.Database;
+using GenAIDBExplorer.Core.Models.Project;
 
 namespace GenAIDBExplorer.Core.SemanticModelProviders;
 
 public sealed class SchemaRepository(
     ISqlQueryExecutor sqlQueryExecutor,
+    IProject project,
     ILogger<SchemaRepository> logger
 ) : ISchemaRepository
 {
     private readonly ISqlQueryExecutor _sqlQueryExecutor = sqlQueryExecutor;
+    private readonly IProject _project = project;
     private readonly ILogger<SchemaRepository> _logger = logger;
     private static readonly ResourceManager _resourceManagerErrorMessages = new("GenAIDBExplorer.Core.Resources.ErrorMessages", typeof(SchemaRepository).Assembly);
 

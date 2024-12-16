@@ -86,4 +86,8 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Models\SemanticModel\YamlConverters\" />
+  </ItemGroup>
+
 </Project>

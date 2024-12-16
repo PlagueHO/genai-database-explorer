@@ -35,4 +35,24 @@ public class DatabaseSettings
     /// The maximum number of parallel queries to run against the database. Requires MultipleActiveResultSets=True in the connection string.
     /// </summary>
     public int MaxDegreeOfParallelism { get; set; } = 1;
+
+    /// <summary>
+    /// A list of regular expressions to set the 'NotUsed' flag on tables in the database.
+    /// </summary>
+    public List<string> NotUsedTables { get; set; } = [];
+
+    /// <summary>
+    /// A list of regular expressions to exclude columns from the database. These will have 'NotUsed' set to true.
+    /// </summary>
+    public List<string> NotUsedColumns { get; set; } = [];
+
+    /// <summary>
+    /// A list of regular expressions to exclude views from the database. These will have 'NotUsed' set to true.
+    /// </summary>
+    public List<string> NotUsedViews { get; set; } = [];
+
+    /// <summary>
+    /// A list of regular expressions to exclude stored procedures from the database. These will have 'NotUsed' set to true.
+    /// </summary>
+    public List<string> NotUsedStoredProcedures { get; set; } = [];
 }

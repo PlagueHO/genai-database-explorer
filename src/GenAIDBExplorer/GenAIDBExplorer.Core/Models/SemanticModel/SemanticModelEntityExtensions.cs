@@ -1,5 +1,6 @@
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
+using GenAIDBExplorer.Core.Models.SemanticModel.YamlConverters;
 
 namespace GenAIDBExplorer.Core.Models.SemanticModel;
 
@@ -18,6 +19,7 @@ public static class SemanticModelEntityExtensions
         var serializer = new SerializerBuilder()
             .WithNamingConvention(CamelCaseNamingConvention.Instance)
             .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitDefaults)
+            .WithTypeConverter(new SemanticModelTableYamlConverter())
             .Build();
 
         return serializer.Serialize(entity);
