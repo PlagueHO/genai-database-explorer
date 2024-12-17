@@ -22,11 +22,11 @@ The reason that this approach of enriching a semantic model rather than just que
 ## Components
 
 ### Console App (GenAIDBExplorer.Console)
-cd 
+
 A console application that provides commands to manage Generative AI Database Explorer projects, including functions for:
 
-- **init-project**: Initializing a new project folder with a `settings.json` file.
-- **extract-model**: Extract a representation of the database schema as a **semantic model** in the ((project folder** based on the `settings.json` file.
+- **init-project**: Initializing a new project folder with a `settings.json` file to contain the configuration for the project.
+- **extract-model**: Extract a representation of the database schema as a **semantic model** in the **project folder** based on the `settings.json` file.
 - **data-dictionary**: Update an extracted semantic model with additional information provided from a set of data dictionary files.
 - **enrich-model**: Enrich an existing **semantic model** of a database schema in the project folder based on the `settings.json` file using Generative AI to produce an **enriched** semantic model.
 - **show-object**: Show the details of a table, column, or stored procedure in the **semantic model**.
@@ -38,7 +38,7 @@ This planned app is a simple web application that can take an **enriched model**
 
 ## Generative AI Database Explorer project
 
-All commands require the -p/--project setting that specifies a folder on disk called a "Project folder" that will contain a settings.json file that the user will configure before being able to execute any other commands.
+All commands require the -p/--project setting that specifies a folder on disk called a "project folder" that will contain a settings.json file that the user will configure before being able to execute any other commands.
 
 ## Semantic Model
 
