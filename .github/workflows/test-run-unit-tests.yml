@@ -26,7 +26,7 @@ jobs:
 
       - name: Run unit tests on ${{ matrix.project }}
         run: |
-          dotnet test ${{ matrix.project }}.Test.csproj --configuration ${{ inputs.BUILD_CONFIGURATION }} --logger "trx;LogFileName=${{ matrix.project }}.trx" --verbosity normal
+          dotnet test ${{ matrix.project }}.Test.csproj --configuration ${{ inputs.BUILD_CONFIGURATION }} --logger "trx;LogFileName=${{ matrix.project }}.trx" --verbosity minimal
         working-directory: ./src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test/
 
       - name: Upload unit test results for ${{ matrix.project }}

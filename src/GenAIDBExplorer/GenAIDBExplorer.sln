@@ -9,8 +9,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{AE3C59E3
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unit", "Unit", "{196DBF2D-9EE1-4453-9A59-70FE0FB2EBB9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenAIDBExplorer.Console.Test", "Tests\Unit\GenAIDBExplorer.Console.Test\GenAIDBExplorer.Console.Test.csproj", "{E95312FE-3044-473A-9662-468DEF7514E8}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{F932A986-F757-43FA-A2DA-EE69555F7F57}"
 	ProjectSection(SolutionItems) = preProject
 		..\..\.github\copilot-instructions.md = ..\..\.github\copilot-instructions.md
@@ -53,6 +51,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "modules", "modules", "{525A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenAIDBExplorer.Core", "GenAIDBExplorer.Core\GenAIDBExplorer.Core.csproj", "{149A5661-5CD2-4D33-99C8-ACCC3D9FC350}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenAIDBExplorer.Core.Test", "Tests\Unit\GenAIDBExplorer.Core.Test\GenAIDBExplorer.Core.Test.csproj", "{8024E38F-BBEA-4C5A-9065-F57F29E8B9A3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenAIDBExplorer.Console.Test", "Tests\Unit\GenAIDBExplorer.Console.Test\GenAIDBExplorer.Console.Test.csproj", "{EFBD0680-2A78-4D0A-BE54-CB92D2185332}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,24 +65,29 @@ Global
 		{7969708C-FF0A-458F-A79E-84FEBEA43144}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7969708C-FF0A-458F-A79E-84FEBEA43144}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7969708C-FF0A-458F-A79E-84FEBEA43144}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E95312FE-3044-473A-9662-468DEF7514E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E95312FE-3044-473A-9662-468DEF7514E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E95312FE-3044-473A-9662-468DEF7514E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E95312FE-3044-473A-9662-468DEF7514E8}.Release|Any CPU.Build.0 = Release|Any CPU
 		{149A5661-5CD2-4D33-99C8-ACCC3D9FC350}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{149A5661-5CD2-4D33-99C8-ACCC3D9FC350}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{149A5661-5CD2-4D33-99C8-ACCC3D9FC350}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{149A5661-5CD2-4D33-99C8-ACCC3D9FC350}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8024E38F-BBEA-4C5A-9065-F57F29E8B9A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8024E38F-BBEA-4C5A-9065-F57F29E8B9A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8024E38F-BBEA-4C5A-9065-F57F29E8B9A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8024E38F-BBEA-4C5A-9065-F57F29E8B9A3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EFBD0680-2A78-4D0A-BE54-CB92D2185332}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EFBD0680-2A78-4D0A-BE54-CB92D2185332}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EFBD0680-2A78-4D0A-BE54-CB92D2185332}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EFBD0680-2A78-4D0A-BE54-CB92D2185332}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{196DBF2D-9EE1-4453-9A59-70FE0FB2EBB9} = {AE3C59E3-D04A-4DF8-B8A0-251510F7312E}
-		{E95312FE-3044-473A-9662-468DEF7514E8} = {196DBF2D-9EE1-4453-9A59-70FE0FB2EBB9}
 		{9F6A9BFE-07ED-49EF-88BF-9E5B09EF61A3} = {F932A986-F757-43FA-A2DA-EE69555F7F57}
 		{AFA1E28B-A93F-466A-BC24-27C0269C1530} = {505C00C0-1F49-4212-831B-8C45673ED89D}
 		{525A63A8-D163-4CD1-805D-C35DBFB021D2} = {AFA1E28B-A93F-466A-BC24-27C0269C1530}
+		{8024E38F-BBEA-4C5A-9065-F57F29E8B9A3} = {196DBF2D-9EE1-4453-9A59-70FE0FB2EBB9}
+		{EFBD0680-2A78-4D0A-BE54-CB92D2185332} = {196DBF2D-9EE1-4453-9A59-70FE0FB2EBB9}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {77E9FCDF-9A98-4242-A12D-9565607A3087}
