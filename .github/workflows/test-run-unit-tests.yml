@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        project: ['GenAIDBExplorer.Console']
+        project: ['GenAIDBExplorer.Console','GenAIDBExplorer.Core']
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -26,7 +26,7 @@ jobs:
 
       - name: Run unit tests on ${{ matrix.project }}
         run: |
-          dotnet test ${{ matrix.project }}.Test.csproj --configuration ${{ inputs.BUILD_CONFIGURATION }} --logger "trx;LogFileName=${{ matrix.project }}.trx" --verbosity minimal
+          dotnet test ${{ matrix.project }}.Test.csproj --configuration ${{ inputs.BUILD_CONFIGURATION }} --logger trx --verbosity minimal -- --results-directory TestResults --report-trx 
         working-directory: ./src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test/
 
       - name: Upload unit test results for ${{ matrix.project }}
@@ -34,12 +34,12 @@ jobs:
         if: ${{ always() }}
         with:
           name: ${{ matrix.project }}.Test
-          path: ./src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test/bin/${{ inputs.BUILD_CONFIGURATION }}/net9.0/TestResults/${{ matrix.project }}.trx
+          path: ./src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test/TestResults/*.trx
 
       - name: Publish unit test results for ${{ matrix.project }}
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: ${{ always() }}
         with:
             files: |
-              ./src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test/bin/${{ inputs.BUILD_CONFIGURATION }}/net9.0/TestResults/${{ matrix.project }}.trx
+              ./src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test/TestResults/*.trx
             check_name: Unit tests ${{ matrix.project }}.Test
