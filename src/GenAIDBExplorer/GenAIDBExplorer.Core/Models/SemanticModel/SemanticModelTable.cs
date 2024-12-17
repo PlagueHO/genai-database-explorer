@@ -150,4 +150,14 @@ public sealed class SemanticModelTable(
 
         return builder.ToString();
     }
+
+    /// <inheritdoc/>
+    public override void Accept(ISemanticModelVisitor visitor)
+    {
+        visitor.VisitTable(this);
+        foreach (var column in Columns)
+        {
+            column.Accept(visitor);
+        }
+    }
 }

@@ -255,4 +255,28 @@ public sealed class SemanticModel(
     {
         return StoredProcedures.FirstOrDefault(sp => sp.Schema == schemaName && sp.Name == storedProcedureName);
     }
+
+    /// <summary>
+    /// Accepts a visitor to traverse the semantic model.
+    /// </summary>
+    /// <param name="visitor">The visitor that will be used to traverse the model.</param>
+    public void Accept(ISemanticModelVisitor visitor)
+    {
+        visitor.VisitSemanticModel(this);
+        foreach (var table in Tables)
+        {
+            table.Accept(visitor);
+        }
+
+        foreach (var view in Views)
+        {
+            view.Accept(visitor);
+        }
+
+        foreach (var storedProcedure in StoredProcedures)
+        {
+            storedProcedure.Accept(visitor);
+        }
+    }
+
 }

@@ -17,4 +17,9 @@ public interface ISemanticModelEntity
     FileInfo GetModelEntityFilename();
     DirectoryInfo GetModelPath();
     void SetSemanticDescription(string semanticDescription);
+    /// <summary>
+    /// Accepts a visitor to traverse the semantic model entity.
+    /// </summary>
+    /// <param name="visitor">The visitor that will be used to traverse the model entity.</param>
+    void Accept(ISemanticModelVisitor visitor);
 }

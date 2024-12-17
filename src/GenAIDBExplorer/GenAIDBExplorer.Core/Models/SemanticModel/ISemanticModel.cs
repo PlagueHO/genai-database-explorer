@@ -25,4 +25,9 @@ public interface ISemanticModel
     void AddStoredProcedure(SemanticModelStoredProcedure storedProcedure);
     bool RemoveStoredProcedure(SemanticModelStoredProcedure storedProcedure);
     SemanticModelStoredProcedure? FindStoredProcedure(string schemaName, string storedProcedureName);
+    /// <summary>
+    /// Accepts a visitor to traverse the semantic model.
+    /// </summary>
+    /// <param name="visitor">The visitor that will be used to traverse the model.</param>
+    void Accept(ISemanticModelVisitor visitor);
 }

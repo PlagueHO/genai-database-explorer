@@ -60,4 +60,10 @@ public sealed class SemanticModelIndex(
     {
         throw new NotImplementedException();
     }
+
+    /// <inheritdoc/>
+    public override void Accept(ISemanticModelVisitor visitor)
+    {
+        visitor.VisitIndex(this);
+    }
 }

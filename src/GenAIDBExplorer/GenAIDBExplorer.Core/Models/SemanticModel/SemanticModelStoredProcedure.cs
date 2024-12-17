@@ -98,4 +98,10 @@ public sealed class SemanticModelStoredProcedure(
 
         return builder.ToString();
     }
+
+    /// <inheritdoc/>
+    public override void Accept(ISemanticModelVisitor visitor)
+    {
+        visitor.VisitStoredProcedure(this);
+    }
 }

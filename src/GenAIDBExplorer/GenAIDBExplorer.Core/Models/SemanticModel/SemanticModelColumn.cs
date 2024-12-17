@@ -107,4 +107,10 @@ public sealed class SemanticModelColumn(
     {
         throw new NotImplementedException();
     }
+
+    /// <inheritdoc/>
+    public override void Accept(ISemanticModelVisitor visitor)
+    {
+        visitor.VisitColumn(this);
+    }
 }

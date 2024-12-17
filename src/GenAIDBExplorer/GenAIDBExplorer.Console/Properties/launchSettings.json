@@ -8,10 +8,6 @@
       "commandName": "Project",
       "commandLineArgs": "query\r\n-p d:\\temp"
     },
-    "GenAIDBExplorer.Console extract-model": {
-      "commandName": "Project",
-      "commandLineArgs": "extract-model \r\n-p d:\\temp"
-    },
     "GenAIDBExplorer.Console enrich-model": {
       "commandName": "Project",
       "commandLineArgs": "enrich-model table -p d:\\temp -s dbo -n tblAlert"
@@ -27,6 +23,14 @@
     "GenAIDBExplorer.Console data-dictionary table": {
       "commandName": "Project",
       "commandLineArgs": "data-dictionary table -p d:\\temp -d d:\\data_dictionary_tables\\dbo.tblTrans_Inventory.md"
+    },
+    "GenAIDBExplorer.Console extract-model": {
+      "commandName": "Project",
+      "commandLineArgs": "extract-model \r\n-p d:\\temp"
+    },
+    "GenAIDBExplorer.Console export-model": {
+      "commandName": "Project",
+      "commandLineArgs": "export-model \r\n-p d:\\temp -o d:\\export"
     }
   }
 }

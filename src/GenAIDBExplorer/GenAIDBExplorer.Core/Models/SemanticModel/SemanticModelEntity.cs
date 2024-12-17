@@ -133,4 +133,10 @@ public abstract class SemanticModelEntity(
         }
         return builder.ToString();
     }
+
+    /// <summary>
+    /// Accepts a visitor to traverse the semantic model entity.
+    /// </summary>
+    /// <param name="visitor">The visitor that will be used to traverse the model entity.</param>
+    public abstract void Accept(ISemanticModelVisitor visitor);
 }

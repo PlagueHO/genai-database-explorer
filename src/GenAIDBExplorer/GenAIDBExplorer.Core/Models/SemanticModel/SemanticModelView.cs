@@ -122,4 +122,14 @@ public sealed class SemanticModelView(
 
         return builder.ToString();
     }
+
+    /// <inheritdoc/>
+    public override void Accept(ISemanticModelVisitor visitor)
+    {
+        visitor.VisitView(this);
+        foreach (var column in Columns)
+        {
+            column.Accept(visitor);
+        }
+    }
 }

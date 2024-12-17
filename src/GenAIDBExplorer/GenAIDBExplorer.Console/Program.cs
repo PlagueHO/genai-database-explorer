@@ -28,6 +28,7 @@ internal static class Program
         rootCommand.AddCommand(InitProjectCommandHandler.SetupCommand(host));
         rootCommand.AddCommand(DataDictionaryCommandHandler.SetupCommand(host));
         rootCommand.AddCommand(EnrichModelCommandHandler.SetupCommand(host));
+        rootCommand.AddCommand(ExportModelCommandHandler.SetupCommand(host));
         rootCommand.AddCommand(ExtractModelCommandHandler.SetupCommand(host));
         rootCommand.AddCommand(QueryModelCommandHandler.SetupCommand(host));
         rootCommand.AddCommand(ShowObjectCommandHandler.SetupCommand(host));

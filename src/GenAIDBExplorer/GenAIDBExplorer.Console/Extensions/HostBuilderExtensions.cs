@@ -54,6 +54,7 @@ public static class HostBuilderExtensions
                 services.AddSingleton<InitProjectCommandHandler>();
                 services.AddSingleton<DataDictionaryCommandHandler>();
                 services.AddSingleton<EnrichModelCommandHandler>();
+                services.AddSingleton<ExportModelCommandHandler>();
                 services.AddSingleton<ExtractModelCommandHandler>();
                 services.AddSingleton<QueryModelCommandHandler>();
                 services.AddSingleton<ShowObjectCommandHandler>();
