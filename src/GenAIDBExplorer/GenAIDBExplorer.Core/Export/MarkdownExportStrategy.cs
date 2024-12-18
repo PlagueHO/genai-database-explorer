@@ -24,7 +24,7 @@ public class MarkdownExportStrategy : IExportStrategy
         }
     }
 
-    private (string filePath, string baseDirectory) ResolveOutputPath(string? outputPath, bool splitFiles, DirectoryInfo projectPath)
+    private static (string filePath, string baseDirectory) ResolveOutputPath(string? outputPath, bool splitFiles, DirectoryInfo projectPath)
     {
         const string defaultFileName = "exported_model";
         const string fileExtension = ".md";
@@ -63,12 +63,12 @@ public class MarkdownExportStrategy : IExportStrategy
         return (filePath, directory);
     }
 
-    private bool IsDirectoryPath(string path)
+    private static bool IsDirectoryPath(string path)
     {
         return path.EndsWith(Path.DirectorySeparatorChar) || path.EndsWith(Path.AltDirectorySeparatorChar);
     }
 
-    private async Task ExportSingleFileAsync(SemanticModel semanticModel, string filePath)
+    private static async Task ExportSingleFileAsync(SemanticModel semanticModel, string filePath)
     {
         var visitor = new MarkdownExportVisitor();
         semanticModel.Accept(visitor);
@@ -77,7 +77,7 @@ public class MarkdownExportStrategy : IExportStrategy
         await File.WriteAllTextAsync(filePath, markdownContent).ConfigureAwait(false);
     }
 
-    private async Task ExportWithSplitFilesAsync(SemanticModel semanticModel, string filePath, string baseDirectory)
+    private static async Task ExportWithSplitFilesAsync(SemanticModel semanticModel, string filePath, string baseDirectory)
     {
         var outputDirectory = new DirectoryInfo(baseDirectory);
 

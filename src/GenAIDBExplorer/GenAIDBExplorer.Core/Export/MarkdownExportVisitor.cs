@@ -9,7 +9,9 @@ using GenAIDBExplorer.Core.Models.SemanticModel;
 /// <summary>
 /// Visitor implementation for exporting semantic model entities to Markdown format.
 /// </summary>
-public class MarkdownExportVisitor(DirectoryInfo? outputDirectory = null) : ISemanticModelVisitor
+public class MarkdownExportVisitor(
+    DirectoryInfo? outputDirectory = null
+) : ISemanticModelVisitor
 {
     private readonly StringBuilder _content = new();
     private readonly DirectoryInfo? _outputDirectory = outputDirectory;
@@ -63,21 +65,21 @@ public class MarkdownExportVisitor(DirectoryInfo? outputDirectory = null) : ISem
             }
 
             indexContent.AppendLine("## Tables");
-            foreach (var table in semanticModel.Tables)
+            foreach (var table in semanticModel.Tables.OrderBy(t => t.Schema).ThenBy(t => t.Name))
             {
                 var fileName = $"tables/{table.Schema}.{table.Name}.md";
                 indexContent.AppendLine($"- [{table.Schema}.{table.Name}]({fileName})");
             }
 
             indexContent.AppendLine("## Views");
-            foreach (var view in semanticModel.Views)
+            foreach (var view in semanticModel.Views.OrderBy(t => t.Schema).ThenBy(t => t.Name))
             {
                 var fileName = $"views/{view.Schema}.{view.Name}.md";
                 indexContent.AppendLine($"- [{view.Schema}.{view.Name}]({fileName})");
             }
 
             indexContent.AppendLine("## Stored Procedures");
-            foreach (var sp in semanticModel.StoredProcedures)
+            foreach (var sp in semanticModel.StoredProcedures.OrderBy(t => t.Schema).ThenBy(t => t.Name))
             {
                 var fileName = $"storedprocedures/{sp.Schema}.{sp.Name}.md";
                 indexContent.AppendLine($"- [{sp.Schema}.{sp.Name}]({fileName})");
