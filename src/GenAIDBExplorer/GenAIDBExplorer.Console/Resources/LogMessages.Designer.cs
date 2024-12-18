@@ -88,6 +88,24 @@ namespace GenAIDBExplorer.Console.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Exporting semantic model for project to folder..
+        /// </summary>
+        internal static string ExportingSemanticModel {
+            get {
+                return ResourceManager.GetString("ExportingSemanticModel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Semantic model export complete..
+        /// </summary>
+        internal static string ExportSemanticModelComplete {
+            get {
+                return ResourceManager.GetString("ExportSemanticModelComplete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Extracting semantic model for project..
         /// </summary>
         internal static string ExtractingSemanticModel {

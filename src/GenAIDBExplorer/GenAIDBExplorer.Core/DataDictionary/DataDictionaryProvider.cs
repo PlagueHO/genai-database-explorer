@@ -1,12 +1,10 @@
 using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.Models.SemanticModel;
 using GenAIDBExplorer.Core.SemanticKernel;
-using GenAIDBExplorer.Core.Models.Database;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using System.Text.Json;
-using DocumentFormat.OpenXml.Vml.Office;
 using System.Resources;
 
 namespace GenAIDBExplorer.Core.DataDictionary;

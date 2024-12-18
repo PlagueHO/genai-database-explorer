@@ -174,4 +174,10 @@
   <data name="DataDictionaryComplete" xml:space="preserve">
     <value>Data dictionary processing complete.</value>
   </data>
+  <data name="ExportingSemanticModel" xml:space="preserve">
+    <value>Exporting semantic model for project to folder.</value>
+  </data>
+  <data name="ExportSemanticModelComplete" xml:space="preserve">
+    <value>Semantic model export complete.</value>
+  </data>
 </root>
