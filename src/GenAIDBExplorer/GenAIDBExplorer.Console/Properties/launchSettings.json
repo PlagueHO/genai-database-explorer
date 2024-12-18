@@ -22,7 +22,7 @@
     },
     "GenAIDBExplorer.Console data-dictionary table": {
       "commandName": "Project",
-      "commandLineArgs": "data-dictionary table -p d:\\temp -d d:\\data_dictionary_tables\\dbo.tblTrans_Inventory.md"
+      "commandLineArgs": "data-dictionary table -p d:\\temp -d d:\\data_dictionary_tables\\*.md"
     },
     "GenAIDBExplorer.Console extract-model": {
       "commandName": "Project",
