@@ -21,7 +21,7 @@ public class Project(
     /// <summary>
     /// Configuration instance for accessing project settings.
     /// </summary>
-    private IConfiguration _configuration;
+    private IConfiguration? _configuration;
 
     /// <summary>
     /// Gets the project settings.

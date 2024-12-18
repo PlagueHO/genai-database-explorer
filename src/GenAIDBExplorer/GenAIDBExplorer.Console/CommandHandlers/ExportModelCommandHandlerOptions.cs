@@ -12,12 +12,12 @@ namespace GenAIDBExplorer.Console.CommandHandlers;
 /// <param name="splitFiles">Flag to split the export into individual files per entity.</param>
 public class ExportModelCommandHandlerOptions(
     DirectoryInfo projectPath,
-    string? outputFileName = null,
+    string? outputPath = null,
     string fileType = "markdown",
     bool splitFiles = false
 ) : CommandHandlerOptions(projectPath)
 {
-    public string OutputFileName { get; } = outputFileName ?? "exported_model.md";
+    public string OutputPath { get; } = outputPath ?? "";
     public string FileType { get; } = fileType;
     public bool SplitFiles { get; } = splitFiles;
 }

@@ -10,11 +10,12 @@
 
 With **Generative AI Database Explorer**, you can explore your database schema and stored procedures using Generative AI. This tool helps you understand your database schema and stored procedures by generating SQL queries based on the schema and explaining the schema and stored procedures in the database to the user based on the stored schema.
 
-Although there are many other tools available that perform similar functions, this tool differs in that it produces a **semantic model** of the database schema that is then enriched and decorated using Generative AI.
+Although there are many other tools available that perform similar functions, this tool produces a **semantic model** of the database schema, combined with a data dictionary and enriched using Generative AI.
 
 The reason that this approach of enriching a semantic model rather than just querying the database directly is:
 
-1. Many databases are not well normalized and have grown organically over time. This can make it difficult to understand the schema and stored procedures by just looking at the table & column names.
+1. Many databases are not normalized and have grown organically over time. This can make it difficult to understand the schema and stored procedures by just looking at the table & column names.
+1. Data dictionaries are often not maintained or are incomplete, but can still be useful to provide additional information about the schema.
 1. Additional grounding information may need to be provided by a user to ensure that the Generative AI can provide accurate information.
 1. Enables greater control and the database owner can review and adjust the semantic model to ensure it is correct.
 1. The semantic model can be stored in version control and used as an asset that is deployed as part of another application.
@@ -25,7 +26,7 @@ The reason that this approach of enriching a semantic model rather than just que
 
 A console application that provides commands to manage Generative AI Database Explorer projects, including functions for:
 
-- **init-project**: Initializing a new project folder with a `settings.json` file to contain the configuration for the project.
+- **init-project**: Initializing a new project folder with a `settings.json` file to contain the configuration for the project.e!!!! XOX
 - **extract-model**: Extract a representation of the database schema as a **semantic model** in the **project folder** based on the `settings.json` file.
 - **data-dictionary**: Update an extracted semantic model with additional information provided from a set of data dictionary files.
 - **enrich-model**: Enrich an existing **semantic model** of a database schema in the project folder based on the `settings.json` file using Generative AI to produce an **enriched** semantic model.

@@ -8,6 +8,6 @@ using System.IO;
 public class ExportOptions
 {
     public required DirectoryInfo ProjectPath { get; init; }
-    public string? OutputFileName { get; init; }
+    public string? OutputPath { get; init; }
     public bool SplitFiles { get; init; }
 }
