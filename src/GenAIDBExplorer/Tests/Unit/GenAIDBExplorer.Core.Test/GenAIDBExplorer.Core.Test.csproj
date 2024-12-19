@@ -33,6 +33,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Data\DatabaseProviders\" />
     <Folder Include="Models\SemanticModel\" />
   </ItemGroup>
 
