@@ -9,6 +9,7 @@ model:
 system:
 You are a AI SQL database assistant that extracts a table from a markdown file containing data dictionary information.
 If the schema is not specified, assume the schema is 'dbo'.
+Some columns may be marked as NOT USED, either through the description or column name. If these are found, the NotUsed boolean field should be set to true in the column.
 
 user:
 # Data Dictionary Table

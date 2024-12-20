@@ -80,6 +80,7 @@ public class Project(
         Settings = new ProjectSettings
         {
             Database = new DatabaseSettings(),
+            DataDictionary = new DataDictionarySettings(),
             SemanticModel = new SemanticModelSettings(),
             ChatCompletion = new ChatCompletionSettings(),
             ChatCompletionStructured = new ChatCompletionStructuredSettings(),
@@ -90,6 +91,7 @@ public class Project(
         Settings.SettingsVersion = _configuration.GetValue<Version>(nameof(Settings.SettingsVersion)) ?? new Version();
 
         _configuration.GetSection(DatabaseSettings.PropertyName).Bind(Settings.Database);
+        _configuration.GetSection(DataDictionarySettings.PropertyName).Bind(Settings.DataDictionary);
         _configuration.GetSection(SemanticModelSettings.PropertyName).Bind(Settings.SemanticModel);
         _configuration.GetSection(ChatCompletionSettings.PropertyName).Bind(Settings.ChatCompletion);
         _configuration.GetSection(ChatCompletionStructuredSettings.PropertyName).Bind(Settings.ChatCompletionStructured);
@@ -108,6 +110,10 @@ public class Project(
         var validationContext = new ValidationContext(Settings.Database);
         Validator.ValidateObject(Settings.Database, validationContext, validateAllProperties: true);
         _logger.LogInformation("{Message} '{Section}'", _resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "Database");
+
+        validationContext = new ValidationContext(Settings.DataDictionary);
+        Validator.ValidateObject(Settings.DataDictionary, validationContext, validateAllProperties: true);
+        _logger.LogInformation("{Message} '{Section}'", _resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "DataDictionary");
 
         validationContext = new ValidationContext(Settings.SemanticModel);
         Validator.ValidateObject(Settings.SemanticModel, validationContext, validateAllProperties: true);

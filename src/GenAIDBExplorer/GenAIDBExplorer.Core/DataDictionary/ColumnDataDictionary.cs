@@ -5,5 +5,6 @@ internal record ColumnDataDictionary(
     string ColumnName,
     string Type,
     int? Size,
-    string Description
+    string Description,
+    Boolean NotUsed
 );

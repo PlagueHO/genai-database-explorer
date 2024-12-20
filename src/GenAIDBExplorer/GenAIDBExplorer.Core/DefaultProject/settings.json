@@ -15,6 +15,13 @@
         "NotUsedViews": [], // Array of regex's to set NotUsed flag on views in the database
         "NotUsedStoredProcedures": [] // Array of regex's to set NotUsed flag on stored procedures in the database
     },
+    "DataDictionary": {
+        // Settings to control the data dictionary import processes.
+        "ColumnTypeMapping": [
+            { "From": "VARCHAR", "To": "NVARCHAR" },
+            { "From": "CHAR", "To": "NCHAR" }
+        ] // Array of mappings to convert column types during data dictionary import.
+    },
     "SemanticModel": {
         "MaxDegreeOfParallelism": 10 // Number of parallel semantic model tasks to run.
     },

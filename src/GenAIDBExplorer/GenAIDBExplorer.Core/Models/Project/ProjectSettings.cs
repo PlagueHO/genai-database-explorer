@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace GenAIDBExplorer.Core.Models.Project;
 
@@ -22,6 +17,12 @@ public class ProjectSettings
     /// Gets or sets the database settings.
     /// </summary>
     public required DatabaseSettings Database { get; set; }
+
+
+    /// <summary>
+    /// Gets or sets the data dictionary settings.
+    /// </summary>
+    public required DataDictionarySettings DataDictionary { get; set; }
 
     /// <summary>
     /// Gets or sets the semantic model settings.

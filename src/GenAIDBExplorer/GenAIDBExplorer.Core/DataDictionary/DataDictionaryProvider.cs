@@ -97,49 +97,6 @@ public class DataDictionaryProvider(
     }
 
     /// <summary>
-    /// Merges a data dictionary table into a semantic model table.
-    /// </summary>
-    /// <param name="semanticModelTable"></param>
-    /// <param name="dataDictionaryTable"></param>
-    internal void MergeDataDictionaryTableIntoSemanticModel(SemanticModelTable semanticModelTable, TableDataDictionary dataDictionaryTable)
-    {
-        semanticModelTable.Description = dataDictionaryTable.Description;
-        semanticModelTable.Details = dataDictionaryTable.Details;
-        semanticModelTable.AdditionalInformation = dataDictionaryTable.AdditionalInformation;
-
-        var dataDictionaryColumnNames = dataDictionaryTable.Columns.Select(c => c.ColumnName).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        var semanticModelColumnNames = semanticModelTable.Columns.Select(c => c.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        // Warn about columns in the data dictionary but not in the semantic model table
-        foreach (var column in dataDictionaryTable.Columns)
-        {
-            var semanticModelColumn = semanticModelTable.Columns.FirstOrDefault(c => c.Name.Equals(column.ColumnName, StringComparison.OrdinalIgnoreCase));
-            if (semanticModelColumn != null)
-            {
-                if (!semanticModelColumn.Type.Equals(column.Type, StringComparison.OrdinalIgnoreCase))
-                {
-                    _logger.LogWarning("Column type mismatch for column '{ColumnName}' in table '{TableName}'. Data dictionary type: '{DataType}', Semantic model type: '{SemanticType}'",
-                        column.ColumnName, semanticModelTable.Name, column.Type, semanticModelColumn.Type);
-                }
-                semanticModelColumn.Description = column.Description;
-            }
-            else
-            {
-                _logger.LogWarning("Column '{ColumnName}' from data dictionary not found in semantic model table '{TableName}'", column.ColumnName, semanticModelTable.Name);
-            }
-        }
-
-        // Warn about columns in the semantic model table but not in the data dictionary
-        foreach (var column in semanticModelTable.Columns)
-        {
-            if (!dataDictionaryColumnNames.Contains(column.Name))
-            {
-                _logger.LogWarning("Column '{ColumnName}' in semantic model table '{TableName}' not found in data dictionary", column.Name, semanticModelTable.Name);
-            }
-        }
-    }
-
-    /// <summary>
     /// Extracts tables from a collection of markdown files.
     /// </summary>
     /// <param name="markdownFiles"></param>
@@ -231,6 +188,186 @@ public class DataDictionaryProvider(
         {
             MaxDegreeOfParallelism = _project.Settings.SemanticModel.MaxDegreeOfParallelism
         };
+    }
+
+    /// <summary>
+    /// Merges a data dictionary table into a semantic model table.
+    /// </summary>
+    /// <param name="semanticModelTable"></param>
+    /// <param name="dataDictionaryTable"></param>
+    internal void MergeDataDictionaryTableIntoSemanticModel(
+        SemanticModelTable semanticModelTable,
+        TableDataDictionary dataDictionaryTable)
+    {
+        AssignTableDescriptions(semanticModelTable, dataDictionaryTable);
+
+        var typeMappings = CreateTypeMappingsDictionary();
+
+        var dataDictionaryColumnNames = dataDictionaryTable.Columns
+            .Select(c => c.ColumnName)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var column in dataDictionaryTable.Columns)
+        {
+            UpdateSemanticModelColumn(semanticModelTable, column, typeMappings);
+        }
+
+        LogWarningsForMissingColumns(semanticModelTable, dataDictionaryColumnNames);
+    }
+
+    /// <summary>
+    /// Assigns descriptions from a data dictionary table to a semantic model table.
+    /// </summary>
+    /// <param name="semanticModelTable"></param>
+    /// <param name="dataDictionaryTable"></param>
+    private static void AssignTableDescriptions(SemanticModelTable semanticModelTable, TableDataDictionary dataDictionaryTable)
+    {
+        semanticModelTable.Description = dataDictionaryTable.Description;
+        semanticModelTable.Details = dataDictionaryTable.Details;
+        semanticModelTable.AdditionalInformation = dataDictionaryTable.AdditionalInformation;
+    }
+
+    /// <summary>
+    /// Creates a dictionary of type mappings from the project settings.
+    /// </summary>
+    /// <returns></returns>
+    private Dictionary<string, string> CreateTypeMappingsDictionary()
+    {
+        return _project.Settings.DataDictionary.ColumnTypeMapping
+            .ToDictionary(
+                mapping => mapping.From,
+                mapping => mapping.To,
+                StringComparer.OrdinalIgnoreCase
+            );
+    }
+
+    /// <summary>
+    /// Updates a column in the semantic model.
+    /// </summary>
+    /// <param name="semanticModelTable"></param>
+    /// <param name="column"></param>
+    /// <param name="typeMappings"></param>
+    private void UpdateSemanticModelColumn(
+        SemanticModelTable semanticModelTable,
+        ColumnDataDictionary column,
+        Dictionary<string, string> typeMappings)
+    {
+        var semanticModelColumn = semanticModelTable.Columns
+            .FirstOrDefault(c => c.Name.Equals(column.ColumnName, StringComparison.OrdinalIgnoreCase));
+
+        if (semanticModelColumn != null)
+        {
+            UpdateColumnType(semanticModelColumn, column, typeMappings);
+            UpdateColumnDescription(semanticModelColumn, column);
+            UpdateColumnUsage(semanticModelColumn, column);
+        }
+        else
+        {
+            LogColumnNotFoundWarning(column, semanticModelTable);
+        }
+    }
+
+    /// <summary>
+    /// Updates the type of a column in the semantic model.
+    /// </summary>
+    /// <param name="semanticModelColumn"></param>
+    /// <param name="column"></param>
+    /// <param name="typeMappings"></param>
+    private void UpdateColumnType(
+        SemanticModelColumn semanticModelColumn,
+        ColumnDataDictionary column,
+        Dictionary<string, string> typeMappings)
+    {
+        var dataDictionaryType = column.Type;
+        var semanticModelType = semanticModelColumn.Type;
+
+        if (typeMappings.TryGetValue(dataDictionaryType, out var mappedType))
+        {
+            string mappingNote = $"Type '{dataDictionaryType}' mapped to '{mappedType}'.";
+
+            dataDictionaryType = mappedType;
+
+            if (string.IsNullOrEmpty(semanticModelColumn.Description) ||
+                !semanticModelColumn.Description.Contains(mappingNote, StringComparison.OrdinalIgnoreCase))
+            {
+                semanticModelColumn.Description = (semanticModelColumn.Description ?? string.Empty).Trim() + " " + mappingNote;
+            }
+        }
+
+        if (!semanticModelType.Equals(dataDictionaryType, StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogWarning(
+                "Column type mismatch for column '{ColumnName}' in table '{TableName}'. " +
+                "Data dictionary type: '{DataType}', Semantic model type: '{SemanticType}'",
+                column.ColumnName,
+                semanticModelColumn.Name,
+                dataDictionaryType,
+                semanticModelType
+            );
+        }
+    }
+
+    /// <summary>
+    /// Updates the description of a column in the semantic model.
+    /// </summary>
+    /// <param name="semanticModelColumn"></param>
+    /// <param name="column"></param>
+    private static void UpdateColumnDescription(SemanticModelColumn semanticModelColumn, ColumnDataDictionary column)
+    {
+        semanticModelColumn.Description = string.Join(" ",
+            (semanticModelColumn.Description ?? string.Empty).Trim(),
+            (column.Description ?? string.Empty).Trim()
+        ).Trim();
+    }
+
+    /// <summary>
+    /// Updates the usage of a column in the semantic model.
+    /// </summary>
+    /// <param name="semanticModelColumn"></param>
+    /// <param name="column"></param>
+    private static void UpdateColumnUsage(SemanticModelColumn semanticModelColumn, ColumnDataDictionary column)
+    {
+        if (column.NotUsed)
+        {
+            semanticModelColumn.NotUsed = true;
+            semanticModelColumn.NotUsedReason = "Set as not used in data dictionary";
+        }
+    }
+
+    /// <summary>
+    /// Logs a warning for a column in the data dictionary that is not found in the semantic model table.
+    /// </summary>
+    /// <param name="column"></param>
+    /// <param name="semanticModelTable"></param>
+    private void LogColumnNotFoundWarning(ColumnDataDictionary column, SemanticModelTable semanticModelTable)
+    {
+        _logger.LogWarning(
+            "Column '{ColumnName}' from data dictionary not found in semantic model table '{TableName}'",
+            column.ColumnName,
+            semanticModelTable.Name
+        );
+    }
+
+    /// <summary>
+    /// Logs warnings for columns in the semantic model table that are not found in the data dictionary.
+    /// </summary>
+    /// <param name="semanticModelTable"></param>
+    /// <param name="dataDictionaryColumnNames"></param>
+    private void LogWarningsForMissingColumns(
+        SemanticModelTable semanticModelTable,
+        HashSet<string> dataDictionaryColumnNames)
+    {
+        foreach (var column in semanticModelTable.Columns)
+        {
+            if (!dataDictionaryColumnNames.Contains(column.Name))
+            {
+                _logger.LogWarning(
+                    "Column '{ColumnName}' in semantic model table '{TableName}' not found in data dictionary",
+                    column.Name,
+                    semanticModelTable.Name
+                );
+            }
+        }
     }
 }
 
