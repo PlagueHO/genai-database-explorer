@@ -36,15 +36,7 @@ jobs:
         run: dotnet build ./src/GenAIDBExplorer/GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj -c ${{ inputs.BUILD_CONFIGURATION }}
 
       - name: Publish Console App
-        run: |
-          dotnet publish ./src/GenAIDBExplorer/GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj \
-            -c ${{ inputs.BUILD_CONFIGURATION }} \
-            -r ${{ matrix.rid }} \
-            --self-contained true \
-            -p:PublishSingleFile=true \
-            -p:PublishTrimmed=true \
-            -p:TargetName=gaidbexp \
-            -o ./publish/${{ matrix.os }}
+        run: dotnet publish ./src/GenAIDBExplorer/GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj -c ${{ inputs.BUILD_CONFIGURATION }} -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=true -p:TargetName=gaidbexp -o ./publish/${{ matrix.os }}
 
       - name: Upload Artifact to GitHub Actions
         uses: actions/upload-artifact@v3
