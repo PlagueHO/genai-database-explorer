@@ -21,7 +21,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 		..\..\.github\workflows\continuous-deployment.yml = ..\..\.github\workflows\continuous-deployment.yml
 		..\..\.github\workflows\continuous-integration.yml = ..\..\.github\workflows\continuous-integration.yml
 		..\..\.github\workflows\deploy-infrastructure.yml = ..\..\.github\workflows\deploy-infrastructure.yml
-		..\..\.github\workflows\publish-applications.yml = ..\..\.github\workflows\publish-applications.yml
+		..\..\.github\workflows\publish-release.yml = ..\..\.github\workflows\publish-release.yml
 		..\..\.github\workflows\set-build-variables.yml = ..\..\.github\workflows\set-build-variables.yml
 		..\..\.github\workflows\test-run-unit-tests.yml = ..\..\.github\workflows\test-run-unit-tests.yml
 		..\..\.github\workflows\validate-infrastructure.yml = ..\..\.github\workflows\validate-infrastructure.yml
@@ -91,8 +91,8 @@ Global
 		{9F6A9BFE-07ED-49EF-88BF-9E5B09EF61A3} = {F932A986-F757-43FA-A2DA-EE69555F7F57}
 		{AFA1E28B-A93F-466A-BC24-27C0269C1530} = {505C00C0-1F49-4212-831B-8C45673ED89D}
 		{525A63A8-D163-4CD1-805D-C35DBFB021D2} = {AFA1E28B-A93F-466A-BC24-27C0269C1530}
-		{8024E38F-BBEA-4C5A-9065-F57F29E8B9A3} = {196DBF2D-9EE1-4453-9A59-70FE0FB2EBB9}
-		{EFBD0680-2A78-4D0A-BE54-CB92D2185332} = {196DBF2D-9EE1-4453-9A59-70FE0FB2EBB9}
+		{8024E38F-BBEA-4C5A-9065-F57F29E8B9A3} = {AE3C59E3-D04A-4DF8-B8A0-251510F7312E}
+		{EFBD0680-2A78-4D0A-BE54-CB92D2185332} = {F932A986-F757-43FA-A2DA-EE69555F7F57}
 		{02EA681E-C7D8-13C7-8484-4AC65E1B71E8} = {92129E6D-FCE0-4431-A456-AD4678B325BE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
