@@ -75,3 +75,9 @@ jobs:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}     
       SQL_SERVER_USERNAME: ${{ secrets.SQL_SERVER_USERNAME }}
       SQL_SERVER_PASSWORD: ${{ secrets.SQL_SERVER_PASSWORD }}
+
+  publish-release:
+    if: startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '.')
+    needs:
+      - deploy-infrastructure-test
+    uses: ./.github/workflows/publish-release.yml
