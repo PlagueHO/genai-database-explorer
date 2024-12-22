@@ -36,6 +36,7 @@ public class ShowObjectCommandHandlerTests
         var mockProjectSettings = new ProjectSettings
         {
             Database = new DatabaseSettings { Name = "TestDatabase" },
+            DataDictionary = new DataDictionarySettings(),
             SemanticModel = new SemanticModelSettings(),
             ChatCompletion = new ChatCompletionSettings(),
             ChatCompletionStructured = new ChatCompletionStructuredSettings(),

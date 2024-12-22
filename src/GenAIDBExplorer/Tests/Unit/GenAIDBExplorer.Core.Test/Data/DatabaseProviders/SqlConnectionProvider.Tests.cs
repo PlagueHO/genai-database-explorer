@@ -28,6 +28,7 @@ namespace GenAIDBExplorer.Core.Tests.Data.DatabaseProviders
             var projectSettings = new ProjectSettings
             {
                 Database = new DatabaseSettings { ConnectionString = null },
+                DataDictionary = new DataDictionarySettings(),
                 SemanticModel = new SemanticModelSettings(),
                 ChatCompletion = new ChatCompletionSettings(),
                 ChatCompletionStructured = new ChatCompletionStructuredSettings(),
@@ -54,6 +55,7 @@ namespace GenAIDBExplorer.Core.Tests.Data.DatabaseProviders
             var projectSettings = new ProjectSettings
             {
                 Database = new DatabaseSettings { ConnectionString = connectionString },
+                DataDictionary = new DataDictionarySettings(),
                 SemanticModel = new SemanticModelSettings(),
                 ChatCompletion = new ChatCompletionSettings(),
                 ChatCompletionStructured = new ChatCompletionStructuredSettings(),

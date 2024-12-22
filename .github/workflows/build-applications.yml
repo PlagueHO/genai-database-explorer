@@ -11,7 +11,18 @@ on:
 jobs:
   build-console-app:
     name: Build console app
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            rid: linux-x64
+          - os: windows-latest
+            rid: win-x64
+          - os: macos-latest
+            rid: osx-x64
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -23,3 +34,12 @@ jobs:
 
       - name: Build Console App
         run: dotnet build ./src/GenAIDBExplorer/GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj -c ${{ inputs.BUILD_CONFIGURATION }}
+
+      - name: Publish Console App
+        run: dotnet publish ./src/GenAIDBExplorer/GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj -c ${{ inputs.BUILD_CONFIGURATION }} -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=true -p:AssemblyName=gaidbexp -o ./publish/${{ matrix.os }}
+
+      - name: Upload Console App as GitHub Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: gaidbexp-${{ matrix.os }}
+          path: ./publish/${{ matrix.os }}
