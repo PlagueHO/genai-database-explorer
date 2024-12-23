@@ -20,11 +20,11 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         include:
-          - os: ubuntu
+          - os: ubuntu-latest
             rid: linux-x64
-          - os: windows
+          - os: windows-latest
             rid: win-x64
-          - os: macos
+          - os: macos-latest
             rid: osx-x64
 
     steps:
@@ -37,10 +37,10 @@ jobs:
           dotnet-version: 9
 
       - name: Publish Solution
-        run: dotnet publish ./src/GenAIDBExplorer/GenAIDBExplorer.sln -c ${{ inputs.BUILD_CONFIGURATION }} -r ${{ matrix.rid }} -p:Version=${{ inputs.BUILD_VERSION }} --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=true -p:TargetName=gaidbexp -o ./publish/${{ matrix.os }}-{{ inputs.BUILD_VERSION }}
+        run: dotnet publish ./src/GenAIDBExplorer/GenAIDBExplorer.sln -c ${{ inputs.BUILD_CONFIGURATION }} -r ${{ matrix.rid }} -p:Version=${{ inputs.BUILD_VERSION }} --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=true -p:TargetName=gaidbexp -o ./publish/${{ matrix.rid }}-{{ inputs.BUILD_VERSION }}
 
       - name: Upload Artifact to GitHub Actions
         uses: actions/upload-artifact@v3
         with:
-          name: gaidbexp-${{ matrix.os }}-{{ inputs.BUILD_VERSION }}
-          path: ./publish/${{ matrix.os }}-{{ inputs.BUILD_VERSION }}
+          name: gaidbexp-${{ matrix.rid }}-{{ inputs.BUILD_VERSION }}
+          path: ./publish/${{ matrix.rid }}-{{ inputs.BUILD_VERSION }}
