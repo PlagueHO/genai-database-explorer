@@ -12,7 +12,7 @@ jobs:
     name: Set build variables
     runs-on: windows-latest
     outputs:
-      build_version: ${{ steps.calculate-build-version.outputs.fullSemVer }}
+      build_version: ${{ steps.calculate-build-version.outputs.GitVersion_FullSemVer }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -29,3 +29,7 @@ jobs:
         uses: gittools/actions/gitversion/execute@v3.1.1
         with:
           useConfigFile: true
+
+      - name: Display FullSemVer
+        run: |
+          echo "FullSemVer: ${{ steps.build_version.outputs.GitVersion_FullSemVer }}"
