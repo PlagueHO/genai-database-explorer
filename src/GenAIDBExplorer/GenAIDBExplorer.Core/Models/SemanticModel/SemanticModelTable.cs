@@ -91,12 +91,14 @@ public sealed class SemanticModelTable(
 
         Schema = table.Schema;
         Name = table.Name;
+        Details = table.Details;
         Description = table.Description;
         SemanticDescription = table.SemanticDescription;
         NotUsed = table.NotUsed;
         NotUsedReason = table.NotUsedReason;
         Columns = table.Columns;
         Indexes = table.Indexes;
+        AdditionalInformation = table.AdditionalInformation;
     }
 
     /// <inheritdoc/>

@@ -18,7 +18,7 @@
     },
     "GenAIDBExplorer.Console show-object": {
       "commandName": "Project",
-      "commandLineArgs": "show-object table \r\n-p d:\\temp -s SalesLT -n Product"
+      "commandLineArgs": "show-object table \r\n-p d:\\temp -s dbo -n tblUser"
     },
     "GenAIDBExplorer.Console data-dictionary table": {
       "commandName": "Project",
