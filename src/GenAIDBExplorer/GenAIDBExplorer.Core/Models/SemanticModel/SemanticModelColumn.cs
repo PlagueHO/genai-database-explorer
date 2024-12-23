@@ -30,7 +30,7 @@ public sealed class SemanticModelColumn(
     /// <summary>
     /// Gets the type of the column.
     /// </summary>
-    public required string Type { get; set; }
+    public string? Type { get; set; }
 
     /// <summary>
     /// Gets a value indicating whether the column is a primary key.

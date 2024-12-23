@@ -129,7 +129,8 @@ public abstract class SemanticModelEntity(
         builder.AppendLine($"Entity: [{Schema}].[{Name}]");
         if (!string.IsNullOrWhiteSpace(Description))
         {
-            builder.AppendLine($"Description: {Description}");
+            builder.AppendLine($"Description:");
+            builder.AppendLine(Description);
         }
         return builder.ToString();
     }
