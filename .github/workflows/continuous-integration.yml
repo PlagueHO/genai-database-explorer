@@ -23,13 +23,7 @@ jobs:
       - test-run-unit-tests
     uses: ./.github/workflows/build-applications.yml
     with:
-      BUILD_CONFIGURATION: Debug
-    
-  publish-applications:
-    needs:
-      - build-applications
-    uses: ./.github/workflows/publish-applications.yml
-    with:
+      BUILD_VERSION: ${{ needs.set-build-variables.outputs.BUILD_VERSION }}
       BUILD_CONFIGURATION: Debug
 
   build-arm-templates:
