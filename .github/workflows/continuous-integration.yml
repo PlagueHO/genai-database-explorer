@@ -23,7 +23,7 @@ jobs:
       - test-run-unit-tests
     uses: ./.github/workflows/build-applications.yml
     with:
-      BUILD_VERSION: ${{ needs.set-build-variables.outputs.BUILD_VERSION }}
+      BUILD_VERSION: ${{ needs.set-build-variables.outputs.build_version }}
       BUILD_CONFIGURATION: Debug
 
   build-arm-templates:
