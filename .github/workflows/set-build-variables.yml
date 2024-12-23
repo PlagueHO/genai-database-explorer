@@ -27,4 +27,3 @@ jobs:
           echo "GitVersion output: $gitVersionOutput"
           $gitVersionObject = $gitVersionOutput | ConvertFrom-Json
           echo "BUILD_VERSION=$($gitVersionObject.FullSemVer)" >> $GITHUB_ENV
-          echo "::set-output name=build_version::$($gitVersionObject.FullSemVer)"
