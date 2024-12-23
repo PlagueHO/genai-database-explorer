@@ -37,7 +37,7 @@ jobs:
           dotnet-version: 9
 
       - name: Publish Solution
-        run: dotnet publish ./src/GenAIDBExplorer/GenAIDBExplorer.sln -c ${{ inputs.BUILD_CONFIGURATION }} -r ${{ matrix.rid }} -p:Version=${{ inputs.BUILD_VERSION }} --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=true -p:TargetName=gaidbexp -o ./publish/${{ matrix.rid }}-{{ inputs.BUILD_VERSION }}
+        run: dotnet publish ./src/GenAIDBExplorer/GenAIDBExplorer.sln -c ${{ inputs.BUILD_CONFIGURATION }} -r ${{ matrix.rid }} -p:Version=${{ inputs.BUILD_VERSION }} --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=true -p:TargetName=gaidbexp -o ./publish/${{ matrix.rid }}-${{ inputs.BUILD_VERSION }}
 
       - name: Upload Artifact to GitHub Actions
         uses: actions/upload-artifact@v3
