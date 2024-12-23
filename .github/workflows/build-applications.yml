@@ -6,7 +6,7 @@ on:
       BUILD_VERSION:
         description: 'The version to assign to the applications'
         type: string
-        default: '0.0.0'
+        default: '0.0.1'
       BUILD_CONFIGURATION:
         description: 'The build configuration to use (e.g., Debug or Release)'
         type: string

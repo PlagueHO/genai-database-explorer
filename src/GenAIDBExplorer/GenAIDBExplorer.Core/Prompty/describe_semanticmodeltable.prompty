@@ -17,10 +17,11 @@ You will be provided with:
 
 You must provide the following in individual sections:
 
-- Description: Purpose of the table, any specific details on how it is used and what it is used for including examples if appropriate. If the purpose of the table is not completely clear, provide a general description based on the columns and sample data.
-- Parameters: Input parameters to the stored procedure and how they are used by the stored procedure.
-- Notable Columns: The notable columns in the table and the specifics of the data they contain with examples where appropriate.
-- Referenced Tables: The tables that are referenced by columns in table. Only include tables that are directly referenced by columns.
+- `#### Description`: Purpose of the table, any specific details on how it is used and what it is used for including examples if appropriate. If the purpose of the table is not completely clear, provide a general description based on the columns and sample data.
+- `#### Notable Columns`: The notable columns in the table and the specifics of the data they contain with examples where appropriate. Ensure columns related to security are included as notable. Combine related columns together into a single line (e.g., Address1, Address2, Suburb)
+- `#### Referenced Tables`: The tables that are referenced by columns in table. Only include tables that are directly referenced by columns. Do not speculate on relationships that are not explicitly defined in the table structure.
+
+> Do not add any additional sections.
 
 # Important Instructions
 

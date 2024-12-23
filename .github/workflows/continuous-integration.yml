@@ -20,6 +20,7 @@ jobs:
 
   build-applications:
     needs:
+      - set-build-variables
       - test-run-unit-tests
     uses: ./.github/workflows/build-applications.yml
     with:
