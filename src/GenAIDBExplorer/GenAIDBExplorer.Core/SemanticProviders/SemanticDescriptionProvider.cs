@@ -146,7 +146,7 @@ public class SemanticDescriptionProvider(
             processResult.Add(new SemanticProcessResultItem(scope, "ChatCompletion", usage, timeTaken));
 
             _logger.LogInformation(
-                "{Message}. {Type} [{Schema}].[{Name}]", 
+                "{Message} {Type} [{Schema}].[{Name}]", 
                 _resourceManagerLogMessages.GetString("GeneratedSemanticDescriptionForEntity"),
                 entityType, entity.Schema, entity.Name);
         }
