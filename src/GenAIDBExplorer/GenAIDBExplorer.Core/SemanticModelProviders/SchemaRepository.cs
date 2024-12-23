@@ -473,12 +473,12 @@ public sealed class SchemaRepository(
     {
         try
         {
-            var query = (selectRandom ? SqlStatements.GetSampleTableDataRandom : SqlStatements.GetSampleTableData);
+            var query = (selectRandom ? SqlStatements.GetSampleTableDataRandom : SqlStatements.GetSampleTableData)
+                .Replace("@EntityName", $"[{tableInfo.SchemaName}].[{tableInfo.TableName}]");
 
             var parameters = new Dictionary<string, object>
             {
-                { "@NumberOfRecords", numberOfRecords },
-                { "@EntityName", $"[{tableInfo.SchemaName}].[{tableInfo.TableName}]" }
+                { "@NumberOfRecords", numberOfRecords }
             };
 
             using var reader = await _sqlQueryExecutor.ExecuteReaderAsync(query, parameters).ConfigureAwait(false);
@@ -520,11 +520,11 @@ public sealed class SchemaRepository(
     {
         try
         {
-            var query = (selectRandom ? SqlStatements.GetSampleViewDataRandom : SqlStatements.GetSampleViewData);
+            var query = (selectRandom ? SqlStatements.GetSampleViewDataRandom : SqlStatements.GetSampleViewData)
+                .Replace("@EntityName", $"[{viewInfo.SchemaName}].[{viewInfo.ViewName}]");
             var parameters = new Dictionary<string, object>
             {
                 { "@NumberOfRecords", numberOfRecords },
-                { "@EntityName", $"[{viewInfo.SchemaName}].[{viewInfo.ViewName}]" }
             };
 
             using var reader = await _sqlQueryExecutor.ExecuteReaderAsync(query, parameters).ConfigureAwait(false);

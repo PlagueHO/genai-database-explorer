@@ -264,6 +264,8 @@ public class DataDictionaryProvider(
 
         if (semanticModelColumn != null)
         {
+            // Clear the current Semantic Column description as the data dictionary content should replace it
+            semanticModelColumn.Description = String.Empty;
             UpdateColumnDescription(semanticModelColumn, column);
             UpdateColumnType(semanticModelColumn, column, typeMappings);
             UpdateColumnUsage(semanticModelColumn, column);
@@ -290,7 +292,7 @@ public class DataDictionaryProvider(
 
         if (typeMappings.TryGetValue(dataDictionaryType, out var mappedType))
         {
-            string mappingNote = $"Type '{dataDictionaryType}' mapped to '{mappedType}'.";
+            string mappingNote = $"Data dictionary type '{dataDictionaryType}' mapped to '{mappedType}'.";
 
             dataDictionaryType = mappedType;
 

@@ -10,7 +10,7 @@
     },
     "GenAIDBExplorer.Console enrich-model": {
       "commandName": "Project",
-      "commandLineArgs": "enrich-model table -p d:\\temp -s dbo -n tblAlert"
+      "commandLineArgs": "enrich-model table -p d:\\temp -s dbo -n tblUser"
     },
     "GenAIDBExplorer.Console init-project": {
       "commandName": "Project",

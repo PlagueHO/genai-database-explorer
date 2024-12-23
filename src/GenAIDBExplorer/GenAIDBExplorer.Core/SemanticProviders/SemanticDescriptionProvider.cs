@@ -59,7 +59,7 @@ public class SemanticDescriptionProvider(
         using (_logger.BeginScope(scope))
         {
             _logger.LogInformation(
-                "{Message}. {Type} [{Schema}].[{Name}]",
+                "{Message} {Type} [{Schema}].[{Name}]",
                 _resourceManagerLogMessages.GetString("GenerateSemanticDescriptionForEntity"),
                 entityType, entity.Schema, entity.Name);
 
@@ -441,6 +441,7 @@ public class SemanticDescriptionProvider(
 
             return JsonSerializer.Serialize(truncatedData);
         }
+
         return "No sample data available";
     }
 

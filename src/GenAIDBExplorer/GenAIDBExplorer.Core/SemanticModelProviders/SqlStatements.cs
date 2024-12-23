@@ -236,7 +236,7 @@ FROM (
 WHERE
     RowNum <= @NumberOfRecords
 ORDER BY
-    RowNum"";
+    RowNum
 ";
 
     public const string GetSampleTableDataRandom = @"
