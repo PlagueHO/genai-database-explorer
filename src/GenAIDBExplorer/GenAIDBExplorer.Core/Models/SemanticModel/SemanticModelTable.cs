@@ -111,6 +111,13 @@ public sealed class SemanticModelTable(
         var builder = new StringBuilder();
         builder.Append(base.ToString());
 
+        if (!string.IsNullOrWhiteSpace(Details))
+        {
+            builder.AppendLine("");
+            builder.AppendLine($"Details:");
+            builder.AppendLine($"{Details}");
+        }
+
         if (Columns.Count > 0)
         {
             builder.AppendLine("");
@@ -139,6 +146,13 @@ public sealed class SemanticModelTable(
             {
                 builder.AppendLine($"  - {index.Name}");
             }
+        }
+
+        if (!string.IsNullOrEmpty(AdditionalInformation))
+        {
+            builder.AppendLine("");
+            builder.AppendLine($"Additional Information:");
+            builder.AppendLine($"{AdditionalInformation}");
         }
 
         if (!string.IsNullOrWhiteSpace(SemanticDescription))

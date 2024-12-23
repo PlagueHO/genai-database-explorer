@@ -25,22 +25,12 @@ public class ProjectSettings
     public required DataDictionarySettings DataDictionary { get; set; }
 
     /// <summary>
+    /// Gets or sets the OpenAI service settings.
+    /// </summary>
+    public required OpenAIServiceSettings OpenAIService { get; set; }
+
+    /// <summary>
     /// Gets or sets the semantic model settings.
     /// </summary>
     public required SemanticModelSettings SemanticModel { get; set; }
-
-    /// <summary>
-    /// Gets or sets the chat completion settings.
-    /// </summary>
-    public required ChatCompletionSettings ChatCompletion { get; set; }
-
-    /// <summary>
-    /// Gets or sets the chat completion settings.
-    /// </summary>
-    public required ChatCompletionStructuredSettings ChatCompletionStructured { get; set; }
-
-    /// <summary>
-    /// Gets or sets the embedding settings.
-    /// </summary>
-    public required EmbeddingSettings Embedding { get; set; }
 }

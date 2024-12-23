@@ -6,6 +6,8 @@ using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using System.Text.Json;
 using System.Resources;
+using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
+using DocumentFormat.OpenXml.Vml.Office;
 
 namespace GenAIDBExplorer.Core.DataDictionary;
 
@@ -108,11 +110,16 @@ public class DataDictionaryProvider(
 
         await Parallel.ForEachAsync(markdownFiles, parallelOptions, async (filePath, cancellationToken) =>
         {
-            var markdownContent = await File.ReadAllTextAsync(filePath, cancellationToken);
-            var table = await GetTableFromMarkdownAsync(markdownContent);
-            lock (processResult)
+            var scope = $"{filePath}";
+
+            using (_logger.BeginScope(scope))
             {
-                processResult.Add(table);
+                var markdownContent = await File.ReadAllTextAsync(filePath, cancellationToken);
+                var table = await GetTableFromMarkdownAsync(markdownContent);
+                lock (processResult)
+                {
+                    processResult.Add(table);
+                }
             }
         });
 
@@ -257,8 +264,8 @@ public class DataDictionaryProvider(
 
         if (semanticModelColumn != null)
         {
-            UpdateColumnType(semanticModelColumn, column, typeMappings);
             UpdateColumnDescription(semanticModelColumn, column);
+            UpdateColumnType(semanticModelColumn, column, typeMappings);
             UpdateColumnUsage(semanticModelColumn, column);
         }
         else

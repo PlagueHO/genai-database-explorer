@@ -10,11 +10,19 @@ on:
 jobs:
   set-build-variables:
     name: Set build variables
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     outputs:
-      build_version: ${{ steps.generate-build-version.outputs.build_version }}
+      build_version: ${{ steps.calculate-build-version.outputs.build_version }}
     steps:
-      - name: Generate build version
-        id: generate-build-version
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install GitVersion
+        run: dotnet tool install --global GitVersion.Tool --version 5.*
+
+      - name: Calculate version with GitVersion
+        id: calculate-build-version
         run: |
-          echo "build_version=${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}" >> "$GITHUB_OUTPUT"
+          $gitVersionObject = dotnet-gitversion | ConvertFrom-Json
+          echo "BUILD_VERSION=$($gitVersionObject.FullSemVer)" >> $GITHUB_ENV
+          echo "::set-output name=build_version::$($gitVersionObject.FullSemVer)"

@@ -30,10 +30,7 @@ namespace GenAIDBExplorer.Core.Tests.Data.DatabaseProviders
                 Database = new DatabaseSettings { ConnectionString = null },
                 DataDictionary = new DataDictionarySettings(),
                 SemanticModel = new SemanticModelSettings(),
-                ChatCompletion = new ChatCompletionSettings(),
-                ChatCompletionStructured = new ChatCompletionStructuredSettings(),
-                Embedding = new EmbeddingSettings()
-
+                OpenAIService = new OpenAIServiceSettings()
             };
             _mockProject.Setup(p => p.Settings).Returns(projectSettings);
 
@@ -57,9 +54,7 @@ namespace GenAIDBExplorer.Core.Tests.Data.DatabaseProviders
                 Database = new DatabaseSettings { ConnectionString = connectionString },
                 DataDictionary = new DataDictionarySettings(),
                 SemanticModel = new SemanticModelSettings(),
-                ChatCompletion = new ChatCompletionSettings(),
-                ChatCompletionStructured = new ChatCompletionStructuredSettings(),
-                Embedding = new EmbeddingSettings()
+                OpenAIService = new OpenAIServiceSettings()
             };
             _mockProject.Setup(p => p.Settings).Returns(projectSettings);
 

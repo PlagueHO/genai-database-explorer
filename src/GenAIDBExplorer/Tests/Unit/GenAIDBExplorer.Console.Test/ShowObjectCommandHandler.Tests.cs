@@ -38,9 +38,7 @@ public class ShowObjectCommandHandlerTests
             Database = new DatabaseSettings { Name = "TestDatabase" },
             DataDictionary = new DataDictionarySettings(),
             SemanticModel = new SemanticModelSettings(),
-            ChatCompletion = new ChatCompletionSettings(),
-            ChatCompletionStructured = new ChatCompletionStructuredSettings(),
-            Embedding = new EmbeddingSettings()
+            OpenAIService = new OpenAIServiceSettings()
         };
 
         _mockProject.Setup(p => p.Settings).Returns(mockProjectSettings);

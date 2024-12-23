@@ -82,9 +82,7 @@ public class Project(
             Database = new DatabaseSettings(),
             DataDictionary = new DataDictionarySettings(),
             SemanticModel = new SemanticModelSettings(),
-            ChatCompletion = new ChatCompletionSettings(),
-            ChatCompletionStructured = new ChatCompletionStructuredSettings(),
-            Embedding = new EmbeddingSettings()
+            OpenAIService = new OpenAIServiceSettings()
         };
 
         // Read the SettingsVersion
@@ -93,9 +91,7 @@ public class Project(
         _configuration.GetSection(DatabaseSettings.PropertyName).Bind(Settings.Database);
         _configuration.GetSection(DataDictionarySettings.PropertyName).Bind(Settings.DataDictionary);
         _configuration.GetSection(SemanticModelSettings.PropertyName).Bind(Settings.SemanticModel);
-        _configuration.GetSection(ChatCompletionSettings.PropertyName).Bind(Settings.ChatCompletion);
-        _configuration.GetSection(ChatCompletionStructuredSettings.PropertyName).Bind(Settings.ChatCompletionStructured);
-        _configuration.GetSection(EmbeddingSettings.PropertyName).Bind(Settings.Embedding);
+        _configuration.GetSection(OpenAIServiceSettings.PropertyName).Bind(Settings.OpenAIService);
 
         ValidateSettings();
     }
@@ -119,17 +115,9 @@ public class Project(
         Validator.ValidateObject(Settings.SemanticModel, validationContext, validateAllProperties: true);
         _logger.LogInformation("{Message} '{Section}'", _resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "SemanticModel");
 
-        validationContext = new ValidationContext(Settings.ChatCompletion);
-        Validator.ValidateObject(Settings.ChatCompletion, validationContext, validateAllProperties: true);
-        _logger.LogInformation("{Message} '{Section}'", _resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "ChatCompletion");
-
-        validationContext = new ValidationContext(Settings.ChatCompletionStructured);
-        Validator.ValidateObject(Settings.ChatCompletionStructured, validationContext, validateAllProperties: true);
-        _logger.LogInformation("{Message} '{Section}'", _resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "ChatCompletionStructured");
-
-        validationContext = new ValidationContext(Settings.Embedding);
-        Validator.ValidateObject(Settings.Embedding, validationContext, validateAllProperties: true);
-        _logger.LogInformation("{Message} '{Section}'", _resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "Embedding");
+        validationContext = new ValidationContext(Settings.OpenAIService);
+        Validator.ValidateObject(Settings.OpenAIService, validationContext, validateAllProperties: true);
+        _logger.LogInformation("{Message} '{Section}'", _resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "OpenAIService");
 
         _logger.LogInformation("{Message}", _resourceManagerLogMessages.GetString("ProjectSettingsValidationCompleted"));
     }

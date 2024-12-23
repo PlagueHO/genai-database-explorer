@@ -25,32 +25,26 @@
     "SemanticModel": {
         "MaxDegreeOfParallelism": 10 // Number of parallel semantic model tasks to run.
     },
-    "ChatCompletion": {
-        "ServiceType": "AzureOpenAI", // AzureOpenAI, OpenAI
-        // "ModelId": "gpt-4o-mini-2024-07-18", // Recommend gpt-4o-2024-08-06 or gpt-4o-mini-2024-07-18
-        // "OpenAIKey": "<Set your OpenAI API key>"
-        "AzureOpenAIKey": "<Set your Azure OpenAI API key>", // Azure OpenAI key
-        "AzureOpenAIEndpoint": "https://<Set your Azure OpenAI endpoint>.cognitiveservices.azure.com/", // Azure OpenAI endpoint
-        // "AzureOpenAIAppId": "", // Azure OpenAI App Id
-        "AzureOpenAIDeploymentId": "<Set your Azure OpenAI deployment id>" // gpt-4o or gpt-4o-mini
-    },
-    // Required for structured chat completion to reliably extract entity lists. Must be a model that supports structured output.
-    "ChatCompletionStructured": {
-        "ServiceType": "AzureOpenAI", // AzureOpenAI, OpenAI
-        // "ModelId": "gpt-4o-mini-2024-07-18", // Must be gpt-4o-2024-08-06 (or later) or gpt-4o-mini-2024-07-18 (or later)
-        // "OpenAIKey": "<Set your OpenAI API key>"
-        "AzureOpenAIKey": "<Set your Azure OpenAI API key>", // Azure OpenAI key
-        "AzureOpenAIEndpoint": "https://<Set your Azure OpenAI endpoint>.cognitiveservices.azure.com/", // Azure OpenAI endpoint
-        // "AzureOpenAIAppId": "", // Azure OpenAI App Id
-        "AzureOpenAIDeploymentId": "<Set your Azure OpenAI deployment id>" // gpt-4o (2024-08-06 or later)
-    },
-    "Embedding": {
-        "ServiceType": "AzureOpenAI", // AzureOpenAI, OpenAI
-        // "ModelId": "text-embedding-3-large", // text-embedding-3-large, text-embedding-3-small or text-embedding-ada-002
-        // "OpenAIKey": "<Set your OpenAI API key>"
-        "AzureOpenAIKey": "<Set your Azure OpenAI API key>", // Azure OpenAI key
-        "AzureOpenAIEndpoint": "https://<Set your Azure OpenAI endpoint>.cognitiveservices.azure.com/", // Azure OpenAI endpoint
-        // "AzureOpenAIAppId": "", // Azure OpenAI App Id
-        "AzureOpenAIDeploymentId": "<Set your Azure OpenAI deployment id>" // text-embedding-3-large, text-embedding-3-small or text-embedding-ada-002
+    "OpenAIService": {
+        "Default": {
+            "ServiceType": "AzureOpenAI", // AzureOpenAI, OpenAI
+            // "OpenAIKey": "<Set your OpenAI API key>"
+            "AzureOpenAIKey": "<Set your Azure OpenAI API key>", // Azure OpenAI key. If not provided, will attempt using Azure Default Credential
+            "AzureOpenAIEndpoint": "https://<Set your Azure OpenAI endpoint>.cognitiveservices.azure.com/" // Azure OpenAI endpoint
+            // "AzureOpenAIAppId": "" // Azure OpenAI App Id
+        },
+        "ChatCompletion": {
+            // "ModelId": "gpt-4o-mini-2024-07-18", // Only required when using OpenAI. Recommend gpt-4o-2024-08-06 or gpt-4o-mini-2024-07-18
+            "AzureOpenAIDeploymentId": "<Set your Azure OpenAI deployment id>" // Only required when using Azure OpenAI. Recommend gpt-4o or gpt-4o-mini
+        },
+        // Required for structured chat completion to reliably extract entity lists. Must be a model that supports structured output.
+        "ChatCompletionStructured": {
+            // "ModelId": "gpt-4o-mini-2024-07-18", // Only required when using OpenAI. Recommend gpt-4o-2024-08-06 or gpt-4o-mini-2024-07-18
+            "AzureOpenAIDeploymentId": "<Set your Azure OpenAI deployment id>" // Only required when using Azure OpenAI. Recommend gpt-4o (2024-08-06 or later)
+        },
+        "Embedding": {
+            // "ModelId": "gpt-4o-mini-2024-07-18", // Only required when using OpenAI. Recommend gpt-4o-2024-08-06 or gpt-4o-mini-2024-07-18
+            "AzureOpenAIDeploymentId": "<Set your Azure OpenAI deployment id>" // Only required when using Azure OpenAI. Recommend text-embedding-3-large, text-embedding-3-small or text-embedding-ada-002
+        }
     }
 }

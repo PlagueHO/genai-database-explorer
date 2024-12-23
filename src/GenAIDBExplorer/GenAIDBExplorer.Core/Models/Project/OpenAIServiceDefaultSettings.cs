@@ -2,19 +2,13 @@
 
 namespace GenAIDBExplorer.Core.Models.Project;
 
-public class EmbeddingSettings : IEmbeddingSettings
+public class OpenAIServiceDefaultSettings
 {
-    // The settings key that contains the Embedding settings
-    public const string PropertyName = "Embedding";
+    // The settings key that contains the Default OpenAI settings
+    public const string PropertyName = "Default";
 
-    /// <summary>
-    /// The service type to use for Embedding
-    /// </summary>
     [Required, NotEmptyOrWhitespace]
     public string ServiceType { get; set; } = "AzureOpenAI";
-
-    [NotEmptyOrWhitespace]
-    public string Model { get; set; } = "text-embedding-3-large";
 
     [RequiredOnPropertyValue(nameof(ServiceType), "OpenAI")]
     public string? OpenAIKey { get; set; }
@@ -26,7 +20,4 @@ public class EmbeddingSettings : IEmbeddingSettings
     public string? AzureOpenAIEndpoint { get; set; }
 
     public string? AzureOpenAIAppId { get; set; }
-
-    [RequiredOnPropertyValue(nameof(ServiceType), "AzureOpenAI")]
-    public string? AzureOpenAIDeploymentId { get; set; }
 }

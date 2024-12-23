@@ -30,8 +30,8 @@ public class SemanticKernelFactory(
                     options.TimestampFormat = "HH:mm:ss ";
                 }));
 
-        AddChatCompletionService(kernelBuilder, _project.Settings.ChatCompletion, "ChatCompletion");
-        AddChatCompletionService(kernelBuilder, _project.Settings.ChatCompletionStructured, "ChatCompletionStructured");
+        AddChatCompletionService(kernelBuilder, _project.Settings.OpenAIService.Default, _project.Settings.OpenAIService.ChatCompletion, "ChatCompletion");
+        AddChatCompletionService(kernelBuilder, _project.Settings.OpenAIService.Default, _project.Settings.OpenAIService.ChatCompletionStructured, "ChatCompletionStructured");
 
         return kernelBuilder.Build();
     }
@@ -42,22 +42,26 @@ public class SemanticKernelFactory(
     /// <param name="kernelBuilder">The kernel builder.</param>
     /// <param name="settings">The chat completion settings.</param>
     /// <param name="serviceId">The service ID.</param>
-    private static void AddChatCompletionService(IKernelBuilder kernelBuilder, IChatCompletionSettings settings, string serviceId)
+    private static void AddChatCompletionService(
+            IKernelBuilder kernelBuilder,
+            OpenAIServiceDefaultSettings openAIServiceDefaultSettings,
+            IOpenAIServiceChatCompletionSettings openAIServiceChatCompletionSettings,
+            string serviceId)
     {
-        if (settings.ServiceType == "AzureOpenAI")
+        if (openAIServiceDefaultSettings.ServiceType == "AzureOpenAI")
         {
             kernelBuilder.AddAzureOpenAIChatCompletion(
-                deploymentName: settings.AzureOpenAIDeploymentId,
-                endpoint: settings.AzureOpenAIEndpoint,
-                apiKey: settings.AzureOpenAIKey,
+                deploymentName: openAIServiceChatCompletionSettings.AzureOpenAIDeploymentId,
+                endpoint: openAIServiceDefaultSettings.AzureOpenAIEndpoint,
+                apiKey: openAIServiceDefaultSettings.AzureOpenAIKey,
                 serviceId: serviceId
             );
         }
         else
         {
             kernelBuilder.AddOpenAIChatCompletion(
-                modelId: settings.ModelId,
-                apiKey: settings.OpenAIKey,
+                modelId: openAIServiceChatCompletionSettings.ModelId,
+                apiKey: openAIServiceDefaultSettings.OpenAIKey,
                 serviceId: serviceId
             );
         }
