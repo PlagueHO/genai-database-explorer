@@ -34,7 +34,7 @@ jobs:
       - test-run-unit-tests
     uses: ./.github/workflows/build-applications.yml
     with:
-      BUILD_VERSION: ${{ needs.set-build-variables.outputs.build_version }}  
+      BUILD_VERSION: ${{ needs.set-build-variables.outputs.BUILD_VERSION }}  
       BUILD_CONFIGURATION: Release
        
   validate-infrastructure-test:
@@ -43,7 +43,7 @@ jobs:
     uses: ./.github/workflows/validate-infrastructure.yml
     with:
       ENVIRONMENT: Test
-      BUILD_VERSION: ${{ needs.set-build-variables.outputs.build_version }}
+      BUILD_VERSION: ${{ needs.set-build-variables.outputs.BUILD_VERSION }}
       LOCATION: ${{ vars.LOCATION }}
     secrets:
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
@@ -58,7 +58,7 @@ jobs:
     uses: ./.github/workflows/deploy-infrastructure.yml
     with:
       ENVIRONMENT: Test
-      BUILD_VERSION: ${{ needs.set-build-variables.outputs.build_version }}
+      BUILD_VERSION: ${{ needs.set-build-variables.outputs.BUILD_VERSION }}
       LOCATION: ${{ vars.LOCATION }}
     secrets:
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
