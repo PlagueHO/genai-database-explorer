@@ -8,6 +8,7 @@ using Microsoft.SemanticKernel;
 using System.Resources;
 using System.Text.Json;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
+using GenAIDBExplorer.Core.Models.SemanticModel.Extensions;
 
 namespace GenAIDBExplorer.Core.SemanticProviders;
 
@@ -71,7 +72,7 @@ public class SemanticDescriptionProvider(
             {
                 case SemanticModelTable table:
                     sampleData = await _schemaRepository.GetSampleTableDataAsync(
-                        new TableInfo(table.Schema, table.Name));
+                        new TableInfo(table.Schema, table.Name), 5, true);
                     break;
 
                 case SemanticModelView view:
@@ -81,7 +82,7 @@ public class SemanticDescriptionProvider(
                     relatedTables = semanticModel.SelectTables(vwtableList);
 
                     sampleData = await _schemaRepository.GetSampleViewDataAsync(
-                        new ViewInfo(view.Schema, view.Name));
+                        new ViewInfo(view.Schema, view.Name), 5, true);
                     break;
 
                 case SemanticModelStoredProcedure storedProcedure:
@@ -109,6 +110,7 @@ public class SemanticDescriptionProvider(
                 parameters = (entity as SemanticModelStoredProcedure)?.Parameters
             };
 
+            
             var promptExecutionSettings = new PromptExecutionSettings
             {
 #pragma warning disable SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.

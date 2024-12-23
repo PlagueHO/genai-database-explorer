@@ -11,7 +11,7 @@ public sealed class SemanticModelTable(
     string schema,
     string name,
     string? description = null
-    ) : SemanticModelEntity(schema, name, description)
+    ) : SemanticModelEntity(schema, name, description), ISemanticModelColumnContainer, ISemanticModelIndexContainer
 {
     /// <summary>
     /// Gets or sets the details of the purpose of the table.

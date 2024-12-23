@@ -11,7 +11,7 @@ public sealed class SemanticModelView(
     string schema,
     string name,
     string? description = null
-    ) : SemanticModelEntity(schema, name, description)
+    ) : SemanticModelEntity(schema, name, description), ISemanticModelColumnContainer
 {
     /// <summary>
     /// Gets or sets additional information about the view (such as business rules).

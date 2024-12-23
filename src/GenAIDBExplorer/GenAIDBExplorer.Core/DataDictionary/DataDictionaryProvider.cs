@@ -299,7 +299,7 @@ public class DataDictionaryProvider(
             if (string.IsNullOrEmpty(semanticModelColumn.Description) ||
                 !semanticModelColumn.Description.Contains(mappingNote, StringComparison.OrdinalIgnoreCase))
             {
-                semanticModelColumn.Description = (semanticModelColumn.Description ?? string.Empty).Trim() + " " + mappingNote;
+                semanticModelColumn.Description = ((semanticModelColumn.Description ?? string.Empty).Trim() + " " + mappingNote).Trim();
             }
         }
 

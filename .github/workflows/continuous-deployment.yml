@@ -19,6 +19,14 @@ jobs:
   set-build-variables:
     uses: ./.github/workflows/set-build-variables.yml
 
+  display-build-version:
+    needs: set-build-variables
+    runs-on: ubuntu-latest
+    steps:
+      - name: Display BUILD_VERSION
+        run: |
+          echo "BUILD_VERSION: ${{ needs.set-build-variables.outputs.BUILD_VERSION }}"
+
   build-arm-templates:
     needs:
       - set-build-variables

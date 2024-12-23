@@ -5,12 +5,9 @@ namespace GenAIDBExplorer.Core.Models.SemanticModel;
 /// <summary>
 /// Represents a column in the semantic model.
 /// </summary>
-public sealed class SemanticModelColumn(
-    string schema,
-    string name,
-    string? description = null
-    ) : SemanticModelEntity(schema, name, description)
-{
+public sealed class SemanticModelColumn(string schema, string name, string? description = null)
+    : SemanticModelEntity(schema, name, description)
+{   
     /// <summary>
     /// Gets the name of the column.
     /// </summary>
