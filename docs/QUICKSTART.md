@@ -32,43 +32,37 @@ Edit the `settings.json` file in the project directory to set the desired config
 
 ```json
 {
-  "SettingsVersion": "1.0.0",
-  "Database": {
-    "Name": "<The name of your project>",
-    "Description": "<An optional description of the purpose of the database that helps ground the semantic descriptions>", // This helps ground the AI on the context of the database.
-    "ConnectionString": "Server=MyServer;Database=MyDatabase;User Id=<SQL username>;Password=<SQL password>;TrustServerCertificate=True;MultipleActiveResultSets=True;",
-    "Schema": "dbo",
-    // ... other parameters
+    "SettingsVersion": "1.0.0",
+    "Database": {
+        "Name": "<The name of your project>",
+        "Description": "<An optional description of the purpose of the database that helps ground the semantic descriptions>", // This helps ground the AI on the context of the database.
+        "ConnectionString": "Server=MyServer;Database=MyDatabase;User Id=<SQL username>;Password=<SQL password>;TrustServerCertificate=True;MultipleActiveResultSets=True;",
+        "Schema": "dbo",
+        // ... other parameters
   },
   // ... other settings
-  "ChatCompletion": {
-    "ServiceType": "AzureOpenAI", // AzureOpenAI, OpenAI
-    // "ModelId": "gpt-4o-mini", // gpt-4o or gpt-4o-mini
-    // "OpenAIKey": "<Set your OpenAI API key>"
-    "AzureOpenAIKey": "<your Azure OpenAI key>", // Azure OpenAI key
-    "AzureOpenAIEndpoint": "<your Azure OpenAI endpoint>", // Azure OpenAI endpoint
-    // "AzureOpenAIAppId": "", // Azure OpenAI App Id
-    "AzureOpenAIDeploymentId": "gpt-4o-mini" // gpt-4o or gpt-4o-mini
-  },
-  // Required for structured chat completion. Must be a model that supports structured output.
-  "ChatCompletionStructured": {
-    "ServiceType": "AzureOpenAI", // AzureOpenAI, OpenAI
-    // "ModelId": "gpt-4o-mini-2024-07-18", // gpt-4o-2024-08-06 (or later) or gpt-4o-mini-2024-07-18 (or later)
-    // "OpenAIKey": "<Set your OpenAI API key>"
-    "AzureOpenAIKey": "<your Azure OpenAI key>", // Azure OpenAI key
-    "AzureOpenAIEndpoint": "<your Azure OpenAI endpoint>", // Azure OpenAI endpoint
-    // "AzureOpenAIAppId": "", // Azure OpenAI App Id
-    "AzureOpenAIDeploymentId": "gpt-4o" // Must be gpt-4o 2024-08-06 or later
-  },
-  "Embedding": {
-    "ServiceType": "AzureOpenAI", // AzureOpenAI, OpenAI
-    // "ModelId": "text-embedding-3-large", // text-embedding-3-large, text-embedding-3-small or text-embedding-ada-002
-    // "OpenAIKey": "<Set your OpenAI API key>"
-    "AzureOpenAIKey": "<your Azure OpenAI key>", // Azure OpenAI key
-    "AzureOpenAIEndpoint": "<your Azure OpenAI endpoint>", // Azure OpenAI endpoint
-    // "AzureOpenAIAppId": "", // Azure OpenAI App Id
-    "AzureOpenAIDeploymentId": "text-embedding-3-large" // text-embedding-3-large, text-embedding-3-small or text-embedding-ada-002
-  }
+    "OpenAIService": {
+        "Default": {
+            "ServiceType": "AzureOpenAI", // AzureOpenAI, OpenAI
+            // "OpenAIKey": "<Set your OpenAI API key>"
+            "AzureOpenAIKey": "<Set your Azure OpenAI API key>", // Azure OpenAI key. If not provided, will attempt using Azure Default Credential
+            "AzureOpenAIEndpoint": "https://<Set your Azure OpenAI endpoint>.cognitiveservices.azure.com/" // Azure OpenAI endpoint
+            // "AzureOpenAIAppId": "" // Azure OpenAI App Id
+        },
+        "ChatCompletion": {
+            // "ModelId": "gpt-4o-mini-2024-07-18", // Only required when using OpenAI. Recommend gpt-4o-2024-08-06 or gpt-4o-mini-2024-07-18
+            "AzureOpenAIDeploymentId": "<Set your Azure OpenAI deployment id>" // Only required when using Azure OpenAI. Recommend gpt-4o or gpt-4o-mini
+        },
+        // Required for structured chat completion to reliably extract entity lists. Must be a model that supports structured output.
+        "ChatCompletionStructured": {
+            // "ModelId": "gpt-4o-mini-2024-07-18", // Only required when using OpenAI. Recommend gpt-4o-2024-08-06 or gpt-4o-mini-2024-07-18
+            "AzureOpenAIDeploymentId": "<Set your Azure OpenAI deployment id>" // Only required when using Azure OpenAI. Recommend gpt-4o (2024-08-06 or later)
+        },
+        "Embedding": {
+            // "ModelId": "gpt-4o-mini-2024-07-18", // Only required when using OpenAI. Recommend gpt-4o-2024-08-06 or gpt-4o-mini-2024-07-18
+            "AzureOpenAIDeploymentId": "<Set your Azure OpenAI deployment id>" // Only required when using Azure OpenAI. Recommend text-embedding-3-large, text-embedding-3-small or text-embedding-ada-002
+        }
+    }
 }
 ```
 
@@ -85,7 +79,7 @@ gaidbexp extract-model --project /path/to/project
 This is an optional step you can use if you have a database dictionary that provides additional information about the database schema. The dictionary should be a folder of markdown files, one for each table in the database. This process will use the `ChatCompletionStructured` model to extract the dictionary information from the markdown files.
 
 ```bash
-gaidbexp data-dictionary table --project /path/to/project -d d:\data_dictionary_tables\*.md
+gaidbexp data-dictionary table --project /path/to/project -d /path/to/data_dictionary/*.md
 ```
 
 ## Generate the semantic model
@@ -94,4 +88,11 @@ To generate the semantic model, use the `enrich-model` command. This command pro
 
 ```bash
 gaidbexp enrich-model --project /path/to/project
+```
+
+## Query the semantic model
+
+After generating the semantic model, you can query it using the `query-model` command. This command allows you to interact with the semantic model by asking questions about the database schema and receiving responses based on the enriched semantic model.
+```bash
+Not implemented yet.
 ```

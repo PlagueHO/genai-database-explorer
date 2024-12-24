@@ -64,21 +64,27 @@ public class MarkdownExportVisitor(
                 indexContent.AppendLine();
             }
 
+            indexContent.AppendLine();
             indexContent.AppendLine("## Tables");
+            indexContent.AppendLine();
             foreach (var table in semanticModel.Tables.OrderBy(t => t.Schema).ThenBy(t => t.Name))
             {
                 var fileName = $"tables/{table.Schema}.{table.Name}.md";
                 indexContent.AppendLine($"- [{table.Schema}.{table.Name}]({fileName})");
             }
 
+            indexContent.AppendLine();
             indexContent.AppendLine("## Views");
+            indexContent.AppendLine();
             foreach (var view in semanticModel.Views.OrderBy(t => t.Schema).ThenBy(t => t.Name))
             {
                 var fileName = $"views/{view.Schema}.{view.Name}.md";
                 indexContent.AppendLine($"- [{view.Schema}.{view.Name}]({fileName})");
             }
 
+            indexContent.AppendLine();
             indexContent.AppendLine("## Stored Procedures");
+            indexContent.AppendLine();
             foreach (var sp in semanticModel.StoredProcedures.OrderBy(t => t.Schema).ThenBy(t => t.Name))
             {
                 var fileName = $"storedprocedures/{sp.Schema}.{sp.Name}.md";
