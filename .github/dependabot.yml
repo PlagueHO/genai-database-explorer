@@ -1,0 +1,46 @@
+version: 2
+
+# Dependabot configuration for GenAI Database Explorer
+updates:
+  # .NET dependencies
+  - package-ecosystem: "nuget"
+    directory: "/src/GenAIDBExplorer"
+    schedule:
+      interval: "weekly"
+      time: "06:00"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps"
+    labels:
+      - "dependencies"
+      - "nuget"
+      - ".net"
+    reviewers:
+      - "PlagueHO"
+    rebase-strategy: "auto"
+    groups:
+      nuget-dependencies:
+        patterns:
+          - "*"
+    allow:
+      - dependency-type: "all"
+
+  # GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      time: "06:00"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    reviewers:
+      - "PlagueHO"
+    rebase-strategy: "auto"
+    groups:
+      gh-actions:
+        patterns:
+          - "*"
