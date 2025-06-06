@@ -40,18 +40,18 @@ var openAiServiceName = '${baseResourceName}-openai'
 
 var openAiModelDeployments = [
   {
-    name: 'gpt-4o'
-    modelName: 'gpt-4o'
-    version: '2024-11-20'
+    name: 'gpt-4.1'
+    modelName: 'gpt-4.1'
+    version: '2025-04-14'
     sku: 'GlobalStandard'
-    capacity: 250
+    capacity: 50
   }
   {
-    name: 'gpt-4o-mini'
-    modelName: 'gpt-4o-mini'
-    version: '2024-07-18'
+    name: 'gpt-4.1-mini'
+    modelName: 'gpt-4.1-mini'
+    version: '2025-04-14'
     sku: 'GlobalStandard'
-    capacity: 2000
+    capacity: 250
   }
   {
     name: 'embedding'
