@@ -30,9 +30,7 @@
             "version": "latest",
             "enableNonRootDocker": "true"
         },
-        "ghcr.io/azure-dev/azd/azd:0": {
-            "version": "latest"
-        }
+        "ghcr.io/azure-dev/azd/azd:0": {}
     },
     // Configure tool-specific properties.
     "customizations": {
