@@ -1,36 +1,117 @@
 {
     "name": "genai-database-explorer",
-    "image": "mcr.microsoft.com/devcontainers/dotnet:0-7.0",
+    "image": "mcr.microsoft.com/devcontainers/dotnet:1-8.0-jammy",
     "workspaceFolder": "/workspaces/genai-database-explorer",
     "onCreateCommand": "bash ./.devcontainer/on-setup.sh",
-  
     // Features to add to the dev container. More info: https://containers.dev/features.
     "features": {
-      "ghcr.io/devcontainers/features/azure-cli:1": {},
-      "ghcr.io/devcontainers/features/dotnet:2.1.3": {},
-      "ghcr.io/devcontainers/features/powershell:1": {},
-      "ghcr.io/devcontainers/features/python:1": {}
+        "ghcr.io/devcontainers/features/azure-cli:1": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers/features/dotnet:2": {
+            "version": "8.0",
+            "dotnetRuntimeVersions": "8.0",
+            "aspNetCoreRuntimeVersions": "8.0"
+        },
+        "ghcr.io/devcontainers/features/powershell:1": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers/features/git:1": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers/features/github-cli:1": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers/features/node:1": {
+            "version": "lts",
+            "nodeGypDependencies": true
+        },
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {
+            "version": "latest",
+            "enableNonRootDocker": "true"
+        },
+        "ghcr.io/azure-dev/azd/azd:0": {
+            "version": "latest"
+        }
     },
-  
     // Configure tool-specific properties.
     "customizations": {
-      // Configure properties specific to VS Code.
-      "vscode": {
-        "settings": {},
-        "extensions": [
-          "ms-dotnettools.csharp",
-          "ms-azuretools.vscode-docker",
-          "GitHub.copilot-nightly",
-          "GitHub.copilot-chat",
-          "ms-dotnettools.csdevkit",
-          "ms-azuretools.vscode-bicep",
-          "ms-vscode.azure-account",
-          "ms-vscode.azurecli",
-          "ms-vscode-remote.remote-containers",
-          "ms-semantic-kernel.semantic-kernel",
-          "GitHub.copilot-labs",
-          "ms-python.python"
-        ]
-      }
+        // Configure properties specific to VS Code.
+        "vscode": {
+            "settings": {
+                "dotnet.completion.showCompletionItemsFromUnimportedNamespaces": true,
+                "dotnet.inlayHints.enableInlayHintsForParameters": true,
+                "dotnet.inlayHints.enableInlayHintsForLiteralParameters": true,
+                "dotnet.inlayHints.enableInlayHintsForIndexerParameters": true,
+                "dotnet.inlayHints.enableInlayHintsForObjectCreationParameters": true,
+                "dotnet.inlayHints.enableInlayHintsForOtherParameters": true,
+                "dotnet.inlayHints.enableInlayHintsForTypes": true,
+                "dotnet.inlayHints.enableInlayHintsForImplicitVariableTypes": true,
+                "dotnet.inlayHints.enableInlayHintsForImplicitObjectCreation": true,
+                "dotnet.preferCSharpExtension": true,
+                "bicep.experimental.deployments.enabled": true,
+                "bicep.suppressedWarnings": [],
+                "files.associations": {
+                    "*.bicep": "bicep"
+                }
+            },
+            "extensions": [
+                // .NET and C# Development
+                "ms-dotnettools.csharp",
+                "ms-dotnettools.csdevkit",
+                "ms-dotnettools.vscode-dotnet-runtime",
+                
+                // Azure Development
+                "ms-azuretools.vscode-bicep",
+                "ms-azuretools.azure-dev",
+                "ms-vscode.azure-account",
+                "ms-vscode.azurecli",
+                "ms-azuretools.vscode-docker",
+                "ms-azuretools.vscode-azureresourcegroups",
+                "ms-azuretools.vscode-azurefunctions",
+                "ms-azuretools.vscode-azureappservice",
+                "ms-azuretools.vscode-azurestorage",
+                "ms-azuretools.vscode-cosmosdb",
+                
+                // GitHub and DevOps
+                "GitHub.copilot",
+                "GitHub.copilot-chat",
+                "GitHub.vscode-github-actions",
+                "GitHub.vscode-pull-request-github",
+                
+                // AI and Semantic Kernel
+                "ms-semantic-kernel.semantic-kernel",
+                "ms-toolsai.jupyter",
+                "ms-python.python",
+                
+                // Development Tools
+                "ms-vscode.powershell",
+                "ms-vscode-remote.remote-containers",
+                "redhat.vscode-yaml",
+                "ms-vscode.vscode-json",
+                "bradlc.vscode-tailwindcss",
+                "esbenp.prettier-vscode",
+                "ms-vsliveshare.vsliveshare"
+            ]
+        }
+    },
+    
+    // Add additional configuration
+    "remoteUser": "vscode",
+    "postCreateCommand": "dotnet restore",
+    "forwardPorts": [5000, 5001, 7071],
+    "portsAttributes": {
+        "5000": {
+            "label": "HTTP",
+            "protocol": "http"
+        },
+        "5001": {
+            "label": "HTTPS",
+            "protocol": "https"
+        },
+        "7071": {
+            "label": "Azure Functions",
+            "protocol": "http"
+        }
     }
   }
