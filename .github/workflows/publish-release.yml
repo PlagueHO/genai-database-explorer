@@ -13,19 +13,19 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download console Linux app artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: gaidbexp-ubuntu-latest
           path: ./publish/ubuntu-latest
 
       - name: Download console Windows app artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: gaidbexp-windows-latest
           path: ./publish/windows-latest
 
       - name: Download console macOS app artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: gaidbexp-macos-latest
           path: ./publish/macos-latest
