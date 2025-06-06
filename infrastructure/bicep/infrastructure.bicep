@@ -51,7 +51,7 @@ var openAiModelDeployments = [
     modelName: 'gpt-4.1-mini'
     version: '2025-04-14'
     sku: 'GlobalStandard'
-    capacity: 250
+    capacity: 200
   }
   {
     name: 'embedding'
