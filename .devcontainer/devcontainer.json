@@ -30,7 +30,9 @@
             "version": "latest",
             "enableNonRootDocker": "true"
         },
-        "ghcr.io/azure-dev/azd/azd:0": {}
+        "ghcr.io/azure-dev/azd/azd:0": {
+            "version": "stable"
+        }
     },
     // Configure tool-specific properties.
     "customizations": {
@@ -70,6 +72,7 @@
                 "ms-azuretools.vscode-azureappservice",
                 "ms-azuretools.vscode-azurestorage",
                 "ms-azuretools.vscode-cosmosdb",
+                "ms-vscode.vscode-node-azure-pack",
                 
                 // GitHub and DevOps
                 "GitHub.copilot",
