@@ -140,7 +140,7 @@ module sqlServer 'br/public:avm/res/sql/server:0.9.0' = {
         zoneRedundant: false
         readScale: 'Disabled'
         highAvailabilityReplicaCount: 0
-        minCapacity: json('0.5')
+        minCapacity: '0.5'
         autoPauseDelay: 60
         requestedBackupStorageRedundancy: 'Local'
         isLedgerOn: false
