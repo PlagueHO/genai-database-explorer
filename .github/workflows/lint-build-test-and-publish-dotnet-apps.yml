@@ -43,12 +43,11 @@ jobs:
 
       - name: Run tests
         run: |
-          if (Test-Path src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test) {
-            dotnet test src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test --configuration ${{ inputs.build_configuration }} --no-build --logger trx
-          } else {
+          if [ -d "src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test" ]; then
+            dotnet test src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test --configuration ${{ inputs.build_configuration }} --no-restore --logger trx
+          else
             echo "No tests found for ${{ matrix.project }}"
-          }
-        shell: pwsh
+          fi
 
       - name: Upload test results
         if: always()
