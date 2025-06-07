@@ -1,45 +1,46 @@
 targetScope = 'subscription'
+extension microsoftGraphV1
 
-// This template uses Azure Verified Modules (AVM) from https://aka.ms/avm
-// All core Azure resources are deployed using Microsoft-verified AVM modules
-// for improved security, maintainability, and compliance.
-
-@description('The location to deploy the resources into.')
-@allowed([
-  'AustraliaEast'
-  'CentralUS'
-  'EastUS'
-  'EastUS2'
-  'FranceCentral'
-  'JapanEast'
-  'NorthCentralUS'
-  'NorwayEast'
-  'SouthCentralUS'
-  'SwedenCentral'
-  'SwitzerlandNorth'
-  'UKSouth'
-  'WestEurope'
-  'WestUS'
-  'WestUS3'
-])
-param location string
-
-@description('Name of the the environment which is used to generate a short unique hash used in all resources.')
+@sys.description('Name of the the environment which is used to generate a short unique hash used in all resources.')
 @minLength(1)
 @maxLength(40)
 param environmentName string
 
-@description('The name of the resource group that will contain all the resources.')
+@sys.description('Location for all resources')
+@minLength(1)
+@metadata({
+  azd: {
+    type: 'location'
+  }
+})
+param location string
+
+@sys.description('The Azure resource group where new resources will be deployed.')
+@metadata({
+  azd: {
+    type: 'resourceGroup'
+  }
+})
 param resourceGroupName string = 'rg-${environmentName}'
 
-@description('The SQL logical server administrator username.')
+@sys.description('Id of the user or app to assign application roles.')
+param principalId string
+
+@sys.description('Type of the principal referenced by principalId.')
+@allowed([
+  'User'
+  'ServicePrincipal'
+])
+param principalIdType string = 'User'
+
+@sys.description('The SQL logical server administrator username.')
 param sqlServerUsername string
 
-@description('The SQL logical server administrator password.')
+@sys.description('The SQL logical server administrator password.')
 @secure()
 param sqlServerPassword string
 
-@description('Whether to deploy Azure AI Search service.')
+@sys.description('Whether to deploy Azure AI Search service.')
 param azureAiSearchDeploy bool = false
 
 var abbrs = loadJsonContent('./abbreviations.json')
@@ -59,7 +60,8 @@ var resourceToken = toLower(uniqueString(subscription().id, environmentName, loc
 
 var logAnalyticsWorkspaceName = '${abbrs.operationalInsightsWorkspaces}${environmentName}'
 var applicationInsightsName = '${abbrs.insightsComponents}${environmentName}'
-var openAiServiceName = '${abbrs.aiServicesAccounts}${environmentName}'
+var aiServicesName = '${abbrs.aiServicesAccounts}${environmentName}'
+var aiServicesCustomSubDomainName = toLower(replace(environmentName, '-', ''))
 var aiSearchName = '${abbrs.aiSearchSearchServices}${environmentName}'
 
 // Use the OpenAI models directly from JSON - they're already in the correct format for the AVM module
@@ -99,11 +101,10 @@ module aiServicesAccount 'br/public:avm/res/cognitive-services/account:0.10.2' =
   name: 'ai-services-account-deployment'
   scope: rg
   params: {
-    kind: 'OpenAI'
-    name: openAiServiceName
+    kind: 'AIServices'
+    name: aiServicesName
     location: location
-    customSubDomainName: openAiServiceName
-    disableLocalAuth: false
+    customSubDomainName: aiServicesCustomSubDomainName
     diagnosticSettings: [
       {
         workspaceResourceId: logAnalyticsWorkspace.outputs.resourceId
@@ -112,10 +113,10 @@ module aiServicesAccount 'br/public:avm/res/cognitive-services/account:0.10.2' =
     managedIdentities: {
       systemAssigned: true
     }
-    publicNetworkAccess: 'Enabled'
     sku: 'S0'
     deployments: openAiModelDeployments
     tags: tags
+    // TODO: Assign RBAC
   }
 }
 
@@ -151,6 +152,7 @@ module sqlServer 'br/public:avm/res/sql/server:0.9.0' = {
     }
     publicNetworkAccess: 'Enabled'
     tags: tags
+    // TODO: Assign RBAC
   }
 }
 
@@ -174,26 +176,30 @@ module aiSearchService 'br/public:avm/res/search/search-service:0.10.0' = if (az
     publicNetworkAccess: 'Enabled'
     semanticSearch: 'standard'
     tags: tags
+    // TODO: Assign RBAC
   }
 }
 
-// Outputs
-output openAiServiceEndpoint string = aiServicesAccount.outputs.endpoint
-output openAiServiceName string = aiServicesAccount.outputs.name
-output openAiServiceId string = aiServicesAccount.outputs.resourceId
 
-output logAnalyticsWorkspaceName string = logAnalyticsWorkspace.outputs.name
-output logAnalyticsWorkspaceId string = logAnalyticsWorkspace.outputs.resourceId
-output logAnalyticsWorkspaceCustomerId string = logAnalyticsWorkspace.outputs.logAnalyticsWorkspaceId
+output AZURE_RESOURCE_GROUP string = rg.name
+output AZURE_PRINCIPAL_ID string = principalId
+output AZURE_PRINCIPAL_ID_TYPE string = principalIdType
 
-output applicationInsightsName string = applicationInsights.outputs.name
-output applicationInsightsInstrumentationKey string = applicationInsights.outputs.instrumentationKey
-output applicationInsightsConnectionString string = applicationInsights.outputs.connectionString
+// Output the monitoring resources
+output LOG_ANALYTICS_WORKSPACE_NAME string = logAnalyticsWorkspace.outputs.name
+output LOG_ANALYTICS_RESOURCE_ID string = logAnalyticsWorkspace.outputs.resourceId
+output LOG_ANALYTICS_WORKSPACE_ID string = logAnalyticsWorkspace.outputs.logAnalyticsWorkspaceId
+output APPLICATION_INSIGHTS_NAME string = applicationInsights.outputs.name
+output APPLICATION_INSIGHTS_RESOURCE_ID string = applicationInsights.outputs.resourceId
+output APPLICATION_INSIGHTS_INSTRUMENTATION_KEY string = applicationInsights.outputs.instrumentationKey
 
-output sqlServerName string = sqlServer.outputs.name
-output sqlServerId string = sqlServer.outputs.resourceId
+// Output the AI Services resources
+output AZURE_AI_SEARCH_NAME string = azureAiSearchDeploy ? aiSearchService.outputs.name : ''
+output AZURE_AI_SEARCH_ID   string = azureAiSearchDeploy ? aiSearchService.outputs.resourceId : ''
+output AZURE_AI_SERVICES_NAME string = aiServicesAccount.outputs.name
+output AZURE_AI_SERVICES_ID string = aiServicesAccount.outputs.resourceId
+output AZURE_AI_SERVICES_ENDPOINT string = aiServicesAccount.outputs.endpoint
+output AZURE_AI_SERVICES_RESOURCE_ID string = aiServicesAccount.outputs.resourceId
 
-// Optional AI Search outputs (only when deployed)
-output aiSearchServiceName string = azureAiSearchDeploy ? aiSearchService.outputs.name : ''
-output aiSearchServiceId string = azureAiSearchDeploy ? aiSearchService.outputs.resourceId : ''
-output aiSearchServiceEndpoint string = azureAiSearchDeploy ? 'https://${aiSearchService.outputs.name}.search.windows.net' : ''
+output SQL_SERVER_NAME string = sqlServer.outputs.name
+output SQL_SERVER_RESOURCE_ID string = sqlServer.outputs.resourceId

@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+name: genai-database-explorer
+
+metadata:
+  template: genai-database-explorer@1.0
+  name: genai-database-explorer@1.0
+
+infra:
+  path: ./infra/
