@@ -33,13 +33,13 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore src/${{ matrix.project }}
+        run: dotnet restore src/GenAIDBExplorer/${{ matrix.project }}
 
       - name: Lint with dotnet format
-        run: dotnet format src/${{ matrix.project }} --verify-no-changes --severity error
+        run: dotnet format src/GenAIDBExplorer/${{ matrix.project }} --verify-no-changes --severity error
 
       - name: Build
-        run: dotnet build src/${{ matrix.project }} --configuration ${{ inputs.build_configuration }} --no-restore
+        run: dotnet build src/GenAIDBExplorer/${{ matrix.project }} --configuration ${{ inputs.build_configuration }} --no-restore
 
       - name: Run tests
         run: |
