@@ -51,7 +51,7 @@ jobs:
     steps:
       - name: Echo endpoints
         run: |
-          echo "AI Endpoint: ${{ needs.provision-infrastructure.outputs.AZURE_AI_SERVIAZURE_AI_SERVICES_ENDPOINT }}"
+          echo "AI Endpoint: ${{ needs.provision-infrastructure.outputs.AZURE_AI_SERVICES_ENDPOINT }}"
 
   delete-infrastructure:
     needs: [provision-infrastructure, e2e-tests]
