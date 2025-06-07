@@ -7,7 +7,7 @@ namespace GenAIDBExplorer.Core.Models.SemanticModel;
 /// </summary>
 public sealed class SemanticModelColumn(string schema, string name, string? description = null)
     : SemanticModelEntity(schema, name, description)
-{   
+{
     /// <summary>
     /// Gets the name of the column.
     /// </summary>

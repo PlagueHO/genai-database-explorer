@@ -110,7 +110,7 @@ public class SemanticDescriptionProvider(
                 parameters = (entity as SemanticModelStoredProcedure)?.Parameters
             };
 
-            
+
             var promptExecutionSettings = new PromptExecutionSettings
             {
 #pragma warning disable SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
@@ -146,7 +146,7 @@ public class SemanticDescriptionProvider(
             processResult.Add(new SemanticProcessResultItem(scope, "ChatCompletion", usage, timeTaken));
 
             _logger.LogInformation(
-                "{Message} {Type} [{Schema}].[{Name}]", 
+                "{Message} {Type} [{Schema}].[{Name}]",
                 _resourceManagerLogMessages.GetString("GeneratedSemanticDescriptionForEntity"),
                 entityType, entity.Schema, entity.Name);
         }

@@ -528,9 +528,9 @@ public sealed class SchemaRepository(
             };
 
             using var reader = await _sqlQueryExecutor.ExecuteReaderAsync(query, parameters).ConfigureAwait(false);
-            
+
             var rows = new List<Dictionary<string, object>>();
-            
+
             while (await reader.ReadAsync().ConfigureAwait(false))
             {
                 var row = new Dictionary<string, object>();

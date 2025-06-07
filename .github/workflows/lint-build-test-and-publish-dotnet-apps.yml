@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   dotnet-lint-build-test:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         project:

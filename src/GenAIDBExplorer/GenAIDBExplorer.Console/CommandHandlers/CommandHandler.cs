@@ -82,7 +82,7 @@ public abstract class CommandHandler<TOptions>(
         {
             throw new ArgumentNullException(nameof(commandOptions), "Project path cannot be null.");
         }
-    }   
+    }
 
     /// <summary>
     /// Validates the specified project path.

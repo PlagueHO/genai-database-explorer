@@ -124,7 +124,7 @@ public class SemanticProcessResult : IEnumerable<SemanticProcessResultItem>
 public class SemanticProcessResultItem(
     string id,
     string label,
-    OpenAI.Chat.ChatTokenUsage tokenUsage, 
+    OpenAI.Chat.ChatTokenUsage tokenUsage,
     TimeSpan timeTaken
 )
 {

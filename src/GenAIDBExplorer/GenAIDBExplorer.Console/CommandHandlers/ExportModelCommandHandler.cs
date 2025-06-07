@@ -61,13 +61,13 @@ public class ExportModelCommandHandler : CommandHandler<ExportModelCommandHandle
         );
 
         var fileTypeOption = new Option<string>(
-            aliases: [ "--fileType", "-f" ],
+            aliases: ["--fileType", "-f"],
             description: "The type of the output files. Defaults to 'markdown'.",
             getDefaultValue: () => "markdown"
         );
 
         var splitFilesOption = new Option<bool>(
-            aliases: [ "--splitFiles", "-s" ],
+            aliases: ["--splitFiles", "-s"],
             description: "Flag to split the export into individual files per entity.",
             getDefaultValue: () => false
         );

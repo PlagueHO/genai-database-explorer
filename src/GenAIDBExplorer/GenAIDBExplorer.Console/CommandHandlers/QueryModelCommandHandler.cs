@@ -42,7 +42,7 @@ public class QueryModelCommandHandler(
     public static Command SetupCommand(IHost host)
     {
         var projectPathOption = new Option<DirectoryInfo>(
-            aliases: [ "--project", "-p" ],
+            aliases: ["--project", "-p"],
             description: "The path to the GenAI Database Explorer project."
         )
         {
