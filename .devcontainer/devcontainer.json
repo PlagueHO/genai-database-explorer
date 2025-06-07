@@ -29,9 +29,6 @@
         "ghcr.io/devcontainers/features/docker-in-docker:2": {
             "version": "latest",
             "enableNonRootDocker": "true"
-        },
-        "ghcr.io/azure-dev/azd/azd:0": {
-            "version": "stable"
         }
     },
     // Configure tool-specific properties.
@@ -64,7 +61,6 @@
                 // Azure Development
                 "ms-azuretools.vscode-bicep",
                 "ms-azuretools.azure-dev",
-                "ms-vscode.azure-account",
                 "ms-vscode.azurecli",
                 "ms-azuretools.vscode-docker",
                 "ms-azuretools.vscode-azureresourcegroups",
