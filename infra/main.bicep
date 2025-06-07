@@ -18,7 +18,7 @@ targetScope = 'subscription'
   'WestUS'
   'WestUS3'
 ])
-param location string = 'EastUS'
+param location string
 
 @description('The base name that will prefixed to all Azure resources deployed to ensure they are unique.')
 param baseResourceName string
@@ -27,11 +27,18 @@ param baseResourceName string
 param resourceGroupName string
 
 @description('The SQL logical server administrator username.')
-param sqlServerUsername string = 'sqladmin'
+param sqlServerUsername string
 
 @description('The SQL logical server administrator password.')
 @secure()
 param sqlServerPassword string
+
+// tags that should be applied to all resources.
+var tags = {
+  // Tag all resources with the environment name.
+  project: 'genai-database-explorer'
+  baseResourceName: baseResourceName
+}
 
 var logAnalyticsWorkspaceName = '${baseResourceName}-law'
 var applicationInsightsName = '${baseResourceName}-appinsights'
@@ -66,44 +73,94 @@ var openAiModelDeployments = [
 resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: resourceGroupName
   location: location
+  tags: tags
 }
 
-module monitoring './modules/monitoring.bicep' = {
-  name: 'monitoring'
+// --------- MONITORING RESOURCES ---------
+module logAnalyticsWorkspace 'br/public:avm/res/operational-insights/workspace:0.11.1' = {
+  name: 'logAnalyticsWorkspace'
   scope: rg
   params: {
+    name: logAnalyticsWorkspaceName
     location: location
-    logAnalyticsWorkspaceName: logAnalyticsWorkspaceName
-    applicationInsightsName: applicationInsightsName
+    tags: tags
   }
 }
 
-module openAiService './modules/openAiService.bicep' = {
-  name: 'openAiService'
+module applicationInsights 'br/public:avm/res/insights/component:0.6.0' = {
+  name: 'applicationInsights'
   scope: rg
-  dependsOn: [
-    monitoring
-  ]
   params: {
+    name: applicationInsightsName
     location: location
-    openAiServiceName: openAiServiceName
-    openAiModeldeployments: openAiModelDeployments
-    logAnalyticsWorkspaceId: monitoring.outputs.logAnalyticsWorkspaceId
-    logAnalyticsWorkspaceName: logAnalyticsWorkspaceName
+    tags: tags
+    workspaceResourceId: logAnalyticsWorkspace.outputs.resourceId
   }
 }
 
-module sqlDatabase './modules/sqlDatabase.bicep' = {
-  name: 'sqlDatabase'
+// --------- AI SERVICES ---------
+module aiServicesAccount 'br/public:avm/res/cognitive-services/account:0.10.2' = {
+  name: 'ai-services-account-deployment'
   scope: rg
   params: {
+    kind: 'OpenAI'
+    name: openAiServiceName
     location: location
-    sqlLogicalServerName: '${baseResourceName}'
-    sqlDatabaseName: 'AdventureWorksLT'
-    sqlServerUsername: sqlServerUsername
-    sqlServerPassword: sqlServerPassword
-    logAnalyticsWorkspaceId: monitoring.outputs.logAnalyticsWorkspaceId
-    logAnalyticsWorkspaceName: logAnalyticsWorkspaceName
+    customSubDomainName: openAiServiceName
+    disableLocalAuth: false
+    diagnosticSettings: [
+      {
+        workspaceResourceId: logAnalyticsWorkspace.outputs.resourceId
+      }
+    ]
+    managedIdentities: {
+      systemAssigned: true
+    }
+    publicNetworkAccess: 'Enabled'
+    sku: 'S0'
+    deployments: openAiModelDeployments
+    tags: tags
+  }
+}
+
+// --------- SQL DATABASE ---------
+module sqlServer 'br/public:avm/res/sql/server:0.9.0' = {
+  name: 'sql-server-deployment'
+  scope: rg
+  params: {
+    name: baseResourceName
+    location: location
+    administratorLogin: sqlServerUsername
+    administratorLoginPassword: sqlServerPassword
+    databases: [
+      {
+        name: 'AdventureWorksLT'
+        skuName: 'GP_S_Gen5_2'
+        skuTier: 'GeneralPurpose'
+        collation: 'SQL_Latin1_General_CP1_CI_AS'
+        maxSizeBytes: 34359738368
+        sampleName: 'AdventureWorksLT'
+        zoneRedundant: false
+        readScale: 'Disabled'
+        highAvailabilityReplicaCount: 0
+        minCapacity: json('0.5')
+        autoPauseDelay: 60
+        requestedBackupStorageRedundancy: 'Local'
+        isLedgerOn: false
+        availabilityZone: 'NoPreference'
+      }
+    ]
+    diagnosticSettings: [
+      {
+        workspaceResourceId: logAnalyticsWorkspace.outputs.resourceId
+      }
+    ]
+    managedIdentities: {
+      systemAssigned: true
+    }
+    publicNetworkAccess: 'Enabled'
+    version: '12.0'
+    tags: tags
   }
 }
 
@@ -127,4 +184,4 @@ module aiSearch './modules/aiSearch.bicep' = {
 }
 */
 
-output openAiServiceEndpoint string = openAiService.outputs.openAiServiceEndpoint
+output openAiServiceEndpoint string = aiServicesAccount.outputs.endpoint
