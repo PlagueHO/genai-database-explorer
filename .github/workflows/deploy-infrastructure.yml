@@ -65,7 +65,7 @@ jobs:
           deploymentName: 'app-${{ inputs.ENVIRONMENT }}-${{ github.action_ref }}-${{ github.run_number }}'
           resourceGroupName: ${{ vars.RESOURCE_GROUP_NAME }}
           subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          template: ./infrastructurearmtemplate/infrastructure.json
+          template: ./infrastructurearmtemplate/main.json
           region: ${{ inputs.LOCATION }}
           scope: subscription
           parameters: >

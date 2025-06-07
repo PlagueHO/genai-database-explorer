@@ -55,7 +55,7 @@ jobs:
           failOnStdErr: false
           resourceGroupName: ${{ vars.RESOURCE_GROUP_NAME }}
           subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          template: ./infrastructurearmtemplate/infrastructure.json
+          template: ./infrastructurearmtemplate/main.json
           region: ${{ inputs.LOCATION }}
           scope: subscription
           parameters: >
