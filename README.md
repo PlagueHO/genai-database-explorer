@@ -1,6 +1,7 @@
 # Generative AI Database Explorer
 
-[![Pipeline][continuous-deployment-shield]][continuous-deployment-url]
+[![Continuous Integration][continuous-integration-shield]][continuous-integration-url]
+[![Continuous Delivery][continuous-delivery-shield]][continuous-delivery-url]
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
@@ -70,8 +71,10 @@ TBC
 
 TBC
 
-[continuous-deployment-shield]: https://github.com/PlagueHO/genai-database-explorer/actions/workflows/continuous-deployment.yml/badge.svg
-[continuous-deployment-url]:https://github.com/github/docs/actions/workflows/main.yml/badge.svg
+[continuous-integration-shield]: https://github.com/PlagueHO/genai-database-explorer/actions/workflows/continuous-integration.yml/badge.svg
+[continuous-integration-url]: https://github.com/PlagueHO/genai-database-explorer/actions/workflows/continuous-integration.yml
+[continuous-delivery-shield]: https://github.com/PlagueHO/genai-database-explorer/actions/workflows/continuous-delivery.yml/badge.svg
+[continuous-delivery-url]: https://github.com/PlagueHO/genai-database-explorer/actions/workflows/continuous-delivery.yml
 [contributors-shield]: https://img.shields.io/github/contributors/PlagueHO/genai-database-explorer.svg
 [contributors-url]: https://github.com/PlagueHO/genai-database-explorer/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/PlagueHO/genai-database-explorer.svg
