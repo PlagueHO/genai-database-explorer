@@ -39,7 +39,11 @@ param sqlServerUsername string
 @secure()
 param sqlServerPassword string
 
+@description('Whether to deploy Azure AI Search service.')
+param azureAiSearchDeploy bool = false
+
 var abbrs = loadJsonContent('./abbreviations.json')
+var openAiModels = loadJsonContent('./sample-openai-models.json')
 
 // tags that should be applied to all resources.
 var tags = {
@@ -56,31 +60,16 @@ var resourceToken = toLower(uniqueString(subscription().id, environmentName, loc
 var logAnalyticsWorkspaceName = '${abbrs.operationalInsightsWorkspaces}${environmentName}'
 var applicationInsightsName = '${abbrs.insightsComponents}${environmentName}'
 var openAiServiceName = '${abbrs.aiServicesAccounts}${environmentName}'
-// var aiSearchName = '${abbrs.aiSearchSearchServices}${environmentName}'
+var aiSearchName = '${abbrs.aiSearchSearchServices}${environmentName}'
 
-var openAiModelDeployments = [
-  {
-    name: 'gpt-4.1'
-    modelName: 'gpt-4.1'
-    version: '2025-04-14'
-    sku: 'GlobalStandard'
-    capacity: 50
-  }
-  {
-    name: 'gpt-4.1-mini'
-    modelName: 'gpt-4.1-mini'
-    version: '2025-04-14'
-    sku: 'GlobalStandard'
-    capacity: 200
-  }
-  {
-    name: 'embedding'
-    modelName: 'text-embedding-3-large'
-    version: '1'
-    sku: 'Standard'
-    capacity: 120
-  }
-]
+// Transform the loaded models into the format expected by the AVM module
+var openAiModelDeployments = [for model in openAiModels: {
+  name: model.name
+  modelName: model.model.name
+  version: model.model.version
+  sku: model.sku.name
+  capacity: model.sku.capacity
+}]
 
 // The application resources that are deployed into the application resource group
 resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
@@ -177,13 +166,12 @@ module sqlServer 'br/public:avm/res/sql/server:0.9.0' = {
   }
 }
 
-/*
 // --------- AI SEARCH (OPTIONAL) ---------
-module aiSearchService 'br/public:avm/res/search/search-service:0.10.0' = {
+module aiSearchService 'br/public:avm/res/search/search-service:0.10.0' = if (azureAiSearchDeploy) {
   name: 'ai-search-service-deployment'
   scope: rg
   params: {
-    name: '${abbrs.aiSearchSearchServices}${environmentName}'
+    name: aiSearchName
     location: location
     sku: 'basic'
     diagnosticSettings: [
@@ -200,7 +188,6 @@ module aiSearchService 'br/public:avm/res/search/search-service:0.10.0' = {
     tags: tags
   }
 }
-*/
 
 // Outputs
 output openAiServiceEndpoint string = aiServicesAccount.outputs.endpoint
@@ -217,3 +204,8 @@ output applicationInsightsConnectionString string = applicationInsights.outputs.
 
 output sqlServerName string = sqlServer.outputs.name
 output sqlServerId string = sqlServer.outputs.resourceId
+
+// Optional AI Search outputs (only when deployed)
+output aiSearchServiceName string = azureAiSearchDeploy ? aiSearchService.outputs.name : ''
+output aiSearchServiceId string = azureAiSearchDeploy ? aiSearchService.outputs.resourceId : ''
+output aiSearchServiceEndpoint string = azureAiSearchDeploy ? 'https://${aiSearchService.outputs.name}.search.windows.net' : ''
