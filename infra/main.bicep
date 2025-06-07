@@ -24,11 +24,13 @@ targetScope = 'subscription'
 ])
 param location string
 
-@description('The base name that will prefixed to all Azure resources deployed to ensure they are unique.')
-param baseResourceName string
+@description('Name of the the environment which is used to generate a short unique hash used in all resources.')
+@minLength(1)
+@maxLength(40)
+param environmentName string
 
 @description('The name of the resource group that will contain all the resources.')
-param resourceGroupName string
+param resourceGroupName string = 'rg-${environmentName}'
 
 @description('The SQL logical server administrator username.')
 param sqlServerUsername string
@@ -37,17 +39,24 @@ param sqlServerUsername string
 @secure()
 param sqlServerPassword string
 
+var abbrs = loadJsonContent('./abbreviations.json')
+
 // tags that should be applied to all resources.
 var tags = {
   // Tag all resources with the environment name.
+  'azd-env-name': environmentName
   project: 'genai-database-explorer'
-  baseResourceName: baseResourceName
 }
 
-var logAnalyticsWorkspaceName = '${baseResourceName}-law'
-var applicationInsightsName = '${baseResourceName}-appinsights'
-var openAiServiceName = '${baseResourceName}-openai'
-// var aiSearchName = '${baseResourceName}-aisearch'
+// Generate a unique token to be used in naming resources.
+// Remove linter suppression after using.
+#disable-next-line no-unused-vars
+var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
+
+var logAnalyticsWorkspaceName = '${abbrs.operationalInsightsWorkspaces}${environmentName}'
+var applicationInsightsName = '${abbrs.insightsComponents}${environmentName}'
+var openAiServiceName = '${abbrs.aiServicesAccounts}${environmentName}'
+// var aiSearchName = '${abbrs.aiSearchSearchServices}${environmentName}'
 
 var openAiModelDeployments = [
   {
@@ -132,7 +141,7 @@ module sqlServer 'br/public:avm/res/sql/server:0.9.0' = {
   name: 'sql-server-deployment'
   scope: rg
   params: {
-    name: baseResourceName
+    name: '${abbrs.sqlServers}${environmentName}'
     location: location
     administratorLogin: sqlServerUsername
     administratorLoginPassword: sqlServerPassword
@@ -174,7 +183,7 @@ module aiSearchService 'br/public:avm/res/search/search-service:0.10.0' = {
   name: 'ai-search-service-deployment'
   scope: rg
   params: {
-    name: '${baseResourceName}-aisearch'
+    name: '${abbrs.aiSearchSearchServices}${environmentName}'
     location: location
     sku: 'basic'
     diagnosticSettings: [
