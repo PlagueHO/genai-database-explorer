@@ -34,21 +34,21 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{92129E6D-F
 		..\..\README.md = ..\..\README.md
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "infrastructure", "infrastructure", "{505C00C0-1F49-4212-831B-8C45673ED89D}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "infra", "infra", "{505C00C0-1F49-4212-831B-8C45673ED89D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "bicep", "bicep", "{AFA1E28B-A93F-466A-BC24-27C0269C1530}"
 	ProjectSection(SolutionItems) = preProject
-		..\..\infrastructure\bicep\bicepconfig.json = ..\..\infrastructure\bicep\bicepconfig.json
-		..\..\infrastructure\bicep\infrastructure.bicep = ..\..\infrastructure\bicep\infrastructure.bicep
+		..\..\infra\bicepconfig.json = ..\..\infra\bicepconfig.json
+		..\..\infra\main.bicep = ..\..\infra\main.bicep
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "modules", "modules", "{525A63A8-D163-4CD1-805D-C35DBFB021D2}"
 	ProjectSection(SolutionItems) = preProject
-		..\..\infrastructure\bicep\modules\aiSearch.bicep = ..\..\infrastructure\bicep\modules\aiSearch.bicep
-		..\..\infrastructure\bicep\modules\monitoring.bicep = ..\..\infrastructure\bicep\modules\monitoring.bicep
-		..\..\infrastructure\bicep\modules\openAiService.bicep = ..\..\infrastructure\bicep\modules\openAiService.bicep
-		..\..\infrastructure\bicep\modules\roleAssignment.bicep = ..\..\infrastructure\bicep\modules\roleAssignment.bicep
-		..\..\infrastructure\bicep\modules\sqlDatabase.bicep = ..\..\infrastructure\bicep\modules\sqlDatabase.bicep
+		..\..\infra\modules\aiSearch.bicep = ..\..\infra\modules\aiSearch.bicep
+		..\..\infra\modules\monitoring.bicep = ..\..\infra\modules\monitoring.bicep
+		..\..\infra\modules\openAiService.bicep = ..\..\infra\modules\openAiService.bicep
+		..\..\infra\modules\roleAssignment.bicep = ..\..\infra\modules\roleAssignment.bicep
+		..\..\infra\modules\sqlDatabase.bicep = ..\..\infra\modules\sqlDatabase.bicep
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenAIDBExplorer.Core", "GenAIDBExplorer.Core\GenAIDBExplorer.Core.csproj", "{149A5661-5CD2-4D33-99C8-ACCC3D9FC350}"
