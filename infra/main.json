@@ -1,16 +1,11 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
-  "languageVersion": "2.1-experimental",
   "contentVersion": "1.0.0.0",
   "metadata": {
-    "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
-    "_EXPERIMENTAL_FEATURES_ENABLED": [
-      "Extensibility"
-    ],
     "_generator": {
       "name": "bicep",
-      "version": "0.35.1.17967",
-      "templateHash": "14908969086769002415"
+      "version": "0.36.1.42791",
+      "templateHash": "14244797949904500310"
     }
   },
   "parameters": {
@@ -92,14 +87,14 @@
       }
     ]
   },
-  "resources": {
-    "rg": {
+  "resources": [
+    {
       "type": "Microsoft.Resources/resourceGroups",
       "apiVersion": "2021-04-01",
       "name": "[parameters('resourceGroupName')]",
       "location": "[parameters('location')]"
     },
-    "monitoring": {
+    {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2022-09-01",
       "name": "monitoring",
@@ -122,17 +117,12 @@
         },
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-          "languageVersion": "2.1-experimental",
           "contentVersion": "1.0.0.0",
           "metadata": {
-            "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
-            "_EXPERIMENTAL_FEATURES_ENABLED": [
-              "Extensibility"
-            ],
             "_generator": {
               "name": "bicep",
-              "version": "0.35.1.17967",
-              "templateHash": "5036758756519079297"
+              "version": "0.36.1.42791",
+              "templateHash": "14540986784375329396"
             }
           },
           "parameters": {
@@ -146,8 +136,8 @@
               "type": "string"
             }
           },
-          "resources": {
-            "logAnalyticsWorkspace": {
+          "resources": [
+            {
               "type": "Microsoft.OperationalInsights/workspaces",
               "apiVersion": "2022-10-01",
               "name": "[parameters('logAnalyticsWorkspaceName')]",
@@ -156,7 +146,7 @@
                 "type": "SystemAssigned"
               }
             },
-            "applicationInsights": {
+            {
               "type": "Microsoft.Insights/components",
               "apiVersion": "2020-02-02",
               "name": "[parameters('applicationInsightsName')]",
@@ -169,18 +159,18 @@
                 "WorkspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalyticsWorkspaceName'))]"
               },
               "dependsOn": [
-                "logAnalyticsWorkspace"
+                "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalyticsWorkspaceName'))]"
               ]
             }
-          },
+          ],
           "outputs": {
             "applicationInsightsInstrumentationKey": {
               "type": "string",
-              "value": "[reference('applicationInsights').InstrumentationKey]"
+              "value": "[reference(resourceId('Microsoft.Insights/components', parameters('applicationInsightsName')), '2020-02-02').InstrumentationKey]"
             },
             "applicationInsightsConnectionString": {
               "type": "string",
-              "value": "[reference('applicationInsights').ConnectionString]"
+              "value": "[reference(resourceId('Microsoft.Insights/components', parameters('applicationInsightsName')), '2020-02-02').ConnectionString]"
             },
             "logAnalyticsWorkspaceId": {
               "type": "string",
@@ -188,16 +178,16 @@
             },
             "logAnalyticsWorkspaceCustomerId": {
               "type": "string",
-              "value": "[reference('logAnalyticsWorkspace').customerId]"
+              "value": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalyticsWorkspaceName')), '2022-10-01').customerId]"
             }
           }
         }
       },
       "dependsOn": [
-        "rg"
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('resourceGroupName'))]"
       ]
     },
-    "openAiService": {
+    {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2022-09-01",
       "name": "openAiService",
@@ -218,7 +208,7 @@
             "value": "[variables('openAiModelDeployments')]"
           },
           "logAnalyticsWorkspaceId": {
-            "value": "[reference('monitoring').outputs.logAnalyticsWorkspaceId.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', 'monitoring'), '2022-09-01').outputs.logAnalyticsWorkspaceId.value]"
           },
           "logAnalyticsWorkspaceName": {
             "value": "[variables('logAnalyticsWorkspaceName')]"
@@ -226,17 +216,12 @@
         },
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-          "languageVersion": "2.1-experimental",
           "contentVersion": "1.0.0.0",
           "metadata": {
-            "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
-            "_EXPERIMENTAL_FEATURES_ENABLED": [
-              "Extensibility"
-            ],
             "_generator": {
               "name": "bicep",
-              "version": "0.35.1.17967",
-              "templateHash": "8870387206538186386"
+              "version": "0.36.1.42791",
+              "templateHash": "18358603739959467917"
             }
           },
           "parameters": {
@@ -273,8 +258,8 @@
               "type": "string"
             }
           },
-          "resources": {
-            "openAiService": {
+          "resources": [
+            {
               "type": "Microsoft.CognitiveServices/accounts",
               "apiVersion": "2023-05-01",
               "name": "[parameters('openAiServiceName')]",
@@ -291,7 +276,7 @@
                 "customSubDomainName": "[parameters('openAiServiceName')]"
               }
             },
-            "openAiServiceDeployment": {
+            {
               "copy": {
                 "name": "openAiServiceDeployment",
                 "count": "[length(parameters('openAiModeldeployments'))]",
@@ -313,10 +298,10 @@
                 }
               },
               "dependsOn": [
-                "openAiService"
+                "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openAiServiceName'))]"
               ]
             },
-            "openAiServiceDiagnosticSetting": {
+            {
               "type": "Microsoft.Insights/diagnosticSettings",
               "apiVersion": "2021-05-01-preview",
               "scope": "[format('Microsoft.CognitiveServices/accounts/{0}', parameters('openAiServiceName'))]",
@@ -361,10 +346,10 @@
                 ]
               },
               "dependsOn": [
-                "openAiService"
+                "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openAiServiceName'))]"
               ]
             }
-          },
+          ],
           "outputs": {
             "openAiServiceName": {
               "type": "string",
@@ -376,17 +361,17 @@
             },
             "openAiServiceEndpoint": {
               "type": "string",
-              "value": "[reference('openAiService').endpoint]"
+              "value": "[reference(resourceId('Microsoft.CognitiveServices/accounts', parameters('openAiServiceName')), '2023-05-01').endpoint]"
             }
           }
         }
       },
       "dependsOn": [
-        "monitoring",
-        "rg"
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', 'monitoring')]",
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('resourceGroupName'))]"
       ]
     },
-    "sqlDatabase": {
+    {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2022-09-01",
       "name": "sqlDatabase",
@@ -413,7 +398,7 @@
             "value": "[parameters('sqlServerPassword')]"
           },
           "logAnalyticsWorkspaceId": {
-            "value": "[reference('monitoring').outputs.logAnalyticsWorkspaceId.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', 'monitoring'), '2022-09-01').outputs.logAnalyticsWorkspaceId.value]"
           },
           "logAnalyticsWorkspaceName": {
             "value": "[variables('logAnalyticsWorkspaceName')]"
@@ -421,17 +406,12 @@
         },
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-          "languageVersion": "2.1-experimental",
           "contentVersion": "1.0.0.0",
           "metadata": {
-            "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
-            "_EXPERIMENTAL_FEATURES_ENABLED": [
-              "Extensibility"
-            ],
             "_generator": {
               "name": "bicep",
-              "version": "0.35.1.17967",
-              "templateHash": "12013087472687030644"
+              "version": "0.36.1.42791",
+              "templateHash": "4194133567027203832"
             }
           },
           "parameters": {
@@ -476,8 +456,8 @@
               "SQLSecurityAuditEvents"
             ]
           },
-          "resources": {
-            "sqlLogicalServer": {
+          "resources": [
+            {
               "type": "Microsoft.Sql/servers",
               "apiVersion": "2023-05-01-preview",
               "name": "[parameters('sqlLogicalServerName')]",
@@ -492,7 +472,7 @@
                 "publicNetworkAccess": "Enabled"
               }
             },
-            "sqlDatabase": {
+            {
               "type": "Microsoft.Sql/servers/databases",
               "apiVersion": "2022-08-01-preview",
               "name": "[format('{0}/{1}', parameters('sqlLogicalServerName'), parameters('sqlDatabaseName'))]",
@@ -515,10 +495,10 @@
                 "availabilityZone": "NoPreference"
               },
               "dependsOn": [
-                "sqlLogicalServer"
+                "[resourceId('Microsoft.Sql/servers', parameters('sqlLogicalServerName'))]"
               ]
             },
-            "sqlDatabaseDiagnosticSetting": {
+            {
               "type": "Microsoft.Insights/diagnosticSettings",
               "apiVersion": "2021-05-01-preview",
               "scope": "[format('Microsoft.Sql/servers/{0}/databases/{1}', parameters('sqlLogicalServerName'), parameters('sqlDatabaseName'))]",
@@ -553,22 +533,22 @@
                 "workspaceId": "[parameters('logAnalyticsWorkspaceId')]"
               },
               "dependsOn": [
-                "sqlDatabase"
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('sqlLogicalServerName'), parameters('sqlDatabaseName'))]"
               ]
             }
-          }
+          ]
         }
       },
       "dependsOn": [
-        "monitoring",
-        "rg"
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', 'monitoring')]",
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('resourceGroupName'))]"
       ]
     }
-  },
+  ],
   "outputs": {
     "openAiServiceEndpoint": {
       "type": "string",
-      "value": "[reference('openAiService').outputs.openAiServiceEndpoint.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', 'openAiService'), '2022-09-01').outputs.openAiServiceEndpoint.value]"
     }
   }
 }

@@ -1,0 +1,50 @@
+[
+  {
+    "model": {
+      "format": "OpenAI",
+      "name": "gpt-4.1",
+      "version": "2025-04-14"
+    },
+    "name": "gpt-4-1",
+    "sku": {
+      "name": "GlobalStandard",
+      "capacity": 50
+    }
+  },
+  {
+    "model": {
+      "format": "OpenAI",
+      "name": "gpt-4.1-mini",
+      "version": "2025-04-14"
+    },
+    "name": "gpt-4-1-mini",
+    "sku": {
+      "name": "GlobalStandard",
+      "capacity": 100
+    }
+  },
+  {
+    "model": {
+      "format": "OpenAI",
+      "name": "gpt-4.1-nano",
+      "version": "2025-04-14"
+    },
+    "name": "gpt-4-1-nano",
+    "sku": {
+      "name": "GlobalStandard",
+      "capacity": 200
+    }
+  },
+  {
+    "model": {
+      "format": "OpenAI",
+      "name": "text-embedding-ada-002",
+      "version": "2"
+    },
+    "name": "text-embedding-ada-002",
+    "sku": {
+      "name": "GlobalStandard",
+      "capacity": 150
+    }
+  }
+]
