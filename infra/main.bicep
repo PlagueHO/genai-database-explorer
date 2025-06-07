@@ -62,14 +62,8 @@ var applicationInsightsName = '${abbrs.insightsComponents}${environmentName}'
 var openAiServiceName = '${abbrs.aiServicesAccounts}${environmentName}'
 var aiSearchName = '${abbrs.aiSearchSearchServices}${environmentName}'
 
-// Transform the loaded models into the format expected by the AVM module
-var openAiModelDeployments = [for model in openAiModels: {
-  name: model.name
-  modelName: model.model.name
-  version: model.model.version
-  sku: model.sku.name
-  capacity: model.sku.capacity
-}]
+// Use the OpenAI models directly from JSON - they're already in the correct format for the AVM module
+var openAiModelDeployments = openAiModels
 
 // The application resources that are deployed into the application resource group
 resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
@@ -152,16 +146,10 @@ module sqlServer 'br/public:avm/res/sql/server:0.9.0' = {
         availabilityZone: 'NoPreference'
       }
     ]
-    diagnosticSettings: [
-      {
-        workspaceResourceId: logAnalyticsWorkspace.outputs.resourceId
-      }
-    ]
     managedIdentities: {
       systemAssigned: true
     }
     publicNetworkAccess: 'Enabled'
-    version: '12.0'
     tags: tags
   }
 }
