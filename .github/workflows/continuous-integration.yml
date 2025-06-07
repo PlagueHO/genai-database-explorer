@@ -9,6 +9,7 @@ on:
       - main
 
 permissions:
+  contents: read
   checks: write
   pull-requests: write
 
@@ -16,7 +17,11 @@ jobs:
   lint-and-publish-bicep:
     name: Lint and Publish Bicep
     uses: ./.github/workflows/lint-and-publish-bicep.yml
+    permissions:
+      contents: read
 
   lint-build-and-test-dotnet-apps:
     name: Lint, Build, Test and Publish .NET Apps
     uses: ./.github/workflows/lint-build-test-and-publish-dotnet-apps.yml
+    permissions:
+      contents: read
