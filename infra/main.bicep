@@ -1,5 +1,9 @@
 targetScope = 'subscription'
 
+// This template uses Azure Verified Modules (AVM) from https://aka.ms/avm
+// All core Azure resources are deployed using Microsoft-verified AVM modules
+// for improved security, maintainability, and compliance.
+
 @description('The location to deploy the resources into.')
 @allowed([
   'AustraliaEast'
@@ -165,23 +169,42 @@ module sqlServer 'br/public:avm/res/sql/server:0.9.0' = {
 }
 
 /*
-module aiSearch './modules/aiSearch.bicep' = {
-  name: 'aiSearch'
+// --------- AI SEARCH (OPTIONAL) ---------
+module aiSearchService 'br/public:avm/res/search/search-service:0.10.0' = {
+  name: 'ai-search-service-deployment'
   scope: rg
-  dependsOn: [
-    monitoring
-  ]
   params: {
+    name: '${baseResourceName}-aisearch'
     location: location
-    aiSearchName: aiSearchName
     sku: 'basic'
-    replicaCount: 1
-    partitionCount: 1
-    hostingMode: 'default'
-    logAnalyticsWorkspaceId: monitoring.outputs.logAnalyticsWorkspaceId
-    logAnalyticsWorkspaceName: logAnalyticsWorkspaceName
+    diagnosticSettings: [
+      {
+        workspaceResourceId: logAnalyticsWorkspace.outputs.resourceId
+      }
+    ]
+    disableLocalAuth: false
+    managedIdentities: {
+      systemAssigned: true
+    }
+    publicNetworkAccess: 'Enabled'
+    semanticSearch: 'standard'
+    tags: tags
   }
 }
 */
 
+// Outputs
 output openAiServiceEndpoint string = aiServicesAccount.outputs.endpoint
+output openAiServiceName string = aiServicesAccount.outputs.name
+output openAiServiceId string = aiServicesAccount.outputs.resourceId
+
+output logAnalyticsWorkspaceName string = logAnalyticsWorkspace.outputs.name
+output logAnalyticsWorkspaceId string = logAnalyticsWorkspace.outputs.resourceId
+output logAnalyticsWorkspaceCustomerId string = logAnalyticsWorkspace.outputs.logAnalyticsWorkspaceId
+
+output applicationInsightsName string = applicationInsights.outputs.name
+output applicationInsightsInstrumentationKey string = applicationInsights.outputs.instrumentationKey
+output applicationInsightsConnectionString string = applicationInsights.outputs.connectionString
+
+output sqlServerName string = sqlServer.outputs.name
+output sqlServerId string = sqlServer.outputs.resourceId

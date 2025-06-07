@@ -7,4 +7,4 @@ param resourceGroupName = readEnvironmentVariable('RESOURCE_GROUP_NAME', 'rg-gen
 
 // SQL Server parameters
 param sqlServerUsername = readEnvironmentVariable('SQL_SERVER_USERNAME', 'sqladmin')
-param sqlServerPassword = readEnvironmentVariable('SQL_SERVER_PASSWORD', 'TempPassword123!')
+param sqlServerPassword = readEnvironmentVariable('SQL_SERVER_PASSWORD', '')
