@@ -33,7 +33,7 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore src/GenAIDBExplorer/${{ matrix.project }}
+        run: dotnet restore src/GenAIDBExplorer/GenAIDBExplorer.sln
 
       - name: Lint with dotnet format
         run: dotnet format src/GenAIDBExplorer/${{ matrix.project }} --verify-no-changes --severity error
@@ -43,8 +43,8 @@ jobs:
 
       - name: Run tests
         run: |
-          if (Test-Path Tests/Unit/${{ matrix.project }}) {
-            dotnet test Tests/Unit/${{ matrix.project }} --configuration ${{ inputs.build_configuration }} --no-build --logger trx
+          if (Test-Path src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test) {
+            dotnet test src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test --configuration ${{ inputs.build_configuration }} --no-build --logger trx
           } else {
             echo "No tests found for ${{ matrix.project }}"
           }

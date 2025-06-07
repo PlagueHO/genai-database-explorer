@@ -6,8 +6,6 @@ on:
       - main
     tags:
       - v*
-    paths:
-      - infra/**
 
   workflow_dispatch:
   
