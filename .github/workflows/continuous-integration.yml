@@ -4,28 +4,19 @@ on:
   pull_request:
     branches:
       - main
+  push:
+    branches:
+      - main
 
 permissions:
   checks: write
   pull-requests: write
 
 jobs:
-  set-build-variables:
-    uses: ./.github/workflows/set-build-variables.yml
+  lint-and-publish-bicep:
+    name: Lint and Publish Bicep
+    uses: ./.github/workflows/lint-and-publish-bicep.yml
 
-  test-run-unit-tests:
-    needs:
-      - set-build-variables
-    uses: ./.github/workflows/test-run-unit-tests.yml
-
-  build-applications:
-    needs:
-      - set-build-variables
-      - test-run-unit-tests
-    uses: ./.github/workflows/build-applications.yml
-    with:
-      BUILD_VERSION: ${{ needs.set-build-variables.outputs.BUILD_VERSION }}
-      BUILD_CONFIGURATION: Debug
-
-  build-arm-templates:
-    uses: ./.github/workflows/build-arm-templates.yml
+  lint-build-and-test-dotnet-apps:
+    name: Lint, Build, Test and Publish .NET Apps
+    uses: ./.github/workflows/lint-build-test-and-publish-dotnet-apps.yml

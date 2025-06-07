@@ -1,0 +1,56 @@
+name: continuous-delivery
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - v*
+    paths:
+      - infra/**
+
+  workflow_dispatch:
+  
+permissions:
+  id-token: write
+  contents: read
+  checks: write
+  pull-requests: write
+
+jobs:
+  set-build-variables:
+    uses: ./.github/workflows/set-build-variables.yml
+
+  lint-and-publish-bicep:
+    uses: ./.github/workflows/lint-and-publish-bicep.yml
+
+  validate-bicep:
+    needs:
+      - set-build-variables
+      - lint-and-publish-bicep
+    uses: ./.github/workflows/validate-bicep.yml
+    with:
+      ENVIRONMENT: Test
+      BUILD_VERSION: ${{ needs.set-build-variables.outputs.BUILD_VERSION }}
+      AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
+      AZURE_ENV_NAME: ${{ format('aifj-{0}-{1}', github.ref_name, github.run_id) }}
+    secrets:
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  
+  test-template:
+    needs:
+      - set-build-variables
+      - validate-bicep
+    name: Test Tmplate
+    uses: ./.github/workflows/test-template.yml
+    with:
+      ENVIRONMENT: Test
+      BUILD_VERSION: ${{ needs.set-build-variables.outputs.BUILD_VERSION }}
+      AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
+      AZURE_ENV_NAME: ${{ format('gaidbexp-{0}-{1}', github.ref_name, github.run_id) }}
+    secrets:
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}

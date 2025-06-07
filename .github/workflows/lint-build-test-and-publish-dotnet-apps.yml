@@ -1,0 +1,61 @@
+name: lint-build-test-and-publish-dotnet-apps
+
+on:
+  workflow_call:
+    inputs:
+      build_configuration:
+        description: 'Build configuration (Debug/Release)'
+        type: string
+        default: 'Debug'
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  dotnet-lint-build-test:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        project:
+          - GenAIDBExplorer.Console
+          - GenAIDBExplorer.Core
+    name: Lint, Build, and Test ${{ matrix.project }}
+    defaults:
+      run:
+        working-directory: src/${{ matrix.project }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Lint with dotnet format
+        run: dotnet format --verify-no-changes --severity error
+
+      - name: Build
+        run: dotnet build --configuration ${{ inputs.build_configuration }} --no-restore
+
+      - name: Run tests
+        run: |
+          if (Test-Path ../../Tests/Unit/${{ matrix.project }}) {
+            dotnet test ../../Tests/Unit/${{ matrix.project }} --configuration ${{ inputs.build_configuration }} --no-build --logger trx
+          } else {
+            echo "No tests found for ${{ matrix.project }}"
+          }
+        shell: pwsh
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.project }}-test-results
+          path: '**/TestResults/*.trx'

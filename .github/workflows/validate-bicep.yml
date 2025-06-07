@@ -1,4 +1,4 @@
-name: validate-infrastructure
+name: validate-bicep
 
 on:
   workflow_call:
@@ -11,11 +11,15 @@ on:
         description: "The version of the build to deploy to the application resources"
         required: true
         type: string
-      LOCATION:
+      AZURE_LOCATION:
         description: "The Azure region to deploy the application resources to"
         required: true
         type: string
-          
+      AZURE_ENV_NAME:
+        description: "The name of the Azure environment"
+        required: true
+        type: string
+
     secrets:
       AZURE_TENANT_ID:
         description: "The Azure tenant ID to use for authentication to Azure for deployment"
@@ -26,20 +30,15 @@ on:
       AZURE_CLIENT_ID:
         description: "The Azure client ID to use for authentication to Azure for deployment"
         required: true
-      SQL_SERVER_USERNAME:
-        description: "The SQL logical server administrator username"
-        required: true
-      SQL_SERVER_PASSWORD:
-        description: "The SQL logical server administrator password"
-        required: true
   
 jobs:
   validate-infrastructure:
     name: Validate Infrastructure ${{ inputs.ENVIRONMENT }}
     environment: ${{ inputs.ENVIRONMENT }}
     runs-on: ubuntu-latest
+
     steps:
-      - name: Download build artifacts
+      - name: Download Build Artifacts
         uses: actions/download-artifact@v4
 
       - name: Azure Login
@@ -49,19 +48,19 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
 
-      - name: Run what-if
-        uses: azure/arm-deploy@v2
+      - name: Validate
+        id: validate-azure-infrastructure
+        uses: azure/bicep-deploy@v2
         with:
-          failOnStdErr: false
-          resourceGroupName: ${{ vars.RESOURCE_GROUP_NAME }}
-          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          template: ./infrastructurearmtemplate/main.json
-          region: ${{ inputs.LOCATION }}
+          type: deployment
+          operation: whatIf
+          name: ${{ inputs.AZURE_ENV_NAME }}-${{inputs.AZURE_LOCATION}}-${{ inputs.ENVIRONMENT }}-${{ github.action_ref }}-${{ github.run_number }}
           scope: subscription
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          location: ${{ inputs.AZURE_LOCATION }}
+          template-file: ./infrastructure_bicep/main.bicep
           parameters: >
-            location=${{ inputs.LOCATION }}
-            baseResourceName=${{ vars.BASE_RESOURCE_NAME }}
-            resourceGroupName=${{ vars.RESOURCE_GROUP_NAME }}
-            sqlServerUsername=${{ secrets.SQL_SERVER_USERNAME }}
-            sqlServerPassword=${{ secrets.SQL_SERVER_PASSWORD }}
-          additionalArguments: --what-if
+            {
+              "location": "${{ inputs.AZURE_LOCATION }}",
+              "environmentName": "${{ inputs.AZURE_ENV_NAME }}"
+            }
