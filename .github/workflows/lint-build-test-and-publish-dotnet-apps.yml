@@ -23,9 +23,6 @@ jobs:
           - GenAIDBExplorer.Console
           - GenAIDBExplorer.Core
     name: Lint, Build, and Test ${{ matrix.project }}
-    defaults:
-      run:
-        working-directory: src/${{ matrix.project }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -36,18 +33,18 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore src/${{ matrix.project }}
 
       - name: Lint with dotnet format
-        run: dotnet format --verify-no-changes --severity error
+        run: dotnet format src/${{ matrix.project }} --verify-no-changes --severity error
 
       - name: Build
-        run: dotnet build --configuration ${{ inputs.build_configuration }} --no-restore
+        run: dotnet build src/${{ matrix.project }} --configuration ${{ inputs.build_configuration }} --no-restore
 
       - name: Run tests
         run: |
-          if (Test-Path ../../Tests/Unit/${{ matrix.project }}) {
-            dotnet test ../../Tests/Unit/${{ matrix.project }} --configuration ${{ inputs.build_configuration }} --no-build --logger trx
+          if (Test-Path Tests/Unit/${{ matrix.project }}) {
+            dotnet test Tests/Unit/${{ matrix.project }} --configuration ${{ inputs.build_configuration }} --no-build --logger trx
           } else {
             echo "No tests found for ${{ matrix.project }}"
           }
