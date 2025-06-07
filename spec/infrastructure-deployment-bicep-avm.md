@@ -27,6 +27,7 @@ The purpose of this specification is to standardize infrastructure deployment fo
 - **REQ-001**: All core Azure resources must be deployed using AVM modules where available.
 - **REQ-002**: The `main.bicep` file must follow the structure and modularity pattern of the [Azure AI Foundry Jumpstart main.bicep](https://github.com/PlagueHO/azure-ai-foundry-jumpstart/blob/main/infra/v1/main.bicep).
 - **REQ-003**: A `main.bicepparam` file must exist in the same directory as `main.bicep` and provide all required parameters for deployment.
+- **REQ-004**: Must comply with requirements for being deployed via Azure Developer CLI, including parameterization and secure handling of secrets.
 - **SEC-001**: All secrets and sensitive values must be passed as secure parameters and never hardcoded.
 - **SEC-002**: Role-based access control (RBAC) and network security rules must be defined using AVM modules where possible.
 - **CON-001**: Only Microsoft-verified AVM modules from https://aka.ms/avm may be used for core resources.
