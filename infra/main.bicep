@@ -44,7 +44,7 @@ param sqlServerPassword string
 param azureAiSearchDeploy bool = false
 
 var abbrs = loadJsonContent('./abbreviations.json')
-var openAiModels = loadJsonContent('./sample-openai-models.json')
+var openAiModels = loadJsonContent('./azure-openai-models.json')
 
 // tags that should be applied to all resources.
 var tags = {
