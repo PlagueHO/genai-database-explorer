@@ -3,40 +3,13 @@
   "languageVersion": "2.1-experimental",
   "contentVersion": "1.0.0.0",
   "metadata": {
-    "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
-    "_EXPERIMENTAL_FEATURES_ENABLED": [
-      "Extensibility"
-    ],
     "_generator": {
       "name": "bicep",
-      "version": "0.34.44.8038",
-      "templateHash": "16213008941171690274"
+      "version": "0.36.1.42791",
+      "templateHash": "1628826443539096196"
     }
   },
   "parameters": {
-    "location": {
-      "type": "string",
-      "allowedValues": [
-        "AustraliaEast",
-        "CentralUS",
-        "EastUS",
-        "EastUS2",
-        "FranceCentral",
-        "JapanEast",
-        "NorthCentralUS",
-        "NorwayEast",
-        "SouthCentralUS",
-        "SwedenCentral",
-        "SwitzerlandNorth",
-        "UKSouth",
-        "WestEurope",
-        "WestUS",
-        "WestUS3"
-      ],
-      "metadata": {
-        "description": "The location to deploy the resources into."
-      }
-    },
     "environmentName": {
       "type": "string",
       "minLength": 1,
@@ -45,11 +18,41 @@
         "description": "Name of the the environment which is used to generate a short unique hash used in all resources."
       }
     },
+    "location": {
+      "type": "string",
+      "metadata": {
+        "azd": {
+          "type": "location"
+        },
+        "description": "Location for all resources"
+      },
+      "minLength": 1
+    },
     "resourceGroupName": {
       "type": "string",
       "defaultValue": "[format('rg-{0}', parameters('environmentName'))]",
       "metadata": {
-        "description": "The name of the resource group that will contain all the resources."
+        "azd": {
+          "type": "resourceGroup"
+        },
+        "description": "The Azure resource group where new resources will be deployed."
+      }
+    },
+    "principalId": {
+      "type": "string",
+      "metadata": {
+        "description": "Id of the user or app to assign application roles."
+      }
+    },
+    "principalIdType": {
+      "type": "string",
+      "defaultValue": "User",
+      "allowedValues": [
+        "User",
+        "ServicePrincipal"
+      ],
+      "metadata": {
+        "description": "Type of the principal referenced by principalId."
       }
     },
     "sqlServerUsername": {
@@ -230,7 +233,7 @@
         "name": "gpt-4-1-mini",
         "sku": {
           "name": "GlobalStandard",
-          "capacity": 100
+          "capacity": 75
         }
       },
       {
@@ -242,7 +245,7 @@
         "name": "gpt-4-1-nano",
         "sku": {
           "name": "GlobalStandard",
-          "capacity": 200
+          "capacity": 100
         }
       },
       {
@@ -267,9 +270,16 @@
     "resourceToken": "[toLower(uniqueString(subscription().id, parameters('environmentName'), parameters('location')))]",
     "logAnalyticsWorkspaceName": "[format('{0}{1}', variables('abbrs').operationalInsightsWorkspaces, parameters('environmentName'))]",
     "applicationInsightsName": "[format('{0}{1}', variables('abbrs').insightsComponents, parameters('environmentName'))]",
-    "openAiServiceName": "[format('{0}{1}', variables('abbrs').aiServicesAccounts, parameters('environmentName'))]",
+    "aiServicesName": "[format('{0}{1}', variables('abbrs').aiServicesAccounts, parameters('environmentName'))]",
+    "aiServicesCustomSubDomainName": "[toLower(replace(parameters('environmentName'), '-', ''))]",
     "aiSearchName": "[format('{0}{1}', variables('abbrs').aiSearchSearchServices, parameters('environmentName'))]",
     "openAiModelDeployments": "[variables('openAiModels')]"
+  },
+  "imports": {
+    "microsoftGraphV1": {
+      "provider": "MicrosoftGraph",
+      "version": "0.2.0-preview"
+    }
   },
   "resources": {
     "rg": {
@@ -4032,19 +4042,16 @@
         "mode": "Incremental",
         "parameters": {
           "kind": {
-            "value": "OpenAI"
+            "value": "AIServices"
           },
           "name": {
-            "value": "[variables('openAiServiceName')]"
+            "value": "[variables('aiServicesName')]"
           },
           "location": {
             "value": "[parameters('location')]"
           },
           "customSubDomainName": {
-            "value": "[variables('openAiServiceName')]"
-          },
-          "disableLocalAuth": {
-            "value": false
+            "value": "[variables('aiServicesCustomSubDomainName')]"
           },
           "diagnosticSettings": {
             "value": [
@@ -4057,9 +4064,6 @@
             "value": {
               "systemAssigned": true
             }
-          },
-          "publicNetworkAccess": {
-            "value": "Enabled"
           },
           "sku": {
             "value": "S0"
@@ -6369,7 +6373,7 @@
                 "zoneRedundant": false,
                 "readScale": "Disabled",
                 "highAvailabilityReplicaCount": 0,
-                "minCapacity": "[json('0.5')]",
+                "minCapacity": "0.5",
                 "autoPauseDelay": 60,
                 "requestedBackupStorageRedundancy": "Local",
                 "isLedgerOn": false,
@@ -12435,61 +12439,73 @@
     }
   },
   "outputs": {
-    "openAiServiceEndpoint": {
+    "AZURE_RESOURCE_GROUP": {
       "type": "string",
-      "value": "[reference('aiServicesAccount').outputs.endpoint.value]"
+      "value": "[parameters('resourceGroupName')]"
     },
-    "openAiServiceName": {
+    "AZURE_PRINCIPAL_ID": {
       "type": "string",
-      "value": "[reference('aiServicesAccount').outputs.name.value]"
+      "value": "[parameters('principalId')]"
     },
-    "openAiServiceId": {
+    "AZURE_PRINCIPAL_ID_TYPE": {
       "type": "string",
-      "value": "[reference('aiServicesAccount').outputs.resourceId.value]"
+      "value": "[parameters('principalIdType')]"
     },
-    "logAnalyticsWorkspaceName": {
+    "LOG_ANALYTICS_WORKSPACE_NAME": {
       "type": "string",
       "value": "[reference('logAnalyticsWorkspace').outputs.name.value]"
     },
-    "logAnalyticsWorkspaceId": {
+    "LOG_ANALYTICS_RESOURCE_ID": {
       "type": "string",
       "value": "[reference('logAnalyticsWorkspace').outputs.resourceId.value]"
     },
-    "logAnalyticsWorkspaceCustomerId": {
+    "LOG_ANALYTICS_WORKSPACE_ID": {
       "type": "string",
       "value": "[reference('logAnalyticsWorkspace').outputs.logAnalyticsWorkspaceId.value]"
     },
-    "applicationInsightsName": {
+    "APPLICATION_INSIGHTS_NAME": {
       "type": "string",
       "value": "[reference('applicationInsights').outputs.name.value]"
     },
-    "applicationInsightsInstrumentationKey": {
+    "APPLICATION_INSIGHTS_RESOURCE_ID": {
+      "type": "string",
+      "value": "[reference('applicationInsights').outputs.resourceId.value]"
+    },
+    "APPLICATION_INSIGHTS_INSTRUMENTATION_KEY": {
       "type": "string",
       "value": "[reference('applicationInsights').outputs.instrumentationKey.value]"
     },
-    "applicationInsightsConnectionString": {
-      "type": "string",
-      "value": "[reference('applicationInsights').outputs.connectionString.value]"
-    },
-    "sqlServerName": {
-      "type": "string",
-      "value": "[reference('sqlServer').outputs.name.value]"
-    },
-    "sqlServerId": {
-      "type": "string",
-      "value": "[reference('sqlServer').outputs.resourceId.value]"
-    },
-    "aiSearchServiceName": {
+    "AZURE_AI_SEARCH_NAME": {
       "type": "string",
       "value": "[if(parameters('azureAiSearchDeploy'), reference('aiSearchService').outputs.name.value, '')]"
     },
-    "aiSearchServiceId": {
+    "AZURE_AI_SEARCH_ID": {
       "type": "string",
       "value": "[if(parameters('azureAiSearchDeploy'), reference('aiSearchService').outputs.resourceId.value, '')]"
     },
-    "aiSearchServiceEndpoint": {
+    "AZURE_AI_SERVICES_NAME": {
       "type": "string",
-      "value": "[if(parameters('azureAiSearchDeploy'), format('https://{0}.search.windows.net', reference('aiSearchService').outputs.name.value), '')]"
+      "value": "[reference('aiServicesAccount').outputs.name.value]"
+    },
+    "AZURE_AI_SERVICES_ID": {
+      "type": "string",
+      "value": "[reference('aiServicesAccount').outputs.resourceId.value]"
+    },
+    "AZURE_AI_SERVICES_ENDPOINT": {
+      "type": "string",
+      "value": "[reference('aiServicesAccount').outputs.endpoint.value]"
+    },
+    "AZURE_AI_SERVICES_RESOURCE_ID": {
+      "type": "string",
+      "value": "[reference('aiServicesAccount').outputs.resourceId.value]"
+    },
+    "SQL_SERVER_NAME": {
+      "type": "string",
+      "value": "[reference('sqlServer').outputs.name.value]"
+    },
+    "SQL_SERVER_RESOURCE_ID": {
+      "type": "string",
+      "value": "[reference('sqlServer').outputs.resourceId.value]"
     }
   }
 }
