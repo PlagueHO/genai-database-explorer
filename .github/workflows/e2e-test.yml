@@ -30,6 +30,12 @@ on:
       AZURE_CLIENT_ID:
         description: "The Azure client ID to use for authentication to Azure for deployment"
         required: true
+      SQL_SERVER_USERNAME:
+        description: "The SQL Server username for the application"
+        required: true
+      SQL_SERVER_PASSWORD:
+        description: "The SQL Server password for the application"
+        required: true
 
 jobs:
   provision-infrastructure:
@@ -43,6 +49,8 @@ jobs:
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      SQL_SERVER_USERNAME: ${{ secrets.SQL_SERVER_USERNAME }}
+      SQL_SERVER_PASSWORD: ${{ secrets.SQL_SERVER_PASSWORD }}
 
   delete-infrastructure:
     needs: [provision-infrastructure]
@@ -56,3 +64,5 @@ jobs:
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      SQL_SERVER_USERNAME: ${{ secrets.SQL_SERVER_USERNAME }}
+      SQL_SERVER_PASSWORD: ${{ secrets.SQL_SERVER_PASSWORD }}

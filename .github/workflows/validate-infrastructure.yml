@@ -30,10 +30,18 @@ on:
       AZURE_CLIENT_ID:
         description: "The Azure client ID to use for authentication to Azure for deployment"
         required: true
+      SQL_SERVER_USERNAME:
+        description: "The SQL Server username for the application"
+        required: true
+      SQL_SERVER_PASSWORD:
+        description: "The SQL Server password for the application"
+        required: true
 
 jobs:
   validate-infrastructure:
     name: Validate Infrastructure ${{ inputs.ENVIRONMENT }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.ENVIRONMENT }}
     env:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
@@ -41,11 +49,8 @@ jobs:
       AZURE_ENV_NAME: ${{ inputs.AZURE_ENV_NAME }}
       AZURE_LOCATION: ${{ inputs.AZURE_LOCATION }}
       AZURE_PRINCIPAL_ID_TYPE: 'ServicePrincipal'
-      SQL_SERVER_USERNAME: ${{ vars.SQL_SERVER_USERNAME }}
+      SQL_SERVER_USERNAME: ${{ secrets.SQL_SERVER_USERNAME }}
       SQL_SERVER_PASSWORD: ${{ secrets.SQL_SERVER_PASSWORD }}
-    
-    environment: ${{ inputs.ENVIRONMENT }}
-    runs-on: ubuntu-latest
 
     steps:
       - name: Download Build Artifacts
