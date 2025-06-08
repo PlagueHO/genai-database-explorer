@@ -19,11 +19,6 @@ on:
         description: "The name of the Azure environment"
         required: true
         type: string
-      SQL_SERVER_USERNAME:
-        description: "The SQL Server admin username"
-        required: false
-        type: string
-        default: 'sqladmin'
         
     secrets:
       AZURE_TENANT_ID:
@@ -34,9 +29,6 @@ on:
         required: true
       AZURE_CLIENT_ID:
         description: "The Azure client ID to use for authentication to Azure for deployment"
-        required: true
-      SQL_SERVER_PASSWORD:
-        description: "The SQL Server password to use for the SQL admin user"
         required: true
 
 jobs:
@@ -52,18 +44,8 @@ jobs:
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
 
-  # Placeholder for E2E test job(s)
-  e2e-tests:
-    needs: provision-infrastructure
-    runs-on: ubuntu-latest
-    environment: ${{ inputs.ENVIRONMENT }}
-    steps:
-      - name: Echo endpoints
-        run: |
-          echo "AI Endpoint: ${{ needs.provision-infrastructure.outputs.AZURE_AI_SERVICES_ENDPOINT }}"
-
   delete-infrastructure:
-    needs: [provision-infrastructure, e2e-tests]
+    needs: [provision-infrastructure]
     if: always()
     uses: ./.github/workflows/delete-infrastructure.yml
     with:

@@ -12,7 +12,7 @@ on:
       - tests/**
 
   workflow_dispatch:
-  
+
 permissions:
   id-token: write
   contents: read
@@ -28,12 +28,12 @@ jobs:
     name: Lint and Publish Bicep
     uses: ./.github/workflows/lint-and-publish-bicep.yml
 
-  validate-bicep:
+  validate-infrastructure:
+    name: Validate Infrastructure
     needs:
       - set-build-variables
       - lint-and-publish-bicep
-    name: Validate Bicep
-    uses: ./.github/workflows/validate-bicep.yml
+    uses: ./.github/workflows/validate-infrastructure.yml
     with:
       ENVIRONMENT: Test
       BUILD_VERSION: ${{ needs.set-build-variables.outputs.BUILD_VERSION }}
@@ -44,22 +44,19 @@ jobs:
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
   
-
-  e2e-test-v1:
+  e2e-test:
+    name: E2E Test
     needs:
       - set-build-variables
-      - validate-bicep
+      - validate-infrastructure
 
-    name: E2E Test
-    uses: ./.github/workflows/e2e-test.yml
+      uses: ./.github/workflows/e2e-test.yml
     with:
       ENVIRONMENT: Test
       BUILD_VERSION: ${{ needs.set-build-variables.outputs.BUILD_VERSION }}
       AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
       AZURE_ENV_NAME: ${{ format('gaidbexp-{0}', github.run_id) }}
-      SQL_SERVER_USERNAME: ${{ vars.SQL_SERVER_USERNAME }}
     secrets:
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      SQL_SERVER_PASSWORD: ${{ secrets.SQL_SERVER_PASSWORD }}
