@@ -19,6 +19,11 @@ on:
         description: "The name of the Azure environment"
         required: true
         type: string
+      SQL_SERVER_USERNAME:
+        description: "The SQL Server admin username"
+        required: false
+        type: string
+        default: 'sqladmin'
 
     secrets:
       AZURE_TENANT_ID:
@@ -29,6 +34,9 @@ on:
         required: true
       AZURE_CLIENT_ID:
         description: "The Azure client ID to use for authentication to Azure for deployment"
+        required: true
+      SQL_SERVER_PASSWORD:
+        description: "The SQL Server password to use for the SQL admin user"
         required: true
 
 jobs:
@@ -41,6 +49,8 @@ jobs:
       AZURE_ENV_NAME: ${{ inputs.AZURE_ENV_NAME }}
       AZURE_LOCATION: ${{ inputs.AZURE_LOCATION }}
       AZURE_PRINCIPAL_ID_TYPE: 'ServicePrincipal'
+      SQL_SERVER_USERNAME: ${{ inputs.SQL_SERVER_USERNAME }}
+      SQL_SERVER_PASSWORD: ${{ secrets.SQL_SERVER_PASSWORD }}
 
     environment: ${{ inputs.ENVIRONMENT }}
     runs-on: ubuntu-latest

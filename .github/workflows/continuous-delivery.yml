@@ -57,7 +57,9 @@ jobs:
       BUILD_VERSION: ${{ needs.set-build-variables.outputs.BUILD_VERSION }}
       AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
       AZURE_ENV_NAME: ${{ format('gaidbexp-{0}', github.run_id) }}
+      SQL_SERVER_USERNAME: ${{ vars.SQL_SERVER_USERNAME }}
     secrets:
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      SQL_SERVER_PASSWORD: ${{ secrets.SQL_SERVER_PASSWORD }}
