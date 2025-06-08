@@ -49,8 +49,7 @@ jobs:
     needs:
       - set-build-variables
       - validate-infrastructure
-
-      uses: ./.github/workflows/e2e-test.yml
+    uses: ./.github/workflows/e2e-test.yml
     with:
       ENVIRONMENT: Test
       BUILD_VERSION: ${{ needs.set-build-variables.outputs.BUILD_VERSION }}
