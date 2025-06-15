@@ -75,7 +75,7 @@ resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
 }
 
 // --------- MONITORING RESOURCES ---------
-module logAnalyticsWorkspace 'br/public:avm/res/operational-insights/workspace:0.11.1' = {
+module logAnalyticsWorkspace 'br/public:avm/res/operational-insights/workspace:0.11.2' = {
   name: 'logAnalyticsWorkspace'
   scope: rg
   params: {
@@ -97,7 +97,7 @@ module applicationInsights 'br/public:avm/res/insights/component:0.6.0' = {
 }
 
 // --------- AI SERVICES ---------
-module aiServicesAccount 'br/public:avm/res/cognitive-services/account:0.10.2' = {
+module aiServicesAccount 'br/public:avm/res/cognitive-services/account:0.11.0' = {
   name: 'ai-services-account-deployment'
   scope: rg
   params: {
@@ -121,7 +121,7 @@ module aiServicesAccount 'br/public:avm/res/cognitive-services/account:0.10.2' =
 }
 
 // --------- SQL DATABASE ---------
-module sqlServer 'br/public:avm/res/sql/server:0.9.0' = {
+module sqlServer 'br/public:avm/res/sql/server:0.16.1' = {
   name: 'sql-server-deployment'
   scope: rg
   params: {
@@ -132,8 +132,11 @@ module sqlServer 'br/public:avm/res/sql/server:0.9.0' = {
     databases: [
       {
         name: 'AdventureWorksLT'
-        skuName: 'GP_S_Gen5_2'
-        skuTier: 'GeneralPurpose'
+        availabilityZone: -1
+        sku: {
+          name: 'GP_S_Gen5_2'
+          tier: 'GeneralPurpose'
+        }
         collation: 'SQL_Latin1_General_CP1_CI_AS'
         maxSizeBytes: 34359738368
         sampleName: 'AdventureWorksLT'
@@ -144,7 +147,6 @@ module sqlServer 'br/public:avm/res/sql/server:0.9.0' = {
         autoPauseDelay: 60
         requestedBackupStorageRedundancy: 'Local'
         isLedgerOn: false
-        availabilityZone: 'NoPreference'
       }
     ]
     managedIdentities: {
