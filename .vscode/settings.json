@@ -1,3 +1,8 @@
 {
-    "dotnet.defaultSolution": "src/GMCopilot/GMCopilot.sln"
+    "dotnet.defaultSolution": "src/GMCopilot/GMCopilot.sln",
+    "github.copilot.chat.commitMessageGeneration.instructions": [
+        {
+            "text": "The first line should be summary of no more than 50 characters starting with classification of commit from: `CHORE:`|`FIX:`|`CHANGE:`|`BREAKING CHANGE:`|`TESTS:`|`SECURITY:`|`COMPLEX:`. The second line should be blank. The following lines should be the full summary. Any summary item that is security related should start with `SECURITY:`. Any summary item change that causes a breaking change to a feature/interface/dependency should start with `BREAKING CHANGE:`"
+        }
+    ]
 }

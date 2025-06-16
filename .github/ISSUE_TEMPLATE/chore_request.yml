@@ -1,0 +1,57 @@
+name: "?? Chore request"
+description: Log a general maintenance, refactoring, or hygiene task for the solution accelerator
+labels: [chore]
+title: "[Chore]: "
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of the solution does this chore relate to?
+      options:
+        - Infrastructure (Bicep/infra)
+        - Application Services (API, Functions, etc.)
+        - UI (Web app, Portal, etc.)
+        - Documentation
+        - GitHub Actions / CI/CD
+        - Testing
+        - Dependency Management
+        - Code Quality / Refactoring
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: What is the reason for this chore? Why is it needed? (e.g., technical debt, code hygiene, dependency update, test coverage, etc.)
+    validations:
+      required: true
+  - type: textarea
+    id: task
+    attributes:
+      label: Task Description
+      description: Describe the specific work to be done. Be as detailed as possible so a Copilot Coding Agent can execute the task efficiently.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: What are the requirements for this chore to be considered complete? (e.g., all tests pass, no build warnings, updated documentation, etc.)
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact / Risk
+      description: Are there any risks, side effects, or impacts to other parts of the solution? (e.g., breaking changes, migration steps, etc.)
+    validations:
+      required: false
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context, links, or screenshots that would help a Copilot Coding Agent complete this chore.
+    validations:
+      required: false

@@ -62,6 +62,18 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "gaidbexp", "gaidbexp", "{02
 		..\..\docs\gaidbexp\README.md = ..\..\docs\gaidbexp\README.md
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
+	ProjectSection(SolutionItems) = preProject
+		.mcp.json = .mcp.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ISSUE_TEMPLATE", "ISSUE_TEMPLATE", "{394573BC-D0AC-4EDA-9CFD-7D4456DBA207}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\.github\ISSUE_TEMPLATE\bug_report.yml = ..\..\.github\ISSUE_TEMPLATE\bug_report.yml
+		..\..\.github\ISSUE_TEMPLATE\chore_request.yml = ..\..\.github\ISSUE_TEMPLATE\chore_request.yml
+		..\..\.github\ISSUE_TEMPLATE\feature_request.yml = ..\..\.github\ISSUE_TEMPLATE\feature_request.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -96,6 +108,7 @@ Global
 		{8024E38F-BBEA-4C5A-9065-F57F29E8B9A3} = {196DBF2D-9EE1-4453-9A59-70FE0FB2EBB9}
 		{EFBD0680-2A78-4D0A-BE54-CB92D2185332} = {196DBF2D-9EE1-4453-9A59-70FE0FB2EBB9}
 		{02EA681E-C7D8-13C7-8484-4AC65E1B71E8} = {92129E6D-FCE0-4431-A456-AD4678B325BE}
+		{394573BC-D0AC-4EDA-9CFD-7D4456DBA207} = {F932A986-F757-43FA-A2DA-EE69555F7F57}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {77E9FCDF-9A98-4242-A12D-9565607A3087}
