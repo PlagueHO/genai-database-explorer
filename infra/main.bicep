@@ -68,16 +68,19 @@ var aiSearchName = '${abbrs.aiSearchSearchServices}${environmentName}'
 var openAiModelDeployments = openAiModels
 
 // The application resources that are deployed into the application resource group
-resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
-  name: resourceGroupName
-  location: location
-  tags: tags
+module rg 'br/public:avm/res/resources/resource-group:0.4.0' = {
+  name: 'resourceGroup'
+  params: {
+    name: resourceGroupName
+    location: location
+    tags: tags
+  }
 }
 
 // --------- MONITORING RESOURCES ---------
 module logAnalyticsWorkspace 'br/public:avm/res/operational-insights/workspace:0.11.2' = {
   name: 'logAnalyticsWorkspace'
-  scope: rg
+  scope: resourceGroup(resourceGroupName)
   params: {
     name: logAnalyticsWorkspaceName
     location: location
@@ -87,7 +90,7 @@ module logAnalyticsWorkspace 'br/public:avm/res/operational-insights/workspace:0
 
 module applicationInsights 'br/public:avm/res/insights/component:0.6.0' = {
   name: 'applicationInsights'
-  scope: rg
+  scope: resourceGroup(resourceGroupName)
   params: {
     name: applicationInsightsName
     location: location
@@ -99,7 +102,7 @@ module applicationInsights 'br/public:avm/res/insights/component:0.6.0' = {
 // --------- AI SERVICES ---------
 module aiServicesAccount 'br/public:avm/res/cognitive-services/account:0.11.0' = {
   name: 'ai-services-account-deployment'
-  scope: rg
+  scope: resourceGroup(resourceGroupName)
   params: {
     kind: 'AIServices'
     name: aiServicesName
@@ -123,7 +126,7 @@ module aiServicesAccount 'br/public:avm/res/cognitive-services/account:0.11.0' =
 // --------- SQL DATABASE ---------
 module sqlServer 'br/public:avm/res/sql/server:0.17.0' = {
   name: 'sql-server-deployment'
-  scope: rg
+  scope: resourceGroup(resourceGroupName)
   params: {
     name: '${abbrs.sqlServers}${environmentName}'
     location: location
@@ -161,7 +164,7 @@ module sqlServer 'br/public:avm/res/sql/server:0.17.0' = {
 // --------- AI SEARCH (OPTIONAL) ---------
 module aiSearchService 'br/public:avm/res/search/search-service:0.10.0' = if (azureAiSearchDeploy) {
   name: 'ai-search-service-deployment'
-  scope: rg
+  scope: resourceGroup(resourceGroupName)
   params: {
     name: aiSearchName
     location: location
@@ -183,7 +186,7 @@ module aiSearchService 'br/public:avm/res/search/search-service:0.10.0' = if (az
 }
 
 
-output AZURE_RESOURCE_GROUP string = rg.name
+output AZURE_RESOURCE_GROUP string = rg.outputs.name
 output AZURE_PRINCIPAL_ID string = principalId
 output AZURE_PRINCIPAL_ID_TYPE string = principalIdType
 
