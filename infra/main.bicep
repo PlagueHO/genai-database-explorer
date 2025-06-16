@@ -121,7 +121,7 @@ module aiServicesAccount 'br/public:avm/res/cognitive-services/account:0.11.0' =
 }
 
 // --------- SQL DATABASE ---------
-module sqlServer 'br/public:avm/res/sql/server:0.16.1' = {
+module sqlServer 'br/public:avm/res/sql/server:0.17.0' = {
   name: 'sql-server-deployment'
   scope: rg
   params: {

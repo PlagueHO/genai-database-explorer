@@ -25,10 +25,16 @@ The purpose of this specification is to standardize infrastructure deployment fo
 ## 3. Requirements, Constraints & Guidelines
 
 - **REQ-001**: All core Azure resources must be deployed using AVM modules where available.
-- **REQ-002**: The `main.bicep` file must follow the structure and modularity pattern of the [Azure AI Foundry Jumpstart main.bicep](https://github.com/PlagueHO/azure-ai-foundry-jumpstart/blob/main/infra/v1/main.bicep).
+- **REQ-002**: The `main.bicep` file must follow the structure and modularity pattern of the [Azure AI Foundry Jumpstart main.bicep](https://github.com/PlagueHO/azure-ai-foundry-jumpstart/blob/main/infra/main.bicep).
 - **REQ-003**: A `main.bicepparam` file must exist in the same directory as `main.bicep` and provide all required parameters for deployment.
-- **REQ-004**: Must comply with requirements for being deployed via Azure Developer CLI, including parameterization and secure handling of secrets.
-- **SEC-001**: All secrets and sensitive values must be passed as secure parameters and never hardcoded.
+- **REQ-004**: Must comply with requirements for being deployed via Azure  
+  Developer CLI, including parameterization and secure handling of secrets.
+- **REQ-005**: The `main.bicepparam` file must read all parameter values from  
+  environment variables using `readEnvironmentVariable()` function with Azure  
+  Developer CLI naming conventions (uppercase with underscore separators) and  
+  provide appropriate default values.
+- **SEC-001**: All secrets and sensitive values must be passed as secure  
+  parameters and never hardcoded.
 - **SEC-002**: Role-based access control (RBAC) and network security rules must be defined using AVM modules where possible.
 - **CON-001**: Only Microsoft-verified AVM modules from https://aka.ms/avm may be used for core resources.
 - **GUD-001**: Use parameterization and outputs to maximize reusability and composability.
@@ -59,6 +65,16 @@ module rg 'br/public:azurerm:resource-group:2.0.0' = {
 }
 ```
 
+Example parameter file with environment variable usage:
+
+```bicep
+using './main.bicep'
+
+param environmentName = readEnvironmentVariable('AZURE_ENV_NAME', 'azdtemp')
+param location = readEnvironmentVariable('AZURE_LOCATION', 'EastUS2')
+param resourceGroupName = readEnvironmentVariable('AZURE_RESOURCE_GROUP', '')
+```
+
 ## 5. Rationale & Context
 
 Using AVM modules ensures security, compliance, and maintainability by leveraging Microsoft-verified best practices. Standardizing the structure and naming conventions improves onboarding and automation for both humans and AI agents.
@@ -85,6 +101,8 @@ module sql 'br/public:azurerm:mssql-server:2.0.0' = {
 - All core resources are deployed using AVM modules.
 - No secrets are hardcoded in any Bicep file.
 - The `main.bicepparam` file exists and is valid.
+- All parameters in `main.bicepparam` use `readEnvironmentVariable()` with  
+  Azure Developer CLI naming conventions (UPPERCASE_WITH_UNDERSCORES).
 - The structure matches the referenced pattern.
 - All parameters required by AVM modules are provided.
 
