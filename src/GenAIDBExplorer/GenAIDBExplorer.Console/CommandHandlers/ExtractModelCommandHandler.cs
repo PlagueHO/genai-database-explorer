@@ -39,43 +39,43 @@ public class ExtractModelCommandHandler(
     /// <returns>The extract model command.</returns>
     public static Command SetupCommand(IHost host)
     {
-        var projectPathOption = new Option<DirectoryInfo>(
-            aliases: ["--project", "-p"],
-            description: "The path to the GenAI Database Explorer project."
-        )
+        var projectPathOption = new Option<DirectoryInfo>("--project", "-p")
         {
-            IsRequired = true
+            Description = "The path to the GenAI Database Explorer project.",
+            Required = true
         };
 
-        var skipTablesOption = new Option<bool>(
-            aliases: ["--skipTables"],
-            description: "Flag to skip tables during the extract model process.",
-            getDefaultValue: () => false
-        );
+        var skipTablesOption = new Option<bool>("--skipTables")
+        {
+            Description = "Flag to skip tables during the extract model process."
+        };
 
-        var skipViewsOption = new Option<bool>(
-            aliases: ["--skipViews"],
-            description: "Flag to skip views during the extract model process.",
-            getDefaultValue: () => false
-        );
+        var skipViewsOption = new Option<bool>("--skipViews")
+        {
+            Description = "Flag to skip views during the extract model process."
+        };
 
-        var skipStoredProceduresOption = new Option<bool>(
-            aliases: ["--skipStoredProcedures"],
-            description: "Flag to skip stored procedures during the extract model process.",
-            getDefaultValue: () => false
-        );
+        var skipStoredProceduresOption = new Option<bool>("--skipStoredProcedures")
+        {
+            Description = "Flag to skip stored procedures during the extract model process."
+        };
 
         var extractModelCommand = new Command("extract-model", "Extract a semantic model from a SQL database for a GenAI Database Explorer project.");
-        extractModelCommand.AddOption(projectPathOption);
-        extractModelCommand.AddOption(skipTablesOption);
-        extractModelCommand.AddOption(skipViewsOption);
-        extractModelCommand.AddOption(skipStoredProceduresOption);
-        extractModelCommand.SetHandler(async (DirectoryInfo projectPath, bool skipTables, bool skipViews, bool skipStoredProcedures) =>
+        extractModelCommand.Options.Add(projectPathOption);
+        extractModelCommand.Options.Add(skipTablesOption);
+        extractModelCommand.Options.Add(skipViewsOption);
+        extractModelCommand.Options.Add(skipStoredProceduresOption);
+        extractModelCommand.SetAction(async (parseResult) =>
         {
+            var projectPath = parseResult.GetValue(projectPathOption)!;
+            var skipTables = parseResult.GetValue(skipTablesOption);
+            var skipViews = parseResult.GetValue(skipViewsOption);
+            var skipStoredProcedures = parseResult.GetValue(skipStoredProceduresOption);
+            
             var handler = host.Services.GetRequiredService<ExtractModelCommandHandler>();
             var options = new ExtractModelCommandHandlerOptions(projectPath, skipTables, skipViews, skipStoredProcedures);
             await handler.HandleAsync(options);
-        }, projectPathOption, skipTablesOption, skipViewsOption, skipStoredProceduresOption);
+        });
 
         return extractModelCommand;
     }
