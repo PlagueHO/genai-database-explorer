@@ -71,7 +71,7 @@ public class ExtractModelCommandHandler(
             var skipTables = parseResult.GetValue(skipTablesOption);
             var skipViews = parseResult.GetValue(skipViewsOption);
             var skipStoredProcedures = parseResult.GetValue(skipStoredProceduresOption);
-            
+
             var handler = host.Services.GetRequiredService<ExtractModelCommandHandler>();
             var options = new ExtractModelCommandHandlerOptions(projectPath, skipTables, skipViews, skipStoredProcedures);
             await handler.HandleAsync(options);

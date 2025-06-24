@@ -63,13 +63,13 @@ namespace GenAIDBExplorer.Console.CommandHandlers
             tableCommand.Options.Add(projectPathOption);
             tableCommand.Options.Add(schemaNameOption);
             tableCommand.Options.Add(nameOption);
-            
+
             tableCommand.SetAction(async (parseResult) =>
             {
                 var projectPath = parseResult.GetValue(projectPathOption)!;
                 var schemaName = parseResult.GetValue(schemaNameOption)!;
                 var name = parseResult.GetValue(nameOption)!;
-                
+
                 var handler = host.Services.GetRequiredService<ShowObjectCommandHandler>();
                 var options = new ShowObjectCommandHandlerOptions(projectPath, schemaName, name, "table");
                 await handler.HandleAsync(options);
@@ -79,13 +79,13 @@ namespace GenAIDBExplorer.Console.CommandHandlers
             viewCommand.Options.Add(projectPathOption);
             viewCommand.Options.Add(schemaNameOption);
             viewCommand.Options.Add(nameOption);
-            
+
             viewCommand.SetAction(async (parseResult) =>
             {
                 var projectPath = parseResult.GetValue(projectPathOption)!;
                 var schemaName = parseResult.GetValue(schemaNameOption)!;
                 var name = parseResult.GetValue(nameOption)!;
-                
+
                 var handler = host.Services.GetRequiredService<ShowObjectCommandHandler>();
                 var options = new ShowObjectCommandHandlerOptions(projectPath, schemaName, name, "view");
                 await handler.HandleAsync(options);
@@ -95,13 +95,13 @@ namespace GenAIDBExplorer.Console.CommandHandlers
             storedProcedureCommand.Options.Add(projectPathOption);
             storedProcedureCommand.Options.Add(schemaNameOption);
             storedProcedureCommand.Options.Add(nameOption);
-            
+
             storedProcedureCommand.SetAction(async (parseResult) =>
             {
                 var projectPath = parseResult.GetValue(projectPathOption)!;
                 var schemaName = parseResult.GetValue(schemaNameOption)!;
                 var name = parseResult.GetValue(nameOption)!;
-                
+
                 var handler = host.Services.GetRequiredService<ShowObjectCommandHandler>();
                 var options = new ShowObjectCommandHandlerOptions(projectPath, schemaName, name, "storedprocedure");
                 await handler.HandleAsync(options);

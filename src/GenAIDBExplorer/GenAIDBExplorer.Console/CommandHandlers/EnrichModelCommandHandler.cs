@@ -91,14 +91,14 @@ public class EnrichModelCommandHandler(
         tableCommand.Options.Add(schemaNameOption);
         tableCommand.Options.Add(nameOption);
         tableCommand.Options.Add(showOption);
-        
+
         tableCommand.SetAction(async (parseResult) =>
         {
             var projectPath = parseResult.GetValue(projectPathOption)!;
             var schemaName = parseResult.GetValue(schemaNameOption);
             var name = parseResult.GetValue(nameOption);
             var show = parseResult.GetValue(showOption);
-            
+
             var handler = host.Services.GetRequiredService<EnrichModelCommandHandler>();
             var options = new EnrichModelCommandHandlerOptions(
                 projectPath,
@@ -118,14 +118,14 @@ public class EnrichModelCommandHandler(
         viewCommand.Options.Add(schemaNameOption);
         viewCommand.Options.Add(nameOption);
         viewCommand.Options.Add(showOption);
-        
+
         viewCommand.SetAction(async (parseResult) =>
         {
             var projectPath = parseResult.GetValue(projectPathOption)!;
             var schemaName = parseResult.GetValue(schemaNameOption);
             var name = parseResult.GetValue(nameOption);
             var show = parseResult.GetValue(showOption);
-            
+
             var handler = host.Services.GetRequiredService<EnrichModelCommandHandler>();
             var options = new EnrichModelCommandHandlerOptions(
                 projectPath,
@@ -145,14 +145,14 @@ public class EnrichModelCommandHandler(
         storedProcedureCommand.Options.Add(schemaNameOption);
         storedProcedureCommand.Options.Add(nameOption);
         storedProcedureCommand.Options.Add(showOption);
-        
+
         storedProcedureCommand.SetAction(async (parseResult) =>
         {
             var projectPath = parseResult.GetValue(projectPathOption)!;
             var schemaName = parseResult.GetValue(schemaNameOption);
             var name = parseResult.GetValue(nameOption);
             var show = parseResult.GetValue(showOption);
-            
+
             var handler = host.Services.GetRequiredService<EnrichModelCommandHandler>();
             var options = new EnrichModelCommandHandlerOptions(
                 projectPath,
@@ -179,7 +179,7 @@ public class EnrichModelCommandHandler(
             var skipTables = parseResult.GetValue(skipTablesOption);
             var skipViews = parseResult.GetValue(skipViewsOption);
             var skipStoredProcedures = parseResult.GetValue(skipStoredProceduresOption);
-            
+
             var handler = host.Services.GetRequiredService<EnrichModelCommandHandler>();
             var options = new EnrichModelCommandHandlerOptions(projectPath, skipTables, skipViews, skipStoredProcedures);
             await handler.HandleAsync(options);

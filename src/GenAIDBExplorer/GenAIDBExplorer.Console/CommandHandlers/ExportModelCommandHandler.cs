@@ -80,7 +80,7 @@ public class ExportModelCommandHandler : CommandHandler<ExportModelCommandHandle
             var outputFileName = parseResult.GetValue(outputFileNameOption);
             var fileType = parseResult.GetValue(fileTypeOption) ?? "markdown";
             var splitFiles = parseResult.GetValue(splitFilesOption);
-            
+
             var handler = host.Services.GetRequiredService<ExportModelCommandHandler>();
             var options = new ExportModelCommandHandlerOptions(projectPath, outputFileName, fileType, splitFiles);
             await handler.HandleAsync(options);

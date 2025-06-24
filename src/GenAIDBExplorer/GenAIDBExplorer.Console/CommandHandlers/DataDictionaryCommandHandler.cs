@@ -84,7 +84,7 @@ public class DataDictionaryCommandHandler(
         tableCommand.Options.Add(schemaNameOption);
         tableCommand.Options.Add(nameOption);
         tableCommand.Options.Add(showOption);
-        
+
         tableCommand.SetAction(async (parseResult) =>
         {
             var projectPath = parseResult.GetValue(projectPathOption)!;
@@ -92,7 +92,7 @@ public class DataDictionaryCommandHandler(
             var schemaName = parseResult.GetValue(schemaNameOption);
             var name = parseResult.GetValue(nameOption);
             var show = parseResult.GetValue(showOption);
-            
+
             var handler = host.Services.GetRequiredService<DataDictionaryCommandHandler>();
             var options = new DataDictionaryCommandHandlerOptions(
                 projectPath,
