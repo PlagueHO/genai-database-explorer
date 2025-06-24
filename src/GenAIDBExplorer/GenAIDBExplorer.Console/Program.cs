@@ -14,7 +14,8 @@ internal static class Program
     /// The main method that sets up and runs the application.
     /// </summary>
     /// <param name="args">The command-line arguments.</param>
-    private static async Task Main(string[] args)
+    /// <returns>The exit code.</returns>
+    private static async Task<int> Main(string[] args)
     {
         // Create the root command with a description
         var rootCommand = new RootCommand("GenAI Database Explorer console application");
@@ -25,15 +26,25 @@ internal static class Program
             .Build();
 
         // Set up commands
-        rootCommand.AddCommand(InitProjectCommandHandler.SetupCommand(host));
-        rootCommand.AddCommand(DataDictionaryCommandHandler.SetupCommand(host));
-        rootCommand.AddCommand(EnrichModelCommandHandler.SetupCommand(host));
-        rootCommand.AddCommand(ExportModelCommandHandler.SetupCommand(host));
-        rootCommand.AddCommand(ExtractModelCommandHandler.SetupCommand(host));
-        rootCommand.AddCommand(QueryModelCommandHandler.SetupCommand(host));
-        rootCommand.AddCommand(ShowObjectCommandHandler.SetupCommand(host));
+        rootCommand.Subcommands.Add(InitProjectCommandHandler.SetupCommand(host));
+        rootCommand.Subcommands.Add(DataDictionaryCommandHandler.SetupCommand(host));
+        rootCommand.Subcommands.Add(EnrichModelCommandHandler.SetupCommand(host));
+        rootCommand.Subcommands.Add(ExportModelCommandHandler.SetupCommand(host));
+        rootCommand.Subcommands.Add(ExtractModelCommandHandler.SetupCommand(host));
+        rootCommand.Subcommands.Add(QueryModelCommandHandler.SetupCommand(host));
+        rootCommand.Subcommands.Add(ShowObjectCommandHandler.SetupCommand(host));
 
-        // Invoke the root command
-        await rootCommand.InvokeAsync(args);
+        // For beta5, the pattern might be different - let me try parsing and executing directly
+        // Since we can't find the right invocation method, let's try command line argument parsing 
+        try
+        {
+            await rootCommand.Parse(args).InvokeAsync();
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            System.Console.WriteLine($"Error: {ex.Message}");
+            return 1;
+        }
     }
 }

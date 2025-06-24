@@ -41,22 +41,21 @@ public class QueryModelCommandHandler(
     /// <returns>The query command.</returns>
     public static Command SetupCommand(IHost host)
     {
-        var projectPathOption = new Option<DirectoryInfo>(
-            aliases: ["--project", "-p"],
-            description: "The path to the GenAI Database Explorer project."
-        )
+        var projectPathOption = new Option<DirectoryInfo>("--project", "-p")
         {
-            IsRequired = true
+            Description = "The path to the GenAI Database Explorer project.",
+            Required = true
         };
 
         var queryCommand = new Command("query-model", "Answer questions based on the semantic model by using Generative AI.");
-        queryCommand.AddOption(projectPathOption);
-        queryCommand.SetHandler(async (DirectoryInfo projectPath) =>
+        queryCommand.Options.Add(projectPathOption);
+        queryCommand.SetAction(async (parseResult) =>
         {
+            var projectPath = parseResult.GetValue(projectPathOption)!;
             var handler = host.Services.GetRequiredService<QueryModelCommandHandler>();
             var options = new QueryModelCommandHandlerOptions(projectPath);
             await handler.HandleAsync(options);
-        }, projectPathOption);
+        });
 
         return queryCommand;
     }
