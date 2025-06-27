@@ -45,7 +45,7 @@ This specification defines the requirements for implementing a repository patter
 
 - **REQ-001**: The repository pattern MUST provide abstraction for semantic model persistence operations
 - **REQ-002**: The implementation MUST support asynchronous operations for all I/O-bound activities
-- **REQ-003**: The repository MUST handle both file-based and future database-based persistence strategies
+- **REQ-003**: The repository MUST handle both file-based (local and blob storage) and future document database-based persistence strategies
 - **REQ-004**: The semantic model MUST be persisted in a hierarchical structure with separate files for entities
 - **REQ-005**: The repository MUST support CRUD operations (Create, Read, Update, Delete) for semantic models
 - **REQ-006**: The implementation MUST use dependency injection for component management
