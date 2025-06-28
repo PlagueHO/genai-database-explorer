@@ -70,7 +70,7 @@ jobs:
             --tenant-id "$AZURE_TENANT_ID"
 
       - name: Provision Infrastructure
-        run: azd provision --no-prompt
+        run: azd provision --no-prompt --debug
 
       - name: Get Output Endpoints
         id: get_endpoints
