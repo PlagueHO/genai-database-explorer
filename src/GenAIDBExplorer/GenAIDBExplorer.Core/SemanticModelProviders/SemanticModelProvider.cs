@@ -12,9 +12,9 @@ public sealed class SemanticModelProvider(
     ILogger<SemanticModelProvider> logger
 ) : ISemanticModelProvider
 {
-    private readonly IProject _project = project;
-    private readonly ISchemaRepository _schemaRepository = schemaRepository;
-    private readonly ILogger _logger = logger;
+    private readonly IProject _project = project ?? throw new ArgumentNullException(nameof(project));
+    private readonly ISchemaRepository _schemaRepository = schemaRepository ?? throw new ArgumentNullException(nameof(schemaRepository));
+    private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Core.Resources.LogMessages", typeof(SemanticModelProvider).Assembly);
 
     /// <inheritdoc/>

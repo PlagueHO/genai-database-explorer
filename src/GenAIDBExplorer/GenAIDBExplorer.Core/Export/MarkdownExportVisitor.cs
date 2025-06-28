@@ -31,7 +31,7 @@ public class MarkdownExportVisitor(
             {
                 Directory.CreateDirectory(directory!);
             }
-            await File.WriteAllTextAsync(filePath, kvp.Value.ToString()).ConfigureAwait(false);
+            await File.WriteAllTextAsync(filePath, kvp.Value.ToString(), Encoding.UTF8).ConfigureAwait(false);
         }
     }
 

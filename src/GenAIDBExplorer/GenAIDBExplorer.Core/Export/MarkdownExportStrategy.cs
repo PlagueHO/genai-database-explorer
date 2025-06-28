@@ -2,6 +2,7 @@ namespace GenAIDBExplorer.Core.Export;
 
 using System;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using GenAIDBExplorer.Core.Models.SemanticModel;
 
@@ -74,7 +75,7 @@ public class MarkdownExportStrategy : IExportStrategy
         semanticModel.Accept(visitor);
         var markdownContent = visitor.GetResult();
 
-        await File.WriteAllTextAsync(filePath, markdownContent).ConfigureAwait(false);
+        await File.WriteAllTextAsync(filePath, markdownContent, Encoding.UTF8).ConfigureAwait(false);
     }
 
     private static async Task ExportWithSplitFilesAsync(SemanticModel semanticModel, string filePath, string baseDirectory)
@@ -92,6 +93,6 @@ public class MarkdownExportStrategy : IExportStrategy
 
         // Save the main file
         var mainFileContent = visitor.GetResult();
-        await File.WriteAllTextAsync(filePath, mainFileContent).ConfigureAwait(false);
+        await File.WriteAllTextAsync(filePath, mainFileContent, Encoding.UTF8).ConfigureAwait(false);
     }
 }

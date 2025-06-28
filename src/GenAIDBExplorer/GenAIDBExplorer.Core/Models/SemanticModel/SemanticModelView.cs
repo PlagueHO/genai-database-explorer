@@ -61,7 +61,7 @@ public sealed class SemanticModelView(
             throw new FileNotFoundException("The specified view file does not exist.", filePath);
         }
 
-        var json = await File.ReadAllTextAsync(filePath);
+        var json = await File.ReadAllTextAsync(filePath, Encoding.UTF8);
         var view = JsonSerializer.Deserialize<SemanticModelView>(json) ?? throw new InvalidOperationException("Failed to load view.");
 
         Schema = view.Schema;

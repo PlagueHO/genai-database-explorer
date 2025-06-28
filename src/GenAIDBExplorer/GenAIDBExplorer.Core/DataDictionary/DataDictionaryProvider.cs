@@ -4,6 +4,7 @@ using GenAIDBExplorer.Core.SemanticKernel;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
+using System.Text;
 using System.Text.Json;
 using System.Resources;
 using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
@@ -114,7 +115,7 @@ public class DataDictionaryProvider(
 
             using (_logger.BeginScope(scope))
             {
-                var markdownContent = await File.ReadAllTextAsync(filePath, cancellationToken);
+                var markdownContent = await File.ReadAllTextAsync(filePath, Encoding.UTF8, cancellationToken);
                 var table = await GetTableFromMarkdownAsync(markdownContent);
                 lock (processResult)
                 {

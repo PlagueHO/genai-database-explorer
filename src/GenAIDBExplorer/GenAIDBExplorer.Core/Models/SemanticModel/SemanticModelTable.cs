@@ -86,8 +86,8 @@ public sealed class SemanticModelTable(
             throw new FileNotFoundException("The specified table file does not exist.", filePath);
         }
 
-        await using var stream = File.OpenRead(filePath);
-        var table = await JsonSerializer.DeserializeAsync<SemanticModelTable>(stream) ?? throw new InvalidOperationException("Failed to load table.");
+        var json = await File.ReadAllTextAsync(filePath, Encoding.UTF8);
+        var table = JsonSerializer.Deserialize<SemanticModelTable>(json) ?? throw new InvalidOperationException("Failed to load table.");
 
         Schema = table.Schema;
         Name = table.Name;

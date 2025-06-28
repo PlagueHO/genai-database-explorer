@@ -15,3 +15,9 @@ param sqlServerPassword = readEnvironmentVariable('SQL_SERVER_PASSWORD', '')
 
 // AI Search parameter
 param azureAiSearchDeploy = bool(readEnvironmentVariable('AZURE_AI_SEARCH_DEPLOY', 'false'))
+
+// Cosmos DB parameter
+param cosmosDbDeploy = bool(readEnvironmentVariable('COSMOS_DB_DEPLOY', 'false'))
+
+// Storage Account parameter
+param storageAccountDeploy = bool(readEnvironmentVariable('STORAGE_ACCOUNT_DEPLOY', 'false'))

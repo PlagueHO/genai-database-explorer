@@ -11,9 +11,9 @@ Repository pattern implementation for persisting AI-consumable semantic models e
 
 ## 1. Purpose & Scope
 
-**Purpose**: Implement repository pattern for persisting semantic models extracted from database schemas. Provides abstraction for data access, supports multiple persistence strategies (file, database, cloud).
+**Purpose**: Implement repository pattern for persisting semantic models extracted from database schemas. Provides abstraction for data access, supports three specific persistence strategies: Local Disk JSON files, Azure Storage Blob Storage JSON files, and Cosmos DB Documents.
 
-**Scope**: Database schema extraction, semantic model persistence, lazy loading, change tracking, concurrent operations.
+**Scope**: Database schema extraction, semantic model persistence, lazy loading, change tracking, concurrent operations across Local Disk, Azure Blob Storage, and Cosmos DB storage providers.
 
 **Audience**: Software developers, architects, AI engineers.
 
@@ -34,7 +34,7 @@ Repository pattern implementation for persisting AI-consumable semantic models e
 
 - **REQ-001**: Repository pattern abstraction for semantic model persistence
 - **REQ-002**: Async operations for all I/O activities  
-- **REQ-003**: Support file-based and database persistence strategies
+- **REQ-003**: Support three specific persistence strategies: Local Disk JSON files, Azure Storage Blob Storage JSON files, and Cosmos DB Documents
 - **REQ-004**: Hierarchical structure with separate entity files
 - **REQ-005**: CRUD operations for semantic models
 - **REQ-006**: Dependency injection integration
@@ -101,6 +101,40 @@ public interface ISemanticModelProvider
     Task<SemanticModel> ExtractSemanticModelAsync();
 }
 
+/// <summary>Persistence strategy interface for different storage providers.</summary>
+public interface ISemanticModelPersistenceStrategy
+{
+    Task SaveModelAsync(SemanticModel model, string containerPath);
+    Task<SemanticModel> LoadModelAsync(string containerPath);
+    Task DeleteModelAsync(string containerPath);
+    Task<bool> ExistsAsync(string containerPath);
+    Task<IEnumerable<string>> ListModelsAsync(string basePath);
+}
+
+/// <summary>Local disk JSON file persistence strategy.</summary>
+public interface ILocalDiskPersistenceStrategy : ISemanticModelPersistenceStrategy
+{
+    Task SaveModelAsync(SemanticModel model, DirectoryInfo modelPath);
+    Task<SemanticModel> LoadModelAsync(DirectoryInfo modelPath);
+}
+
+/// <summary>Azure Blob Storage JSON file persistence strategy.</summary>
+public interface IAzureBlobPersistenceStrategy : ISemanticModelPersistenceStrategy
+{
+    Task SaveModelAsync(SemanticModel model, string containerName, string blobPrefix);
+    Task<SemanticModel> LoadModelAsync(string containerName, string blobPrefix);
+    string ConnectionString { get; set; }
+}
+
+/// <summary>Cosmos DB document persistence strategy.</summary>
+public interface ICosmosPersistenceStrategy : ISemanticModelPersistenceStrategy
+{
+    Task SaveModelAsync(SemanticModel model, string databaseName, string containerName);
+    Task<SemanticModel> LoadModelAsync(string databaseName, string containerName);
+    string ConnectionString { get; set; }
+    string PartitionKeyPath { get; set; } // Should be "/partitionKey" for hierarchical keys
+}
+
 /// <summary>Semantic model with persistence and entity management.</summary>
 public interface ISemanticModel
 {
@@ -134,18 +168,157 @@ public interface ISemanticModelEntity
 }
 ```
 
+### Persistent Storage Structure
+
+The repository supports three persistence strategies, each implementing a hierarchical structure with an index document/file linking to entity documents/files:
+
+#### Local Disk JSON Files Structure
+
+```text
+{model-name}/
+├── semanticmodel.json           # Index document with model metadata and entity references
+├── tables/
+│   ├── {schema}.{table-name}.json
+│   └── ...
+├── views/
+│   ├── {schema}.{view-name}.json
+│   └── ...
+└── storedprocedures/
+    ├── {schema}.{procedure-name}.json
+    └── ...
+```
+
+#### Azure Blob Storage Structure
+
+```text
+Container: {container-name}
+├── {model-name}/semanticmodel.json     # Index blob with model metadata
+├── {model-name}/tables/{schema}.{table-name}.json
+├── {model-name}/views/{schema}.{view-name}.json
+└── {model-name}/storedprocedures/{schema}.{procedure-name}.json
+```
+
+#### Cosmos DB Documents Structure
+
+```text
+Database: {database-name}
+Container: {container-name}
+Documents (each with hierarchical partition key):
+├── Document: SemanticModel Index
+│   ├── id: "{model-name}"
+│   ├── partitionKey: "{model-name}/semanticmodel/index"
+│   ├── type: "SemanticModel"
+│   └── [model metadata and entity references]
+├── Document: Table Entity
+│   ├── id: "{model-name}-table-{schema}-{table-name}"
+│   ├── partitionKey: "{model-name}/table/{schema}.{table-name}"
+│   ├── type: "Table"
+│   └── [table definition and columns]
+├── Document: View Entity
+│   ├── id: "{model-name}-view-{schema}-{view-name}"
+│   ├── partitionKey: "{model-name}/view/{schema}.{view-name}"
+│   ├── type: "View"
+│   └── [view definition and columns]
+└── Document: Stored Procedure Entity
+    ├── id: "{model-name}-sp-{schema}-{procedure-name}"
+    ├── partitionKey: "{model-name}/storedprocedure/{schema}.{procedure-name}"
+    ├── type: "StoredProcedure"
+    └── [procedure definition and parameters]
+```
+
+#### Index Document Schema
+
+**Local Disk & Azure Blob Storage:**
+
+```json
+{
+  "id": "model-name",
+  "type": "SemanticModel",
+  "name": "Database Schema Model",
+  "source": "SQL Server Adventure Works",
+  "description": "Complete schema model for Adventure Works database",
+  "tables": [
+    {
+      "schema": "Sales",
+      "name": "Customer",
+      "id": "model-name-table-Sales-Customer",
+      "relativePath": "tables/Sales.Customer.json"
+    }
+  ],
+  "views": [
+    {
+      "schema": "Sales",
+      "name": "vCustomer",
+      "id": "model-name-view-Sales-vCustomer",
+      "relativePath": "views/Sales.vCustomer.json"
+    }
+  ],
+  "storedProcedures": [
+    {
+      "schema": "Sales",
+      "name": "uspGetCustomer",
+      "id": "model-name-sp-Sales-uspGetCustomer",
+      "relativePath": "storedprocedures/Sales.uspGetCustomer.json"
+    }
+  ],
+  "createdDate": "2025-06-28T10:30:00Z",
+  "lastModified": "2025-06-28T15:45:00Z"
+}
+```
+
+**Cosmos DB Index Document:**
+
+```json
+{
+  "id": "adventureworks",
+  "partitionKey": "adventureworks/semanticmodel/index",
+  "type": "SemanticModel",
+  "name": "Adventure Works Database Schema",
+  "source": "SQL Server Adventure Works",
+  "description": "Complete schema model for Adventure Works database",
+  "tables": [
+    {
+      "schema": "Sales",
+      "name": "Customer",
+      "partitionKey": "adventureworks/table/Sales.Customer",
+      "documentId": "adventureworks-table-Sales-Customer"
+    }
+  ],
+  "views": [
+    {
+      "schema": "Sales",
+      "name": "vCustomer",
+      "partitionKey": "adventureworks/view/Sales.vCustomer",
+      "documentId": "adventureworks-view-Sales-vCustomer"
+    }
+  ],
+  "storedProcedures": [
+    {
+      "schema": "Sales",
+      "name": "uspGetCustomer",
+      "partitionKey": "adventureworks/storedprocedure/Sales.uspGetCustomer",
+      "documentId": "adventureworks-sp-Sales-uspGetCustomer"
+    }
+  ],
+  "createdDate": "2025-06-28T10:30:00Z",
+  "lastModified": "2025-06-28T15:45:00Z"
+}
+```
+
 ## 5. Acceptance Criteria
 
-- **AC-001**: Given a semantic model, When SaveModelAsync is called, Then model persists to hierarchical file structure with separate entity files
-- **AC-002**: Given an existing model directory, When LoadSemanticModelAsync is called, Then model loads with all entities accessible via lazy loading
-- **AC-003**: Given concurrent operations, When multiple threads access repository, Then no data corruption occurs
-- **AC-004**: Given 1000 entities, When loading entities, Then operations complete within 5 seconds
-- **AC-005**: Given path input, When performing file operations, Then directory traversal attacks are prevented
-- **AC-006**: Given modified entities, When dirty tracking enabled, Then only changed entities persist
-- **AC-007**: Given large model, When lazy loading enabled, Then initial memory usage reduces by ≥70%
-- **AC-008**: Given JSON serialization, When processing data, Then injection attacks are prevented
-- **AC-009**: Given entity names, When creating file paths, Then names are sanitized and length ≤128 characters
-- **AC-010**: Given repository operations, When using dependency injection, Then components integrate seamlessly
+- **AC-001**: Given a semantic model, When SaveModelAsync is called with Local Disk strategy, Then model persists to hierarchical file structure with separate entity files and index document
+- **AC-002**: Given a semantic model, When SaveModelAsync is called with Azure Blob Storage strategy, Then model persists as JSON blobs with hierarchical naming and index blob
+- **AC-003**: Given a semantic model, When SaveModelAsync is called with Cosmos DB strategy, Then model persists as documents with index document linking to entity documents
+- **AC-004**: Given an existing model directory/container, When LoadSemanticModelAsync is called, Then model loads with all entities accessible via lazy loading across all persistence strategies
+- **AC-005**: Given concurrent operations, When multiple threads access repository, Then no data corruption occurs across all storage strategies
+- **AC-006**: Given 1000 entities, When loading entities, Then operations complete within performance thresholds for each storage strategy
+- **AC-007**: Given path input, When performing file operations, Then directory traversal attacks are prevented
+- **AC-008**: Given modified entities, When dirty tracking enabled, Then only changed entities persist across all storage strategies
+- **AC-009**: Given large model, When lazy loading enabled, Then initial memory usage reduces by ≥70% for all storage strategies
+- **AC-010**: Given JSON serialization, When processing data, Then injection attacks are prevented across all persistence strategies
+- **AC-011**: Given entity names, When creating file/blob/document paths, Then names are sanitized and length ≤128 characters
+- **AC-012**: Given repository operations, When using dependency injection, Then components integrate seamlessly with strategy pattern selection
 
 ## 6. Test Automation Strategy
 
@@ -185,7 +358,13 @@ public interface ISemanticModelEntity
 
 **Repository Pattern Selection**: Provides clean abstraction between domain logic and data access. Enables testability through mocking, flexibility for multiple persistence strategies, and maintainability through separation of concerns.
 
-**File-Based Persistence**: Hierarchical structure with separate entity files enables human readability, version control compatibility, lazy loading support, and parallel processing capabilities.
+**Three-Strategy Persistence Design**:
+
+- **Local Disk JSON**: Development scenarios, small deployments, version control integration, human-readable format
+- **Azure Blob Storage JSON**: Cloud-native scenarios, scalable storage, cost-effective for large models, geo-replication support
+- **Cosmos DB Documents**: Global distribution, low-latency access, automatic indexing, integrated with Azure ecosystem
+
+**Hierarchical Structure with Index**: Separate entity files enable human readability, version control compatibility, lazy loading support, parallel processing capabilities, and efficient partial updates. Index document provides fast model discovery and metadata access.
 
 **JSON Serialization**: Selected for AI compatibility, human readability, language agnostic consumption, and extensive tooling ecosystem.
 
@@ -193,16 +372,48 @@ public interface ISemanticModelEntity
 
 ## 8. Examples & Edge Cases
 
-### Basic Usage
+### Basic Usage - Local Disk
 
 ```csharp
-// Create and extract semantic model
+// Create and extract semantic model to local disk
+var localStrategy = serviceProvider.GetRequiredService<ILocalDiskPersistenceStrategy>();
 var provider = serviceProvider.GetRequiredService<ISemanticModelProvider>();
 var model = await provider.ExtractSemanticModelAsync();
-await model.SaveModelAsync(new DirectoryInfo(@"C:\Models\Database"));
+await localStrategy.SaveModelAsync(model, new DirectoryInfo(@"C:\Models\Database"));
 
-// Load existing model
-var loadedModel = await provider.LoadSemanticModelAsync(new DirectoryInfo(@"C:\Models\Database"));
+// Load existing model from local disk
+var loadedModel = await localStrategy.LoadModelAsync(new DirectoryInfo(@"C:\Models\Database"));
+```
+
+### Azure Blob Storage Usage
+
+```csharp
+// Create and save to Azure Blob Storage
+var blobStrategy = serviceProvider.GetRequiredService<IAzureBlobPersistenceStrategy>();
+blobStrategy.ConnectionString = "DefaultEndpointsProtocol=https;AccountName=...";
+var model = await provider.ExtractSemanticModelAsync();
+await blobStrategy.SaveModelAsync(model, "semantic-models", "adventureworks");
+
+// Load from Azure Blob Storage
+var loadedModel = await blobStrategy.LoadModelAsync("semantic-models", "adventureworks");
+```
+
+### Cosmos DB Usage
+
+```csharp
+// Create and save to Cosmos DB
+var cosmosStrategy = serviceProvider.GetRequiredService<ICosmosPersistenceStrategy>();
+cosmosStrategy.ConnectionString = "AccountEndpoint=https://...;AccountKey=...";
+cosmosStrategy.PartitionKeyPath = "/partitionKey"; // Hierarchical partition key path
+var model = await provider.ExtractSemanticModelAsync();
+await cosmosStrategy.SaveModelAsync(model, "SemanticModels", "Models");
+
+// Load from Cosmos DB
+var loadedModel = await cosmosStrategy.LoadModelAsync("SemanticModels", "Models");
+
+// Query specific entity by partition key for optimal performance
+// Partition key format: "{model-name}/{entity-type}/{entity-name}"
+// Example: "adventureworks/table/Sales.Customer"
 ```
 
 ### Repository Pattern
@@ -255,18 +466,21 @@ public async Task<SemanticModel> SafeLoadAsync(DirectoryInfo path)
 
 **Functional**:
 
-- Persist/retrieve semantic models without data loss
-- Async operations complete within performance thresholds
-- Concurrent access without corruption
-- Lazy loading reduces memory usage ≥70%
+- Persist/retrieve semantic models without data loss across all three storage strategies
+- Async operations complete within performance thresholds for Local Disk, Azure Blob Storage, and Cosmos DB
+- Concurrent access without corruption across all persistence strategies
+- Lazy loading reduces memory usage ≥70% for all storage types
 - Change tracking identifies modifications with 100% accuracy
+- Index document maintains referential integrity to entity documents/files
 
 **Performance**:
 
 - Model extraction for 100 tables ≤30 seconds
-- Entity loading ≤500 milliseconds
-- Memory usage ≤2GB for 10,000 entities
+- Entity loading ≤500 milliseconds (Local Disk), ≤2 seconds (Azure Blob), ≤1 second (Cosmos DB)
+- Memory usage ≤2GB for 10,000 entities across all storage strategies
 - Parallel operations achieve ≥80% CPU utilization
+- Cosmos DB queries utilize hierarchical partition key for optimal performance and entity isolation
+- Azure Blob Storage operations leverage concurrent uploads/downloads
 
 **Security**:
 

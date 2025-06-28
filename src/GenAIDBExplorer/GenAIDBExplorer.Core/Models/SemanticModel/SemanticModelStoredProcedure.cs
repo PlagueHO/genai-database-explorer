@@ -43,7 +43,7 @@ public sealed class SemanticModelStoredProcedure(
             throw new FileNotFoundException("The specified stored procedure file does not exist.", filePath);
         }
 
-        var json = await File.ReadAllTextAsync(filePath);
+        var json = await File.ReadAllTextAsync(filePath, Encoding.UTF8);
         var storedProcedure = JsonSerializer.Deserialize<SemanticModelStoredProcedure>(json) ?? throw new InvalidOperationException("Failed to load stored procedure.");
 
         Schema = storedProcedure.Schema;

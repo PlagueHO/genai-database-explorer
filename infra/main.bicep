@@ -43,6 +43,12 @@ param sqlServerPassword string
 @sys.description('Whether to deploy Azure AI Search service.')
 param azureAiSearchDeploy bool = false
 
+@sys.description('Whether to deploy Cosmos DB.')
+param cosmosDbDeploy bool = false
+
+@sys.description('Whether to deploy Storage Account.')
+param storageAccountDeploy bool = false
+
 var abbrs = loadJsonContent('./abbreviations.json')
 var openAiModels = loadJsonContent('./azure-openai-models.json')
 
@@ -60,15 +66,17 @@ var resourceToken = toLower(uniqueString(subscription().id, environmentName, loc
 
 var logAnalyticsWorkspaceName = '${abbrs.operationalInsightsWorkspaces}${environmentName}'
 var applicationInsightsName = '${abbrs.insightsComponents}${environmentName}'
-var aiServicesName = '${abbrs.aiServicesAccounts}${environmentName}'
-var aiServicesCustomSubDomainName = toLower(replace(environmentName, '-', ''))
+var aiFoundryName = '${abbrs.aiFoundryAccounts}${environmentName}'
+var aiFoundryCustomSubDomainName = toLower(replace(environmentName, '-', ''))
 var aiSearchName = '${abbrs.aiSearchSearchServices}${environmentName}'
+var cosmosDbAccountName = '${abbrs.cosmosDBAccounts}${environmentName}'
+var storageAccountName = '${abbrs.storageStorageAccounts}${toLower(replace(environmentName, '-', ''))}'
 
 // Use the OpenAI models directly from JSON - they're already in the correct format for the AVM module
 var openAiModelDeployments = openAiModels
 
 // The application resources that are deployed into the application resource group
-module rg 'br/public:avm/res/resources/resource-group:0.4.0' = {
+module rg 'br/public:avm/res/resources/resource-group:0.4.1' = {
   name: 'resourceGroup'
   params: {
     name: resourceGroupName
@@ -99,15 +107,15 @@ module applicationInsights 'br/public:avm/res/insights/component:0.6.0' = {
   }
 }
 
-// --------- AI SERVICES ---------
-module aiServicesAccount 'br/public:avm/res/cognitive-services/account:0.11.0' = {
-  name: 'ai-services-account-deployment'
+// --------- AI FOUNDRY ---------
+module aiFoundryAccount 'br/public:avm/res/cognitive-services/account:0.11.0' = {
+  name: 'ai-foundry-account-deployment'
   scope: resourceGroup(resourceGroupName)
   params: {
     kind: 'AIServices'
-    name: aiServicesName
+    name: aiFoundryName
     location: location
-    customSubDomainName: aiServicesCustomSubDomainName
+    customSubDomainName: aiFoundryCustomSubDomainName
     diagnosticSettings: [
       {
         workspaceResourceId: logAnalyticsWorkspace.outputs.resourceId
@@ -119,12 +127,23 @@ module aiServicesAccount 'br/public:avm/res/cognitive-services/account:0.11.0' =
     sku: 'S0'
     deployments: openAiModelDeployments
     tags: tags
-    // TODO: Assign RBAC
+    roleAssignments: [
+      {
+        roleDefinitionIdOrName: 'Cognitive Services OpenAI Contributor'
+        principalType: principalIdType
+        principalId: principalId
+      }
+      {
+        roleDefinitionIdOrName: 'Cognitive Services OpenAI Service User'
+        principalType: principalIdType
+        principalId: principalId
+      }
+    ]
   }
 }
 
 // --------- SQL DATABASE ---------
-module sqlServer 'br/public:avm/res/sql/server:0.17.0' = {
+module sqlServer 'br/public:avm/res/sql/server:0.19.1' = {
   name: 'sql-server-deployment'
   scope: resourceGroup(resourceGroupName)
   params: {
@@ -157,7 +176,124 @@ module sqlServer 'br/public:avm/res/sql/server:0.17.0' = {
     }
     publicNetworkAccess: 'Enabled'
     tags: tags
-    // TODO: Assign RBAC
+    roleAssignments: [
+      {
+        roleDefinitionIdOrName: 'SQL DB Contributor'
+        principalType: principalIdType
+        principalId: principalId
+      }
+      {
+        roleDefinitionIdOrName: 'SQL Security Manager'
+        principalType: principalIdType
+        principalId: principalId
+      }
+    ]
+  }
+}
+
+// --------- COSMOS DB ---------
+module cosmosDbAccount 'br/public:avm/res/document-db/database-account:0.15.0' = if (cosmosDbDeploy) {
+  name: 'cosmos-db-account-deployment'
+  scope: resourceGroup(resourceGroupName)
+  params: {
+    name: cosmosDbAccountName
+    location: location
+    enableFreeTier: true
+    sqlDatabases: [
+      {
+        name: 'genaidbexp'
+        throughput: 400
+        containers: [
+          {
+            name: 'default-container'
+            paths: ['/id']
+            throughput: 400
+          }
+        ]
+      }
+    ]
+    diagnosticSettings: [
+      {
+        name: 'cosmos-db-diagnostics'
+        workspaceResourceId: logAnalyticsWorkspace.outputs.resourceId
+        logCategoriesAndGroups: [
+          {
+            categoryGroup: 'allLogs'
+            enabled: true
+          }
+        ]
+        metricCategories: [
+          {
+            category: 'AllMetrics'
+            enabled: true
+          }
+        ]
+      }
+    ]
+    managedIdentities: {
+      systemAssigned: true
+    }
+    tags: tags
+    roleAssignments: [
+      {
+        roleDefinitionIdOrName: 'Cosmos DB Account Reader Role'
+        principalType: principalIdType
+        principalId: principalId
+      }
+      {
+        roleDefinitionIdOrName: 'Cosmos DB Data Contributor'
+        principalType: principalIdType
+        principalId: principalId
+      }
+    ]
+  }
+}
+
+// --------- STORAGE ACCOUNT ---------
+module storageAccount 'br/public:avm/res/storage/storage-account:0.23.0' = if (storageAccountDeploy) {
+  name: 'storage-account-deployment'
+  scope: resourceGroup(resourceGroupName)
+  params: {
+    name: storageAccountName
+    location: location
+    kind: 'StorageV2'
+    skuName: 'Standard_LRS'
+    allowBlobPublicAccess: false
+    blobServices: {
+      containers: [
+        {
+          name: 'genaidbexp'
+          publicAccess: 'None'
+        }
+      ]
+    }
+    diagnosticSettings: [
+      {
+        name: 'default-diagnostic-setting'
+        workspaceResourceId: logAnalyticsWorkspace.outputs.resourceId
+        logCategoriesAndGroups: [
+          {
+            categoryGroup: 'allLogs'
+          }
+        ]
+        metricCategories: [
+          {
+            category: 'AllMetrics'
+          }
+        ]
+      }
+    ]
+    managedIdentities: {
+      systemAssigned: true
+    }
+    tags: tags
+    roleAssignments: [
+      {
+        roleDefinitionIdOrName: 'Storage Blob Data Contributor'
+        principalType: principalIdType
+        principalId: principalId
+      }
+    ]
   }
 }
 
@@ -171,7 +307,18 @@ module aiSearchService 'br/public:avm/res/search/search-service:0.10.0' = if (az
     sku: 'basic'
     diagnosticSettings: [
       {
+        name: 'default-diagnostic-setting'
         workspaceResourceId: logAnalyticsWorkspace.outputs.resourceId
+        logCategoriesAndGroups: [
+          {
+            categoryGroup: 'allLogs'
+          }
+        ]
+        metricCategories: [
+          {
+            category: 'AllMetrics'
+          }
+        ]
       }
     ]
     disableLocalAuth: false
@@ -181,7 +328,18 @@ module aiSearchService 'br/public:avm/res/search/search-service:0.10.0' = if (az
     publicNetworkAccess: 'Enabled'
     semanticSearch: 'standard'
     tags: tags
-    // TODO: Assign RBAC
+    roleAssignments: [
+      {
+        roleDefinitionIdOrName: 'Search Service Contributor'
+        principalType: principalIdType
+        principalId: principalId
+      }
+      {
+        roleDefinitionIdOrName: 'Search Index Data Contributor'
+        principalType: principalIdType
+        principalId: principalId
+      }
+    ]
   }
 }
 
@@ -201,10 +359,20 @@ output APPLICATION_INSIGHTS_INSTRUMENTATION_KEY string = applicationInsights.out
 // Output the AI Services resources
 output AZURE_AI_SEARCH_NAME string = azureAiSearchDeploy ? aiSearchService.outputs.name : ''
 output AZURE_AI_SEARCH_ID   string = azureAiSearchDeploy ? aiSearchService.outputs.resourceId : ''
-output AZURE_AI_SERVICES_NAME string = aiServicesAccount.outputs.name
-output AZURE_AI_SERVICES_ID string = aiServicesAccount.outputs.resourceId
-output AZURE_AI_SERVICES_ENDPOINT string = aiServicesAccount.outputs.endpoint
-output AZURE_AI_SERVICES_RESOURCE_ID string = aiServicesAccount.outputs.resourceId
+output AZURE_AI_SERVICES_NAME string = aiFoundryAccount.outputs.name
+output AZURE_AI_SERVICES_ID string = aiFoundryAccount.outputs.resourceId
+output AZURE_AI_SERVICES_ENDPOINT string = aiFoundryAccount.outputs.endpoint
+output AZURE_AI_SERVICES_RESOURCE_ID string = aiFoundryAccount.outputs.resourceId
 
 output SQL_SERVER_NAME string = sqlServer.outputs.name
 output SQL_SERVER_RESOURCE_ID string = sqlServer.outputs.resourceId
+
+// Output the Cosmos DB resources
+output COSMOS_DB_ACCOUNT_NAME string = cosmosDbDeploy ? cosmosDbAccount.outputs.name : ''
+output COSMOS_DB_ACCOUNT_RESOURCE_ID string = cosmosDbDeploy ? cosmosDbAccount.outputs.resourceId : ''
+output COSMOS_DB_ACCOUNT_ENDPOINT string = cosmosDbDeploy ? cosmosDbAccount.outputs.endpoint : ''
+
+// Output the Storage Account resources
+output STORAGE_ACCOUNT_NAME string = storageAccountDeploy ? storageAccount.outputs.name : ''
+output STORAGE_ACCOUNT_RESOURCE_ID string = storageAccountDeploy ? storageAccount.outputs.resourceId : ''
+output STORAGE_ACCOUNT_BLOB_ENDPOINT string = storageAccountDeploy ? storageAccount.outputs.primaryBlobEndpoint : ''

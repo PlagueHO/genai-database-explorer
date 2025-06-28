@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using GenAIDBExplorer.Core.Models.Database;
 using GenAIDBExplorer.Core.Models.SemanticModel.JsonConverters;
@@ -75,7 +76,7 @@ public sealed class SemanticModel(
         jsonSerializerOptions.Converters.Add(new SemanticModelStoredProcedureJsonConverter());
 
         var semanticModelJsonPath = Path.Combine(modelPath.FullName, "semanticmodel.json");
-        await File.WriteAllTextAsync(semanticModelJsonPath, JsonSerializer.Serialize(this, jsonSerializerOptions));
+        await File.WriteAllTextAsync(semanticModelJsonPath, JsonSerializer.Serialize(this, jsonSerializerOptions), Encoding.UTF8);
     }
 
     /// <summary>
