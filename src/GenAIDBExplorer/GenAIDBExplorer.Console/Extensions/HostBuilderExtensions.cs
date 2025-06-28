@@ -8,6 +8,7 @@ using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.SemanticKernel;
 using GenAIDBExplorer.Core.SemanticModelProviders;
 using GenAIDBExplorer.Core.SemanticProviders;
+using GenAIDBExplorer.Core.Repository;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -95,6 +96,15 @@ public static class HostBuilderExtensions
                     var project = provider.GetRequiredService<IProject>();
                     return new KernelMemoryFactory().CreateKernelMemory(project)(provider);
                 });
+
+                // Register persistence strategies
+                services.AddSingleton<ILocalDiskPersistenceStrategy, LocalDiskPersistenceStrategy>();
+                services.AddSingleton<IAzureBlobPersistenceStrategy, AzureBlobPersistenceStrategy>();
+                services.AddSingleton<ICosmosPersistenceStrategy, CosmosPersistenceStrategy>();
+
+                // Register persistence strategy factory and repository
+                services.AddSingleton<IPersistenceStrategyFactory, PersistenceStrategyFactory>();
+                services.AddSingleton<ISemanticModelRepository, SemanticModelRepository>();
             })
             .UseConsoleLifetime();
     }
