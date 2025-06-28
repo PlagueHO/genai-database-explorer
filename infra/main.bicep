@@ -89,16 +89,23 @@ module rg 'br/public:avm/res/resources/resource-group:0.4.1' = {
 module logAnalyticsWorkspace 'br/public:avm/res/operational-insights/workspace:0.11.2' = {
   name: 'logAnalyticsWorkspace'
   scope: resourceGroup(resourceGroupName)
+  dependsOn: [
+    rg
+  ]
   params: {
     name: logAnalyticsWorkspaceName
     location: location
     tags: tags
   }
+
 }
 
 module applicationInsights 'br/public:avm/res/insights/component:0.6.0' = {
   name: 'applicationInsights'
   scope: resourceGroup(resourceGroupName)
+  dependsOn: [
+    rg
+  ]
   params: {
     name: applicationInsightsName
     location: location
@@ -111,6 +118,9 @@ module applicationInsights 'br/public:avm/res/insights/component:0.6.0' = {
 module aiFoundryAccount 'br/public:avm/res/cognitive-services/account:0.11.0' = {
   name: 'ai-foundry-account-deployment'
   scope: resourceGroup(resourceGroupName)
+  dependsOn: [
+    rg
+  ]
   params: {
     kind: 'AIServices'
     name: aiFoundryName
@@ -146,6 +156,9 @@ module aiFoundryAccount 'br/public:avm/res/cognitive-services/account:0.11.0' = 
 module sqlServer 'br/public:avm/res/sql/server:0.19.1' = {
   name: 'sql-server-deployment'
   scope: resourceGroup(resourceGroupName)
+  dependsOn: [
+    rg
+  ]
   params: {
     name: '${abbrs.sqlServers}${environmentName}'
     location: location
@@ -195,6 +208,9 @@ module sqlServer 'br/public:avm/res/sql/server:0.19.1' = {
 module cosmosDbAccount 'br/public:avm/res/document-db/database-account:0.15.0' = if (cosmosDbDeploy) {
   name: 'cosmos-db-account-deployment'
   scope: resourceGroup(resourceGroupName)
+  dependsOn: [
+    rg
+  ]
   params: {
     name: cosmosDbAccountName
     location: location
@@ -253,6 +269,9 @@ module cosmosDbAccount 'br/public:avm/res/document-db/database-account:0.15.0' =
 module storageAccount 'br/public:avm/res/storage/storage-account:0.23.0' = if (storageAccountDeploy) {
   name: 'storage-account-deployment'
   scope: resourceGroup(resourceGroupName)
+  dependsOn: [
+    rg
+  ]
   params: {
     name: storageAccountName
     location: location
@@ -301,6 +320,9 @@ module storageAccount 'br/public:avm/res/storage/storage-account:0.23.0' = if (s
 module aiSearchService 'br/public:avm/res/search/search-service:0.10.0' = if (azureAiSearchDeploy) {
   name: 'ai-search-service-deployment'
   scope: resourceGroup(resourceGroupName)
+  dependsOn: [
+    rg
+  ]
   params: {
     name: aiSearchName
     location: location
