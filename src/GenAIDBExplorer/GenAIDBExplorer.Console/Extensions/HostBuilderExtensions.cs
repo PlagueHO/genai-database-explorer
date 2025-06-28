@@ -9,6 +9,7 @@ using GenAIDBExplorer.Core.SemanticKernel;
 using GenAIDBExplorer.Core.SemanticModelProviders;
 using GenAIDBExplorer.Core.SemanticProviders;
 using GenAIDBExplorer.Core.Repository;
+using GenAIDBExplorer.Core.Repository.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -51,6 +52,12 @@ public static class HostBuilderExtensions
             })
             .ConfigureServices((context, services) =>
             {
+                // Configure Azure persistence strategy options
+                services.Configure<AzureBlobStorageConfiguration>(
+                    context.Configuration.GetSection("AzureBlobStorage"));
+                services.Configure<CosmosDbConfiguration>(
+                    context.Configuration.GetSection("CosmosDb"));
+
                 // Register command handlers
                 services.AddSingleton<InitProjectCommandHandler>();
                 services.AddSingleton<DataDictionaryCommandHandler>();

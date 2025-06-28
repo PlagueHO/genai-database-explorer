@@ -35,6 +35,12 @@
     <PackageReference Include="Microsoft.SemanticKernel.Yaml" Version="1.57.0" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.2" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
+    <!-- Azure SDK packages for cloud persistence strategies -->
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.24.1" />
+    <PackageReference Include="Azure.Identity" Version="1.14.1" />
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.52.0" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.6" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
   <ItemGroup>
