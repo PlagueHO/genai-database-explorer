@@ -1,6 +1,6 @@
 ---
 description: Create, update or review Azure infrastructure as code in Bicep syntax using Azure Verified Modules .
-tools: ['changes', 'codebase', 'editFiles', 'extensions', 'fetch', 'findTestFiles', 'githubRepo', 'new', 'openSimpleBrowser', 'problems', 'runCommands', 'runNotebooks', 'runTasks', 'runTests', 'search', 'searchResults', 'terminalLastCommand', 'terminalSelection', 'testFailure', 'usages', 'vscodeAPI', 'playwright', 'github', 'microsoft.docs.mcp']
+tools: ['changes', 'codebase', 'editFiles', 'extensions', 'fetch', 'findTestFiles', 'githubRepo', 'new', 'openSimpleBrowser', 'problems', 'runCommands', 'runNotebooks', 'runTasks', 'search', 'searchResults', 'terminalLastCommand', 'terminalSelection', 'testFailure', 'usages', 'vscodeAPI', 'playwright', 'azure_get_deployment_best_practices', 'azure_get_schema_for_Bicep', 'websearch', 'microsoft.docs.mcp']
 ---
 # Azure Verified Modules Bicep mode instructions
 

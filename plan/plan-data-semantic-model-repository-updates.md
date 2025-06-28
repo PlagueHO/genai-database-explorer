@@ -90,17 +90,36 @@ This plan implements the missing requirements from the Data Semantic Model Repos
 
 ### Phase 2: Local Disk Strategy Enhancement (Priority 4-5)
 
-1. **Enhance existing local disk implementation**
-   - Create `LocalDiskPersistenceStrategy` that wraps existing `SemanticModel.SaveModelAsync()/LoadModelAsync()` methods
-   - **MAINTAIN BACKWARD COMPATIBILITY**: Keep existing methods functional while adding strategy layer
-   - Add index document generation for hierarchical structure (optional enhancement, doesn't break existing format)
-   - Implement proper error handling and validation
+Task 2.1: Enhance existing local disk persistence
+  a. Define class `LocalDiskPersistenceStrategy : ILocalDiskPersistenceStrategy`:
+     - Wrap calls to `SemanticModel.SaveModelAsync(DirectoryInfo)` and `SemanticModel.LoadModelAsync(DirectoryInfo)`.
+     - Preserve existing public API signatures so that legacy callers are unaffected.
+  b. Index file generation:
+     - Produce `index.json` in model root listing entity categories (tables, views, storedprocedures) and relative file paths.
+     - Use `System.Text.Json` with `WriteIndented = true` for readability.
+  c. Validation and safety:
+     - Apply `PathValidator` to sanitize `modelPath.FullName` and prevent directory traversal.
+     - Enforce entity name length ≤128 via `EntityNameSanitizer`.
+     - Log errors through `ILogger<LocalDiskPersistenceStrategy>` with structured context.
+  d. Error handling and rollback:
+     - Catch `IOException`, `UnauthorizedAccessException`, wrap with descriptive messages.
+     - Write to a temp directory and use atomic rename/move to avoid partial writes.
 
-2. **Add CRUD operations for local disk**
-   - Implement `DeleteModelAsync`, `ExistsAsync`, `ListModelsAsync`
-   - Add atomic operations with file locking
-   - Implement rollback mechanisms for failed operations
-   - **ENSURE**: All existing local disk operations continue to work through both old and new APIs
+Task 2.2: Add CRUD operations on disk
+  a. Extend `ILocalDiskPersistenceStrategy` interface:
+     - `Task<bool> ExistsAsync(DirectoryInfo modelPath)`
+     - `Task<IEnumerable<string>> ListModelsAsync(DirectoryInfo rootPath)`
+     - `Task DeleteModelAsync(DirectoryInfo modelPath)`
+  b. Implement methods in `LocalDiskPersistenceStrategy`:
+     - `ExistsAsync`: call `Directory.Exists`, validate path security.
+     - `ListModelsAsync`: enumerate subfolders under `rootPath`, return model folder names.
+     - `DeleteModelAsync`: acquire exclusive lock via `FileStream(FileShare.None)`, delete directory recursively, rollback on errors.
+  c. Concurrency and atomicity:
+     - Use `FileStream` locks and temp-to-final directory swaps for atomic operations.
+     - Ensure file handles are released before moving or deleting.
+  d. Testing requirements:
+     - Unit tests against `Path.GetTempPath()`-based test directory, covering success and failure scenarios.
+     - Regression tests to verify `SaveModelAsync`/`LoadModelAsync` still work on existing model artifacts.
 
 ### Phase 3: Cloud Persistence Strategies (Priority 6-7)
 
