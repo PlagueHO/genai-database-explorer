@@ -8,6 +8,13 @@ using System.Resources;
 
 namespace GenAIDBExplorer.Core.SemanticModelProviders;
 
+/// <summary>
+/// Responsible for interacting with the source database to read its schema
+/// and construct a semantic model. This class builds the in-memory representation
+/// of tables, views, columns, and stored procedures. It does not handle the
+/// persistence (saving or loading) of the semantic model to any storage medium;
+/// that is the responsibility of the <see cref="Repository.ISemanticModelRepository"/>.
+/// </summary>
 public sealed class SchemaRepository(
     ISqlQueryExecutor sqlQueryExecutor,
     IProject project,
@@ -465,7 +472,7 @@ public sealed class SchemaRepository(
     /// <param name="numberOfRecords">The number of records to retrieve.</param>
     /// <param name="selectRandom">Whether to select a random sample of records.</param>
     /// <returns></returns>
-    public async Task<List<Dictionary<string, object>>> GetSampleTableDataAsync(
+    public async Task<List<Dictionary<string, object?>>> GetSampleTableDataAsync(
         TableInfo tableInfo,
         int numberOfRecords = 5,
         bool selectRandom = false
@@ -483,11 +490,11 @@ public sealed class SchemaRepository(
 
             using var reader = await _sqlQueryExecutor.ExecuteReaderAsync(query, parameters).ConfigureAwait(false);
 
-            var rows = new List<Dictionary<string, object>>();
+            var rows = new List<Dictionary<string, object?>>();
 
             while (await reader.ReadAsync().ConfigureAwait(false))
             {
-                var row = new Dictionary<string, object>();
+                var row = new Dictionary<string, object?>();
 
                 for (var i = 0; i < reader.FieldCount; i++)
                 {
@@ -512,7 +519,7 @@ public sealed class SchemaRepository(
     /// <param name="viewInfo">The view info for the view to retrieve sample data for.</param>
     /// <param name="numberOfRecords">The number of records to retrieve.</param>
     /// <param name="selectRandom">Whether to select a random sample of records.</param>
-    public async Task<List<Dictionary<string, object>>> GetSampleViewDataAsync(
+    public async Task<List<Dictionary<string, object?>>> GetSampleViewDataAsync(
         ViewInfo viewInfo,
         int numberOfRecords = 5,
         bool selectRandom = false
@@ -529,11 +536,11 @@ public sealed class SchemaRepository(
 
             using var reader = await _sqlQueryExecutor.ExecuteReaderAsync(query, parameters).ConfigureAwait(false);
 
-            var rows = new List<Dictionary<string, object>>();
+            var rows = new List<Dictionary<string, object?>>();
 
             while (await reader.ReadAsync().ConfigureAwait(false))
             {
-                var row = new Dictionary<string, object>();
+                var row = new Dictionary<string, object?>();
 
                 for (var i = 0; i < reader.FieldCount; i++)
                 {

@@ -36,6 +36,21 @@
                 "${workspaceFolder}/src/game-master-copilot/game-master-copilot-server/game-master-copilot-server.csproj"
             ],
             "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "test",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "test",
+                "${workspaceFolder}/src/GenAIDBExplorer/GenAIDBExplorer.sln",
+                "--no-build"
+            ],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "problemMatcher": "$msCompile"
         }
     ]
 }
