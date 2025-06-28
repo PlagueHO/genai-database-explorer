@@ -19,5 +19,20 @@ namespace GenAIDBExplorer.Core.Repository
         {
             throw new NotImplementedException("AzureBlobPersistenceStrategy.LoadModelAsync is not implemented.");
         }
+
+        public Task<bool> ExistsAsync(DirectoryInfo modelPath)
+        {
+            throw new NotImplementedException("AzureBlobPersistenceStrategy.ExistsAsync is not implemented.");
+        }
+
+        public Task<IEnumerable<string>> ListModelsAsync(DirectoryInfo rootPath)
+        {
+            throw new NotImplementedException("AzureBlobPersistenceStrategy.ListModelsAsync is not implemented.");
+        }
+
+        public Task DeleteModelAsync(DirectoryInfo modelPath)
+        {
+            throw new NotImplementedException("AzureBlobPersistenceStrategy.DeleteModelAsync is not implemented.");
+        }
     }
 }
