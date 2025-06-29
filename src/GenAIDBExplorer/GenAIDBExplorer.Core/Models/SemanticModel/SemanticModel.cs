@@ -3,6 +3,9 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using GenAIDBExplorer.Core.Models.Database;
 using GenAIDBExplorer.Core.Models.SemanticModel.JsonConverters;
+using GenAIDBExplorer.Core.Models.SemanticModel.Lazy;
+using GenAIDBExplorer.Core.Repository;
+using Microsoft.Extensions.Logging;
 
 namespace GenAIDBExplorer.Core.Models.SemanticModel;
 
@@ -13,8 +16,11 @@ public sealed class SemanticModel(
     string name,
     string source,
     string? description = null
-    ) : ISemanticModel
+    ) : ISemanticModel, IDisposable
 {
+    private ILazyLoadingProxy<SemanticModelTable>? _tablesLazyProxy;
+    private bool _disposed;
+
     /// <summary>
     /// Gets the name of the semantic model.
     /// </summary>
@@ -30,6 +36,12 @@ public sealed class SemanticModel(
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? Description { get; set; } = description;
+
+    /// <summary>
+    /// Gets a value indicating whether lazy loading is enabled for this semantic model.
+    /// </summary>
+    [JsonIgnore]
+    public bool IsLazyLoadingEnabled => _tablesLazyProxy != null;
 
     /// <summary>
     /// Saves the semantic model to the specified folder.
@@ -188,6 +200,62 @@ public sealed class SemanticModel(
     }
 
     /// <summary>
+    /// Enables lazy loading for entity collections using the specified strategy.
+    /// </summary>
+    /// <param name="modelPath">The path where the model is located.</param>
+    /// <param name="persistenceStrategy">The persistence strategy to use for loading entities.</param>
+    public void EnableLazyLoading(DirectoryInfo modelPath, ISemanticModelPersistenceStrategy persistenceStrategy)
+    {
+        if (_disposed)
+        {
+            throw new ObjectDisposedException(nameof(SemanticModel));
+        }
+
+        // Create lazy loading proxy for Tables collection (Phase 4a - most commonly accessed)
+        _tablesLazyProxy = new LazyLoadingProxy<SemanticModelTable>(
+            async () =>
+            {
+                // Load only the table metadata, then lazy load individual table details
+                var tablesFolderPath = new DirectoryInfo(Path.Combine(modelPath.FullName, "tables"));
+                if (!Directory.Exists(tablesFolderPath.FullName))
+                {
+                    return Enumerable.Empty<SemanticModelTable>();
+                }
+
+                var tables = new List<SemanticModelTable>();
+                foreach (var table in Tables)
+                {
+                    await table.LoadModelAsync(tablesFolderPath);
+                    tables.Add(table);
+                }
+                return tables;
+            });
+
+        // Clear the eagerly loaded tables since we're using lazy loading
+        Tables.Clear();
+    }
+
+    /// <summary>
+    /// Gets the tables collection with lazy loading support.
+    /// </summary>
+    /// <returns>A task that resolves to the tables collection.</returns>
+    public async Task<IEnumerable<SemanticModelTable>> GetTablesAsync()
+    {
+        if (_disposed)
+        {
+            throw new ObjectDisposedException(nameof(SemanticModel));
+        }
+
+        if (_tablesLazyProxy != null)
+        {
+            return await _tablesLazyProxy.GetEntitiesAsync();
+        }
+
+        // Fall back to eager loaded tables if lazy loading is not enabled
+        return Tables;
+    }
+
+    /// <summary>
     /// Gets the views in the semantic model.
     /// </summary>
     public List<SemanticModelView> Views { get; set; } = [];
@@ -278,6 +346,21 @@ public sealed class SemanticModel(
         {
             storedProcedure.Accept(visitor);
         }
+    }
+
+    /// <summary>
+    /// Disposes the semantic model and releases any resources used by lazy loading proxies.
+    /// </summary>
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _tablesLazyProxy?.Dispose();
+        _tablesLazyProxy = null;
+        _disposed = true;
     }
 
 }

@@ -1,4 +1,5 @@
 ﻿using GenAIDBExplorer.Core.Models.Database;
+using GenAIDBExplorer.Core.Repository;
 
 namespace GenAIDBExplorer.Core.Models.SemanticModel;
 
@@ -25,6 +26,25 @@ public interface ISemanticModel
     void AddStoredProcedure(SemanticModelStoredProcedure storedProcedure);
     bool RemoveStoredProcedure(SemanticModelStoredProcedure storedProcedure);
     SemanticModelStoredProcedure? FindStoredProcedure(string schemaName, string storedProcedureName);
+    
+    /// <summary>
+    /// Gets a value indicating whether lazy loading is enabled for this semantic model.
+    /// </summary>
+    bool IsLazyLoadingEnabled { get; }
+    
+    /// <summary>
+    /// Enables lazy loading for entity collections using the specified strategy.
+    /// </summary>
+    /// <param name="modelPath">The path where the model is located.</param>
+    /// <param name="persistenceStrategy">The persistence strategy to use for loading entities.</param>
+    void EnableLazyLoading(DirectoryInfo modelPath, ISemanticModelPersistenceStrategy persistenceStrategy);
+    
+    /// <summary>
+    /// Gets the tables collection with lazy loading support.
+    /// </summary>
+    /// <returns>A task that resolves to the tables collection.</returns>
+    Task<IEnumerable<SemanticModelTable>> GetTablesAsync();
+    
     /// <summary>
     /// Accepts a visitor to traverse the semantic model.
     /// </summary>

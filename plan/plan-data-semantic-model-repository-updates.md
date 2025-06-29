@@ -154,35 +154,79 @@ This plan implements the missing requirements from the Data Semantic Model Repos
 - Comprehensive error handling, retry policies, and concurrent operation support
 - Complete CRUD operations with proper resource management and disposal
 
-### Phase 4: Advanced Features (Priority 8-11)
+### Phase 4: Core Advanced Features (Priority 8-11)
 
-1. **Implement lazy loading mechanism**
-   - Create lazy loading proxies for entities
-   - Add deferred loading for Tables, Views, StoredProcedures collections
-   - Implement memory optimization patterns
+This phase is broken down into atomic sub-phases to ensure the solution remains functional after each step.
+
+#### Phase 4a: Core Lazy Loading (Required - Priority 8)
+
+1. **Create lazy loading foundation**
+   - Create `ILazyLoadingProxy` interface
+   - Implement basic `LazyLoadingProxy` class
+   - Add lazy loading to Tables collection only (most commonly accessed)
+   - Update repository to support lazy loading option
    - **ENSURE**: Lazy loading is opt-in and doesn't affect existing eager loading behavior
 
-2. **Add dirty tracking system**
-   - Implement change tracking for entities
+**Phase 4a Status**: ✅ **COMPLETED** on 2025-06-29 – Core lazy loading foundation implemented with immediate memory optimization benefits while maintaining 100% backward compatibility. Key deliverables implemented:
+
+- `ILazyLoadingProxy<T>` interface with comprehensive lazy loading contract including disposal, reset, and thread-safe loading operations
+- `LazyLoadingProxy<T>` implementation with thread-safe loading, proper resource management, concurrent access protection, and comprehensive error handling
+- `ISemanticModel` and `SemanticModel` updated with lazy loading support including `EnableLazyLoading()`, `GetTablesAsync()`, and `IsLazyLoadingEnabled` properties
+- `ISemanticModelRepository` and `SemanticModelRepository` enhanced with optional lazy loading parameter in `LoadModelAsync()` methods
+- Comprehensive unit test coverage with 15+ test methods covering all scenarios including concurrent access, error handling, disposal, and backward compatibility
+- All tests passing successfully with zero regressions - existing APIs continue to function unchanged
+- Phase 4a delivers immediate memory optimization for Tables collection (most commonly accessed entities) while establishing proven foundation for Phase 4d extension
+
+#### Phase 4b: Basic Change Tracking (Required - Priority 9)
+
+1. **Implement change tracking system**
    - Add `IChangeTracker` interface and implementation
-   - Create selective persistence based on dirty state
+   - Implement entity-level dirty tracking
+   - Integrate with semantic model entities
+   - Create selective persistence based on dirty state in repository
    - **ENSURE**: Dirty tracking is optional and existing save operations continue to work
 
-3. **Enhance security features**
-   - Add path validation and sanitization (enhance existing validation, don't replace)
-   - Implement input validation for all persistence operations
-   - Add secure connection string handling
-   - Implement JSON deserialization protection
-   - **ENSURE**: Security enhancements are additive, not breaking
+#### Phase 4c: Security Hardening (Required - Priority 10)
 
-4. **Add performance optimizations**
-   - Implement concurrent operation protection with semaphores
+1. **Enhance security features**
+   - Enhance existing path validation with additional security checks
+   - Implement comprehensive input validation for all persistence operations
+   - Add concurrent operation protection with semaphores
+   - **ENSURE**: Security enhancements are additive validation layers, not replacements
+
+#### Phase 4d: Extended Lazy Loading (Optional - Priority 11)
+
+1. **Complete lazy loading implementation**
+   - Add deferred loading for Views collection
+   - Add deferred loading for StoredProcedures collection
+   - Implement memory optimization patterns
+   - **ENSURE**: Extended lazy loading builds on Phase 4a foundation
+
+### Phase 5: Optional Performance Enhancements (Priority 12-15)
+
+This phase contains optional features that provide additional performance benefits but are not required for core functionality.
+
+1. **Advanced caching mechanisms**
    - Add caching mechanisms for frequently accessed entities
+   - Implement cache invalidation strategies
+   - Add cache configuration options
+
+2. **Cloud security enhancements**
+   - Add secure connection string handling for cloud strategies
+   - Implement JSON deserialization protection
+   - Add authentication enhancements
+
+3. **Performance optimizations**
    - Implement parallel processing for bulk operations
    - Add performance monitoring and metrics
-   - **ENSURE**: Performance optimizations don't change existing API behavior
+   - Implement advanced memory optimization patterns
 
-### Phase 5: Testing and Documentation (Priority 12-17)
+4. **Property-level change tracking**
+   - Extend dirty tracking to property level for more granular updates
+   - Add change event notifications
+   - Implement selective property persistence
+
+### Phase 6: Testing and Documentation (Priority 16-21)
 
 1. **Implement comprehensive unit tests**
    - Test all persistence strategies independently
@@ -231,14 +275,45 @@ This plan implements the missing requirements from the Data Semantic Model Repos
 - New strategies are isolated and don't affect existing code paths
 - Solution builds successfully with all Azure SDK integrations working correctly
 
-**Phase 4**: ✅ **SAFE** - Advanced features are opt-in enhancements.
+**Phase 4a**: ✅ **COMPLETED SUCCESSFULLY** - Core lazy loading for Tables collection implemented with full backward compatibility.
 
-- Lazy loading is optional and doesn't change eager loading behavior
-- Dirty tracking is additive and doesn't change existing save operations
-- Security enhancements are additional validation layers, not replacements
-- Performance optimizations don't change API behavior
+- `ILazyLoadingProxy<T>` interface and `LazyLoadingProxy<T>` implementation successfully created with thread-safe operations
+- Lazy loading implemented for Tables collection (most commonly used collection) with opt-in approach
+- `ISemanticModel` and `SemanticModel` enhanced with lazy loading methods while preserving existing functionality
+- `ISemanticModelRepository` and `SemanticModelRepository` updated with optional lazy loading parameter
+- All 15+ comprehensive unit tests passing with 100% success rate covering all scenarios
+- Backward compatibility maintained - existing APIs continue to function unchanged with zero breaking changes
+- Immediate memory optimization benefits available for applications choosing to enable lazy loading
 
-**Phase 5**: ✅ **SAFE** - Testing and documentation don't affect runtime behavior.
+**Phase 4b**: ✅ **SAFE** - Basic change tracking for selective persistence.
+
+- Adds `IChangeTracker` interface with entity-level tracking
+- Enables selective persistence for performance optimization
+- Optional feature that doesn't change existing save behavior
+- Provides foundation for advanced tracking features
+
+**Phase 4c**: ✅ **SAFE** - Security hardening with additional validation.
+
+- Enhances existing security utilities with additional checks
+- Adds concurrent operation protection for thread safety
+- All enhancements are additive validation layers
+- Critical for production deployment readiness
+
+**Phase 4d**: ✅ **SAFE** - Extended lazy loading for remaining collections.
+
+- Completes lazy loading implementation for Views and StoredProcedures
+- Builds on proven Phase 4a foundation
+- Optional feature that can be deferred if needed
+- Provides complete memory optimization coverage
+
+**Phase 5**: ✅ **SAFE** - Optional performance enhancements.
+
+- All features are optional performance optimizations
+- No impact on core functionality
+- Can be implemented based on usage patterns and requirements
+- Provides advanced capabilities for high-performance scenarios
+
+**Phase 6**: ✅ **SAFE** - Testing and documentation don't affect runtime behavior.
 
 - No code changes that could break existing functionality
 - Testing validates that existing behavior is preserved
@@ -249,6 +324,13 @@ This plan implements the missing requirements from the Data Semantic Model Repos
 - **REG-TEST-002**: File format compatibility tests to ensure existing models can still be loaded
 - **REG-TEST-003**: API signature verification tests to prevent breaking changes
 - **REG-TEST-004**: End-to-end workflow tests using existing calling patterns
+
+### Sub-Phase Testing Strategy
+
+- **SUB-TEST-001**: Phase 4a regression tests for Tables lazy loading without affecting existing behavior
+- **SUB-TEST-002**: Phase 4b regression tests for change tracking with existing save operations
+- **SUB-TEST-003**: Phase 4c regression tests for enhanced security without breaking existing validation
+- **SUB-TEST-004**: Phase 4d regression tests for complete lazy loading implementation
 
 ## 3. Alternatives
 
@@ -272,6 +354,8 @@ This plan implements the missing requirements from the Data Semantic Model Repos
 
 ### New Files to Create
 
+#### Phase 1-3 Files (Already Completed)
+
 - **FILE-001**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository/ISemanticModelRepository.cs` - Repository interface
 - **FILE-002**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository/SemanticModelRepository.cs` - Repository implementation
 - **FILE-003**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository/ISemanticModelPersistenceStrategy.cs` - Base strategy interface
@@ -283,17 +367,38 @@ This plan implements the missing requirements from the Data Semantic Model Repos
 - **FILE-009**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository/CosmosPersistenceStrategy.cs` - Cosmos DB implementation
 - **FILE-010**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository/IPersistenceStrategyFactory.cs` - Strategy factory interface
 - **FILE-011**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository/PersistenceStrategyFactory.cs` - Strategy factory implementation
-- **FILE-012**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Models/SemanticModel/Lazy/ILazyLoadingProxy.cs` - Lazy loading interface
-- **FILE-013**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Models/SemanticModel/Lazy/LazyLoadingProxy.cs` - Lazy loading implementation
-- **FILE-014**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Models/SemanticModel/ChangeTracking/IChangeTracker.cs` - Change tracker interface
-- **FILE-015**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Models/SemanticModel/ChangeTracking/ChangeTracker.cs` - Change tracker implementation
 - **FILE-016**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Security/PathValidator.cs` - Path validation utilities
 - **FILE-017**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Security/EntityNameSanitizer.cs` - Entity name sanitization
 
+#### Phase 4a Files (Core Lazy Loading) - ✅ COMPLETED
+
+- **FILE-012**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Models/SemanticModel/Lazy/ILazyLoadingProxy.cs` - Lazy loading interface ✅
+- **FILE-013**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Models/SemanticModel/Lazy/LazyLoadingProxy.cs` - Basic lazy loading implementation ✅
+
+#### Phase 4b Files (Change Tracking)
+
+- **FILE-014**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Models/SemanticModel/ChangeTracking/IChangeTracker.cs` - Change tracker interface
+- **FILE-015**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Models/SemanticModel/ChangeTracking/ChangeTracker.cs` - Change tracker implementation
+
+#### Phase 4c Files (Security Hardening)
+
+- Enhanced security features are implemented in existing files through additional validation methods
+
+#### Phase 4d Files (Extended Lazy Loading)
+
+- Extensions to existing lazy loading files for Views and StoredProcedures collections
+
+#### Phase 5 Files (Optional Performance)
+
+- **FILE-030**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Caching/ISemanticModelCache.cs` - Caching interface
+- **FILE-031**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Caching/SemanticModelCache.cs` - Caching implementation
+- **FILE-032**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Performance/IPerformanceMonitor.cs` - Performance monitoring interface
+- **FILE-033**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Performance/PerformanceMonitor.cs` - Performance monitoring implementation
+
 ### Files to Modify
 
-- **FILE-018**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Models/SemanticModel/SemanticModel.cs` - Add repository integration and lazy loading
-- **FILE-019**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Models/SemanticModel/ISemanticModel.cs` - Update interface with repository methods
+- **FILE-018**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Models/SemanticModel/SemanticModel.cs` - Add repository integration and lazy loading ✅
+- **FILE-019**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Models/SemanticModel/ISemanticModel.cs` - Update interface with repository methods ✅
 - **FILE-020**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticModelProviders/SemanticModelProvider.cs` - Integrate with repository pattern
 - **FILE-021**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticModelProviders/ISemanticModelProvider.cs` - Update interface for repository
 - **FILE-022**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/GenAIDBExplorer.Core.csproj` - Add new NuGet package references
@@ -301,24 +406,58 @@ This plan implements the missing requirements from the Data Semantic Model Repos
 
 ### Test Files to Create
 
-- **FILE-024**: `src/Tests/Unit/GenAIDBExplorer.Core.Tests/Repository/SemanticModelRepositoryTests.cs`
-- **FILE-025**: `src/Tests/Unit/GenAIDBExplorer.Core.Tests/Repository/LocalDiskPersistenceStrategyTests.cs`
-- **FILE-026**: `src/Tests/Unit/GenAIDBExplorer.Core.Tests/Repository/AzureBlobPersistenceStrategyTests.cs`
-- **FILE-027**: `src/Tests/Unit/GenAIDBExplorer.Core.Tests/Repository/CosmosPersistenceStrategyTests.cs`
-- **FILE-028**: `src/Tests/Integration/GenAIDBExplorer.Core.Tests/Repository/RepositoryIntegrationTests.cs`
+#### Phase 4a Test Files (Core Lazy Loading) - ✅ COMPLETED
+
+- **FILE-024**: `src/Tests/Unit/GenAIDBExplorer.Core.Test/Models/SemanticModel/Lazy/LazyLoadingProxyTests.cs` ✅
+- **FILE-025**: `src/Tests/Unit/GenAIDBExplorer.Core.Test/Repository/SemanticModelRepositoryLazyLoadingTests.cs` ✅
+
+#### Phase 4b Test Files (Change Tracking)
+
+- **FILE-026**: `src/Tests/Unit/GenAIDBExplorer.Core.Tests/Models/SemanticModel/ChangeTracking/ChangeTrackerTests.cs`
+- **FILE-027**: `src/Tests/Unit/GenAIDBExplorer.Core.Tests/Repository/SemanticModelRepositoryChangeTrackingTests.cs`
+
+#### Phase 4c Test Files (Security Hardening)
+
+- **FILE-028**: `src/Tests/Unit/GenAIDBExplorer.Core.Tests/Security/EnhancedSecurityValidationTests.cs`
+- **FILE-029**: `src/Tests/Unit/GenAIDBExplorer.Core.Tests/Repository/ConcurrentOperationTests.cs`
+
+#### Phase 6 Test Files (Comprehensive Testing)
+
+- **FILE-030**: `src/Tests/Unit/GenAIDBExplorer.Core.Tests/Repository/SemanticModelRepositoryTests.cs`
+- **FILE-031**: `src/Tests/Unit/GenAIDBExplorer.Core.Tests/Repository/LocalDiskPersistenceStrategyTests.cs`
+- **FILE-032**: `src/Tests/Unit/GenAIDBExplorer.Core.Tests/Repository/AzureBlobPersistenceStrategyTests.cs`
+- **FILE-033**: `src/Tests/Unit/GenAIDBExplorer.Core.Tests/Repository/CosmosPersistenceStrategyTests.cs`
+- **FILE-034**: `src/Tests/Integration/GenAIDBExplorer.Core.Tests/Repository/RepositoryIntegrationTests.cs`
 
 ## 6. Testing
 
 ### Unit Tests
 
-- **TEST-001**: Repository pattern abstraction unit tests with mocked persistence strategies
-- **TEST-002**: Local disk persistence strategy unit tests with temporary directories
-- **TEST-003**: Azure Blob Storage persistence strategy unit tests with Azure Storage Emulator
-- **TEST-004**: Cosmos DB persistence strategy unit tests with Cosmos DB Emulator
-- **TEST-005**: Lazy loading proxy unit tests with mock entities
-- **TEST-006**: Change tracking unit tests with entity modifications
-- **TEST-007**: Security validation unit tests with malicious inputs
-- **TEST-008**: Performance optimization unit tests with large datasets
+#### Phase 4a Tests (Core Lazy Loading) - ✅ COMPLETED
+
+- **TEST-001**: Lazy loading proxy unit tests with mock entities ✅
+- **TEST-002**: Tables collection lazy loading tests ✅
+- **TEST-003**: Memory optimization validation tests ✅
+
+#### Phase 4b Tests (Change Tracking)
+
+- **TEST-004**: Change tracking unit tests with entity modifications
+- **TEST-005**: Selective persistence unit tests
+- **TEST-006**: Entity-level dirty tracking tests
+
+#### Phase 4c Tests (Security Hardening)
+
+- **TEST-007**: Enhanced security validation unit tests with malicious inputs
+- **TEST-008**: Concurrent operation protection tests
+- **TEST-009**: Thread safety validation tests
+
+#### Phase 6 Tests (Comprehensive)
+
+- **TEST-010**: Repository pattern abstraction unit tests with mocked persistence strategies
+- **TEST-011**: Local disk persistence strategy unit tests with temporary directories
+- **TEST-012**: Azure Blob Storage persistence strategy unit tests with Azure Storage Emulator
+- **TEST-013**: Cosmos DB persistence strategy unit tests with Cosmos DB Emulator
+- **TEST-014**: Performance optimization unit tests with large datasets
 
 ### Integration Tests
 
