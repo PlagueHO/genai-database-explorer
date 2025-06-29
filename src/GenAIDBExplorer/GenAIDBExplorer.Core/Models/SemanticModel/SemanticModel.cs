@@ -49,8 +49,8 @@ public sealed class SemanticModel(
     /// Gets a value indicating whether change tracking is enabled for this semantic model.
     /// </summary>
     [JsonIgnore]
-    public bool IsChangeTrackingEnabled 
-    { 
+    public bool IsChangeTrackingEnabled
+    {
         get
         {
             if (_disposed)
@@ -65,8 +65,8 @@ public sealed class SemanticModel(
     /// Gets the change tracker for this semantic model if change tracking is enabled.
     /// </summary>
     [JsonIgnore]
-    public IChangeTracker? ChangeTracker 
-    { 
+    public IChangeTracker? ChangeTracker
+    {
         get
         {
             if (_disposed)

@@ -40,8 +40,8 @@ public sealed class ChangeTracker : IChangeTracker, IDisposable
     /// Determines whether there are any dirty (modified) entities.
     /// </summary>
     /// <exception cref="ObjectDisposedException">Thrown when the change tracker has been disposed.</exception>
-    public bool HasChanges 
-    { 
+    public bool HasChanges
+    {
         get
         {
             ThrowIfDisposed();

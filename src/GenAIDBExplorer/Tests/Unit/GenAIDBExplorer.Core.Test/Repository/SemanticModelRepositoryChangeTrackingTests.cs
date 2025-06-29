@@ -33,11 +33,10 @@ public class SemanticModelRepositoryChangeTrackingTests
         _mockLogger = new Mock<ILogger<SemanticModelRepository>>();
         _mockLoggerFactory = new Mock<ILoggerFactory>();
         _mockChangeTrackerLogger = new Mock<ILogger<ChangeTracker>>();
-        
+
         _mockStrategyFactory.Setup(f => f.GetStrategy(It.IsAny<string?>()))
             .Returns(_mockStrategy.Object);
-        
-        // Setup the logger factory to return the mock change tracker logger
+
         _mockLoggerFactory.Setup(f => f.CreateLogger(typeof(ChangeTracker).FullName!))
             .Returns(_mockChangeTrackerLogger.Object);
 
