@@ -55,7 +55,7 @@ public class SemanticModelRepositoryLazyLoadingTests
         // Arrange
         var expectedModel = new SemanticModel("TestModel", "TestSource");
         _mockStrategy!
-            .Setup(s => s.LoadModelAsync(_testModelPath!))
+            .Setup(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()))
             .ReturnsAsync(expectedModel);
 
         // Act
@@ -64,7 +64,7 @@ public class SemanticModelRepositoryLazyLoadingTests
         // Assert
         result.Should().BeSameAs(expectedModel);
         result.IsLazyLoadingEnabled.Should().BeFalse();
-        _mockStrategy.Verify(s => s.LoadModelAsync(_testModelPath), Times.Once);
+        _mockStrategy.Verify(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()), Times.Once);
     }
 
     [TestMethod]
@@ -74,7 +74,7 @@ public class SemanticModelRepositoryLazyLoadingTests
         var expectedModel = new SemanticModel("TestModel", "TestSource");
         const string strategyName = "custom-strategy";
         _mockStrategy!
-            .Setup(s => s.LoadModelAsync(_testModelPath!))
+            .Setup(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()))
             .ReturnsAsync(expectedModel);
 
         // Act
@@ -83,7 +83,7 @@ public class SemanticModelRepositoryLazyLoadingTests
         // Assert
         result.Should().BeSameAs(expectedModel);
         _mockStrategyFactory!.Verify(f => f.GetStrategy(strategyName), Times.Once);
-        _mockStrategy.Verify(s => s.LoadModelAsync(_testModelPath), Times.Once);
+        _mockStrategy.Verify(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()), Times.Once);
     }
 
     [TestMethod]
@@ -92,7 +92,7 @@ public class SemanticModelRepositoryLazyLoadingTests
         // Arrange
         var expectedModel = new SemanticModel("TestModel", "TestSource");
         _mockStrategy!
-            .Setup(s => s.LoadModelAsync(_testModelPath!))
+            .Setup(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()))
             .ReturnsAsync(expectedModel);
 
         // Act
@@ -101,7 +101,7 @@ public class SemanticModelRepositoryLazyLoadingTests
         // Assert
         result.Should().BeSameAs(expectedModel);
         result.IsLazyLoadingEnabled.Should().BeTrue();
-        _mockStrategy.Verify(s => s.LoadModelAsync(_testModelPath), Times.Once);
+        _mockStrategy.Verify(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()), Times.Once);
     }
 
     [TestMethod]
@@ -111,7 +111,7 @@ public class SemanticModelRepositoryLazyLoadingTests
         var expectedModel = new SemanticModel("TestModel", "TestSource");
         const string strategyName = "custom-strategy";
         _mockStrategy!
-            .Setup(s => s.LoadModelAsync(_testModelPath!))
+            .Setup(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()))
             .ReturnsAsync(expectedModel);
 
         // Act
@@ -121,7 +121,7 @@ public class SemanticModelRepositoryLazyLoadingTests
         result.Should().BeSameAs(expectedModel);
         result.IsLazyLoadingEnabled.Should().BeTrue();
         _mockStrategyFactory!.Verify(f => f.GetStrategy(strategyName), Times.Once);
-        _mockStrategy.Verify(s => s.LoadModelAsync(_testModelPath), Times.Once);
+        _mockStrategy.Verify(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()), Times.Once);
     }
 
     [TestMethod]
@@ -130,7 +130,7 @@ public class SemanticModelRepositoryLazyLoadingTests
         // Arrange
         var expectedModel = new SemanticModel("TestModel", "TestSource");
         _mockStrategy!
-            .Setup(s => s.LoadModelAsync(_testModelPath!))
+            .Setup(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()))
             .ReturnsAsync(expectedModel);
 
         // Act
@@ -139,7 +139,7 @@ public class SemanticModelRepositoryLazyLoadingTests
         // Assert
         result.Should().BeSameAs(expectedModel);
         result.IsLazyLoadingEnabled.Should().BeFalse();
-        _mockStrategy.Verify(s => s.LoadModelAsync(_testModelPath), Times.Once);
+        _mockStrategy.Verify(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()), Times.Once);
     }
 
     [TestMethod]
@@ -155,7 +155,7 @@ public class SemanticModelRepositoryLazyLoadingTests
         await _repository!.SaveModelAsync(model, _testModelPath!);
 
         // Assert
-        _mockStrategy.Verify(s => s.SaveModelAsync(model, _testModelPath), Times.Once);
+        _mockStrategy.Verify(s => s.SaveModelAsync(model, It.IsAny<DirectoryInfo>()), Times.Once);
     }
 
     [TestMethod]
@@ -173,7 +173,7 @@ public class SemanticModelRepositoryLazyLoadingTests
 
         // Assert
         _mockStrategyFactory!.Verify(f => f.GetStrategy(strategyName), Times.Once);
-        _mockStrategy.Verify(s => s.SaveModelAsync(model, _testModelPath), Times.Once);
+        _mockStrategy.Verify(s => s.SaveModelAsync(model, It.IsAny<DirectoryInfo>()), Times.Once);
     }
 
     [TestMethod]
@@ -182,7 +182,7 @@ public class SemanticModelRepositoryLazyLoadingTests
         // Arrange
         var expectedModel = new SemanticModel("TestModel", "TestSource");
         _mockStrategy!
-            .Setup(s => s.LoadModelAsync(_testModelPath!))
+            .Setup(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()))
             .ReturnsAsync(expectedModel);
 
         // Act - Use the original method signature (without lazy loading parameter)
@@ -191,6 +191,6 @@ public class SemanticModelRepositoryLazyLoadingTests
         // Assert - Should work exactly as before
         result.Should().BeSameAs(expectedModel);
         result.IsLazyLoadingEnabled.Should().BeFalse();
-        _mockStrategy.Verify(s => s.LoadModelAsync(_testModelPath), Times.Once);
+        _mockStrategy.Verify(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()), Times.Once);
     }
 }

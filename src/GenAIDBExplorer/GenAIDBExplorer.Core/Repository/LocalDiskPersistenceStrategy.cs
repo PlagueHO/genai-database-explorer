@@ -29,6 +29,9 @@ namespace GenAIDBExplorer.Core.Repository
             ArgumentNullException.ThrowIfNull(semanticModel);
             ArgumentNullException.ThrowIfNull(modelPath);
 
+            // Enhanced input validation
+            ValidateInputSecurity(semanticModel, modelPath);
+
             // Validate and sanitize the path
             var validatedPath = PathValidator.ValidateDirectoryPath(modelPath.FullName);
 
@@ -92,6 +95,9 @@ namespace GenAIDBExplorer.Core.Repository
         {
             ArgumentNullException.ThrowIfNull(modelPath);
 
+            // Enhanced input validation
+            EntityNameSanitizer.ValidateInputSecurity(modelPath.FullName, nameof(modelPath));
+
             // Validate the path
             var validatedPath = PathValidator.ValidateDirectoryPath(modelPath.FullName);
 
@@ -125,6 +131,9 @@ namespace GenAIDBExplorer.Core.Repository
         {
             ArgumentNullException.ThrowIfNull(modelPath);
 
+            // Enhanced input validation
+            EntityNameSanitizer.ValidateInputSecurity(modelPath.FullName, nameof(modelPath));
+
             try
             {
                 var validatedPath = PathValidator.ValidateDirectoryPath(modelPath.FullName);
@@ -152,6 +161,9 @@ namespace GenAIDBExplorer.Core.Repository
         public async Task<IEnumerable<string>> ListModelsAsync(DirectoryInfo rootPath)
         {
             ArgumentNullException.ThrowIfNull(rootPath);
+
+            // Enhanced input validation
+            EntityNameSanitizer.ValidateInputSecurity(rootPath.FullName, nameof(rootPath));
 
             try
             {
@@ -195,6 +207,9 @@ namespace GenAIDBExplorer.Core.Repository
         public async Task DeleteModelAsync(DirectoryInfo modelPath)
         {
             ArgumentNullException.ThrowIfNull(modelPath);
+
+            // Enhanced input validation
+            EntityNameSanitizer.ValidateInputSecurity(modelPath.FullName, nameof(modelPath));
 
             var validatedPath = PathValidator.ValidateDirectoryPath(modelPath.FullName);
 
@@ -300,6 +315,65 @@ namespace GenAIDBExplorer.Core.Repository
             await File.WriteAllTextAsync(indexPath, indexJson, Encoding.UTF8);
 
             _logger.LogDebug("Generated index file at '{IndexPath}'", indexPath);
+        }
+
+        /// <summary>
+        /// Validates input security for semantic model operations.
+        /// </summary>
+        /// <param name="semanticModel">The semantic model to validate.</param>
+        /// <param name="modelPath">The model path to validate.</param>
+        private static void ValidateInputSecurity(SemanticModel semanticModel, DirectoryInfo modelPath)
+        {
+            // Validate semantic model properties
+            if (!string.IsNullOrWhiteSpace(semanticModel.Name))
+            {
+                EntityNameSanitizer.ValidateInputSecurity(semanticModel.Name, nameof(semanticModel.Name));
+            }
+
+            if (!string.IsNullOrWhiteSpace(semanticModel.Description))
+            {
+                EntityNameSanitizer.ValidateInputSecurity(semanticModel.Description, nameof(semanticModel.Description));
+            }
+
+            // Validate path security
+            EntityNameSanitizer.ValidateInputSecurity(modelPath.FullName, nameof(modelPath));
+
+            // Validate entity names in collections
+            foreach (var table in semanticModel.Tables)
+            {
+                if (!string.IsNullOrWhiteSpace(table.Name))
+                {
+                    EntityNameSanitizer.ValidateInputSecurity(table.Name, $"Table.Name");
+                }
+                if (!string.IsNullOrWhiteSpace(table.Schema))
+                {
+                    EntityNameSanitizer.ValidateInputSecurity(table.Schema, $"Table.Schema");
+                }
+            }
+
+            foreach (var view in semanticModel.Views)
+            {
+                if (!string.IsNullOrWhiteSpace(view.Name))
+                {
+                    EntityNameSanitizer.ValidateInputSecurity(view.Name, $"View.Name");
+                }
+                if (!string.IsNullOrWhiteSpace(view.Schema))
+                {
+                    EntityNameSanitizer.ValidateInputSecurity(view.Schema, $"View.Schema");
+                }
+            }
+
+            foreach (var procedure in semanticModel.StoredProcedures)
+            {
+                if (!string.IsNullOrWhiteSpace(procedure.Name))
+                {
+                    EntityNameSanitizer.ValidateInputSecurity(procedure.Name, $"StoredProcedure.Name");
+                }
+                if (!string.IsNullOrWhiteSpace(procedure.Schema))
+                {
+                    EntityNameSanitizer.ValidateInputSecurity(procedure.Schema, $"StoredProcedure.Schema");
+                }
+            }
         }
 
         /// <summary>

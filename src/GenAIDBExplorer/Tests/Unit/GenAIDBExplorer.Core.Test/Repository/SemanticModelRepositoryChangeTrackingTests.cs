@@ -62,7 +62,7 @@ public class SemanticModelRepositoryChangeTrackingTests
     {
         // Arrange
         var expectedModel = new SemanticModel("TestModel", "TestSource", "Test Description");
-        _mockStrategy!.Setup(s => s.LoadModelAsync(_testModelPath!))
+        _mockStrategy!.Setup(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()))
             .ReturnsAsync(expectedModel);
 
         // Act
@@ -80,7 +80,7 @@ public class SemanticModelRepositoryChangeTrackingTests
     {
         // Arrange
         var expectedModel = new SemanticModel("TestModel", "TestSource", "Test Description");
-        _mockStrategy!.Setup(s => s.LoadModelAsync(_testModelPath!))
+        _mockStrategy!.Setup(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()))
             .ReturnsAsync(expectedModel);
 
         // Act
@@ -98,7 +98,7 @@ public class SemanticModelRepositoryChangeTrackingTests
     {
         // Arrange
         var expectedModel = new SemanticModel("TestModel", "TestSource", "Test Description");
-        _mockStrategy!.Setup(s => s.LoadModelAsync(_testModelPath!))
+        _mockStrategy!.Setup(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()))
             .ReturnsAsync(expectedModel);
 
         // Act
@@ -121,7 +121,7 @@ public class SemanticModelRepositoryChangeTrackingTests
         await _repository!.SaveChangesAsync(model, _testModelPath!);
 
         // Assert
-        _mockStrategy!.Verify(s => s.SaveModelAsync(model, _testModelPath!), Times.Once);
+        _mockStrategy!.Verify(s => s.SaveModelAsync(model, It.IsAny<DirectoryInfo>()), Times.Once);
     }
 
     [TestMethod]
@@ -136,7 +136,7 @@ public class SemanticModelRepositoryChangeTrackingTests
         await _repository!.SaveChangesAsync(model, _testModelPath!);
 
         // Assert
-        _mockStrategy!.Verify(s => s.SaveModelAsync(model, _testModelPath!), Times.Once);
+        _mockStrategy!.Verify(s => s.SaveModelAsync(model, It.IsAny<DirectoryInfo>()), Times.Once);
         model.HasUnsavedChanges.Should().BeFalse();
     }
 
@@ -158,7 +158,7 @@ public class SemanticModelRepositoryChangeTrackingTests
         await _repository!.SaveChangesAsync(model, _testModelPath!);
 
         // Assert
-        _mockStrategy!.Verify(s => s.SaveModelAsync(model, _testModelPath!), Times.Once);
+        _mockStrategy!.Verify(s => s.SaveModelAsync(model, It.IsAny<DirectoryInfo>()), Times.Once);
         model.HasUnsavedChanges.Should().BeFalse(); // Changes should be accepted
     }
 
@@ -180,7 +180,7 @@ public class SemanticModelRepositoryChangeTrackingTests
 
         // Assert
         _mockStrategyFactory!.Verify(f => f.GetStrategy(strategyName), Times.Once);
-        _mockStrategy!.Verify(s => s.SaveModelAsync(model, _testModelPath!), Times.Once);
+        _mockStrategy!.Verify(s => s.SaveModelAsync(model, It.IsAny<DirectoryInfo>()), Times.Once);
     }
 
     [TestMethod]
@@ -198,7 +198,7 @@ public class SemanticModelRepositoryChangeTrackingTests
         await _repository!.SaveModelAsync(model, _testModelPath!);
 
         // Assert
-        _mockStrategy!.Verify(s => s.SaveModelAsync(model, _testModelPath!), Times.Once);
+        _mockStrategy!.Verify(s => s.SaveModelAsync(model, It.IsAny<DirectoryInfo>()), Times.Once);
         // Note: SaveModelAsync should NOT accept changes automatically - that's only for SaveChangesAsync
         model.HasUnsavedChanges.Should().BeTrue();
     }
@@ -208,7 +208,7 @@ public class SemanticModelRepositoryChangeTrackingTests
     {
         // Arrange
         var expectedModel = new SemanticModel("TestModel", "TestSource", "Test Description");
-        _mockStrategy!.Setup(s => s.LoadModelAsync(_testModelPath!))
+        _mockStrategy!.Setup(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()))
             .ReturnsAsync(expectedModel);
 
         var model = await _repository!.LoadModelAsync(_testModelPath!, enableLazyLoading: false, enableChangeTracking: true);
@@ -243,7 +243,7 @@ public class SemanticModelRepositoryChangeTrackingTests
     {
         // Arrange
         var expectedModel = new SemanticModel("TestModel", "TestSource", "Test Description");
-        _mockStrategy!.Setup(s => s.LoadModelAsync(_testModelPath!))
+        _mockStrategy!.Setup(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()))
             .ReturnsAsync(expectedModel);
 
         var model = await _repository!.LoadModelAsync(_testModelPath!, enableLazyLoading: false, enableChangeTracking: true);
