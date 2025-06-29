@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
-namespace GenAIDBExplorer.Core.Models.SemanticModel.Lazy;
+namespace GenAIDBExplorer.Core.Models.SemanticModel.LazyLoading;
 
 /// <summary>
 /// Basic lazy loading proxy implementation that defers entity loading until accessed.
@@ -15,7 +15,7 @@ public sealed class LazyLoadingProxy<T> : ILazyLoadingProxy<T>
     private readonly Func<Task<IEnumerable<T>>> _loadFunction;
     private readonly ILogger<LazyLoadingProxy<T>>? _logger;
     private readonly SemaphoreSlim _loadSemaphore = new(1, 1);
-    
+
     private IEnumerable<T>? _entities;
     private bool _isLoaded;
     private bool _disposed;
@@ -40,7 +40,7 @@ public sealed class LazyLoadingProxy<T> : ILazyLoadingProxy<T>
     public async Task<IEnumerable<T>> GetEntitiesAsync()
     {
         ThrowIfDisposed();
-        
+
         if (!_isLoaded)
         {
             await LoadAsync().ConfigureAwait(false);
@@ -53,7 +53,7 @@ public sealed class LazyLoadingProxy<T> : ILazyLoadingProxy<T>
     public async Task LoadAsync()
     {
         ThrowIfDisposed();
-        
+
         if (_isLoaded)
         {
             return;
@@ -73,7 +73,7 @@ public sealed class LazyLoadingProxy<T> : ILazyLoadingProxy<T>
             _entities = await _loadFunction().ConfigureAwait(false);
             _isLoaded = true;
 
-            _logger?.LogDebug("Successfully loaded {EntityCount} entities for type {EntityType}", 
+            _logger?.LogDebug("Successfully loaded {EntityCount} entities for type {EntityType}",
                 _entities?.Count() ?? 0, typeof(T).Name);
         }
         catch (Exception ex)
@@ -91,13 +91,13 @@ public sealed class LazyLoadingProxy<T> : ILazyLoadingProxy<T>
     public void Reset()
     {
         ThrowIfDisposed();
-        
+
         _loadSemaphore.Wait();
         try
         {
             _entities = null;
             _isLoaded = false;
-            
+
             _logger?.LogDebug("Reset lazy loading proxy for type {EntityType}", typeof(T).Name);
         }
         finally
@@ -117,7 +117,7 @@ public sealed class LazyLoadingProxy<T> : ILazyLoadingProxy<T>
         _loadSemaphore?.Dispose();
         _entities = null;
         _disposed = true;
-        
+
         _logger?.LogDebug("Disposed lazy loading proxy for type {EntityType}", typeof(T).Name);
     }
 

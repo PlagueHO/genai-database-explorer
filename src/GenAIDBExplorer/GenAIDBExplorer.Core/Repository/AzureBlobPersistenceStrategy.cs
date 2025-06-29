@@ -61,7 +61,7 @@ namespace GenAIDBExplorer.Core.Repository
         {
             _configuration = configuration?.Value ?? throw new ArgumentNullException(nameof(configuration));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            
+
             // Validate configuration
             if (string.IsNullOrWhiteSpace(_configuration.AccountEndpoint))
             {
@@ -83,7 +83,7 @@ namespace GenAIDBExplorer.Core.Repository
                 var credential = new DefaultAzureCredential();
                 var clientOptions = new BlobClientOptions
                 {
-                    Retry = 
+                    Retry =
                     {
                         MaxRetries = 3,
                         Mode = RetryMode.Exponential,
@@ -217,7 +217,7 @@ namespace GenAIDBExplorer.Core.Repository
 
                 // Load main semantic model document
                 var mainModelBlob = _containerClient.GetBlobClient(mainModelBlobName);
-                
+
                 if (!await mainModelBlob.ExistsAsync())
                 {
                     throw new FileNotFoundException($"Semantic model '{modelName}' not found in Azure Blob Storage.", mainModelBlobName);
@@ -227,7 +227,7 @@ namespace GenAIDBExplorer.Core.Repository
                 var response = await mainModelBlob.DownloadContentAsync();
                 var jsonContent = response.Value.Content.ToString();
                 var jsonOptions = new JsonSerializerOptions { WriteIndented = true };
-                
+
                 var semanticModel = JsonSerializer.Deserialize<SemanticModel>(jsonContent, jsonOptions)
                     ?? throw new InvalidOperationException($"Failed to deserialize semantic model '{modelName}'.");
 
@@ -238,7 +238,8 @@ namespace GenAIDBExplorer.Core.Repository
                 foreach (var table in semanticModel.Tables)
                 {
                     var tableName = EntityNameSanitizer.SanitizeEntityName(table.Name);
-                    var loadTask = LoadEntityAsync($"{blobPrefix}/tables/{tableName}.json", async jsonContent => {
+                    var loadTask = LoadEntityAsync($"{blobPrefix}/tables/{tableName}.json", async jsonContent =>
+                    {
                         // For blob storage, we need to create a temporary directory approach
                         // This is a workaround since the entities expect DirectoryInfo
                         var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -262,7 +263,8 @@ namespace GenAIDBExplorer.Core.Repository
                 foreach (var view in semanticModel.Views)
                 {
                     var viewName = EntityNameSanitizer.SanitizeEntityName(view.Name);
-                    var loadTask = LoadEntityAsync($"{blobPrefix}/views/{viewName}.json", async jsonContent => {
+                    var loadTask = LoadEntityAsync($"{blobPrefix}/views/{viewName}.json", async jsonContent =>
+                    {
                         var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
                         Directory.CreateDirectory(tempDir);
                         try
@@ -284,7 +286,8 @@ namespace GenAIDBExplorer.Core.Repository
                 foreach (var storedProcedure in semanticModel.StoredProcedures)
                 {
                     var procedureName = EntityNameSanitizer.SanitizeEntityName(storedProcedure.Name);
-                    var loadTask = LoadEntityAsync($"{blobPrefix}/storedprocedures/{procedureName}.json", async jsonContent => {
+                    var loadTask = LoadEntityAsync($"{blobPrefix}/storedprocedures/{procedureName}.json", async jsonContent =>
+                    {
                         var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
                         Directory.CreateDirectory(tempDir);
                         try
@@ -349,7 +352,7 @@ namespace GenAIDBExplorer.Core.Repository
                 var mainModelBlob = _containerClient.GetBlobClient(mainModelBlobName);
 
                 var exists = await mainModelBlob.ExistsAsync();
-                
+
                 _logger.LogDebug("Semantic model {ModelName} exists check: {Exists}", modelName, exists.Value);
                 return exists.Value;
             }
@@ -375,8 +378,8 @@ namespace GenAIDBExplorer.Core.Repository
             try
             {
                 var modelNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                var prefix = string.IsNullOrWhiteSpace(_configuration.BlobPrefix) 
-                    ? "models/" 
+                var prefix = string.IsNullOrWhiteSpace(_configuration.BlobPrefix)
+                    ? "models/"
                     : $"{_configuration.BlobPrefix.TrimEnd('/')}/models/";
 
                 await foreach (var blobItem in _containerClient.GetBlobsAsync(prefix: prefix))
@@ -384,7 +387,7 @@ namespace GenAIDBExplorer.Core.Repository
                     // Extract model name from blob path: models/{modelName}/...
                     var relativePath = blobItem.Name.Substring(prefix.Length);
                     var firstSlashIndex = relativePath.IndexOf('/');
-                    
+
                     if (firstSlashIndex > 0)
                     {
                         var modelName = relativePath.Substring(0, firstSlashIndex);
@@ -484,7 +487,7 @@ namespace GenAIDBExplorer.Core.Repository
         private string GetBlobPrefix(string modelName)
         {
             var sanitizedModelName = EntityNameSanitizer.SanitizeEntityName(modelName);
-            
+
             return string.IsNullOrWhiteSpace(_configuration.BlobPrefix)
                 ? $"models/{sanitizedModelName}"
                 : $"{_configuration.BlobPrefix.TrimEnd('/')}/models/{sanitizedModelName}";
@@ -499,7 +502,7 @@ namespace GenAIDBExplorer.Core.Repository
             try
             {
                 var jsonOptions = new JsonSerializerOptions { WriteIndented = true };
-                
+
                 // Add entity converters for main model to avoid circular references
                 if (useEntityConverters)
                 {
@@ -531,7 +534,7 @@ namespace GenAIDBExplorer.Core.Repository
             try
             {
                 var blobClient = _containerClient.GetBlobClient(blobName);
-                
+
                 if (await blobClient.ExistsAsync())
                 {
                     var response = await blobClient.DownloadContentAsync();

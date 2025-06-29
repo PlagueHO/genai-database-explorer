@@ -193,7 +193,7 @@ public class SemanticModelProviderTests
         // Arrange
         var largeTableCount = 50;
         var tables = new Dictionary<string, TableInfo>();
-        
+
         for (int i = 0; i < largeTableCount; i++)
         {
             tables[$"dbo.Table{i}"] = new TableInfo("dbo", $"Table{i}");
@@ -217,7 +217,7 @@ public class SemanticModelProviderTests
         // Assert - Tests PER-002: Entity loading ≤5s for 1000 entities (scaled down)
         result.Tables.Should().HaveCount(largeTableCount);
         duration.Should().BeLessThan(TimeSpan.FromSeconds(5));
-        
+
         // Verify no duplicate tables (tests concurrency safety)
         var tableNames = result.Tables.Select(t => $"{t.Schema}.{t.Name}").ToList();
         tableNames.Should().OnlyHaveUniqueItems();
@@ -252,9 +252,9 @@ public class SemanticModelProviderTests
                 {
                     var current = Interlocked.Increment(ref concurrentCallCount);
                     maxConcurrentCalls = Math.Max(maxConcurrentCalls, current);
-                    
+
                     await Task.Delay(50); // Simulate work
-                    
+
                     Interlocked.Decrement(ref concurrentCallCount);
                     return new SemanticModelTable(info.SchemaName, info.TableName);
                 }

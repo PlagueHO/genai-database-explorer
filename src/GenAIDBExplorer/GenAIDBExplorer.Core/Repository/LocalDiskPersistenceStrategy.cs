@@ -31,8 +31,8 @@ namespace GenAIDBExplorer.Core.Repository
 
             // Validate and sanitize the path
             var validatedPath = PathValidator.ValidateDirectoryPath(modelPath.FullName);
-            
-            _logger.LogInformation("Saving semantic model '{ModelName}' to path '{Path}'", 
+
+            _logger.LogInformation("Saving semantic model '{ModelName}' to path '{Path}'",
                 semanticModel.Name, validatedPath.FullName);
 
             await _concurrencyLock.WaitAsync();
@@ -40,26 +40,26 @@ namespace GenAIDBExplorer.Core.Repository
             {
                 // Create a temporary directory for atomic operations
                 var tempPath = new DirectoryInfo(Path.Combine(Path.GetTempPath(), $"semanticmodel_temp_{Guid.NewGuid():N}"));
-                
+
                 try
                 {
                     // Save to temporary location first
                     await semanticModel.SaveModelAsync(tempPath);
-                    
+
                     // Generate index file
                     await GenerateIndexFileAsync(semanticModel, tempPath);
-                    
+
                     // Ensure target directory exists
                     Directory.CreateDirectory(validatedPath.FullName);
-                    
+
                     // Atomic move from temp to final location
                     await MoveDirectoryContentsAsync(tempPath, validatedPath);
-                    
+
                     _logger.LogInformation("Successfully saved semantic model '{ModelName}'", semanticModel.Name);
                 }
                 catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
                 {
-                    _logger.LogError(ex, "Failed to save semantic model '{ModelName}' to '{Path}'", 
+                    _logger.LogError(ex, "Failed to save semantic model '{ModelName}' to '{Path}'",
                         semanticModel.Name, validatedPath.FullName);
                     throw new InvalidOperationException($"Failed to save semantic model: {ex.Message}", ex);
                 }
@@ -94,7 +94,7 @@ namespace GenAIDBExplorer.Core.Repository
 
             // Validate the path
             var validatedPath = PathValidator.ValidateDirectoryPath(modelPath.FullName);
-            
+
             _logger.LogInformation("Loading semantic model from path '{Path}'", validatedPath.FullName);
 
             try
@@ -102,7 +102,7 @@ namespace GenAIDBExplorer.Core.Repository
                 // Use existing SemanticModel load functionality
                 var placeholder = new SemanticModel(string.Empty, string.Empty);
                 var loadedModel = await placeholder.LoadModelAsync(validatedPath);
-                
+
                 _logger.LogInformation("Successfully loaded semantic model '{ModelName}'", loadedModel.Name);
                 return loadedModel;
             }
@@ -128,14 +128,14 @@ namespace GenAIDBExplorer.Core.Repository
             try
             {
                 var validatedPath = PathValidator.ValidateDirectoryPath(modelPath.FullName);
-                
+
                 // Check if directory exists and contains the semantic model file
                 if (!validatedPath.Exists)
                     return Task.FromResult(false);
 
                 var semanticModelFile = Path.Combine(validatedPath.FullName, "semanticmodel.json");
                 var exists = File.Exists(semanticModelFile);
-                
+
                 _logger.LogDebug("Model existence check for path '{Path}': {Exists}", validatedPath.FullName, exists);
                 return Task.FromResult(exists);
             }
@@ -156,7 +156,7 @@ namespace GenAIDBExplorer.Core.Repository
             try
             {
                 var validatedPath = PathValidator.ValidateDirectoryPath(rootPath.FullName);
-                
+
                 if (!validatedPath.Exists)
                 {
                     _logger.LogInformation("Root path '{Path}' does not exist, returning empty list", validatedPath.FullName);
@@ -177,9 +177,9 @@ namespace GenAIDBExplorer.Core.Repository
                     }
                 });
 
-                _logger.LogInformation("Found {Count} semantic models in root path '{Path}'", 
+                _logger.LogInformation("Found {Count} semantic models in root path '{Path}'",
                     modelDirectories.Count, validatedPath.FullName);
-                
+
                 return modelDirectories;
             }
             catch (Exception ex) when (ex is ArgumentException || ex is UnauthorizedAccessException || ex is IOException)
@@ -197,7 +197,7 @@ namespace GenAIDBExplorer.Core.Repository
             ArgumentNullException.ThrowIfNull(modelPath);
 
             var validatedPath = PathValidator.ValidateDirectoryPath(modelPath.FullName);
-            
+
             _logger.LogInformation("Deleting semantic model at path '{Path}'", validatedPath.FullName);
 
             await _concurrencyLock.WaitAsync();
@@ -222,9 +222,9 @@ namespace GenAIDBExplorer.Core.Repository
                 try
                 {
                     lockFile = File.Create(lockFilePath, 1, FileOptions.None);
-                    
+
                     // Delete the directory recursively
-                    await Task.Run(() => 
+                    await Task.Run(() =>
                     {
                         lockFile.Dispose(); // Ensure lock file is closed before deleting directory
                         lockFile = null;
@@ -240,7 +240,7 @@ namespace GenAIDBExplorer.Core.Repository
                         try { File.Delete(lockFilePath); } catch { /* Best effort cleanup */ }
                     }
                 }
-                
+
                 _logger.LogInformation("Successfully deleted semantic model at path '{Path}'", validatedPath.FullName);
             }
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
@@ -288,17 +288,17 @@ namespace GenAIDBExplorer.Core.Repository
                 }
             };
 
-            var jsonOptions = new JsonSerializerOptions 
-            { 
+            var jsonOptions = new JsonSerializerOptions
+            {
                 WriteIndented = true,
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             };
 
             var indexJson = JsonSerializer.Serialize(index, jsonOptions);
             var indexPath = Path.Combine(modelPath.FullName, "index.json");
-            
+
             await File.WriteAllTextAsync(indexPath, indexJson, Encoding.UTF8);
-            
+
             _logger.LogDebug("Generated index file at '{IndexPath}'", indexPath);
         }
 
@@ -313,7 +313,7 @@ namespace GenAIDBExplorer.Core.Repository
                 {
                     var relativePath = Path.GetRelativePath(source.FullName, file.FullName);
                     var destPath = Path.Combine(destination.FullName, relativePath);
-                    
+
                     Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
                     File.Move(file.FullName, destPath, true);
                 }

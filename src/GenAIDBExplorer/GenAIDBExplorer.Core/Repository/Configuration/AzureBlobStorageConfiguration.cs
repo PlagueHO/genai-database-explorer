@@ -25,7 +25,7 @@ public sealed class AzureBlobStorageConfiguration
     /// Default is "semantic-models".
     /// </summary>
     [Required]
-    [RegularExpression(@"^[a-z0-9]([a-z0-9\-]{1,61}[a-z0-9])?$", 
+    [RegularExpression(@"^[a-z0-9]([a-z0-9\-]{1,61}[a-z0-9])?$",
         ErrorMessage = "Container name must be 3-63 characters, lowercase letters, numbers, and hyphens only")]
     public string ContainerName { get; set; } = "semantic-models";
 

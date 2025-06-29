@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
-using GenAIDBExplorer.Core.Models.SemanticModel.Lazy;
+using GenAIDBExplorer.Core.Models.SemanticModel.LazyLoading;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
-namespace GenAIDBExplorer.Core.Tests.Models.SemanticModel.Lazy;
+namespace GenAIDBExplorer.Core.Tests.Models.SemanticModel.LazyLoading;
 
 /// <summary>
 /// Unit tests for the LazyLoadingProxy class.
@@ -243,7 +243,7 @@ public class LazyLoadingProxyTests
         // Assert
         callCount.Should().Be(1, "load function should only be called once despite concurrent access");
         proxy.IsLoaded.Should().BeTrue();
-        
+
         foreach (var result in results)
         {
             result.Should().BeEquivalentTo(expectedEntities);

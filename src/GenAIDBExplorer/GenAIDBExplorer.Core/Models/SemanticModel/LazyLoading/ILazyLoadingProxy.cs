@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace GenAIDBExplorer.Core.Models.SemanticModel.Lazy;
+namespace GenAIDBExplorer.Core.Models.SemanticModel.LazyLoading;
 
 /// <summary>
 /// Interface for lazy loading proxy objects that defer entity loading until accessed.

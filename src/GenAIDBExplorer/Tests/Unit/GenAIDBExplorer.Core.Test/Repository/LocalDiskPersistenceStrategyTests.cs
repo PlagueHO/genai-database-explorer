@@ -25,12 +25,12 @@ public class LocalDiskPersistenceStrategyTests
         // Arrange
         _mockLogger = new Mock<ILogger<LocalDiskPersistenceStrategy>>();
         _strategy = new LocalDiskPersistenceStrategy(_mockLogger.Object);
-        
+
         // Create a unique test directory
         var tempPath = Path.Combine(Path.GetTempPath(), $"SemanticModelTests_{Guid.NewGuid():N}");
         _testDirectory = new DirectoryInfo(tempPath);
         Directory.CreateDirectory(_testDirectory.FullName);
-        
+
         // Create a test semantic model
         _testModel = new SemanticModel("TestModel", "TestSource", "Test Description");
         _testModel.AddTable(new SemanticModelTable("dbo", "TestTable"));
@@ -178,9 +178,9 @@ public class LocalDiskPersistenceStrategyTests
         // Arrange
         var model1Path = new DirectoryInfo(Path.Combine(_testDirectory!.FullName, "Model1"));
         var model2Path = new DirectoryInfo(Path.Combine(_testDirectory.FullName, "Model2"));
-        
+
         await _strategy!.SaveModelAsync(_testModel!, model1Path);
-        
+
         var secondModel = new SemanticModel("Model2", "Source2");
         await _strategy.SaveModelAsync(secondModel, model2Path);
 
@@ -222,7 +222,7 @@ public class LocalDiskPersistenceStrategyTests
         // Arrange
         var modelPath = new DirectoryInfo(Path.Combine(_testDirectory!.FullName, "TestModel"));
         await _strategy!.SaveModelAsync(_testModel!, modelPath);
-        
+
         // Verify it exists first
         modelPath.Refresh();
         modelPath.Exists.Should().BeTrue();
@@ -271,7 +271,7 @@ public class LocalDiskPersistenceStrategyTests
         // Assert
         var indexPath = Path.Combine(modelPath.FullName, "index.json");
         File.Exists(indexPath).Should().BeTrue();
-        
+
         var indexContent = await File.ReadAllTextAsync(indexPath);
         indexContent.Should().Contain("TestModel");
         indexContent.Should().Contain("TestSource");
@@ -291,7 +291,7 @@ public class LocalDiskPersistenceStrategyTests
 
         // Act - Save using new strategy
         await _strategy!.SaveModelAsync(_testModel!, modelPath);
-        
+
         // Load using original SemanticModel method
         var placeholder = new SemanticModel(string.Empty, string.Empty);
         var loadedModel = await placeholder.LoadModelAsync(modelPath);

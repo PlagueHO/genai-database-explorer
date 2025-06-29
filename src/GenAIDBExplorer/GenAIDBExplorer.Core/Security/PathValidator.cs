@@ -6,7 +6,7 @@ namespace GenAIDBExplorer.Core.Security;
 public static class PathValidator
 {
     private static readonly string[] DangerousPathSegments = ["..", "~"];
-    
+
     /// <summary>
     /// Validates and sanitizes a directory path to prevent directory traversal attacks.
     /// </summary>
@@ -16,10 +16,10 @@ public static class PathValidator
     public static string ValidateAndSanitizePath(string path)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
-        
+
         // Normalize path separators
         var normalizedPath = path.Replace('/', Path.DirectorySeparatorChar);
-        
+
         // Check for dangerous path segments (directory traversal)
         foreach (var dangerousSegment in DangerousPathSegments)
         {
@@ -28,13 +28,13 @@ public static class PathValidator
                 throw new ArgumentException($"Path contains dangerous segment '{dangerousSegment}': {path}", nameof(path));
             }
         }
-        
+
         // For path validation, we need to be more careful than filename validation
         // Allow colons only in drive letter position (index 1) and path separators
         var invalidChars = new char[] { '<', '>', '"', '|', '?', '*' }
             .Concat(Enumerable.Range(0, 32).Select(i => (char)i)) // Control characters
             .ToArray();
-            
+
         // Check each character, allowing colon only at index 1 (drive letter)
         for (int i = 0; i < normalizedPath.Length; i++)
         {
@@ -49,19 +49,19 @@ public static class PathValidator
                 throw new ArgumentException($"Path contains invalid characters: {path}", nameof(path));
             }
         }
-        
+
         // Ensure the path is rooted to prevent relative path attacks
         if (!Path.IsPathRooted(normalizedPath))
         {
             throw new ArgumentException($"Path must be an absolute path: {path}", nameof(path));
         }
-        
+
         // Get the full path to resolve any remaining relative components
         var fullPath = Path.GetFullPath(normalizedPath);
-        
+
         return fullPath;
     }
-    
+
     /// <summary>
     /// Validates that a child path is within the bounds of a parent directory.
     /// </summary>
@@ -72,12 +72,12 @@ public static class PathValidator
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(parentPath);
         ArgumentException.ThrowIfNullOrWhiteSpace(childPath);
-        
+
         try
         {
             var normalizedParent = Path.GetFullPath(parentPath).TrimEnd(Path.DirectorySeparatorChar);
             var normalizedChild = Path.GetFullPath(childPath).TrimEnd(Path.DirectorySeparatorChar);
-            
+
             return normalizedChild.StartsWith(normalizedParent + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) ||
                    normalizedChild.Equals(normalizedParent, StringComparison.OrdinalIgnoreCase);
         }
@@ -86,7 +86,7 @@ public static class PathValidator
             return false;
         }
     }
-    
+
     /// <summary>
     /// Validates a directory path and ensures it exists or can be created safely.
     /// </summary>
@@ -97,17 +97,17 @@ public static class PathValidator
     public static DirectoryInfo ValidateDirectoryPath(string directoryPath)
     {
         var sanitizedPath = ValidateAndSanitizePath(directoryPath);
-        
+
         try
         {
             var directoryInfo = new DirectoryInfo(sanitizedPath);
-            
+
             // Test if we can access the parent directory
             if (directoryInfo.Parent != null && !directoryInfo.Parent.Exists)
             {
                 throw new DirectoryNotFoundException($"Parent directory does not exist: {directoryInfo.Parent.FullName}");
             }
-            
+
             return directoryInfo;
         }
         catch (Exception ex) when (ex is ArgumentException || ex is NotSupportedException || ex is PathTooLongException)

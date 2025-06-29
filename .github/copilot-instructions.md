@@ -57,3 +57,11 @@ When creating application code, provide comprehensive guidance and best practice
 - This `.github/copilot-instructions.md` directs AI agents in this repo
 - Preserve existing Azure and infrastructure guidance
 - Merge, don’t overwrite; be concise and factual
+
+## Test
+- Use `dotnet test` to run all tests
+- Test files should be named `*Tests.cs` and located in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.*.Test/`
+- Use MSTest, FluentAssertions, and Moq for unit tests
+- Use AAA pattern for test structure: Arrange, Act, Assert
+- Use `Should().BeTrue()` for boolean assertions
+- Use `Should().BeEquivalentTo()` for object comparisons

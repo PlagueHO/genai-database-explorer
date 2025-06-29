@@ -27,13 +27,13 @@ public class SemanticModelRepositoryLazyLoadingTests
         _mockStrategyFactory = new Mock<IPersistenceStrategyFactory>();
         _mockStrategy = new Mock<ISemanticModelPersistenceStrategy>();
         _mockLogger = new Mock<ILogger<SemanticModelRepository>>();
-        
+
         _mockStrategyFactory
             .Setup(f => f.GetStrategy(It.IsAny<string>()))
             .Returns(_mockStrategy.Object);
 
         _repository = new SemanticModelRepository(_mockStrategyFactory.Object, _mockLogger.Object);
-        
+
         // Create a temporary directory for testing
         var tempPath = Path.Combine(Path.GetTempPath(), "SemanticModelRepositoryTests", Guid.NewGuid().ToString());
         _testModelPath = new DirectoryInfo(tempPath);

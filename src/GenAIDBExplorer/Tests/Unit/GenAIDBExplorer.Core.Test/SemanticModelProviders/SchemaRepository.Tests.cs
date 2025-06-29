@@ -266,7 +266,7 @@ public class SchemaRepositoryTests
         // Assert
         result.Should().NotBeNull();
         result.Should().HaveCount(1);
-        
+
         // Verify random selection was requested
         _mockSchemaRepository.Verify(r => r.GetSampleTableDataAsync(tableInfo, 1, true), Times.Once);
     }

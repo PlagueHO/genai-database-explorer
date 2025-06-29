@@ -62,7 +62,7 @@ namespace GenAIDBExplorer.Core.Repository
         {
             _configuration = configuration?.Value ?? throw new ArgumentNullException(nameof(configuration));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            
+
             // Validate configuration
             if (string.IsNullOrWhiteSpace(_configuration.AccountEndpoint))
             {
@@ -271,8 +271,8 @@ namespace GenAIDBExplorer.Core.Repository
                     {
                         var tableName = EntityNameSanitizer.SanitizeEntityName(tableRef.Name.ToString());
                         var loadTask = LoadEntityAsync<SemanticModelTable>(
-                            $"{modelName}_table_{tableName}", 
-                            modelName, 
+                            $"{modelName}_table_{tableName}",
+                            modelName,
                             entity => semanticModel.AddTable(entity));
                         loadTasks.Add(loadTask);
                     }
@@ -285,8 +285,8 @@ namespace GenAIDBExplorer.Core.Repository
                     {
                         var viewName = EntityNameSanitizer.SanitizeEntityName(viewRef.Name.ToString());
                         var loadTask = LoadEntityAsync<SemanticModelView>(
-                            $"{modelName}_view_{viewName}", 
-                            modelName, 
+                            $"{modelName}_view_{viewName}",
+                            modelName,
                             entity => semanticModel.AddView(entity));
                         loadTasks.Add(loadTask);
                     }
@@ -299,8 +299,8 @@ namespace GenAIDBExplorer.Core.Repository
                     {
                         var procedureName = EntityNameSanitizer.SanitizeEntityName(procedureRef.Name.ToString());
                         var loadTask = LoadEntityAsync<SemanticModelStoredProcedure>(
-                            $"{modelName}_storedprocedure_{procedureName}", 
-                            modelName, 
+                            $"{modelName}_storedprocedure_{procedureName}",
+                            modelName,
                             entity => semanticModel.AddStoredProcedure(entity));
                         loadTasks.Add(loadTask);
                     }
@@ -348,7 +348,7 @@ namespace GenAIDBExplorer.Core.Repository
             try
             {
                 var response = await _modelsContainer.ReadItemAsync<dynamic>(modelName, new PartitionKey(modelName));
-                
+
                 _logger.LogDebug("Semantic model {ModelName} exists check: {Exists}", modelName, true);
                 return true;
             }
@@ -380,7 +380,7 @@ namespace GenAIDBExplorer.Core.Repository
             {
                 var modelNames = new List<string>();
                 var query = "SELECT c.id FROM c";
-                
+
                 using var iterator = _modelsContainer.GetItemQueryIterator<dynamic>(query);
                 while (iterator.HasMoreResults)
                 {
@@ -435,7 +435,7 @@ namespace GenAIDBExplorer.Core.Repository
                 // Delete all entity documents for this model
                 var query = $"SELECT c.id FROM c WHERE c.modelName = '{modelName}'";
                 using var iterator = _entitiesContainer.GetItemQueryIterator<dynamic>(query);
-                
+
                 while (iterator.HasMoreResults)
                 {
                     var response = await iterator.ReadNextAsync();
@@ -478,7 +478,7 @@ namespace GenAIDBExplorer.Core.Repository
             {
                 // Create database if it doesn't exist
                 var databaseResponse = await _cosmosClient.CreateDatabaseIfNotExistsAsync(
-                    _configuration.DatabaseName, 
+                    _configuration.DatabaseName,
                     _configuration.DatabaseThroughput);
 
                 // Create models container if it doesn't exist
@@ -527,11 +527,11 @@ namespace GenAIDBExplorer.Core.Repository
             {
                 var response = await _entitiesContainer.ReadItemAsync<dynamic>(documentId, new PartitionKey(partitionKeyValue));
                 var entityData = response.Resource.data;
-                
+
                 // Deserialize the entity data
                 var jsonString = entityData.ToString();
                 var entity = JsonSerializer.Deserialize<T>(jsonString);
-                
+
                 if (entity != null)
                 {
                     processEntity(entity);

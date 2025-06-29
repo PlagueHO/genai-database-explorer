@@ -2,8 +2,9 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using GenAIDBExplorer.Core.Models.Database;
+using GenAIDBExplorer.Core.Models.SemanticModel.ChangeTracking;
 using GenAIDBExplorer.Core.Models.SemanticModel.JsonConverters;
-using GenAIDBExplorer.Core.Models.SemanticModel.Lazy;
+using GenAIDBExplorer.Core.Models.SemanticModel.LazyLoading;
 using GenAIDBExplorer.Core.Repository;
 using Microsoft.Extensions.Logging;
 
@@ -19,6 +20,7 @@ public sealed class SemanticModel(
     ) : ISemanticModel, IDisposable
 {
     private ILazyLoadingProxy<SemanticModelTable>? _tablesLazyProxy;
+    private IChangeTracker? _changeTracker;
     private bool _disposed;
 
     /// <summary>
@@ -42,6 +44,44 @@ public sealed class SemanticModel(
     /// </summary>
     [JsonIgnore]
     public bool IsLazyLoadingEnabled => _tablesLazyProxy != null;
+
+    /// <summary>
+    /// Gets a value indicating whether change tracking is enabled for this semantic model.
+    /// </summary>
+    [JsonIgnore]
+    public bool IsChangeTrackingEnabled 
+    { 
+        get
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException(nameof(SemanticModel));
+            }
+            return _changeTracker != null;
+        }
+    }
+
+    /// <summary>
+    /// Gets the change tracker for this semantic model if change tracking is enabled.
+    /// </summary>
+    [JsonIgnore]
+    public IChangeTracker? ChangeTracker 
+    { 
+        get
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException(nameof(SemanticModel));
+            }
+            return _changeTracker;
+        }
+    }
+
+    /// <summary>
+    /// Determines whether there are any unsaved changes in the semantic model.
+    /// </summary>
+    [JsonIgnore]
+    public bool HasUnsavedChanges => _changeTracker?.HasChanges ?? false;
 
     /// <summary>
     /// Saves the semantic model to the specified folder.
@@ -155,6 +195,7 @@ public sealed class SemanticModel(
     public void AddTable(SemanticModelTable table)
     {
         Tables.Add(table);
+        _changeTracker?.MarkAsDirty(table);
     }
 
     /// <summary>
@@ -164,7 +205,12 @@ public sealed class SemanticModel(
     /// <returns>True if the table was removed; otherwise, false.</returns>
     public bool RemoveTable(SemanticModelTable table)
     {
-        return Tables.Remove(table);
+        var removed = Tables.Remove(table);
+        if (removed)
+        {
+            _changeTracker?.MarkAsDirty(table);
+        }
+        return removed;
     }
 
     /// <summary>
@@ -236,6 +282,34 @@ public sealed class SemanticModel(
     }
 
     /// <summary>
+    /// Enables change tracking for this semantic model.
+    /// </summary>
+    /// <param name="changeTracker">The change tracker to use for tracking entity modifications.</param>
+    public void EnableChangeTracking(IChangeTracker changeTracker)
+    {
+        if (_disposed)
+        {
+            throw new ObjectDisposedException(nameof(SemanticModel));
+        }
+
+        ArgumentNullException.ThrowIfNull(changeTracker);
+        _changeTracker = changeTracker;
+    }
+
+    /// <summary>
+    /// Accepts all changes and marks all entities as clean.
+    /// </summary>
+    public void AcceptAllChanges()
+    {
+        if (_disposed)
+        {
+            throw new ObjectDisposedException(nameof(SemanticModel));
+        }
+
+        _changeTracker?.AcceptAllChanges();
+    }
+
+    /// <summary>
     /// Gets the tables collection with lazy loading support.
     /// </summary>
     /// <returns>A task that resolves to the tables collection.</returns>
@@ -267,6 +341,7 @@ public sealed class SemanticModel(
     public void AddView(SemanticModelView view)
     {
         Views.Add(view);
+        _changeTracker?.MarkAsDirty(view);
     }
 
     /// <summary>
@@ -276,7 +351,12 @@ public sealed class SemanticModel(
     /// <returns>True if the view was removed; otherwise, false.</returns>
     public bool RemoveView(SemanticModelView view)
     {
-        return Views.Remove(view);
+        var removed = Views.Remove(view);
+        if (removed)
+        {
+            _changeTracker?.MarkAsDirty(view);
+        }
+        return removed;
     }
 
     /// <summary>
@@ -302,6 +382,7 @@ public sealed class SemanticModel(
     public void AddStoredProcedure(SemanticModelStoredProcedure storedProcedure)
     {
         StoredProcedures.Add(storedProcedure);
+        _changeTracker?.MarkAsDirty(storedProcedure);
     }
 
     /// <summary>
@@ -311,7 +392,12 @@ public sealed class SemanticModel(
     /// <returns>True if the stored procedure was removed; otherwise, false.</returns>
     public bool RemoveStoredProcedure(SemanticModelStoredProcedure storedProcedure)
     {
-        return StoredProcedures.Remove(storedProcedure);
+        var removed = StoredProcedures.Remove(storedProcedure);
+        if (removed)
+        {
+            _changeTracker?.MarkAsDirty(storedProcedure);
+        }
+        return removed;
     }
 
     /// <summary>
@@ -349,7 +435,7 @@ public sealed class SemanticModel(
     }
 
     /// <summary>
-    /// Disposes the semantic model and releases any resources used by lazy loading proxies.
+    /// Disposes the semantic model and releases any resources used by lazy loading proxies and change tracker.
     /// </summary>
     public void Dispose()
     {
@@ -360,6 +446,13 @@ public sealed class SemanticModel(
 
         _tablesLazyProxy?.Dispose();
         _tablesLazyProxy = null;
+
+        if (_changeTracker is IDisposable disposableTracker)
+        {
+            disposableTracker.Dispose();
+        }
+        _changeTracker = null;
+
         _disposed = true;
     }
 

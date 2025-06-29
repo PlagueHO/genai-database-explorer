@@ -15,6 +15,12 @@ namespace GenAIDBExplorer.Core.Repository
         Task SaveModelAsync(SemanticModel model, DirectoryInfo modelPath, string? strategyName = null);
 
         /// <summary>
+        /// Saves only the changes (dirty entities) in the semantic model if change tracking is enabled.
+        /// Falls back to full save if change tracking is not enabled or no changes are detected.
+        /// </summary>
+        Task SaveChangesAsync(SemanticModel model, DirectoryInfo modelPath, string? strategyName = null);
+
+        /// <summary>
         /// Loads the semantic model using the specified persistence strategy.
         /// </summary>
         Task<SemanticModel> LoadModelAsync(DirectoryInfo modelPath, string? strategyName = null);
@@ -26,5 +32,14 @@ namespace GenAIDBExplorer.Core.Repository
         /// <param name="enableLazyLoading">Whether to enable lazy loading for entity collections.</param>
         /// <param name="strategyName">Optional strategy name to use for loading.</param>
         Task<SemanticModel> LoadModelAsync(DirectoryInfo modelPath, bool enableLazyLoading, string? strategyName = null);
+
+        /// <summary>
+        /// Loads the semantic model with optional lazy loading and change tracking.
+        /// </summary>
+        /// <param name="modelPath">The path to load the model from.</param>
+        /// <param name="enableLazyLoading">Whether to enable lazy loading for entity collections.</param>
+        /// <param name="enableChangeTracking">Whether to enable change tracking for the model.</param>
+        /// <param name="strategyName">Optional strategy name to use for loading.</param>
+        Task<SemanticModel> LoadModelAsync(DirectoryInfo modelPath, bool enableLazyLoading, bool enableChangeTracking, string? strategyName = null);
     }
 }
