@@ -10,7 +10,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.34.44.8038",
-      "templateHash": "5718435012636259727"
+      "templateHash": "11835921473866947678"
     }
   },
   "parameters": {
@@ -3825,7 +3825,10 @@
             }
           }
         }
-      }
+      },
+      "dependsOn": [
+        "rg"
+      ]
     },
     "applicationInsights": {
       "type": "Microsoft.Resources/deployments",
@@ -4541,7 +4544,8 @@
         }
       },
       "dependsOn": [
-        "logAnalyticsWorkspace"
+        "logAnalyticsWorkspace",
+        "rg"
       ]
     },
     "aiFoundryAccount": {
@@ -4601,6 +4605,9 @@
                 "principalId": "[parameters('principalId')]"
               }
             ]
+          },
+          "allowProjectManagement": {
+            "value": true
           }
         },
         "template": {
@@ -6871,7 +6878,8 @@
         }
       },
       "dependsOn": [
-        "logAnalyticsWorkspace"
+        "logAnalyticsWorkspace",
+        "rg"
       ]
     },
     "sqlServer": {
@@ -13448,7 +13456,10 @@
             }
           }
         }
-      }
+      },
+      "dependsOn": [
+        "rg"
+      ]
     },
     "cosmosDbAccount": {
       "condition": "[parameters('cosmosDbDeploy')]",
@@ -17296,7 +17307,8 @@
         }
       },
       "dependsOn": [
-        "logAnalyticsWorkspace"
+        "logAnalyticsWorkspace",
+        "rg"
       ]
     },
     "storageAccount": {
@@ -23108,7 +23120,8 @@
         }
       },
       "dependsOn": [
-        "logAnalyticsWorkspace"
+        "logAnalyticsWorkspace",
+        "rg"
       ]
     },
     "aiSearchService": {
@@ -25249,7 +25262,8 @@
         }
       },
       "dependsOn": [
-        "logAnalyticsWorkspace"
+        "logAnalyticsWorkspace",
+        "rg"
       ]
     }
   },

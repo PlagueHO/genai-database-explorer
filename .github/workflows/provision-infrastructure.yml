@@ -51,9 +51,34 @@ jobs:
       AZURE_PRINCIPAL_ID_TYPE: 'ServicePrincipal'
       SQL_SERVER_USERNAME: ${{ secrets.SQL_SERVER_USERNAME }}
       SQL_SERVER_PASSWORD: ${{ secrets.SQL_SERVER_PASSWORD }}
+      AZURE_AI_SEARCH_DEPLOY: 'true'
+      COSMOS_DB_DEPLOY: 'true'
+      STORAGE_ACCOUNT_DEPLOY: 'true'
 
     outputs:
+      AZURE_RESOURCE_GROUP: ${{ steps.get_endpoints.outputs.AZURE_RESOURCE_GROUP }}
+      AZURE_PRINCIPAL_ID: ${{ steps.get_endpoints.outputs.AZURE_PRINCIPAL_ID }}
+      AZURE_PRINCIPAL_ID_TYPE: ${{ steps.get_endpoints.outputs.AZURE_PRINCIPAL_ID_TYPE }}
+      LOG_ANALYTICS_WORKSPACE_NAME: ${{ steps.get_endpoints.outputs.LOG_ANALYTICS_WORKSPACE_NAME }}
+      LOG_ANALYTICS_RESOURCE_ID: ${{ steps.get_endpoints.outputs.LOG_ANALYTICS_RESOURCE_ID }}
+      LOG_ANALYTICS_WORKSPACE_ID: ${{ steps.get_endpoints.outputs.LOG_ANALYTICS_WORKSPACE_ID }}
+      APPLICATION_INSIGHTS_NAME: ${{ steps.get_endpoints.outputs.APPLICATION_INSIGHTS_NAME }}
+      APPLICATION_INSIGHTS_RESOURCE_ID: ${{ steps.get_endpoints.outputs.APPLICATION_INSIGHTS_RESOURCE_ID }}
+      APPLICATION_INSIGHTS_INSTRUMENTATION_KEY: ${{ steps.get_endpoints.outputs.APPLICATION_INSIGHTS_INSTRUMENTATION_KEY }}
+      AZURE_AI_SEARCH_NAME: ${{ steps.get_endpoints.outputs.AZURE_AI_SEARCH_NAME }}
+      AZURE_AI_SEARCH_ID: ${{ steps.get_endpoints.outputs.AZURE_AI_SEARCH_ID }}
+      AZURE_AI_SERVICES_NAME: ${{ steps.get_endpoints.outputs.AZURE_AI_SERVICES_NAME }}
+      AZURE_AI_SERVICES_ID: ${{ steps.get_endpoints.outputs.AZURE_AI_SERVICES_ID }}
       AZURE_AI_SERVICES_ENDPOINT: ${{ steps.get_endpoints.outputs.AZURE_AI_SERVICES_ENDPOINT }}
+      AZURE_AI_SERVICES_RESOURCE_ID: ${{ steps.get_endpoints.outputs.AZURE_AI_SERVICES_RESOURCE_ID }}
+      SQL_SERVER_NAME: ${{ steps.get_endpoints.outputs.SQL_SERVER_NAME }}
+      SQL_SERVER_RESOURCE_ID: ${{ steps.get_endpoints.outputs.SQL_SERVER_RESOURCE_ID }}
+      COSMOS_DB_ACCOUNT_NAME: ${{ steps.get_endpoints.outputs.COSMOS_DB_ACCOUNT_NAME }}
+      COSMOS_DB_ACCOUNT_RESOURCE_ID: ${{ steps.get_endpoints.outputs.COSMOS_DB_ACCOUNT_RESOURCE_ID }}
+      COSMOS_DB_ACCOUNT_ENDPOINT: ${{ steps.get_endpoints.outputs.COSMOS_DB_ACCOUNT_ENDPOINT }}
+      STORAGE_ACCOUNT_NAME: ${{ steps.get_endpoints.outputs.STORAGE_ACCOUNT_NAME }}
+      STORAGE_ACCOUNT_RESOURCE_ID: ${{ steps.get_endpoints.outputs.STORAGE_ACCOUNT_RESOURCE_ID }}
+      STORAGE_ACCOUNT_BLOB_ENDPOINT: ${{ steps.get_endpoints.outputs.STORAGE_ACCOUNT_BLOB_ENDPOINT }}
 
     steps:
       - name: Checkout
@@ -75,5 +100,55 @@ jobs:
       - name: Get Output Endpoints
         id: get_endpoints
         run: |
-          AZURE_AI_SERVICES_ENDPOINT=$(azd env get-values | grep AZURE_AI_SERVICES_ENDPOINT | cut -d'=' -f2- | xargs)
-          echo "AZURE_AI_SERVICES_ENDPOINT=$AZURE_AI_SERVICES_ENDPOINT" >> $GITHUB_OUTPUT
+          # Get all outputs from azd env get-values
+          AZD_OUTPUTS=$(azd env get-values)
+          
+          # Extract each output value and set as GitHub output
+          AZURE_RESOURCE_GROUP=$(echo "$AZD_OUTPUTS" | grep AZURE_RESOURCE_GROUP | cut -d'=' -f2- | xargs)
+          AZURE_PRINCIPAL_ID=$(echo "$AZD_OUTPUTS" | grep AZURE_PRINCIPAL_ID | cut -d'=' -f2- | xargs)
+          AZURE_PRINCIPAL_ID_TYPE=$(echo "$AZD_OUTPUTS" | grep AZURE_PRINCIPAL_ID_TYPE | cut -d'=' -f2- | xargs)
+          LOG_ANALYTICS_WORKSPACE_NAME=$(echo "$AZD_OUTPUTS" | grep LOG_ANALYTICS_WORKSPACE_NAME | cut -d'=' -f2- | xargs)
+          LOG_ANALYTICS_RESOURCE_ID=$(echo "$AZD_OUTPUTS" | grep LOG_ANALYTICS_RESOURCE_ID | cut -d'=' -f2- | xargs)
+          LOG_ANALYTICS_WORKSPACE_ID=$(echo "$AZD_OUTPUTS" | grep LOG_ANALYTICS_WORKSPACE_ID | cut -d'=' -f2- | xargs)
+          APPLICATION_INSIGHTS_NAME=$(echo "$AZD_OUTPUTS" | grep APPLICATION_INSIGHTS_NAME | cut -d'=' -f2- | xargs)
+          APPLICATION_INSIGHTS_RESOURCE_ID=$(echo "$AZD_OUTPUTS" | grep APPLICATION_INSIGHTS_RESOURCE_ID | cut -d'=' -f2- | xargs)
+          APPLICATION_INSIGHTS_INSTRUMENTATION_KEY=$(echo "$AZD_OUTPUTS" | grep APPLICATION_INSIGHTS_INSTRUMENTATION_KEY | cut -d'=' -f2- | xargs)
+          AZURE_AI_SEARCH_NAME=$(echo "$AZD_OUTPUTS" | grep AZURE_AI_SEARCH_NAME | cut -d'=' -f2- | xargs)
+          AZURE_AI_SEARCH_ID=$(echo "$AZD_OUTPUTS" | grep AZURE_AI_SEARCH_ID | cut -d'=' -f2- | xargs)
+          AZURE_AI_FOUNDRY_NAME=$(echo "$AZD_OUTPUTS" | grep AZURE_AI_FOUNDRY_NAME | cut -d'=' -f2- | xargs)
+          AZURE_AI_FOUNDRY_ID=$(echo "$AZD_OUTPUTS" | grep AZURE_AI_FOUNDRY_ID | cut -d'=' -f2- | xargs)
+          AZURE_AI_FOUNDRY_ENDPOINT=$(echo "$AZD_OUTPUTS" | grep AZURE_AI_FOUNDRY_ENDPOINT | cut -d'=' -f2- | xargs)
+          AZURE_AI_FOUNDRY_RESOURCE_ID=$(echo "$AZD_OUTPUTS" | grep AZURE_AI_FOUNDRY_RESOURCE_ID | cut -d'=' -f2- | xargs)
+          SQL_SERVER_NAME=$(echo "$AZD_OUTPUTS" | grep SQL_SERVER_NAME | cut -d'=' -f2- | xargs)
+          SQL_SERVER_RESOURCE_ID=$(echo "$AZD_OUTPUTS" | grep SQL_SERVER_RESOURCE_ID | cut -d'=' -f2- | xargs)
+          COSMOS_DB_ACCOUNT_NAME=$(echo "$AZD_OUTPUTS" | grep COSMOS_DB_ACCOUNT_NAME | cut -d'=' -f2- | xargs)
+          COSMOS_DB_ACCOUNT_RESOURCE_ID=$(echo "$AZD_OUTPUTS" | grep COSMOS_DB_ACCOUNT_RESOURCE_ID | cut -d'=' -f2- | xargs)
+          COSMOS_DB_ACCOUNT_ENDPOINT=$(echo "$AZD_OUTPUTS" | grep COSMOS_DB_ACCOUNT_ENDPOINT | cut -d'=' -f2- | xargs)
+          STORAGE_ACCOUNT_NAME=$(echo "$AZD_OUTPUTS" | grep STORAGE_ACCOUNT_NAME | cut -d'=' -f2- | xargs)
+          STORAGE_ACCOUNT_RESOURCE_ID=$(echo "$AZD_OUTPUTS" | grep STORAGE_ACCOUNT_RESOURCE_ID | cut -d'=' -f2- | xargs)
+          STORAGE_ACCOUNT_BLOB_ENDPOINT=$(echo "$AZD_OUTPUTS" | grep STORAGE_ACCOUNT_BLOB_ENDPOINT | cut -d'=' -f2- | xargs)
+          
+          # Set all outputs for GitHub Actions
+          echo "AZURE_RESOURCE_GROUP=$AZURE_RESOURCE_GROUP" >> $GITHUB_OUTPUT
+          echo "AZURE_PRINCIPAL_ID=$AZURE_PRINCIPAL_ID" >> $GITHUB_OUTPUT
+          echo "AZURE_PRINCIPAL_ID_TYPE=$AZURE_PRINCIPAL_ID_TYPE" >> $GITHUB_OUTPUT
+          echo "LOG_ANALYTICS_WORKSPACE_NAME=$LOG_ANALYTICS_WORKSPACE_NAME" >> $GITHUB_OUTPUT
+          echo "LOG_ANALYTICS_RESOURCE_ID=$LOG_ANALYTICS_RESOURCE_ID" >> $GITHUB_OUTPUT
+          echo "LOG_ANALYTICS_WORKSPACE_ID=$LOG_ANALYTICS_WORKSPACE_ID" >> $GITHUB_OUTPUT
+          echo "APPLICATION_INSIGHTS_NAME=$APPLICATION_INSIGHTS_NAME" >> $GITHUB_OUTPUT
+          echo "APPLICATION_INSIGHTS_RESOURCE_ID=$APPLICATION_INSIGHTS_RESOURCE_ID" >> $GITHUB_OUTPUT
+          echo "APPLICATION_INSIGHTS_INSTRUMENTATION_KEY=$APPLICATION_INSIGHTS_INSTRUMENTATION_KEY" >> $GITHUB_OUTPUT
+          echo "AZURE_AI_SEARCH_NAME=$AZURE_AI_SEARCH_NAME" >> $GITHUB_OUTPUT
+          echo "AZURE_AI_SEARCH_ID=$AZURE_AI_SEARCH_ID" >> $GITHUB_OUTPUT
+          echo "AZURE_AI_FOUNDRY_NAME=$AZURE_AI_FOUNDRY_NAME" >> $GITHUB_OUTPUT
+          echo "AZURE_AI_FOUNDRY_ID=$AZURE_AI_FOUNDRY_ID" >> $GITHUB_OUTPUT
+          echo "AZURE_AI_FOUNDRY_ENDPOINT=$AZURE_AI_FOUNDRY_ENDPOINT" >> $GITHUB_OUTPUT
+          echo "AZURE_AI_FOUNDRY_RESOURCE_ID=$AZURE_AI_FOUNDRY_RESOURCE_ID" >> $GITHUB_OUTPUT
+          echo "SQL_SERVER_NAME=$SQL_SERVER_NAME" >> $GITHUB_OUTPUT
+          echo "SQL_SERVER_RESOURCE_ID=$SQL_SERVER_RESOURCE_ID" >> $GITHUB_OUTPUT
+          echo "COSMOS_DB_ACCOUNT_NAME=$COSMOS_DB_ACCOUNT_NAME" >> $GITHUB_OUTPUT
+          echo "COSMOS_DB_ACCOUNT_RESOURCE_ID=$COSMOS_DB_ACCOUNT_RESOURCE_ID" >> $GITHUB_OUTPUT
+          echo "COSMOS_DB_ACCOUNT_ENDPOINT=$COSMOS_DB_ACCOUNT_ENDPOINT" >> $GITHUB_OUTPUT
+          echo "STORAGE_ACCOUNT_NAME=$STORAGE_ACCOUNT_NAME" >> $GITHUB_OUTPUT
+          echo "STORAGE_ACCOUNT_RESOURCE_ID=$STORAGE_ACCOUNT_RESOURCE_ID" >> $GITHUB_OUTPUT
+          echo "STORAGE_ACCOUNT_BLOB_ENDPOINT=$STORAGE_ACCOUNT_BLOB_ENDPOINT" >> $GITHUB_OUTPUT

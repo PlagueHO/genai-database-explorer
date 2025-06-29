@@ -149,6 +149,7 @@ module aiFoundryAccount 'br/public:avm/res/cognitive-services/account:0.11.0' = 
         principalId: principalId
       }
     ]
+    allowProjectManagement: true
   }
 }
 
@@ -378,14 +379,17 @@ output APPLICATION_INSIGHTS_NAME string = applicationInsights.outputs.name
 output APPLICATION_INSIGHTS_RESOURCE_ID string = applicationInsights.outputs.resourceId
 output APPLICATION_INSIGHTS_INSTRUMENTATION_KEY string = applicationInsights.outputs.instrumentationKey
 
-// Output the AI Services resources
+// Output the AI Search resources
 output AZURE_AI_SEARCH_NAME string = azureAiSearchDeploy ? aiSearchService.outputs.name : ''
 output AZURE_AI_SEARCH_ID   string = azureAiSearchDeploy ? aiSearchService.outputs.resourceId : ''
-output AZURE_AI_SERVICES_NAME string = aiFoundryAccount.outputs.name
-output AZURE_AI_SERVICES_ID string = aiFoundryAccount.outputs.resourceId
-output AZURE_AI_SERVICES_ENDPOINT string = aiFoundryAccount.outputs.endpoint
-output AZURE_AI_SERVICES_RESOURCE_ID string = aiFoundryAccount.outputs.resourceId
 
+// Output the AI Foundry resources
+output AZURE_AI_FOUNDRY_NAME string = aiFoundryAccount.outputs.name
+output AZURE_AI_FOUNDRY_ID string = aiFoundryAccount.outputs.resourceId
+output AZURE_AI_FOUNDRY_ENDPOINT string = aiFoundryAccount.outputs.endpoint
+output AZURE_AI_FOUNDRY_RESOURCE_ID string = aiFoundryAccount.outputs.resourceId
+
+// Output the SQL Server resources
 output SQL_SERVER_NAME string = sqlServer.outputs.name
 output SQL_SERVER_RESOURCE_ID string = sqlServer.outputs.resourceId
 
