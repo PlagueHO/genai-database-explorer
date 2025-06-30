@@ -39,7 +39,7 @@ namespace GenAIDBExplorer.Core.Repository
         public async Task SaveModelAsync(SemanticModel model, DirectoryInfo modelPath, string? strategyName = null)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
-            
+
             var sanitizedPath = await ValidateAndSanitizePathAsync(modelPath);
             await ExecuteWithConcurrencyProtectionAsync(sanitizedPath, async () =>
             {
@@ -99,7 +99,7 @@ namespace GenAIDBExplorer.Core.Repository
             return await ExecuteWithConcurrencyProtectionAsync(sanitizedPath, async () =>
             {
                 _logger?.LogDebug("Loading semantic model from {ModelPath}", sanitizedPath);
-                
+
                 var strategy = _strategyFactory.GetStrategy(strategyName);
                 var model = await strategy.LoadModelAsync(new DirectoryInfo(sanitizedPath));
 
@@ -132,17 +132,17 @@ namespace GenAIDBExplorer.Core.Repository
             {
                 // Validate input security
                 EntityNameSanitizer.ValidateInputSecurity(modelPath.FullName, nameof(modelPath));
-                
+
                 // Validate and sanitize the path
                 var sanitizedPath = PathValidator.ValidateAndSanitizePath(modelPath.FullName);
-                
+
                 // Ensure the path is safe for concurrent operations
                 if (!PathValidator.IsPathSafeForConcurrentOperations(sanitizedPath))
                 {
                     throw new InvalidOperationException($"Path is not safe for concurrent operations: {sanitizedPath}");
                 }
 
-                _logger?.LogDebug("Path validated and sanitized: {OriginalPath} -> {SanitizedPath}", 
+                _logger?.LogDebug("Path validated and sanitized: {OriginalPath} -> {SanitizedPath}",
                     modelPath.FullName, sanitizedPath);
 
                 return Task.FromResult(sanitizedPath);

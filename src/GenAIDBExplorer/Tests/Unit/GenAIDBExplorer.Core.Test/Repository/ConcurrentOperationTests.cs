@@ -51,7 +51,7 @@ namespace GenAIDBExplorer.Core.Tests.Repository
         public void Cleanup()
         {
             _repository?.Dispose();
-            
+
             if (Directory.Exists(_testDirectory))
             {
                 try
@@ -71,7 +71,7 @@ namespace GenAIDBExplorer.Core.Tests.Repository
             // Arrange
             var model = CreateTestSemanticModel();
             var modelPath = new DirectoryInfo(Path.Combine(_testDirectory, "concurrent_save"));
-            
+
             var saveDelayMs = 100;
             var concurrentTasks = 5;
 
@@ -87,7 +87,7 @@ namespace GenAIDBExplorer.Core.Tests.Repository
             await Task.WhenAll(tasks);
 
             // Verify all operations completed
-            _mockStrategy.Verify(s => s.SaveModelAsync(It.IsAny<SemanticModel>(), It.IsAny<DirectoryInfo>()), 
+            _mockStrategy.Verify(s => s.SaveModelAsync(It.IsAny<SemanticModel>(), It.IsAny<DirectoryInfo>()),
                                Times.Exactly(concurrentTasks));
         }
 
@@ -97,7 +97,7 @@ namespace GenAIDBExplorer.Core.Tests.Repository
             // Arrange
             var model = CreateTestSemanticModel();
             var modelPath = new DirectoryInfo(Path.Combine(_testDirectory, "concurrent_load"));
-            
+
             var loadDelayMs = 100;
             var concurrentTasks = 5;
 
@@ -119,7 +119,7 @@ namespace GenAIDBExplorer.Core.Tests.Repository
             // Verify all operations completed and returned results
             results.Should().NotBeNull();
             results.Should().AllSatisfy(result => result.Should().NotBeNull());
-            _mockStrategy.Verify(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()), 
+            _mockStrategy.Verify(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()),
                                Times.Exactly(concurrentTasks));
         }
 
@@ -129,7 +129,7 @@ namespace GenAIDBExplorer.Core.Tests.Repository
             // Arrange
             var model = CreateTestSemanticModel();
             var modelPath = new DirectoryInfo(Path.Combine(_testDirectory, "mixed_operations"));
-            
+
             var operationDelayMs = 50;
             var operationCount = 0;
 
@@ -151,7 +151,7 @@ namespace GenAIDBExplorer.Core.Tests.Repository
             // Act - Mix save and load operations on the same path
             var saveTasks = Enumerable.Range(0, 3)
                                     .Select(_ => _repository.SaveModelAsync(model, modelPath));
-            
+
             var loadTasks = Enumerable.Range(0, 3)
                                     .Select(_ => _repository.LoadModelAsync(modelPath));
 
@@ -198,7 +198,7 @@ namespace GenAIDBExplorer.Core.Tests.Repository
 
             // Act - Start more tasks than the concurrency limit
             var tasks = Enumerable.Range(0, maxConcurrent * 2)
-                                 .Select(i => repository.SaveModelAsync(model, 
+                                 .Select(i => repository.SaveModelAsync(model,
                                      new DirectoryInfo(Path.Combine(_testDirectory, $"model_{i}"))))
                                  .ToArray();
 
@@ -278,25 +278,25 @@ namespace GenAIDBExplorer.Core.Tests.Repository
                         {
                             // Signal that the operation has started
                             taskCompletionSource.SetResult(true);
-                            
+
                             // Short delay before completion
                             await Task.Delay(10);
                         });
 
             // Act
             var operationTask = _repository.SaveModelAsync(model, modelPath);
-            
+
             // Wait for operation to start
             await taskCompletionSource.Task;
-            
+
             // Complete the operation first, then dispose
             await operationTask;
-            
+
             // Dispose repository after operation completes
             _repository.Dispose();
 
             // Verify operation completed
-            _mockStrategy.Verify(s => s.SaveModelAsync(It.IsAny<SemanticModel>(), It.IsAny<DirectoryInfo>()), 
+            _mockStrategy.Verify(s => s.SaveModelAsync(It.IsAny<SemanticModel>(), It.IsAny<DirectoryInfo>()),
                                Times.Once);
         }
 

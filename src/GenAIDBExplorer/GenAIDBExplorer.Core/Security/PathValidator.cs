@@ -65,7 +65,7 @@ public static class PathValidator
     private static void ValidatePathLength(string path, bool allowExtendedPaths)
     {
         var maxLength = allowExtendedPaths ? MaxPathLengthExtended : MaxPathLength;
-        
+
         if (path.Length > maxLength)
         {
             throw new ArgumentException($"Path exceeds maximum length of {maxLength} characters: {path}", nameof(path));
@@ -152,7 +152,7 @@ public static class PathValidator
     private static void ValidateReservedNames(string path)
     {
         var segments = path.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries);
-        
+
         foreach (var segment in segments)
         {
             var nameWithoutExtension = Path.GetFileNameWithoutExtension(segment).ToUpperInvariant();
@@ -174,14 +174,14 @@ public static class PathValidator
         {
             // Normalize to prevent Unicode-based attacks
             var normalized = path.Normalize(NormalizationForm.FormC);
-            
+
             // Check if normalization changed the path significantly
             if (!string.Equals(path, normalized, StringComparison.Ordinal))
             {
                 // Log the normalization for security monitoring
                 // In a real implementation, you might want to log this event
             }
-            
+
             return normalized;
         }
         catch (ArgumentException)
@@ -200,14 +200,14 @@ public static class PathValidator
         try
         {
             var validatedPath = ValidateAndSanitizePath(path);
-            
+
             // Check if the path is on a network drive (which may have different locking behavior)
             var pathRoot = Path.GetPathRoot(validatedPath);
             if (string.IsNullOrEmpty(pathRoot))
                 return false;
 
             var driveInfo = new DriveInfo(pathRoot);
-            
+
             // Network drives may not support proper file locking
             if (driveInfo.DriveType == DriveType.Network)
             {

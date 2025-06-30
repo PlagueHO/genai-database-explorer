@@ -89,10 +89,10 @@ public static class EntityNameSanitizer
         {
             // Normalize to prevent Unicode-based attacks
             var normalized = entityName.Normalize(NormalizationForm.FormC);
-            
+
             // Additional check for homograph attacks (similar-looking characters)
             ValidateHomographSafety(entityName, normalized);
-            
+
             return normalized;
         }
         catch (ArgumentException)
@@ -307,7 +307,7 @@ public static class EntityNameSanitizer
     private static bool ContainsBinaryContent(string input)
     {
         // Check for null bytes and other binary indicators
-        return input.Contains('\0') || 
+        return input.Contains('\0') ||
                input.Any(c => c < 32 && c != '\t' && c != '\n' && c != '\r');
     }
 }
