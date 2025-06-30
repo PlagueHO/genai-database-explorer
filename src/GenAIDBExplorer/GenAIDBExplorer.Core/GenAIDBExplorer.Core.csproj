@@ -24,15 +24,15 @@
     <PackageReference Include="Microsoft.KernelMemory.Core" Version="0.98.250508.3" />
     <PackageReference Include="Microsoft.KernelMemory.MemoryDb.AzureAISearch" Version="0.98.250508.3" />
     <PackageReference Include="Microsoft.KernelMemory.SemanticKernelPlugin" Version="0.98.250508.3" />
-    <PackageReference Include="Microsoft.SemanticKernel" Version="1.57.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.Abstractions" Version="1.57.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.Connectors.AzureOpenAI" Version="1.57.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.Connectors.OpenAI" Version="1.57.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.Core" Version="1.57.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.PromptTemplates.Handlebars" Version="1.57.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.PromptTemplates.Liquid" Version="1.57.0" />
+    <PackageReference Include="Microsoft.SemanticKernel" Version="1.58.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Abstractions" Version="1.58.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Connectors.AzureOpenAI" Version="1.58.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Connectors.OpenAI" Version="1.58.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Core" Version="1.58.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.PromptTemplates.Handlebars" Version="1.58.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.PromptTemplates.Liquid" Version="1.58.0" />
     <PackageReference Include="Microsoft.SemanticKernel.Prompty" Version="1.55.0-beta" />
-    <PackageReference Include="Microsoft.SemanticKernel.Yaml" Version="1.57.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Yaml" Version="1.58.0" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.2" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
     <!-- Azure SDK packages for cloud persistence strategies -->
