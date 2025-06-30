@@ -2,11 +2,7 @@
     "name": "genai-database-explorer",
     "image": "mcr.microsoft.com/devcontainers/dotnet:1-8.0-jammy",
     "workspaceFolder": "/workspaces/genai-database-explorer",
-    "onCreateCommand": {
-        "line-endings": "sed -i 's/\\r$//' ./.devcontainer/on-setup.sh || tr -d '\\r' < ./.devcontainer/on-setup.sh > /tmp/on-setup.sh && mv /tmp/on-setup.sh ./.devcontainer/on-setup.sh",
-        "permissions": "chmod +x ./.devcontainer/on-setup.sh",
-        "setup": "bash ./.devcontainer/on-setup.sh"
-    },
+    "onCreateCommand": "tr -d '\\r' < .devcontainer/on-setup.sh > /tmp/on-setup.sh && mv /tmp/on-setup.sh .devcontainer/on-setup.sh && chmod +x .devcontainer/on-setup.sh && bash .devcontainer/on-setup.sh",
     // Features to add to the dev container. More info: https://containers.dev/features.
     "features": {
         "ghcr.io/devcontainers/features/azure-cli:1": {
