@@ -64,4 +64,4 @@ git config --global init.defaultBranch main || echo "⚠️  Git config failed"
 git config --global pull.rebase false || echo "⚠️  Git config failed"
 
 echo "✅ DevContainer setup completed successfully!"
-echo "🚀 Ready for .NET 8 + C# 13 development with Azure tooling"
+echo "🚀 Ready for .NET 9 + C# 14 development with Azure tooling"
