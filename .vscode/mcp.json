@@ -1,19 +1,13 @@
 {
+    "inputs": [
+        {
+            "id": "giphy_api_key",
+            "type": "promptString",
+            "description": "Giphy API Key",
+            "password": true
+        }
+    ],
     "servers": {
-          "microsoft.docs.mcp": {
-            "type": "http",
-            "url": "https://learn.microsoft.com/api/mcp"
-        },
-        "filesystem": {
-            "command": "npx",
-            "args": [
-                "-y",
-                "@modelcontextprotocol/server-filesystem",
-                "${input:baseDirectory}"
-            ],
-            "type": "stdio",
-            "env": {}
-        },
         "playwright": {
             "command": "npx",
             "args": [
@@ -23,16 +17,6 @@
             "type": "stdio",
             "env": {}
         },
-        "github": {
-            "command": "npx",
-            "args": [
-                "-y",
-                "@modelcontextprotocol/server-github"
-            ],
-            "env": {
-                "GITHUB_PERSONAL_ACCESS_TOKEN": "${input:github_token}"
-            }
-        },
         "giphy": {
             "command": "npx",
             "args": [
@@ -41,26 +25,16 @@
             ],
             "env": {
                 "GIPHY_API_KEY": "${input:giphy_api_key}"
-            }
-        }
-    },
-    "inputs": [
-        {
-            "id": "baseDirectory",
-            "type": "promptString",
-            "description": "Enter the base directory path for the server"
+            },
+            "type": "stdio"
         },
-        {
-            "id": "github_token",
-            "type": "promptString",
-            "description": "GitHub Personal Access Token",
-            "password": true
+        "microsoft.docs.mcp": {
+            "type": "http",
+            "url": "https://learn.microsoft.com/api/mcp"
         },
-        {
-            "id": "giphy_api_key",
-            "type": "promptString",
-            "description": "Giphy API Key",
-            "password": true
+        "github": {
+            "url": "https://api.githubcopilot.com/mcp/",
+            "type": "http"
         }
-    ]
+    }
 }
