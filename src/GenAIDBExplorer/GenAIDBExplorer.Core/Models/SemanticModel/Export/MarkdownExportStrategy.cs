@@ -1,10 +1,6 @@
-namespace GenAIDBExplorer.Core.Export;
+namespace GenAIDBExplorer.Core.Models.SemanticModel.Export;
 
-using System;
-using System.IO;
 using System.Text;
-using System.Threading.Tasks;
-using GenAIDBExplorer.Core.Models.SemanticModel;
 
 /// <summary>
 /// Export strategy for exporting the semantic model to Markdown format.

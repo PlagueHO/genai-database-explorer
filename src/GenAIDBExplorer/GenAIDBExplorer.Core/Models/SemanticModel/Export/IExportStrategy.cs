@@ -1,6 +1,4 @@
-namespace GenAIDBExplorer.Core.Export;
-
-using GenAIDBExplorer.Core.Models.SemanticModel;
+namespace GenAIDBExplorer.Core.Models.SemanticModel.Export;
 
 /// <summary>
 /// Defines an interface for exporting the semantic model.

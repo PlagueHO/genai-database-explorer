@@ -1,5 +1,5 @@
 using GenAIDBExplorer.Core.Data.DatabaseProviders;
-using GenAIDBExplorer.Core.Export;
+using GenAIDBExplorer.Core.Models.SemanticModel.Export;
 using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.SemanticModelProviders;
 using GenAIDBExplorer.Console.Services;
