@@ -20,6 +20,8 @@ public sealed class SemanticModel(
     ) : ISemanticModel, IDisposable
 {
     private ILazyLoadingProxy<SemanticModelTable>? _tablesLazyProxy;
+    private ILazyLoadingProxy<SemanticModelView>? _viewsLazyProxy;
+    private ILazyLoadingProxy<SemanticModelStoredProcedure>? _storedProceduresLazyProxy;
     private IChangeTracker? _changeTracker;
     private bool _disposed;
 
@@ -43,7 +45,7 @@ public sealed class SemanticModel(
     /// Gets a value indicating whether lazy loading is enabled for this semantic model.
     /// </summary>
     [JsonIgnore]
-    public bool IsLazyLoadingEnabled => _tablesLazyProxy != null;
+    public bool IsLazyLoadingEnabled => _tablesLazyProxy != null || _viewsLazyProxy != null || _storedProceduresLazyProxy != null;
 
     /// <summary>
     /// Gets a value indicating whether change tracking is enabled for this semantic model.
@@ -277,8 +279,50 @@ public sealed class SemanticModel(
                 return tables;
             });
 
-        // Clear the eagerly loaded tables since we're using lazy loading
+        // Create lazy loading proxy for Views collection (Phase 4d)
+        _viewsLazyProxy = new LazyLoadingProxy<SemanticModelView>(
+            async () =>
+            {
+                // Load view metadata and details on demand
+                var viewsFolderPath = new DirectoryInfo(Path.Combine(modelPath.FullName, "views"));
+                if (!Directory.Exists(viewsFolderPath.FullName))
+                {
+                    return Enumerable.Empty<SemanticModelView>();
+                }
+
+                var views = new List<SemanticModelView>();
+                foreach (var view in Views)
+                {
+                    await view.LoadModelAsync(viewsFolderPath);
+                    views.Add(view);
+                }
+                return views;
+            });
+
+        // Create lazy loading proxy for StoredProcedures collection (Phase 4d)
+        _storedProceduresLazyProxy = new LazyLoadingProxy<SemanticModelStoredProcedure>(
+            async () =>
+            {
+                // Load stored procedure metadata and details on demand
+                var storedProceduresFolderPath = new DirectoryInfo(Path.Combine(modelPath.FullName, "storedprocedures"));
+                if (!Directory.Exists(storedProceduresFolderPath.FullName))
+                {
+                    return Enumerable.Empty<SemanticModelStoredProcedure>();
+                }
+
+                var storedProcedures = new List<SemanticModelStoredProcedure>();
+                foreach (var storedProcedure in StoredProcedures)
+                {
+                    await storedProcedure.LoadModelAsync(storedProceduresFolderPath);
+                    storedProcedures.Add(storedProcedure);
+                }
+                return storedProcedures;
+            });
+
+        // Clear the eagerly loaded collections since we're using lazy loading
         Tables.Clear();
+        Views.Clear();
+        StoredProcedures.Clear();
     }
 
     /// <summary>
@@ -327,6 +371,46 @@ public sealed class SemanticModel(
 
         // Fall back to eager loaded tables if lazy loading is not enabled
         return Tables;
+    }
+
+    /// <summary>
+    /// Gets the views collection with lazy loading support.
+    /// </summary>
+    /// <returns>A task that resolves to the views collection.</returns>
+    public async Task<IEnumerable<SemanticModelView>> GetViewsAsync()
+    {
+        if (_disposed)
+        {
+            throw new ObjectDisposedException(nameof(SemanticModel));
+        }
+
+        if (_viewsLazyProxy != null)
+        {
+            return await _viewsLazyProxy.GetEntitiesAsync();
+        }
+
+        // Fall back to eager loaded views if lazy loading is not enabled
+        return Views;
+    }
+
+    /// <summary>
+    /// Gets the stored procedures collection with lazy loading support.
+    /// </summary>
+    /// <returns>A task that resolves to the stored procedures collection.</returns>
+    public async Task<IEnumerable<SemanticModelStoredProcedure>> GetStoredProceduresAsync()
+    {
+        if (_disposed)
+        {
+            throw new ObjectDisposedException(nameof(SemanticModel));
+        }
+
+        if (_storedProceduresLazyProxy != null)
+        {
+            return await _storedProceduresLazyProxy.GetEntitiesAsync();
+        }
+
+        // Fall back to eager loaded stored procedures if lazy loading is not enabled
+        return StoredProcedures;
     }
 
     /// <summary>
@@ -446,6 +530,12 @@ public sealed class SemanticModel(
 
         _tablesLazyProxy?.Dispose();
         _tablesLazyProxy = null;
+
+        _viewsLazyProxy?.Dispose();
+        _viewsLazyProxy = null;
+
+        _storedProceduresLazyProxy?.Dispose();
+        _storedProceduresLazyProxy = null;
 
         if (_changeTracker is IDisposable disposableTracker)
         {

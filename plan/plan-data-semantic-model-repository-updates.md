@@ -229,6 +229,18 @@ This phase is broken down into atomic sub-phases to ensure the solution remains 
    - Implement memory optimization patterns
    - **ENSURE**: Extended lazy loading builds on Phase 4a foundation
 
+**Phase 4d Status**: ✅ **COMPLETED** on 2025-06-29 – Extended lazy loading implementation completed for Views and StoredProcedures collections, building on the proven Phase 4a foundation with comprehensive memory optimization coverage. Key deliverables implemented:
+
+- **Extended `ISemanticModel` interface** with `GetViewsAsync()` and `GetStoredProceduresAsync()` methods following the established lazy loading pattern from Phase 4a
+- **Enhanced `SemanticModel` class** with lazy loading proxies for Views (`_viewsLazyProxy`) and StoredProcedures (`_storedProceduresLazyProxy`) collections, integrated with existing lazy loading infrastructure
+- **Updated `EnableLazyLoading()` method** to create proxies for all collections (Tables, Views, StoredProcedures) providing complete memory optimization coverage
+- **Consistent lazy loading implementation** following Phase 4a patterns with thread-safe operations, proper resource management, and error handling for all entity collections
+- **Enhanced disposal pattern** in `Dispose()` method to properly clean up all lazy loading proxies and prevent memory leaks
+- **Comprehensive test coverage** with `ExtendedLazyLoadingTests.cs` containing 12 test methods covering all lazy loading scenarios including Views and StoredProcedures collections, backward compatibility validation, disposal behavior, and integration testing
+- **Complete memory optimization** - all major entity collections now support lazy loading, providing maximum memory efficiency for large semantic models while maintaining backward compatibility
+- **Zero breaking changes** - all existing APIs continue to function unchanged, with lazy loading remaining opt-in for applications that want memory optimization benefits
+- **Foundation for advanced scenarios** - complete lazy loading infrastructure now ready for advanced caching mechanisms and performance optimizations in Phase 5
+
 ### Phase 5: Optional Performance Enhancements (Priority 12-15)
 
 This phase contains optional features that provide additional performance benefits but are not required for core functionality.

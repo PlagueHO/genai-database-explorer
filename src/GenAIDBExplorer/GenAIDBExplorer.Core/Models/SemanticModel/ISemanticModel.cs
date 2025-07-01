@@ -47,6 +47,18 @@ public interface ISemanticModel
     Task<IEnumerable<SemanticModelTable>> GetTablesAsync();
 
     /// <summary>
+    /// Gets the views collection with lazy loading support.
+    /// </summary>
+    /// <returns>A task that resolves to the views collection.</returns>
+    Task<IEnumerable<SemanticModelView>> GetViewsAsync();
+
+    /// <summary>
+    /// Gets the stored procedures collection with lazy loading support.
+    /// </summary>
+    /// <returns>A task that resolves to the stored procedures collection.</returns>
+    Task<IEnumerable<SemanticModelStoredProcedure>> GetStoredProceduresAsync();
+
+    /// <summary>
     /// Gets a value indicating whether change tracking is enabled for this semantic model.
     /// </summary>
     bool IsChangeTrackingEnabled { get; }
