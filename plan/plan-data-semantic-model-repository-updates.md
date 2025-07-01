@@ -243,27 +243,51 @@ This phase is broken down into atomic sub-phases to ensure the solution remains 
 
 ### Phase 5: Optional Performance Enhancements (Priority 12-15)
 
-This phase contains optional features that provide additional performance benefits but are not required for core functionality.
+This phase is broken down into independent sub-phases to ensure the solution remains functional and incrementally deployable after each step. Each sub-phase provides specific performance benefits and can be implemented separately based on requirements and priorities.
 
-1. **Advanced caching mechanisms**
-   - Add caching mechanisms for frequently accessed entities
-   - Implement cache invalidation strategies
-   - Add cache configuration options
+#### Phase 5a: Basic Caching Foundation (Optional - Priority 12)
 
-2. **Cloud security enhancements**
-   - Add secure connection string handling for cloud strategies
-   - Implement JSON deserialization protection
-   - Add authentication enhancements
+1. **Implement basic caching infrastructure**
+   - Create `ISemanticModelCache` interface with basic cache operations
+   - Implement `MemorySemanticModelCache` with in-memory caching
+   - Add basic cache statistics and hit rate tracking
+   - Integrate with repository for optional caching layer
+   - **ENSURE**: Caching is completely optional and doesn't affect existing persistence operations
 
-3. **Performance optimizations**
-   - Implement parallel processing for bulk operations
-   - Add performance monitoring and metrics
-   - Implement advanced memory optimization patterns
+**Benefits**: Immediate performance improvement for frequently accessed entities with simple memory-based caching.
 
-4. **Property-level change tracking**
-   - Extend dirty tracking to property level for more granular updates
-   - Add change event notifications
-   - Implement selective property persistence
+#### Phase 5b: Enhanced Security Features (Optional - Priority 13)
+
+1. **Implement cloud security enhancements**
+   - Create `IEnhancedCredentialProvider` for Azure authentication
+   - Implement `ISecureJsonSerializer` with injection protection
+   - Add `KeyVaultConfigurationProvider` for secure configuration management
+   - Enhance existing cloud strategies with secure credential handling
+   - **ENSURE**: Security enhancements are additive and don't break existing authentication
+
+**Benefits**: Enterprise-grade security for cloud deployments with Azure Key Vault integration and secure JSON handling.
+
+#### Phase 5c: Performance Monitoring (Optional - Priority 14)
+
+1. **Implement performance monitoring and metrics**
+   - Create `IPerformanceMonitor` interface for operation tracking
+   - Implement performance metrics collection and analysis
+   - Add performance recommendations based on usage patterns
+   - Create `IParallelExecutionService` for optimized bulk operations
+   - **ENSURE**: Monitoring is non-intrusive and doesn't impact existing performance
+
+**Benefits**: Detailed performance insights and optimized parallel processing for large-scale operations.
+
+#### Phase 5d: Advanced Change Tracking (Optional - Priority 15)
+
+1. **Implement property-level change tracking**
+   - Create `IPropertyChangeTrackable` interface for granular tracking
+   - Implement `PropertyChangeTrackingService` for detailed change management
+   - Add property-level dirty tracking and selective persistence
+   - Extend existing change tracking to support property-level granularity
+   - **ENSURE**: Advanced tracking builds on Phase 4b foundation without breaking existing functionality
+
+**Benefits**: Fine-grained change tracking for optimal persistence performance and detailed audit capabilities.
 
 ### Phase 6: Testing and Documentation (Priority 16-21)
 
@@ -349,12 +373,33 @@ This phase contains optional features that provide additional performance benefi
 - Optional feature that can be deferred if needed
 - Provides complete memory optimization coverage
 
-**Phase 5**: ✅ **SAFE** - Optional performance enhancements.
+**Phase 5a**: ✅ **SAFE** - Basic caching foundation.
 
-- All features are optional performance optimizations
-- No impact on core functionality
-- Can be implemented based on usage patterns and requirements
-- Provides advanced capabilities for high-performance scenarios
+- Memory-based caching implementation that's completely optional
+- No impact on existing persistence operations
+- Simple performance optimization that can be enabled per application needs
+- Provides immediate benefits for frequently accessed entities
+
+**Phase 5b**: ✅ **SAFE** - Enhanced security features.
+
+- Cloud security enhancements as additive security layers
+- Azure Key Vault integration for secure configuration management
+- Enhanced credential handling doesn't replace existing authentication
+- Production-ready security features for enterprise deployments
+
+**Phase 5c**: ✅ **SAFE** - Performance monitoring and parallel execution.
+
+- Non-intrusive performance monitoring and metrics collection
+- Parallel execution service for optimized bulk operations
+- Performance insights and recommendations based on usage patterns
+- No impact on existing single-operation performance
+
+**Phase 5d**: ✅ **SAFE** - Advanced change tracking features.
+
+- Property-level change tracking builds on proven Phase 4b foundation
+- Granular tracking provides additional optimization opportunities
+- Optional advanced features that enhance existing change tracking
+- Fine-grained persistence optimization for large models
 
 **Phase 6**: ✅ **SAFE** - Testing and documentation don't affect runtime behavior.
 
@@ -374,6 +419,10 @@ This phase contains optional features that provide additional performance benefi
 - **SUB-TEST-002**: Phase 4b regression tests for change tracking with existing save operations
 - **SUB-TEST-003**: Phase 4c regression tests for enhanced security without breaking existing validation
 - **SUB-TEST-004**: Phase 4d regression tests for complete lazy loading implementation
+- **SUB-TEST-005**: Phase 5a regression tests for basic caching without affecting persistence
+- **SUB-TEST-006**: Phase 5b regression tests for enhanced security without breaking authentication
+- **SUB-TEST-007**: Phase 5c regression tests for performance monitoring without impacting operations
+- **SUB-TEST-008**: Phase 5d regression tests for advanced change tracking building on Phase 4b
 
 ## 3. Alternatives
 
@@ -431,12 +480,31 @@ This phase contains optional features that provide additional performance benefi
 
 - Extensions to existing lazy loading files for Views and StoredProcedures collections
 
-#### Phase 5 Files (Optional Performance)
+#### Phase 5a Files (Basic Caching)
 
-- **FILE-030**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Caching/ISemanticModelCache.cs` - Caching interface
-- **FILE-031**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Caching/SemanticModelCache.cs` - Caching implementation
-- **FILE-032**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Performance/IPerformanceMonitor.cs` - Performance monitoring interface
-- **FILE-033**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Performance/PerformanceMonitor.cs` - Performance monitoring implementation
+- **FILE-030**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository/Caching/ISemanticModelCache.cs` - Basic caching interface
+- **FILE-031**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository/Caching/MemorySemanticModelCache.cs` - Memory-based cache implementation
+
+#### Phase 5b Files (Enhanced Security)
+
+- **FILE-032**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository/Security/IEnhancedCredentialProvider.cs` - Enhanced credential provider interface
+- **FILE-033**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository/Security/EnhancedCredentialProvider.cs` - Enhanced credential provider implementation
+- **FILE-034**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository/Security/ISecureJsonSerializer.cs` - Secure JSON serializer interface
+- **FILE-035**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository/Security/SecureJsonSerializer.cs` - Secure JSON serializer implementation
+- **FILE-036**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository/Security/KeyVaultConfigurationProvider.cs` - Key Vault configuration provider
+
+#### Phase 5c Files (Performance Monitoring)
+
+- **FILE-037**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository/Performance/IPerformanceMonitor.cs` - Performance monitoring interface
+- **FILE-038**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository/Performance/PerformanceMonitor.cs` - Performance monitoring implementation
+- **FILE-039**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository/Performance/IParallelExecutionService.cs` - Parallel execution service interface
+- **FILE-040**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository/Performance/ParallelExecutionService.cs` - Parallel execution service implementation
+
+#### Phase 5d Files (Advanced Change Tracking)
+
+- **FILE-041**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository/ChangeTracking/IPropertyChangeTrackable.cs` - Property change tracking interface
+- **FILE-042**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository/ChangeTracking/PropertyChangeTrackingService.cs` - Property change tracking service
+- **FILE-043**: `src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository/ChangeTracking/PropertyChangeTrackableBase.cs` - Base class for property tracking
 
 ### Files to Modify
 
@@ -493,6 +561,30 @@ This phase contains optional features that provide additional performance benefi
 - **TEST-007**: Enhanced security validation unit tests with malicious inputs ✅
 - **TEST-008**: Concurrent operation protection tests ✅
 - **TEST-009**: Thread safety validation tests ✅
+
+#### Phase 5a Tests (Basic Caching)
+
+- **TEST-015**: Basic caching unit tests with mock entities
+- **TEST-016**: Cache hit rate and statistics validation tests
+- **TEST-017**: Memory cache integration tests with repository
+
+#### Phase 5b Tests (Enhanced Security)
+
+- **TEST-018**: Enhanced credential provider unit tests
+- **TEST-019**: Secure JSON serialization unit tests with injection scenarios
+- **TEST-020**: Key Vault configuration provider integration tests
+
+#### Phase 5c Tests (Performance Monitoring)
+
+- **TEST-021**: Performance monitoring unit tests with operation tracking
+- **TEST-022**: Parallel execution service unit tests with bulk operations
+- **TEST-023**: Performance optimization validation tests
+
+#### Phase 5d Tests (Advanced Change Tracking)
+
+- **TEST-024**: Property-level change tracking unit tests
+- **TEST-025**: Advanced change tracking integration tests
+- **TEST-026**: Granular persistence optimization tests
 
 #### Phase 6 Tests (Comprehensive)
 
