@@ -1,8 +1,8 @@
 ---
 title: Data Semantic Model Repository Pattern Specification
-version: 1.1
+version: 1.2
 date_created: 2025-06-22
-last_updated: 2025-06-28
+last_updated: 2025-07-02
 owner: GenAI Database Explorer Team
 tags: [data, repository, persistence, semantic-model, generative-ai]
 ---
@@ -370,7 +370,48 @@ Documents (each with hierarchical partition key):
 
 **Change Tracking**: Essential for performance optimization (selective persistence), conflict resolution, audit trails, and network optimization in distributed scenarios.
 
-## 8. Examples & Edge Cases
+## 8. Dependencies & External Integrations
+
+### External Systems
+
+- **EXT-001**: Source Database Systems - SQL Server, MySQL, PostgreSQL, or other relational databases that provide schema metadata through standard information schema views or system catalogs
+- **EXT-002**: Authentication Providers - Azure Active Directory, Active Directory, or other identity providers for secure access to cloud resources
+
+### Third-Party Services
+
+- **SVC-001**: Azure Storage Account - Blob storage service with standard or premium performance tiers, supporting hierarchical namespace and access control for cloud persistence strategy
+- **SVC-002**: Azure Cosmos DB - Multi-model database service with global distribution capabilities, supporting SQL API and hierarchical partition keys for document persistence strategy
+- **SVC-003**: Azure Key Vault - Secret management service for secure storage and retrieval of connection strings, API keys, and other sensitive configuration data
+
+### Infrastructure Dependencies
+
+- **INF-001**: .NET 9 Runtime - Latest version of .NET runtime with C# 11+ language features, async/await patterns, and modern dependency injection capabilities
+- **INF-002**: File System Access - Local disk storage with read/write permissions for development scenarios and local persistence strategy
+- **INF-003**: Network Connectivity - Reliable internet connection for Azure service access, with appropriate firewall and proxy configurations
+- **INF-004**: Azure Resource Group - Logical container for Azure resources with proper RBAC permissions and resource management policies
+
+### Data Dependencies
+
+- **DAT-001**: Database Schema Metadata - Access to information schema views, system catalogs, or equivalent metadata sources for schema extraction and semantic model generation
+- **DAT-002**: Configuration Data - Application settings, connection strings, and environment-specific configuration accessible through .NET configuration providers
+- **DAT-003**: Semantic Enhancement Data - Optional AI-generated descriptions, business rules, and metadata enrichments from generative AI services
+
+### Technology Platform Dependencies
+
+- **PLT-001**: JSON Serialization Library - System.Text.Json or compatible serialization framework supporting async operations and injection protection
+- **PLT-002**: Azure SDK Libraries - Latest Azure client libraries for Blob Storage, Cosmos DB, Key Vault, and Identity services with DefaultAzureCredential support
+- **PLT-003**: Dependency Injection Framework - Microsoft.Extensions.DependencyInjection or compatible DI container supporting service lifetime management and configuration options
+- **PLT-004**: Logging Framework - Microsoft.Extensions.Logging or compatible structured logging framework for operational monitoring and diagnostics
+
+### Compliance Dependencies
+
+- **COM-001**: Data Privacy Regulations - GDPR, CCPA, or regional data protection requirements affecting semantic model storage and processing
+- **COM-002**: Security Standards - Industry security frameworks (SOC 2, ISO 27001) governing cloud service usage and data handling practices
+- **COM-003**: Organizational Policies - Corporate governance policies for cloud resource usage, data classification, and access control requirements
+
+**Note**: This section focuses on architectural and business dependencies required for the semantic model repository pattern implementation. Specific package versions and implementation details are maintained separately in implementation documentation.
+
+## 9. Examples & Edge Cases
 
 ### Basic Usage - Local Disk
 
@@ -462,7 +503,7 @@ public async Task<SemanticModel> SafeLoadAsync(DirectoryInfo path)
 }
 ```
 
-## 9. Validation Criteria
+## 10. Validation Criteria
 
 **Functional**:
 
@@ -495,7 +536,7 @@ public async Task<SemanticModel> SafeLoadAsync(DirectoryInfo path)
 - Structured logging compliance
 - Backward compatibility maintenance
 
-## 10. Related Specifications / Further Reading
+## 11. Related Specifications / Further Reading
 
 - [Infrastructure Deployment Bicep AVM Specification](./infrastructure-deployment-bicep-avm.md)
 - [Microsoft .NET Application Architecture Guides](https://docs.microsoft.com/en-us/dotnet/architecture/)
