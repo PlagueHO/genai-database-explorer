@@ -10,6 +10,7 @@ using GenAIDBExplorer.Core.SemanticModelProviders;
 using GenAIDBExplorer.Core.SemanticProviders;
 using GenAIDBExplorer.Core.Repository;
 using GenAIDBExplorer.Core.Repository.Configuration;
+using GenAIDBExplorer.Core.Repository.Caching;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -58,6 +59,10 @@ public static class HostBuilderExtensions
                 services.Configure<CosmosDbConfiguration>(
                     context.Configuration.GetSection("CosmosDb"));
 
+                // Configure caching options for Phase 5a: Basic Caching Foundation
+                services.Configure<CacheOptions>(
+                    context.Configuration.GetSection(CacheOptions.SectionName));
+
                 // Register command handlers
                 services.AddSingleton<InitProjectCommandHandler>();
                 services.AddSingleton<DataDictionaryCommandHandler>();
@@ -103,6 +108,10 @@ public static class HostBuilderExtensions
                     var project = provider.GetRequiredService<IProject>();
                     return new KernelMemoryFactory().CreateKernelMemory(project)(provider);
                 });
+
+                // Register caching services for Phase 5a: Basic Caching Foundation
+                services.AddMemoryCache();
+                services.AddSingleton<ISemanticModelCache, MemorySemanticModelCache>();
 
                 // Register persistence strategies
                 services.AddSingleton<ILocalDiskPersistenceStrategy, LocalDiskPersistenceStrategy>();

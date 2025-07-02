@@ -254,7 +254,16 @@ This phase is broken down into independent sub-phases to ensure the solution rem
    - Integrate with repository for optional caching layer
    - **ENSURE**: Caching is completely optional and doesn't affect existing persistence operations
 
-**Phase 5a Status**: 🟡 **PENDING** - Basic caching foundation not yet implemented.
+**Phase 5a Status**: ✅ **COMPLETED** on 2025-07-02 – Basic caching foundation implemented with memory-based cache, repository integration, dependency injection setup, and comprehensive testing. Key deliverables implemented:
+
+- **`ISemanticModelCache` interface** with comprehensive cache contract including `GetAsync`, `SetAsync`, `RemoveAsync`, `ClearAsync`, `GetStatisticsAsync`, and `ExistsAsync` operations supporting optional expiration times
+- **`MemorySemanticModelCache` implementation** using `Microsoft.Extensions.Caching.Memory 9.0.6` with thread-safe operations, statistics tracking (hit/miss ratios), automatic expired entry compaction via Timer-based cleanup, and proper disposal patterns
+- **`CacheOptions` configuration class** with configurable maximum items (default 100), expiration time (default 30 minutes), memory limits (default 512MB), and hit rate threshold monitoring for performance optimization
+- **Enhanced `ISemanticModelRepository` and `SemanticModelRepository`** with optional `enableCaching` parameter in `LoadModelAsync()` overloads, cache-first loading strategy with persistence fallback, SHA256-based cache key generation for consistency, and comprehensive error handling ensuring cache failures don't break functionality
+- **Dependency injection integration** with `ISemanticModelCache` service registration in `HostBuilderExtensions`, enabling applications to opt-in to caching benefits without affecting existing functionality
+- **Comprehensive test coverage** with 15 caching-specific tests covering cache hit/miss scenarios, error handling (cache get/set failures), lazy loading integration, change tracking compatibility, consistent cache key generation, thread safety, and resource disposal - all 78 repository tests passing confirming zero regressions
+- **Immediate performance benefits** for frequently accessed semantic models with memory-based caching while maintaining complete backward compatibility and zero breaking changes to existing APIs
+- **Production readiness** with structured logging, performance monitoring through cache statistics, graceful degradation on cache errors, and proper resource management for enterprise deployment scenarios
 
 **Benefits**: Immediate performance improvement for frequently accessed entities with simple memory-based caching.
 
