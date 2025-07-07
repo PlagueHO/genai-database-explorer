@@ -35,7 +35,7 @@ public sealed class SqlConnectionProvider(
     public async Task<SqlConnection> ConnectAsync()
     {
         var connectionString = _project.Settings.Database.ConnectionString;
-        
+
         if (string.IsNullOrWhiteSpace(connectionString))
         {
             throw new InvalidDataException("Missing database connection string.");
