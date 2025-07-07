@@ -259,6 +259,11 @@ public sealed class SemanticModel(
             throw new ObjectDisposedException(nameof(SemanticModel));
         }
 
+        // Capture the current entities before clearing collections
+        var capturedTables = Tables.ToList();
+        var capturedViews = Views.ToList();
+        var capturedStoredProcedures = StoredProcedures.ToList();
+
         // Create lazy loading proxy for Tables collection (Phase 4a - most commonly accessed)
         _tablesLazyProxy = new LazyLoadingProxy<SemanticModelTable>(
             async () =>
@@ -271,9 +276,15 @@ public sealed class SemanticModel(
                 }
 
                 var tables = new List<SemanticModelTable>();
-                foreach (var table in Tables)
+                foreach (var table in capturedTables)
                 {
-                    await table.LoadModelAsync(tablesFolderPath);
+                    // Check if the table file exists before attempting to load
+                    var fileName = $"{table.Schema}.{table.Name}.json";
+                    var filePath = Path.Combine(tablesFolderPath.FullName, fileName);
+                    if (File.Exists(filePath))
+                    {
+                        await table.LoadModelAsync(tablesFolderPath);
+                    }
                     tables.Add(table);
                 }
                 return tables;
@@ -291,9 +302,15 @@ public sealed class SemanticModel(
                 }
 
                 var views = new List<SemanticModelView>();
-                foreach (var view in Views)
+                foreach (var view in capturedViews)
                 {
-                    await view.LoadModelAsync(viewsFolderPath);
+                    // Check if the view file exists before attempting to load
+                    var fileName = $"{view.Schema}.{view.Name}.json";
+                    var filePath = Path.Combine(viewsFolderPath.FullName, fileName);
+                    if (File.Exists(filePath))
+                    {
+                        await view.LoadModelAsync(viewsFolderPath);
+                    }
                     views.Add(view);
                 }
                 return views;
@@ -311,9 +328,15 @@ public sealed class SemanticModel(
                 }
 
                 var storedProcedures = new List<SemanticModelStoredProcedure>();
-                foreach (var storedProcedure in StoredProcedures)
+                foreach (var storedProcedure in capturedStoredProcedures)
                 {
-                    await storedProcedure.LoadModelAsync(storedProceduresFolderPath);
+                    // Check if the stored procedure file exists before attempting to load
+                    var fileName = $"{storedProcedure.Schema}.{storedProcedure.Name}.json";
+                    var filePath = Path.Combine(storedProceduresFolderPath.FullName, fileName);
+                    if (File.Exists(filePath))
+                    {
+                        await storedProcedure.LoadModelAsync(storedProceduresFolderPath);
+                    }
                     storedProcedures.Add(storedProcedure);
                 }
                 return storedProcedures;
