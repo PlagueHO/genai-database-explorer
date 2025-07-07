@@ -6,7 +6,7 @@ The general steps to using the GenAI Database Explorer are as follows:
 1. [Create a new project](#create-a-new-project)
 1. [Configure the project](#configure-the-project)
 1. [Extract the database schema](#extract-the-database-schema)
-1. (Optional) [Add a database dictionary](#add-a-database-dictionary)
+1. (Optional) [Add a database dictionary for each table](#add-a-database-dictionary-for-each-table)
 1. [Generate the semantic model](#generate-the-semantic-model)
 1. [Query the semantic model](#query-the-semantic-model)
 
@@ -93,6 +93,7 @@ gaidbexp enrich-model --project /path/to/project
 ## Query the semantic model
 
 After generating the semantic model, you can query it using the `query-model` command. This command allows you to interact with the semantic model by asking questions about the database schema and receiving responses based on the enriched semantic model.
+
 ```bash
 Not implemented yet.
 ```
