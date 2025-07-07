@@ -32,7 +32,6 @@ jobs:
         id: build_version
         uses: gittools/actions/gitversion/execute@v4.0.0
         with:
-          useConfigFile: true
           configFilePath: GitVersion.yml
 
       - name: Display GitVersion outputs
