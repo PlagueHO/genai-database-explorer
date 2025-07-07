@@ -9,8 +9,10 @@ This project generates semantic models from database schemas, enriches them with
 - [Main README](README.md): Primary project documentation with overview, components, and getting started information
 - [Quick Start Guide](docs/QUICKSTART.md): Step-by-step guide for installing, configuring, and using the GenAI Database Explorer
 - [Installation Guide](docs/INSTALLATION.md): Detailed installation instructions and requirements
-- [Semantic Model Storage](docs/SEMANTIC_MODEL_STORAGE.md): Documentation on semantic model persistence and storage strategies
+- [CLI Tool Documentation](docs/gaidbexp/README.md): Complete documentation for the gaidbexp console application commands and usage
+- [Semantic Model Storage](docs/technical/SEMANTIC_MODEL_STORAGE.md): Documentation on semantic model persistence and storage strategies
 - [Component Documentation](docs/components/semantic-model-repository-documentation.md): Technical documentation for the semantic model repository system
+- [AI Agent Instructions](.github/copilot-instructions.md): Comprehensive development guidelines and coding standards for AI agents working with this codebase
 
 ## Specifications
 
@@ -43,6 +45,6 @@ This project generates semantic models from database schemas, enriches them with
 ## Optional
 
 - [GitVersion Configuration](GitVersion.yml): Semantic versioning configuration for automated release management
-- [Development Container](.devcontainer/): Docker development environment configuration
-- [VS Code Settings](.vscode/): Visual Studio Code workspace configuration and debugging settings
+- [Development Container](.devcontainer/): Docker development environment configuration with setup and validation scripts
+- [VS Code Settings](.vscode/): Visual Studio Code workspace configuration, debugging settings, and task definitions
 - [License](LICENSE): MIT license terms and conditions
