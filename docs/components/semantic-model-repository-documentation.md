@@ -37,7 +37,7 @@ The Semantic Model Repository component provides a unified abstraction layer for
 
 - **ARC-001**: **Repository Pattern** - Encapsulates data access logic and provides a uniform interface for semantic model persistence
 - **ARC-002**: **Strategy Pattern** - Enables runtime selection of persistence strategies (Local Disk, Azure Blob, Cosmos DB)
-- **ARC-003**: **Factory Pattern** - `PersistenceStrategyFactory` manages strategy instantiation and selection
+- **ARC-003**: **Factory Pattern** - [`PersistenceStrategyFactory`](../../src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository/PersistenceStrategyFactory.cs) manages strategy instantiation and selection
 - **ARC-004**: **Dependency Injection Pattern** - All dependencies injected via constructor for testability and flexibility
 - **ARC-005**: **Disposable Pattern** - Proper resource cleanup for semaphores and strategy-specific resources
 
@@ -45,7 +45,7 @@ The Semantic Model Repository component provides a unified abstraction layer for
 
 - **Internal Dependencies**:
   - `GenAIDBExplorer.Core.Models.SemanticModel` - Core semantic model domain objects
-  - `GenAIDBExplorer.Core.Security` - Security validation utilities (PathValidator, EntityNameSanitizer)
+  - `GenAIDBExplorer.Core.Security` - Security validation utilities ([PathValidator](../../src/GenAIDBExplorer/GenAIDBExplorer.Core/Security/PathValidator.cs), [EntityNameSanitizer](../../src/GenAIDBExplorer/GenAIDBExplorer.Core/Security/EntityNameSanitizer.cs))
   - `GenAIDBExplorer.Core.Models.SemanticModel.ChangeTracking` - Change tracking infrastructure
 - **External Dependencies**:
   - `Microsoft.Extensions.Logging` - Structured logging framework
@@ -178,7 +178,7 @@ graph TB
 
 ## 3. Interface Documentation
 
-### ISemanticModelRepository
+### [ISemanticModelRepository](../../src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository/ISemanticModelRepository.cs)
 
 **Purpose**: Main repository interface providing unified access to semantic model persistence operations across different storage backends.
 
@@ -197,7 +197,7 @@ graph TB
 | `LoadModelAsync` | Loads with lazy loading + change tracking | `modelPath`, `enableLazyLoading`, `enableChangeTracking`, `strategyName?` | `Task<SemanticModel>` | Feature combination |
 | `LoadModelAsync` | Loads with all features | `modelPath`, `enableLazyLoading`, `enableChangeTracking`, `enableCaching`, `strategyName?` | `Task<SemanticModel>` | Full feature set |
 
-### ISemanticModelPersistenceStrategy
+### [ISemanticModelPersistenceStrategy](../../src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository/ISemanticModelPersistenceStrategy.cs)
 
 **Purpose**: Base interface defining standard persistence operations that all storage backend strategies must implement.
 
@@ -209,7 +209,7 @@ graph TB
 | `ListModelsAsync` | Lists available models | `rootPath` | `Task<IEnumerable<string>>` | Discovery operation |
 | `DeleteModelAsync` | Removes model | `modelPath` | `Task` | Destructive operation |
 
-### ISemanticModelCache
+### [ISemanticModelCache](../../src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository/Caching/ISemanticModelCache.cs)
 
 **Purpose**: Caching interface for performance optimization of frequently accessed semantic models.
 
@@ -224,7 +224,7 @@ graph TB
 
 ## 4. Implementation Details
 
-### SemanticModelRepository (Main Implementation)
+### [SemanticModelRepository](../../src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository/SemanticModelRepository.cs) (Main Implementation)
 
 **Responsibilities**:
 
@@ -235,8 +235,8 @@ graph TB
 
 **Key Components**:
 
-- `IPersistenceStrategyFactory` - Strategy selection and instantiation
-- `ISemanticModelCache` - Optional caching layer for performance
+- [`IPersistenceStrategyFactory`](../../src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository/IPersistenceStrategyFactory.cs) - Strategy selection and instantiation
+- [`ISemanticModelCache`](../../src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository/Caching/ISemanticModelCache.cs) - Optional caching layer for performance
 - `ConcurrentDictionary<string, SemaphoreSlim>` - Path-specific concurrency control
 - `SemaphoreSlim` - Global concurrency limiting
 
@@ -373,8 +373,8 @@ if (await strategy.ExistsAsync(modelPath))
 
 **Input Validation**:
 
-- Path validation prevents directory traversal attacks using `PathValidator`
-- Entity name sanitization prevents file system injection via `EntityNameSanitizer`
+- Path validation prevents directory traversal attacks using [`PathValidator`](../../src/GenAIDBExplorer/GenAIDBExplorer.Core/Security/PathValidator.cs)
+- Entity name sanitization prevents file system injection via [`EntityNameSanitizer`](../../src/GenAIDBExplorer/GenAIDBExplorer.Core/Security/EntityNameSanitizer.cs)
 - All public methods validate input parameters for null/empty values
 
 **Authentication & Authorization**:
@@ -434,8 +434,8 @@ if (await strategy.ExistsAsync(modelPath))
 
 **Extension Points**:
 
-- New persistence strategies can be added by implementing `ISemanticModelPersistenceStrategy`
-- Custom caching implementations via `ISemanticModelCache` interface
+- New persistence strategies can be added by implementing [`ISemanticModelPersistenceStrategy`](../../src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository/ISemanticModelPersistenceStrategy.cs)
+- Custom caching implementations via [`ISemanticModelCache`](../../src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository/Caching/ISemanticModelCache.cs) interface
 - Strategy factory supports runtime registration of new strategies
 - Configuration-driven strategy selection
 
@@ -502,7 +502,7 @@ var repository = new SemanticModelRepository(
 
 | Error | Cause | Solution |
 |-------|-------|----------|
-| `ArgumentException: Persistence strategy 'X' is not registered` | Strategy not registered in DI | Verify strategy registration in `HostBuilderExtensions` |
+| `ArgumentException: Persistence strategy 'X' is not registered` | Strategy not registered in DI | Verify strategy registration in [`HostBuilderExtensions`](../../src/GenAIDBExplorer/GenAIDBExplorer.Console/Extensions/HostBuilderExtensions.cs) |
 | `UnauthorizedAccessException` | Insufficient file system permissions | Check directory permissions for local disk strategy |
 | `Azure.RequestFailedException` | Azure authentication failure | Verify Azure credentials and service permissions |
 | `ObjectDisposedException` | Repository used after disposal | Ensure repository lifetime matches usage scope |
@@ -525,6 +525,6 @@ var repository = new SemanticModelRepository(
 
 **Migration Notes**:
 
-- Backward compatible with existing `SemanticModel.SaveModelAsync()` and `LoadModelAsync()` methods
+- Backward compatible with existing [`SemanticModel.SaveModelAsync()` and `LoadModelAsync()`](../../src/GenAIDBExplorer/GenAIDBExplorer.Core/Models/SemanticModel/SemanticModel.cs) methods
 - New features are opt-in and don't affect existing functionality
 - Configuration-driven strategy selection allows gradual migration to cloud storage
