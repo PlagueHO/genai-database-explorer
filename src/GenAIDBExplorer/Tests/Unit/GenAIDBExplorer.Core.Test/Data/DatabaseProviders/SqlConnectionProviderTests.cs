@@ -11,8 +11,8 @@ namespace GenAIDBExplorer.Core.Tests.Data.DatabaseProviders
     [TestClass]
     public class SqlConnectionProviderTests
     {
-        private Mock<IProject> _mockProject;
-        private Mock<ILogger<SqlConnectionProvider>> _mockLogger;
+        private Mock<IProject> _mockProject = null!;
+        private Mock<ILogger<SqlConnectionProvider>> _mockLogger = null!;
 
         [TestInitialize]
         public void Setup()
@@ -27,7 +27,7 @@ namespace GenAIDBExplorer.Core.Tests.Data.DatabaseProviders
             // Arrange
             var projectSettings = new ProjectSettings
             {
-                Database = new DatabaseSettings { ConnectionString = null },
+                Database = new DatabaseSettings { ConnectionString = string.Empty },
                 DataDictionary = new DataDictionarySettings(),
                 SemanticModel = new SemanticModelSettings(),
                 OpenAIService = new OpenAIServiceSettings()

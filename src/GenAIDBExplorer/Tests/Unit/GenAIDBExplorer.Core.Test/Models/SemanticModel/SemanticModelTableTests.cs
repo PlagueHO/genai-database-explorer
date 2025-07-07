@@ -191,7 +191,7 @@ namespace GenAIDBExplorer.Core.Tests.Models.SemanticModel
 
             // Assert
             result.Name.Should().Be("dbo.TestTable.json");
-            result.Parent.Name.Should().Be("tables");
+            result.Parent?.Name.Should().Be("tables");
         }
     }
 }

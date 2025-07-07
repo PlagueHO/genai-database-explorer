@@ -48,7 +48,7 @@ namespace GenAIDBExplorer.Core.Tests.Models.SemanticModel
 
             // Assert
             result.Name.Should().Be("dbo.TestStoredProcedure.json");
-            result.Parent.Name.Should().Be("storedprocedures");
+            result.Parent?.Name.Should().Be("storedprocedures");
         }
 
         [TestMethod]

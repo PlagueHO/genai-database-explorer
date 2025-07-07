@@ -149,7 +149,7 @@ public class SchemaRepositoryTests
     {
         // Arrange
         var tableInfo = new TableInfo("dbo", "Customer");
-        var expectedData = new List<Dictionary<string, object>>
+        var expectedData = new List<Dictionary<string, object?>>
         {
             new() { { "CustomerID", 1 }, { "CustomerName", "John Doe" } },
             new() { { "CustomerID", 2 }, { "CustomerName", "Jane Smith" } }
@@ -252,7 +252,7 @@ public class SchemaRepositoryTests
     {
         // Arrange
         var tableInfo = new TableInfo("dbo", "Customer");
-        var expectedData = new List<Dictionary<string, object>>
+        var expectedData = new List<Dictionary<string, object?>>
         {
             new() { { "CustomerID", 1 }, { "CustomerName", "Random Customer" } }
         };
@@ -351,7 +351,7 @@ public class SchemaRepositoryTests
     {
         // Arrange
         var viewInfo = new ViewInfo("dbo", "CustomerView");
-        var expectedData = new List<Dictionary<string, object>>
+        var expectedData = new List<Dictionary<string, object?>>
         {
             new() { { "CustomerID", 1 }, { "CustomerName", "Active Customer" } }
         };

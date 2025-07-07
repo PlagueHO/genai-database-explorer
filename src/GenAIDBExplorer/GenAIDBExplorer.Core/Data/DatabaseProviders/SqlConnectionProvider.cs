@@ -34,9 +34,12 @@ public sealed class SqlConnectionProvider(
     /// <exception cref="Exception">Thrown if there is a general error connecting to the database.</exception>
     public async Task<SqlConnection> ConnectAsync()
     {
-        var connectionString =
-            _project.Settings.Database.ConnectionString ??
-                throw new InvalidDataException($"Missing database connection string.");
+        var connectionString = _project.Settings.Database.ConnectionString;
+        
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new InvalidDataException("Missing database connection string.");
+        }
 
         var connection = new SqlConnection(connectionString);
 

@@ -99,7 +99,7 @@ namespace GenAIDBExplorer.Core.Tests.Models.SemanticModel
 
             // Assert
             result.Name.Should().Be("dbo.TestView.json");
-            result.Parent.Name.Should().Be("views");
+            result.Parent?.Name.Should().Be("views");
         }
 
         [TestMethod]
