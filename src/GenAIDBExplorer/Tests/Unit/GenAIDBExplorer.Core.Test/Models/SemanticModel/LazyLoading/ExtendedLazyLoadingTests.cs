@@ -44,7 +44,7 @@ public class ExtendedLazyLoadingTests
     public void TestCleanup()
     {
         _semanticModel?.Dispose();
-        
+
         if (_testModelPath?.Exists == true)
         {
             _testModelPath.Delete(recursive: true);

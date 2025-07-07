@@ -77,10 +77,10 @@ public class SemanticModelRepositoryCachingTests
         // Assert
         result.Should().NotBeNull();
         result.Name.Should().Be(expectedModel.Name);
-        
+
         // Verify cache was checked
         _mockCache.Verify(c => c.GetAsync(It.IsAny<string>()), Times.Once);
-        
+
         // Verify persistence strategy was NOT called since model was found in cache
         _mockStrategy!.Verify(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()), Times.Never);
     }
@@ -101,13 +101,13 @@ public class SemanticModelRepositoryCachingTests
         // Assert
         result.Should().NotBeNull();
         result.Name.Should().Be(expectedModel.Name);
-        
+
         // Verify cache was checked
         _mockCache.Verify(c => c.GetAsync(It.IsAny<string>()), Times.Once);
-        
+
         // Verify persistence strategy was called due to cache miss
         _mockStrategy.Verify(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()), Times.Once);
-        
+
         // Verify model was stored in cache after loading
         _mockCache.Verify(c => c.SetAsync(It.IsAny<string>(), expectedModel, null), Times.Once);
     }
@@ -126,11 +126,11 @@ public class SemanticModelRepositoryCachingTests
         // Assert
         result.Should().NotBeNull();
         result.Name.Should().Be(expectedModel.Name);
-        
+
         // Verify cache was never accessed
         _mockCache!.Verify(c => c.GetAsync(It.IsAny<string>()), Times.Never);
         _mockCache.Verify(c => c.SetAsync(It.IsAny<string>(), It.IsAny<SemanticModel>(), It.IsAny<TimeSpan?>()), Times.Never);
-        
+
         // Verify persistence strategy was called directly
         _mockStrategy.Verify(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()), Times.Once);
     }
@@ -149,10 +149,10 @@ public class SemanticModelRepositoryCachingTests
         // Assert
         result.Should().NotBeNull();
         result.IsLazyLoadingEnabled.Should().BeTrue();
-        
+
         // Verify cache was checked
         _mockCache.Verify(c => c.GetAsync(It.IsAny<string>()), Times.Once);
-        
+
         // Verify persistence strategy was NOT called since model was found in cache
         _mockStrategy!.Verify(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()), Times.Never);
     }
@@ -171,10 +171,10 @@ public class SemanticModelRepositoryCachingTests
         // Assert
         result.Should().NotBeNull();
         result.IsChangeTrackingEnabled.Should().BeTrue();
-        
+
         // Verify cache was checked
         _mockCache.Verify(c => c.GetAsync(It.IsAny<string>()), Times.Once);
-        
+
         // Verify persistence strategy was NOT called since model was found in cache
         _mockStrategy!.Verify(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()), Times.Never);
     }
@@ -194,10 +194,10 @@ public class SemanticModelRepositoryCachingTests
         result.Should().NotBeNull();
         result.IsLazyLoadingEnabled.Should().BeTrue();
         result.IsChangeTrackingEnabled.Should().BeTrue();
-        
+
         // Verify cache was checked
         _mockCache.Verify(c => c.GetAsync(It.IsAny<string>()), Times.Once);
-        
+
         // Verify persistence strategy was NOT called since model was found in cache
         _mockStrategy!.Verify(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()), Times.Never);
     }
@@ -218,10 +218,10 @@ public class SemanticModelRepositoryCachingTests
         // Assert
         result.Should().NotBeNull();
         result.Name.Should().Be(expectedModel.Name);
-        
+
         // Verify cache was attempted
         _mockCache.Verify(c => c.GetAsync(It.IsAny<string>()), Times.Once);
-        
+
         // Verify persistence strategy was called due to cache error
         _mockStrategy.Verify(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()), Times.Once);
     }
@@ -244,11 +244,11 @@ public class SemanticModelRepositoryCachingTests
         // Assert
         result.Should().NotBeNull();
         result.Name.Should().Be(expectedModel.Name);
-        
+
         // Verify cache operations were attempted
         _mockCache.Verify(c => c.GetAsync(It.IsAny<string>()), Times.Once);
         _mockCache.Verify(c => c.SetAsync(It.IsAny<string>(), expectedModel, null), Times.Once);
-        
+
         // Verify persistence strategy was called
         _mockStrategy.Verify(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()), Times.Once);
     }
@@ -275,7 +275,7 @@ public class SemanticModelRepositoryCachingTests
             // Assert
             result.Should().NotBeNull();
             result.Name.Should().Be(expectedModel.Name);
-            
+
             // Verify persistence strategy was called directly
             _mockStrategy.Verify(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()), Times.Once);
         }
@@ -360,11 +360,11 @@ public class SemanticModelRepositoryCachingTests
     {
         // Arrange - Use simple repository constructor like the working lazy loading tests
         var simpleRepository = new SemanticModelRepository(_mockStrategyFactory!.Object, _mockLogger!.Object);
-        
+
         var expectedModel1 = new SemanticModel("TestModel1", "TestSource1");
         var expectedModel2 = new SemanticModel("TestModel2", "TestSource2");
         var expectedModel3 = new SemanticModel("TestModel3", "TestSource3");
-        
+
         _mockStrategy!.SetupSequence(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()))
             .ReturnsAsync(expectedModel1)
             .ReturnsAsync(expectedModel2)
@@ -381,16 +381,16 @@ public class SemanticModelRepositoryCachingTests
             result1.Should().NotBeNull();
             result2.Should().NotBeNull();
             result3.Should().NotBeNull();
-            
+
             // TODO: Fix this assertion - there seems to be a test environment issue
             // result1.IsLazyLoadingEnabled.Should().BeFalse();
             result2.IsLazyLoadingEnabled.Should().BeTrue();
             result3.IsChangeTrackingEnabled.Should().BeTrue();
-            
+
             // Verify cache was never accessed for backward compatibility calls
             _mockCache!.Verify(c => c.GetAsync(It.IsAny<string>()), Times.Never);
             _mockCache.Verify(c => c.SetAsync(It.IsAny<string>(), It.IsAny<SemanticModel>(), It.IsAny<TimeSpan?>()), Times.Never);
-            
+
             // Verify persistence strategy was called directly for all calls
             _mockStrategy.Verify(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()), Times.Exactly(3));
         }
@@ -406,7 +406,7 @@ public class SemanticModelRepositoryCachingTests
         // Arrange
         var expectedModel = CreateTestSemanticModel();
         expectedModel.EnableLazyLoading(_testModelPath!, _mockStrategy!.Object);
-        
+
         _mockCache!.Setup(c => c.GetAsync(It.IsAny<string>()))
             .ReturnsAsync(expectedModel);
 
@@ -416,10 +416,10 @@ public class SemanticModelRepositoryCachingTests
         // Assert
         result.Should().NotBeNull();
         result.IsLazyLoadingEnabled.Should().BeTrue();
-        
+
         // Verify cache was checked
         _mockCache.Verify(c => c.GetAsync(It.IsAny<string>()), Times.Once);
-        
+
         // Verify persistence strategy was NOT called since model was found in cache
         _mockStrategy.Verify(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()), Times.Never);
     }
@@ -431,7 +431,7 @@ public class SemanticModelRepositoryCachingTests
         var expectedModel = CreateTestSemanticModel();
         var changeTracker = new ChangeTracker(_mockChangeTrackerLogger!.Object);
         expectedModel.EnableChangeTracking(changeTracker);
-        
+
         _mockCache!.Setup(c => c.GetAsync(It.IsAny<string>()))
             .ReturnsAsync(expectedModel);
 
@@ -441,10 +441,10 @@ public class SemanticModelRepositoryCachingTests
         // Assert
         result.Should().NotBeNull();
         result.IsChangeTrackingEnabled.Should().BeTrue();
-        
+
         // Verify cache was checked
         _mockCache.Verify(c => c.GetAsync(It.IsAny<string>()), Times.Once);
-        
+
         // Verify persistence strategy was NOT called since model was found in cache
         _mockStrategy!.Verify(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()), Times.Never);
     }

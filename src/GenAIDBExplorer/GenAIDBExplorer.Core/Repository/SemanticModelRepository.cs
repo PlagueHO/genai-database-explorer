@@ -118,14 +118,14 @@ namespace GenAIDBExplorer.Core.Repository
                 {
                     cacheKey = GenerateCacheKey(sanitizedPath, strategyName);
                     _logger?.LogDebug("Attempting to load model from cache with key: {CacheKey}", cacheKey);
-                    
+
                     try
                     {
                         model = await _cache.GetAsync(cacheKey);
                         if (model != null)
                         {
                             _logger?.LogDebug("Model loaded from cache for path: {ModelPath}", sanitizedPath);
-                            
+
                             // Apply lazy loading and change tracking to cached model if requested
                             if (enableLazyLoading && !model.IsLazyLoadingEnabled)
                             {
@@ -229,12 +229,12 @@ namespace GenAIDBExplorer.Core.Repository
         {
             // Create a deterministic cache key using the path and strategy
             var keySource = $"{sanitizedPath}|{strategyName ?? "default"}";
-            
+
             // Use SHA256 to create a deterministic hash for the cache key
             using var sha256 = SHA256.Create();
             var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(keySource));
             var hashString = Convert.ToHexString(hashBytes).ToLowerInvariant();
-            
+
             // Prefix with a recognizable identifier and include first few chars of original path for debugging
             var pathSegment = Path.GetFileName(sanitizedPath) ?? "unknown";
             return $"semantic_model_{pathSegment}_{hashString[..16]}";
