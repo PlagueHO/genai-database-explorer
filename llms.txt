@@ -1,0 +1,48 @@
+# Generative AI Database Explorer
+
+> A .NET 9 application that uses Generative AI to help users explore and query relational databases by generating detailed semantic models and enabling natural language database interactions.
+
+This project generates semantic models from database schemas, enriches them with AI-powered insights, and provides both CLI and planned web interfaces for database exploration through natural language queries.
+
+## Documentation
+
+- [Main README](README.md): Primary project documentation with overview, components, and getting started information
+- [Quick Start Guide](docs/QUICKSTART.md): Step-by-step guide for installing, configuring, and using the GenAI Database Explorer
+- [Installation Guide](docs/INSTALLATION.md): Detailed installation instructions and requirements
+- [Semantic Model Storage](docs/SEMANTIC_MODEL_STORAGE.md): Documentation on semantic model persistence and storage strategies
+- [Component Documentation](docs/components/semantic-model-repository-documentation.md): Technical documentation for the semantic model repository system
+
+## Specifications
+
+- [Semantic Model Repository Specification](spec/spec-data-semantic-model-repository.md): Technical specification for the repository pattern implementation supporting Local Disk, Azure Blob, and Cosmos DB persistence
+- [Infrastructure Deployment Specification](spec/spec-infrastructure-deployment-bicep-avm.md): Azure infrastructure deployment specifications using Bicep and Azure Verified Modules
+
+## Implementation Plans
+
+- [Semantic Model Repository Updates Plan](plan/plan-data-semantic-model-repository-updates.md): Comprehensive implementation plan for repository pattern with lazy loading, change tracking, and multi-storage support
+- [System.CommandLine Beta5 Upgrade Plan](plan/plan-upgrade-system-commandline-beta5.md): Plan for upgrading the CLI framework to System.CommandLine Beta5
+
+## Configuration
+
+- [Azure Deployment Configuration](azure.yaml): Azure Developer CLI configuration for cloud deployment
+- [Infrastructure Templates](infra/main.bicep): Bicep templates for Azure infrastructure provisioning
+- [Azure OpenAI Models Configuration](infra/azure-openai-models.json): Configuration for Azure OpenAI service models and capabilities
+- [Project Settings Template](samples/AdventureWorksLT/settings.json): Example project configuration for the AdventureWorksLT sample database
+
+## Examples
+
+- [AdventureWorksLT Sample](samples/AdventureWorksLT/): Complete sample project demonstrating semantic model extraction and enrichment with the AdventureWorksLT database
+- [Data Dictionary Preprocessing](utils/prepare-data-dictionary.ipynb): Jupyter notebook for preparing and processing data dictionary files
+
+## Source Code
+
+- [Console Application](src/GenAIDBExplorer/GenAIDBExplorer.Console/): Command-line interface providing init-project, extract-model, enrich-model, and query-model commands
+- [Core Library](src/GenAIDBExplorer/GenAIDBExplorer.Core/): Domain logic, semantic providers, data dictionary processing, and repository patterns
+- [Unit Tests](src/GenAIDBExplorer/Tests/Unit/): Comprehensive test suite using MSTest, FluentAssertions, and Moq
+
+## Optional
+
+- [GitVersion Configuration](GitVersion.yml): Semantic versioning configuration for automated release management
+- [Development Container](.devcontainer/): Docker development environment configuration
+- [VS Code Settings](.vscode/): Visual Studio Code workspace configuration and debugging settings
+- [License](LICENSE): MIT license terms and conditions
