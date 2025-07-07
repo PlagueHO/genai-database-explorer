@@ -12,13 +12,13 @@ namespace GenAIDBExplorer.Console.Test;
 [TestClass]
 public class InitProjectCommandHandlerTests
 {
-    private Mock<IProject> _mockProject;
-    private Mock<ISemanticModelProvider> _mockSemanticModelProvider;
-    private Mock<IDatabaseConnectionProvider> _mockConnectionProvider;
-    private Mock<IServiceProvider> _mockServiceProvider;
-    private Mock<ILogger<ICommandHandler<InitProjectCommandHandlerOptions>>> _mockLogger;
-    private Mock<IOutputService> _mockOutputService;
-    private InitProjectCommandHandler _handler;
+    private Mock<IProject> _mockProject = null!;
+    private Mock<ISemanticModelProvider> _mockSemanticModelProvider = null!;
+    private Mock<IDatabaseConnectionProvider> _mockConnectionProvider = null!;
+    private Mock<IServiceProvider> _mockServiceProvider = null!;
+    private Mock<ILogger<ICommandHandler<InitProjectCommandHandlerOptions>>> _mockLogger = null!;
+    private Mock<IOutputService> _mockOutputService = null!;
+    private InitProjectCommandHandler _handler = null!;
 
     [TestInitialize]
     public void SetUp()
@@ -59,18 +59,18 @@ public class InitProjectCommandHandlerTests
             x => x.Log(
                 LogLevel.Information,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Initializing project. '{projectPath.FullName}'")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains($"Initializing project. '{projectPath.FullName}'")),
                 null,
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
 
         _mockLogger.Verify(
             x => x.Log(
                 LogLevel.Information,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Project initialized successfully. '{projectPath.FullName}'")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains($"Project initialized successfully. '{projectPath.FullName}'")),
                 null,
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
     }
 
@@ -94,9 +94,9 @@ public class InitProjectCommandHandlerTests
             x => x.Log(
                 LogLevel.Information,
                 It.IsAny<EventId>(),
-                It.Is<object>(v => v.ToString().Contains("InitializeProjectComplete")),
+                It.Is<object>(v => v.ToString()!.Contains("InitializeProjectComplete")),
                 null,
-                It.IsAny<Func<object, Exception, string>>()),
+                It.IsAny<Func<object, Exception?, string>>()),
             Times.Never);
 
         _mockOutputService.Verify(o => o.WriteError(It.Is<string>(s => s.Contains(exceptionMessage))), Times.Once);
@@ -106,10 +106,10 @@ public class InitProjectCommandHandlerTests
     public async Task HandleAsync_ShouldThrowArgumentNullException_WhenCommandOptionsIsNull()
     {
         // Arrange
-        InitProjectCommandHandlerOptions commandOptions = null;
+        InitProjectCommandHandlerOptions? commandOptions = null;
 
         // Act
-        Func<Task> act = async () => await _handler.HandleAsync(commandOptions);
+        Func<Task> act = async () => await _handler.HandleAsync(commandOptions!);
 
         // Assert
         await act.Should().ThrowAsync<ArgumentNullException>();
@@ -120,7 +120,7 @@ public class InitProjectCommandHandlerTests
     public async Task HandleAsync_ShouldThrowArgumentNullException_WhenProjectPathIsNull()
     {
         // Arrange
-        var commandOptions = new InitProjectCommandHandlerOptions(null);
+        var commandOptions = new InitProjectCommandHandlerOptions(null!);
 
         // Act
         Func<Task> act = async () => await _handler.HandleAsync(commandOptions);

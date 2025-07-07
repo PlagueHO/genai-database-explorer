@@ -13,13 +13,13 @@ namespace GenAIDBExplorer.Console.Test;
 [TestClass]
 public class ExtractModelCommandHandlerTests
 {
-    private Mock<IProject> _mockProject;
-    private Mock<ISemanticModelProvider> _mockSemanticModelProvider;
-    private Mock<IDatabaseConnectionProvider> _mockConnectionProvider;
-    private Mock<IServiceProvider> _mockServiceProvider;
-    private Mock<ILogger<ICommandHandler<ExtractModelCommandHandlerOptions>>> _mockLogger;
-    private Mock<IOutputService> _mockOutputService;
-    private ExtractModelCommandHandler _handler;
+    private Mock<IProject> _mockProject = null!;
+    private Mock<ISemanticModelProvider> _mockSemanticModelProvider = null!;
+    private Mock<IDatabaseConnectionProvider> _mockConnectionProvider = null!;
+    private Mock<IServiceProvider> _mockServiceProvider = null!;
+    private Mock<ILogger<ICommandHandler<ExtractModelCommandHandlerOptions>>> _mockLogger = null!;
+    private Mock<IOutputService> _mockOutputService = null!;
+    private ExtractModelCommandHandler _handler = null!;
 
     [TestInitialize]
     public void SetUp()
@@ -66,27 +66,27 @@ public class ExtractModelCommandHandlerTests
             x => x.Log(
                 LogLevel.Information,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Extracting semantic model for project. '{projectPath.FullName}'")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains($"Extracting semantic model for project. '{projectPath.FullName}'")),
                 null,
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
 
         _mockLogger.Verify(
             x => x.Log(
                 LogLevel.Information,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Saving semantic model. '{Path.Combine(projectPath.FullName, semanticModel.Name)}'")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains($"Saving semantic model. '{Path.Combine(projectPath.FullName, semanticModel.Name)}'")),
                 null,
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
 
         _mockLogger.Verify(
             x => x.Log(
                 LogLevel.Information,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Semantic model extraction complete. '{projectPath.FullName}'")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains($"Semantic model extraction complete. '{projectPath.FullName}'")),
                 null,
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
     }
 
@@ -114,9 +114,9 @@ public class ExtractModelCommandHandlerTests
             x => x.Log(
                 LogLevel.Information,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Semantic model extraction complete. '{projectPath.FullName}'")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains($"Semantic model extraction complete. '{projectPath.FullName}'")),
                 null,
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Never);
     }
 
@@ -124,10 +124,10 @@ public class ExtractModelCommandHandlerTests
     public async Task HandleAsync_ShouldThrowArgumentNullException_WhenCommandOptionsIsNull()
     {
         // Arrange
-        ExtractModelCommandHandlerOptions commandOptions = null;
+        ExtractModelCommandHandlerOptions? commandOptions = null;
 
         // Act
-        Func<Task> act = async () => await _handler.HandleAsync(commandOptions);
+        Func<Task> act = async () => await _handler.HandleAsync(commandOptions!);
 
         // Assert
         await act.Should().ThrowAsync<ArgumentNullException>();
@@ -139,7 +139,7 @@ public class ExtractModelCommandHandlerTests
     public async Task HandleAsync_ShouldThrowArgumentNullException_WhenProjectPathIsNull()
     {
         // Arrange
-        var commandOptions = new ExtractModelCommandHandlerOptions(null);
+        var commandOptions = new ExtractModelCommandHandlerOptions(null!);
 
         // Act
         Func<Task> act = async () => await _handler.HandleAsync(commandOptions);

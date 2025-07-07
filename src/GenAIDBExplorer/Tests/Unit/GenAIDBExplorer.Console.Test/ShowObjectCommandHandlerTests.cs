@@ -13,13 +13,13 @@ namespace GenAIDBExplorer.Console.Test;
 [TestClass]
 public class ShowObjectCommandHandlerTests
 {
-    private Mock<IProject> _mockProject;
-    private Mock<ISemanticModelProvider> _mockSemanticModelProvider;
-    private Mock<IDatabaseConnectionProvider> _mockConnectionProvider;
-    private Mock<IServiceProvider> _mockServiceProvider;
-    private Mock<ILogger<ICommandHandler<ShowObjectCommandHandlerOptions>>> _mockLogger;
-    private Mock<IOutputService> _mockOutputService;
-    private ShowObjectCommandHandler _handler;
+    private Mock<IProject> _mockProject = null!;
+    private Mock<ISemanticModelProvider> _mockSemanticModelProvider = null!;
+    private Mock<IDatabaseConnectionProvider> _mockConnectionProvider = null!;
+    private Mock<IServiceProvider> _mockServiceProvider = null!;
+    private Mock<ILogger<ICommandHandler<ShowObjectCommandHandlerOptions>>> _mockLogger = null!;
+    private Mock<IOutputService> _mockOutputService = null!;
+    private ShowObjectCommandHandler _handler = null!;
 
     [TestInitialize]
     public void SetUp()
@@ -80,7 +80,7 @@ public class ShowObjectCommandHandlerTests
                 It.IsAny<EventId>(),
                 It.IsAny<It.IsAnyType>(),
                 It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Never);
     }
 
@@ -110,7 +110,7 @@ public class ShowObjectCommandHandlerTests
                 It.IsAny<EventId>(),
                 It.IsAny<It.IsAnyType>(),
                 It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Never);
     }
 
@@ -140,7 +140,7 @@ public class ShowObjectCommandHandlerTests
                 It.IsAny<EventId>(),
                 It.IsAny<It.IsAnyType>(),
                 It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Never);
     }
 
@@ -148,10 +148,10 @@ public class ShowObjectCommandHandlerTests
     public async Task HandleAsync_ShouldThrowArgumentNullException_WhenCommandOptionsIsNull()
     {
         // Arrange
-        ShowObjectCommandHandlerOptions commandOptions = null;
+        ShowObjectCommandHandlerOptions? commandOptions = null;
 
         // Act
-        Func<Task> act = async () => await _handler.HandleAsync(commandOptions);
+        Func<Task> act = async () => await _handler.HandleAsync(commandOptions!);
 
         // Assert
         await act.Should().ThrowAsync<ArgumentNullException>();
@@ -162,7 +162,7 @@ public class ShowObjectCommandHandlerTests
     public async Task HandleAsync_ShouldThrowArgumentNullException_WhenProjectPathIsNull()
     {
         // Arrange
-        var commandOptions = new ShowObjectCommandHandlerOptions(null, "dbo", "TestTable", "table");
+        var commandOptions = new ShowObjectCommandHandlerOptions(null!, "dbo", "TestTable", "table");
 
         // Act
         Func<Task> act = async () => await _handler.HandleAsync(commandOptions);
