@@ -139,7 +139,7 @@ namespace GenAIDBExplorer.Console.CommandHandlers
                     await ShowStoredProcedureDetailsAsync(semanticModel, commandOptions.SchemaName, commandOptions.ObjectName);
                     break;
                 default:
-                    var errorMessage = _resourceManagerErrorMessages.GetString("InvalidObjectType");
+                    var errorMessage = _resourceManagerErrorMessages.GetString("InvalidObjectType") ?? "Invalid object type specified.";
                     OutputStopError(errorMessage);
                     break;
             }

@@ -205,24 +205,45 @@ public class EnrichModelCommandHandler(
             switch (commandOptions.ObjectType.ToLower())
             {
                 case "table":
-                    await EnrichTableAsync(semanticModel, commandOptions.SchemaName, commandOptions.ObjectName);
-                    if (commandOptions.Show)
+                    if (commandOptions.SchemaName != null && commandOptions.ObjectName != null)
                     {
-                        await ShowTableDetailsAsync(semanticModel, commandOptions.SchemaName, commandOptions.ObjectName);
+                        await EnrichTableAsync(semanticModel, commandOptions.SchemaName, commandOptions.ObjectName);
+                        if (commandOptions.Show)
+                        {
+                            await ShowTableDetailsAsync(semanticModel, commandOptions.SchemaName, commandOptions.ObjectName);
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Cannot enrich table: SchemaName or ObjectName is null");
                     }
                     break;
                 case "view":
-                    await EnrichViewAsync(semanticModel, commandOptions.SchemaName, commandOptions.ObjectName);
-                    if (commandOptions.Show)
+                    if (commandOptions.SchemaName != null && commandOptions.ObjectName != null)
                     {
-                        await ShowViewDetailsAsync(semanticModel, commandOptions.SchemaName, commandOptions.ObjectName);
+                        await EnrichViewAsync(semanticModel, commandOptions.SchemaName, commandOptions.ObjectName);
+                        if (commandOptions.Show)
+                        {
+                            await ShowViewDetailsAsync(semanticModel, commandOptions.SchemaName, commandOptions.ObjectName);
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Cannot enrich view: SchemaName or ObjectName is null");
                     }
                     break;
                 case "storedprocedure":
-                    await EnrichStoredProcedureAsync(semanticModel, commandOptions.SchemaName, commandOptions.ObjectName);
-                    if (commandOptions.Show)
+                    if (commandOptions.SchemaName != null && commandOptions.ObjectName != null)
                     {
-                        await ShowStoredProcedureDetailsAsync(semanticModel, commandOptions.SchemaName, commandOptions.ObjectName);
+                        await EnrichStoredProcedureAsync(semanticModel, commandOptions.SchemaName, commandOptions.ObjectName);
+                        if (commandOptions.Show)
+                        {
+                            await ShowStoredProcedureDetailsAsync(semanticModel, commandOptions.SchemaName, commandOptions.ObjectName);
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Cannot enrich stored procedure: SchemaName or ObjectName is null");
                     }
                     break;
                 default:

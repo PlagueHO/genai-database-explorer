@@ -151,7 +151,14 @@ public class DataDictionaryCommandHandler(
                         commandOptions.ObjectName);
                     if (commandOptions.Show)
                     {
-                        await ShowTableDetailsAsync(semanticModel, commandOptions.SchemaName, commandOptions.ObjectName);
+                        if (commandOptions.SchemaName != null && commandOptions.ObjectName != null)
+                        {
+                            await ShowTableDetailsAsync(semanticModel, commandOptions.SchemaName, commandOptions.ObjectName);
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Cannot show table details: SchemaName or ObjectName is null");
+                        }
                     }
                     break;
                 default:
