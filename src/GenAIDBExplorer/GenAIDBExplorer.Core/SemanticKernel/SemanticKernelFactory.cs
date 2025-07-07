@@ -51,17 +51,17 @@ public class SemanticKernelFactory(
         if (openAIServiceDefaultSettings.ServiceType == "AzureOpenAI")
         {
             kernelBuilder.AddAzureOpenAIChatCompletion(
-                deploymentName: openAIServiceChatCompletionSettings.AzureOpenAIDeploymentId,
-                endpoint: openAIServiceDefaultSettings.AzureOpenAIEndpoint,
-                apiKey: openAIServiceDefaultSettings.AzureOpenAIKey,
+                deploymentName: openAIServiceChatCompletionSettings.AzureOpenAIDeploymentId ?? throw new InvalidOperationException("AzureOpenAI deployment ID is required"),
+                endpoint: openAIServiceDefaultSettings.AzureOpenAIEndpoint ?? throw new InvalidOperationException("AzureOpenAI endpoint is required"),
+                apiKey: openAIServiceDefaultSettings.AzureOpenAIKey ?? throw new InvalidOperationException("AzureOpenAI API key is required"),
                 serviceId: serviceId
             );
         }
         else
         {
             kernelBuilder.AddOpenAIChatCompletion(
-                modelId: openAIServiceChatCompletionSettings.ModelId,
-                apiKey: openAIServiceDefaultSettings.OpenAIKey,
+                modelId: openAIServiceChatCompletionSettings.ModelId ?? throw new InvalidOperationException("OpenAI model ID is required"),
+                apiKey: openAIServiceDefaultSettings.OpenAIKey ?? throw new InvalidOperationException("OpenAI API key is required"),
                 serviceId: serviceId
             );
         }

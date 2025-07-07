@@ -14,11 +14,6 @@ public class Project(
     private static readonly ResourceManager _resourceManagerErrorMessages = new("GenAIDBExplorer.Core.Resources.ErrorMessages", typeof(Project).Assembly);
 
     /// <summary>
-    /// Logger instance for logging information, warnings, and errors.
-    /// </summary>
-    private readonly ILogger<Project> _logger = logger;
-
-    /// <summary>
     /// Configuration instance for accessing project settings.
     /// </summary>
     private IConfiguration? _configuration;
@@ -26,12 +21,12 @@ public class Project(
     /// <summary>
     /// Gets the project settings.
     /// </summary>
-    public ProjectSettings Settings { get; private set; }
+    public ProjectSettings Settings { get; private set; } = null!;
 
     /// <summary>
     /// Gets the project directory.
     /// </summary>
-    public DirectoryInfo ProjectDirectory { get; private set; }
+    public DirectoryInfo ProjectDirectory { get; private set; } = null!;
 
     /// <summary>
     /// Initializes the project directory by copying the default project structure.
@@ -43,7 +38,7 @@ public class Project(
 
         if (ProjectUtils.IsDirectoryNotEmpty(projectDirectory))
         {
-            _logger.LogError("{ErrorMessage}", _resourceManagerErrorMessages.GetString("ErrorProjectFolderNotEmpty"));
+            logger.LogError("{ErrorMessage}", _resourceManagerErrorMessages.GetString("ErrorProjectFolderNotEmpty"));
 
             // Throw exception directory is not empty
             throw new InvalidOperationException(_resourceManagerErrorMessages.GetString("ErrorProjectFolderNotEmpty"));
@@ -86,12 +81,12 @@ public class Project(
         };
 
         // Read the SettingsVersion
-        Settings.SettingsVersion = _configuration.GetValue<Version>(nameof(Settings.SettingsVersion)) ?? new Version();
+        Settings.SettingsVersion = _configuration?.GetValue<Version>(nameof(Settings.SettingsVersion)) ?? new Version();
 
-        _configuration.GetSection(DatabaseSettings.PropertyName).Bind(Settings.Database);
-        _configuration.GetSection(DataDictionarySettings.PropertyName).Bind(Settings.DataDictionary);
-        _configuration.GetSection(SemanticModelSettings.PropertyName).Bind(Settings.SemanticModel);
-        _configuration.GetSection(OpenAIServiceSettings.PropertyName).Bind(Settings.OpenAIService);
+        _configuration?.GetSection(DatabaseSettings.PropertyName).Bind(Settings.Database);
+        _configuration?.GetSection(DataDictionarySettings.PropertyName).Bind(Settings.DataDictionary);
+        _configuration?.GetSection(SemanticModelSettings.PropertyName).Bind(Settings.SemanticModel);
+        _configuration?.GetSection(OpenAIServiceSettings.PropertyName).Bind(Settings.OpenAIService);
 
         ValidateSettings();
     }
@@ -101,24 +96,24 @@ public class Project(
     /// </summary>
     private void ValidateSettings()
     {
-        _logger.LogInformation("{Message}", _resourceManagerLogMessages.GetString("ProjectSettingsValidationStarted"));
+        logger.LogInformation("{Message}", _resourceManagerLogMessages.GetString("ProjectSettingsValidationStarted"));
 
         var validationContext = new ValidationContext(Settings.Database);
         Validator.ValidateObject(Settings.Database, validationContext, validateAllProperties: true);
-        _logger.LogInformation("{Message} '{Section}'", _resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "Database");
+        logger.LogInformation("{Message} '{Section}'", _resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "Database");
 
         validationContext = new ValidationContext(Settings.DataDictionary);
         Validator.ValidateObject(Settings.DataDictionary, validationContext, validateAllProperties: true);
-        _logger.LogInformation("{Message} '{Section}'", _resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "DataDictionary");
+        logger.LogInformation("{Message} '{Section}'", _resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "DataDictionary");
 
         validationContext = new ValidationContext(Settings.SemanticModel);
         Validator.ValidateObject(Settings.SemanticModel, validationContext, validateAllProperties: true);
-        _logger.LogInformation("{Message} '{Section}'", _resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "SemanticModel");
+        logger.LogInformation("{Message} '{Section}'", _resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "SemanticModel");
 
         validationContext = new ValidationContext(Settings.OpenAIService);
         Validator.ValidateObject(Settings.OpenAIService, validationContext, validateAllProperties: true);
-        _logger.LogInformation("{Message} '{Section}'", _resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "OpenAIService");
+        logger.LogInformation("{Message} '{Section}'", _resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "OpenAIService");
 
-        _logger.LogInformation("{Message}", _resourceManagerLogMessages.GetString("ProjectSettingsValidationCompleted"));
+        logger.LogInformation("{Message}", _resourceManagerLogMessages.GetString("ProjectSettingsValidationCompleted"));
     }
 }

@@ -65,7 +65,7 @@ public class SemanticDescriptionProvider(
                 entityType, entity.Schema, entity.Name);
 
             // Fetch sample data based on entity type
-            List<Dictionary<string, object>> sampleData = [];
+            List<Dictionary<string, object?>> sampleData = [];
             IEnumerable<SemanticModelTable> relatedTables = Enumerable.Empty<SemanticModelTable>();
 
             switch (entity)
@@ -425,7 +425,7 @@ public class SemanticDescriptionProvider(
         return tableList;
     }
 
-    private static string SerializeSampleData(List<Dictionary<string, object>> sampleData)
+    private static string SerializeSampleData(List<Dictionary<string, object?>> sampleData)
     {
         const int MaxColumnLength = 200; // Adjust the maximum length as needed
 
@@ -436,7 +436,7 @@ public class SemanticDescriptionProvider(
                 var truncatedRow = new Dictionary<string, object?>();
                 foreach (var kvp in row)
                 {
-                    truncatedRow[kvp.Key] = TruncateValue(kvp.Value, MaxColumnLength);
+                    truncatedRow[kvp.Key] = kvp.Value != null ? TruncateValue(kvp.Value, MaxColumnLength) : null;
                 }
                 return truncatedRow;
             }).ToList();

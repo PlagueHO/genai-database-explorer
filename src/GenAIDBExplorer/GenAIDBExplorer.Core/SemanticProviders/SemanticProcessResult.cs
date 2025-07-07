@@ -37,7 +37,7 @@ public class SemanticProcessResult : IEnumerable<SemanticProcessResultItem>
     /// <returns></returns>
     public int GetTotalInputTokenCount()
     {
-        return _items.Sum(item => item.TokenUsage.InputTokenCount);
+        return _items.Sum(item => item.TokenUsage?.InputTokenCount ?? 0);
     }
 
     /// <summary>
@@ -47,7 +47,7 @@ public class SemanticProcessResult : IEnumerable<SemanticProcessResultItem>
     /// <returns></returns>
     public int GetTotalInputTokenCount(string label)
     {
-        return _items.Where(item => item.Label == label).Sum(item => item.TokenUsage.InputTokenCount);
+        return _items.Where(item => item.Label == label).Sum(item => item.TokenUsage?.InputTokenCount ?? 0);
     }
 
     /// <summary>
@@ -56,7 +56,7 @@ public class SemanticProcessResult : IEnumerable<SemanticProcessResultItem>
     /// <returns></returns>
     public int GetTotalOutputTokenCount()
     {
-        return _items.Sum(item => item.TokenUsage.OutputTokenCount);
+        return _items.Sum(item => item.TokenUsage?.OutputTokenCount ?? 0);
     }
 
     /// <summary>
@@ -66,7 +66,7 @@ public class SemanticProcessResult : IEnumerable<SemanticProcessResultItem>
     /// <returns></returns>
     public int GetTotalOutputTokenCount(string label)
     {
-        return _items.Where(item => item.Label == label).Sum(item => item.TokenUsage.OutputTokenCount);
+        return _items.Where(item => item.Label == label).Sum(item => item.TokenUsage?.OutputTokenCount ?? 0);
     }
 
     /// <summary>
@@ -75,7 +75,7 @@ public class SemanticProcessResult : IEnumerable<SemanticProcessResultItem>
     /// <returns></returns>
     public int GetTotalTokenCount()
     {
-        return _items.Sum(item => item.TokenUsage.TotalTokenCount);
+        return _items.Sum(item => item.TokenUsage?.TotalTokenCount ?? 0);
     }
 
     /// <summary>
@@ -84,7 +84,7 @@ public class SemanticProcessResult : IEnumerable<SemanticProcessResultItem>
     /// <param name="other"></param>
     public int GetTotalTokenCount(string label)
     {
-        return _items.Where(item => item.Label == label).Sum(item => item.TokenUsage.TotalTokenCount);
+        return _items.Where(item => item.Label == label).Sum(item => item.TokenUsage?.TotalTokenCount ?? 0);
     }
 
     /// <summary>
@@ -124,12 +124,12 @@ public class SemanticProcessResult : IEnumerable<SemanticProcessResultItem>
 public class SemanticProcessResultItem(
     string id,
     string label,
-    OpenAI.Chat.ChatTokenUsage tokenUsage,
+    OpenAI.Chat.ChatTokenUsage? tokenUsage,
     TimeSpan timeTaken
 )
 {
     public string Id { get; set; } = id;
     public string Label { get; set; } = label;
-    public OpenAI.Chat.ChatTokenUsage TokenUsage { get; set; } = tokenUsage;
+    public OpenAI.Chat.ChatTokenUsage? TokenUsage { get; set; } = tokenUsage;
     public TimeSpan TimeTaken { get; set; } = timeTaken;
 }

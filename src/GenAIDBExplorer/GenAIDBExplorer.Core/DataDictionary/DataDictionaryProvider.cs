@@ -23,7 +23,6 @@ public class DataDictionaryProvider(
 {
     private readonly IProject _project = project;
     private readonly ISemanticKernelFactory _semanticKernelFactory = semanticKernelFactory;
-    private readonly ILogger<DataDictionaryProvider> _logger = logger;
     private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Core.Resources.LogMessages", typeof(DataDictionaryProvider).Assembly);
     private static readonly ResourceManager _resourceManagerErrorMessages = new("GenAIDBExplorer.Core.Resources.ErrorMessages", typeof(DataDictionaryProvider).Assembly);
     private const string _promptyFolder = "Prompty";
@@ -56,7 +55,7 @@ public class DataDictionaryProvider(
 
         if (!Directory.Exists(directory))
         {
-            _logger.LogError("{ErrorMessage} '{SourcePath}'", _resourceManagerErrorMessages.GetString("ErrorDataDictionarySourcePathDoesNotExist"), directory);
+            logger.LogError("{ErrorMessage} '{SourcePath}'", _resourceManagerErrorMessages.GetString("ErrorDataDictionarySourcePathDoesNotExist"), directory);
             return;
         }
 
@@ -64,7 +63,7 @@ public class DataDictionaryProvider(
 
         if (markdownFiles.Length == 0)
         {
-            _logger.LogWarning("{Message} '{SourcePath}' with pattern '{SearchPattern}'", _resourceManagerLogMessages.GetString("DataDictionaryFilesNotFound"), directory, searchPattern);
+            logger.LogWarning("{Message} '{SourcePath}' with pattern '{SearchPattern}'", _resourceManagerLogMessages.GetString("DataDictionaryFilesNotFound"), directory, searchPattern);
             return;
         }
 
@@ -94,7 +93,7 @@ public class DataDictionaryProvider(
             }
             else
             {
-                _logger.LogWarning("{Message} [{SchemaName}].[{TableName}]", _resourceManagerLogMessages.GetString("TableDoesNotExistInSemanticModel"), table.SchemaName, table.TableName);
+                logger.LogWarning("{Message} [{SchemaName}].[{TableName}]", _resourceManagerLogMessages.GetString("TableDoesNotExistInSemanticModel"), table.SchemaName, table.TableName);
             }
         }
     }
@@ -113,7 +112,7 @@ public class DataDictionaryProvider(
         {
             var scope = $"{filePath}";
 
-            using (_logger.BeginScope(scope))
+            using (logger.BeginScope(scope))
             {
                 var markdownContent = await File.ReadAllTextAsync(filePath, Encoding.UTF8, cancellationToken);
                 var table = await GetTableFromMarkdownAsync(markdownContent);
@@ -173,7 +172,7 @@ public class DataDictionaryProvider(
 
         if (string.IsNullOrEmpty(resultString))
         {
-            _logger.LogWarning("Semantic Kernel returned an empty result for markdown content.");
+            logger.LogWarning("Semantic Kernel returned an empty result for markdown content.");
             throw new InvalidOperationException("Failed to extract table structure from markdown content.");
         }
         else
@@ -304,9 +303,9 @@ public class DataDictionaryProvider(
             }
         }
 
-        if (!semanticModelType.Equals(dataDictionaryType, StringComparison.OrdinalIgnoreCase))
+        if (!string.Equals(semanticModelType, dataDictionaryType, StringComparison.OrdinalIgnoreCase))
         {
-            _logger.LogWarning(
+            logger.LogWarning(
                 "Column type mismatch for column '{ColumnName}' in table '{TableName}'. " +
                 "Data dictionary type: '{DataType}', Semantic model type: '{SemanticType}'",
                 column.ColumnName,
@@ -351,7 +350,7 @@ public class DataDictionaryProvider(
     /// <param name="semanticModelTable"></param>
     private void LogColumnNotFoundWarning(ColumnDataDictionary column, SemanticModelTable semanticModelTable)
     {
-        _logger.LogWarning(
+        logger.LogWarning(
             "Column '{ColumnName}' from data dictionary not found in semantic model table '{TableName}'",
             column.ColumnName,
             semanticModelTable.Name
@@ -371,7 +370,7 @@ public class DataDictionaryProvider(
         {
             if (!dataDictionaryColumnNames.Contains(column.Name))
             {
-                _logger.LogWarning(
+                logger.LogWarning(
                     "Column '{ColumnName}' in semantic model table '{TableName}' not found in data dictionary",
                     column.Name,
                     semanticModelTable.Name
