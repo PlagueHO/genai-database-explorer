@@ -86,7 +86,7 @@ module rg 'br/public:avm/res/resources/resource-group:0.4.1' = {
 }
 
 // --------- MONITORING RESOURCES ---------
-module logAnalyticsWorkspace 'br/public:avm/res/operational-insights/workspace:0.11.2' = {
+module logAnalyticsWorkspace 'br/public:avm/res/operational-insights/workspace:0.12.0' = {
   name: 'logAnalyticsWorkspace'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [
@@ -267,7 +267,7 @@ module cosmosDbAccount 'br/public:avm/res/document-db/database-account:0.15.0' =
 }
 
 // --------- STORAGE ACCOUNT ---------
-module storageAccount 'br/public:avm/res/storage/storage-account:0.23.0' = if (storageAccountDeploy) {
+module storageAccount 'br/public:avm/res/storage/storage-account:0.25.0' = if (storageAccountDeploy) {
   name: 'storage-account-deployment'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [
@@ -318,7 +318,7 @@ module storageAccount 'br/public:avm/res/storage/storage-account:0.23.0' = if (s
 }
 
 // --------- AI SEARCH (OPTIONAL) ---------
-module aiSearchService 'br/public:avm/res/search/search-service:0.10.0' = if (azureAiSearchDeploy) {
+module aiSearchService 'br/public:avm/res/search/search-service:0.11.0' = if (azureAiSearchDeploy) {
   name: 'ai-search-service-deployment'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [
