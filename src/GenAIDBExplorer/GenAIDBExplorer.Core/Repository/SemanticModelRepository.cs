@@ -42,50 +42,6 @@ namespace GenAIDBExplorer.Core.Repository
             _globalSemaphore = new SemaphoreSlim(maxConcurrentOperations, maxConcurrentOperations);
         }
 
-        public async Task SaveModelAsync(SemanticModel model, DirectoryInfo modelPath, string? strategyName = null)
-        {
-            ObjectDisposedException.ThrowIf(_disposed, this);
-
-            var sanitizedPath = await ValidateAndSanitizePathAsync(modelPath);
-            await ExecuteWithConcurrencyProtectionAsync(sanitizedPath, async () =>
-            {
-                _logger?.LogDebug("Saving semantic model to {ModelPath}", sanitizedPath);
-                var strategy = _strategyFactory.GetStrategy(strategyName);
-                await strategy.SaveModelAsync(model, new DirectoryInfo(sanitizedPath));
-            });
-        }
-
-        public async Task SaveChangesAsync(SemanticModel model, DirectoryInfo modelPath, string? strategyName = null)
-        {
-            ObjectDisposedException.ThrowIf(_disposed, this);
-
-            var sanitizedPath = await ValidateAndSanitizePathAsync(modelPath);
-
-            // If change tracking is not enabled or there are no changes, perform a full save
-            if (!model.IsChangeTrackingEnabled || !model.HasUnsavedChanges)
-            {
-                _logger?.LogDebug("Change tracking not enabled or no changes detected. Performing full save for model at {ModelPath}", sanitizedPath);
-                await SaveModelAsync(model, new DirectoryInfo(sanitizedPath), strategyName);
-                return;
-            }
-
-            await ExecuteWithConcurrencyProtectionAsync(sanitizedPath, async () =>
-            {
-                _logger?.LogDebug("Selective persistence - saving only changed entities for model at {ModelPath}", sanitizedPath);
-
-                // For Phase 4b, we implement basic selective persistence by performing a full save
-                // but only when there are actual changes. Future phases could implement more granular
-                // selective persistence by only saving specific entity files.
-                var strategy = _strategyFactory.GetStrategy(strategyName);
-                await strategy.SaveModelAsync(model, new DirectoryInfo(sanitizedPath));
-
-                // Mark all entities as clean after successful save
-                model.AcceptAllChanges();
-
-                _logger?.LogDebug("Selective persistence completed for model at {ModelPath}", sanitizedPath);
-            });
-        }
-
         public Task<SemanticModel> LoadModelAsync(DirectoryInfo modelPath, string? strategyName = null)
         {
             return LoadModelAsync(modelPath, enableLazyLoading: false, strategyName);
@@ -183,6 +139,50 @@ namespace GenAIDBExplorer.Core.Repository
                 }
 
                 return model;
+            });
+        }
+
+        public async Task SaveModelAsync(SemanticModel model, DirectoryInfo modelPath, string? strategyName = null)
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+
+            var sanitizedPath = await ValidateAndSanitizePathAsync(modelPath);
+            await ExecuteWithConcurrencyProtectionAsync(sanitizedPath, async () =>
+            {
+                _logger?.LogDebug("Saving semantic model to {ModelPath}", sanitizedPath);
+                var strategy = _strategyFactory.GetStrategy(strategyName);
+                await strategy.SaveModelAsync(model, new DirectoryInfo(sanitizedPath));
+            });
+        }
+
+        public async Task SaveChangesAsync(SemanticModel model, DirectoryInfo modelPath, string? strategyName = null)
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+
+            var sanitizedPath = await ValidateAndSanitizePathAsync(modelPath);
+
+            // If change tracking is not enabled or there are no changes, perform a full save
+            if (!model.IsChangeTrackingEnabled || !model.HasUnsavedChanges)
+            {
+                _logger?.LogDebug("Change tracking not enabled or no changes detected. Performing full save for model at {ModelPath}", sanitizedPath);
+                await SaveModelAsync(model, new DirectoryInfo(sanitizedPath), strategyName);
+                return;
+            }
+
+            await ExecuteWithConcurrencyProtectionAsync(sanitizedPath, async () =>
+            {
+                _logger?.LogDebug("Selective persistence - saving only changed entities for model at {ModelPath}", sanitizedPath);
+
+                // For Phase 4b, we implement basic selective persistence by performing a full save
+                // but only when there are actual changes. Future phases could implement more granular
+                // selective persistence by only saving specific entity files.
+                var strategy = _strategyFactory.GetStrategy(strategyName);
+                await strategy.SaveModelAsync(model, new DirectoryInfo(sanitizedPath));
+
+                // Mark all entities as clean after successful save
+                model.AcceptAllChanges();
+
+                _logger?.LogDebug("Selective persistence completed for model at {ModelPath}", sanitizedPath);
             });
         }
 
