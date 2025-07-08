@@ -41,6 +41,9 @@ Repository pattern implementation for persisting AI-consumable semantic models e
 - **REQ-007**: Error handling and logging
 - **REQ-008**: Lazy loading for memory optimization
 - **REQ-009**: Dirty tracking for selective persistence
+- **REQ-010**: Builder pattern for repository options configuration
+- **REQ-011**: Fluent interface for repository options construction
+- **REQ-012**: Immutable options objects after construction
 
 ### Security Requirements
 
@@ -73,6 +76,10 @@ Repository pattern implementation for persisting AI-consumable semantic models e
 - **GUD-003**: Structured logging
 - **GUD-004**: Consistent async/await patterns
 - **GUD-005**: Repository pattern separation of concerns
+- **GUD-006**: Builder pattern for complex configuration scenarios
+- **GUD-007**: Immutable options objects to prevent unintended modifications
+- **GUD-008**: Fluent interface design for improved readability
+- **GUD-009**: Method chaining for builder pattern implementation
 
 ## 4. Interfaces & Data Contracts
 
@@ -91,6 +98,94 @@ public interface ISchemaRepository
     Task<SemanticModelTable> CreateSemanticModelTableAsync(TableInfo table);
     Task<SemanticModelView> CreateSemanticModelViewAsync(ViewInfo view);
     Task<SemanticModelStoredProcedure> CreateSemanticModelStoredProcedureAsync(StoredProcedureInfo storedProcedure);
+}
+
+/// <summary>Repository for semantic model persistence with flexible loading options.</summary>
+public interface ISemanticModelRepository
+{
+    Task SaveModelAsync(SemanticModel model, DirectoryInfo modelPath, string? strategyName = null);
+    Task SaveChangesAsync(SemanticModel model, DirectoryInfo modelPath, string? strategyName = null);
+    Task<SemanticModel> LoadModelAsync(DirectoryInfo modelPath, string? strategyName = null);
+    Task<SemanticModel> LoadModelAsync(DirectoryInfo modelPath, SemanticModelRepositoryOptions options);
+}
+
+/// <summary>Options for configuring semantic model repository operations.</summary>
+public class SemanticModelRepositoryOptions
+{
+    public bool EnableLazyLoading { get; set; } = false;
+    public bool EnableChangeTracking { get; set; } = false;
+    public bool EnableCaching { get; set; } = false;
+    public string? StrategyName { get; set; }
+    public TimeSpan? CacheExpiration { get; set; }
+    public int? MaxConcurrentOperations { get; set; }
+}
+
+/// <summary>Builder for creating SemanticModelRepositoryOptions with fluent interface.</summary>
+public interface ISemanticModelRepositoryOptionsBuilder
+{
+    ISemanticModelRepositoryOptionsBuilder WithLazyLoading(bool enabled = true);
+    ISemanticModelRepositoryOptionsBuilder WithChangeTracking(bool enabled = true);
+    ISemanticModelRepositoryOptionsBuilder WithCaching(bool enabled = true);
+    ISemanticModelRepositoryOptionsBuilder WithCaching(bool enabled, TimeSpan expiration);
+    ISemanticModelRepositoryOptionsBuilder WithStrategyName(string strategyName);
+    ISemanticModelRepositoryOptionsBuilder WithMaxConcurrentOperations(int maxOperations);
+    SemanticModelRepositoryOptions Build();
+}
+
+/// <summary>Builder implementation for SemanticModelRepositoryOptions.</summary>
+public class SemanticModelRepositoryOptionsBuilder : ISemanticModelRepositoryOptionsBuilder
+{
+    private readonly SemanticModelRepositoryOptions _options = new();
+
+    public ISemanticModelRepositoryOptionsBuilder WithLazyLoading(bool enabled = true)
+    {
+        _options.EnableLazyLoading = enabled;
+        return this;
+    }
+
+    public ISemanticModelRepositoryOptionsBuilder WithChangeTracking(bool enabled = true)
+    {
+        _options.EnableChangeTracking = enabled;
+        return this;
+    }
+
+    public ISemanticModelRepositoryOptionsBuilder WithCaching(bool enabled = true)
+    {
+        _options.EnableCaching = enabled;
+        return this;
+    }
+
+    public ISemanticModelRepositoryOptionsBuilder WithCaching(bool enabled, TimeSpan expiration)
+    {
+        _options.EnableCaching = enabled;
+        _options.CacheExpiration = expiration;
+        return this;
+    }
+
+    public ISemanticModelRepositoryOptionsBuilder WithStrategyName(string strategyName)
+    {
+        _options.StrategyName = strategyName;
+        return this;
+    }
+
+    public ISemanticModelRepositoryOptionsBuilder WithMaxConcurrentOperations(int maxOperations)
+    {
+        _options.MaxConcurrentOperations = maxOperations;
+        return this;
+    }
+
+    public SemanticModelRepositoryOptions Build()
+    {
+        return new SemanticModelRepositoryOptions
+        {
+            EnableLazyLoading = _options.EnableLazyLoading,
+            EnableChangeTracking = _options.EnableChangeTracking,
+            EnableCaching = _options.EnableCaching,
+            StrategyName = _options.StrategyName,
+            CacheExpiration = _options.CacheExpiration,
+            MaxConcurrentOperations = _options.MaxConcurrentOperations
+        };
+    }
 }
 
 /// <summary>Semantic model provider for orchestrating model operations.</summary>
@@ -319,6 +414,11 @@ Documents (each with hierarchical partition key):
 - **AC-010**: Given JSON serialization, When processing data, Then injection attacks are prevented across all persistence strategies
 - **AC-011**: Given entity names, When creating file/blob/document paths, Then names are sanitized and length ≤128 characters
 - **AC-012**: Given repository operations, When using dependency injection, Then components integrate seamlessly with strategy pattern selection
+- **AC-013**: Given SemanticModelRepositoryOptionsBuilder, When methods are chained, Then fluent interface maintains immutability until Build() is called
+- **AC-014**: Given repository options, When LoadModelAsync is called with options object, Then all specified options are applied correctly
+- **AC-015**: Given builder pattern usage, When Build() is called multiple times, Then each call returns a new immutable options instance
+- **AC-016**: Given invalid option combinations, When Build() is called, Then appropriate validation exceptions are thrown
+- **AC-017**: Given default builder usage, When no options are specified, Then safe defaults are applied (no lazy loading, no change tracking, no caching)
 
 ## 6. Test Automation Strategy
 
@@ -358,6 +458,8 @@ Documents (each with hierarchical partition key):
 
 **Repository Pattern Selection**: Provides clean abstraction between domain logic and data access. Enables testability through mocking, flexibility for multiple persistence strategies, and maintainability through separation of concerns.
 
+**Builder Pattern for Options Configuration**: Addresses the "Boolean Parameter Hell" problem by providing a fluent, self-documenting interface for configuring repository options. Improves code readability, extensibility, and maintainability while supporting complex configuration scenarios without breaking existing method signatures.
+
 **Three-Strategy Persistence Design**:
 
 - **Local Disk JSON**: Development scenarios, small deployments, version control integration, human-readable format
@@ -369,6 +471,8 @@ Documents (each with hierarchical partition key):
 **JSON Serialization**: Selected for AI compatibility, human readability, language agnostic consumption, and extensive tooling ecosystem.
 
 **Change Tracking**: Essential for performance optimization (selective persistence), conflict resolution, audit trails, and network optimization in distributed scenarios.
+
+**Immutable Options Pattern**: Options objects are immutable after construction through the builder, preventing unintended modifications and ensuring thread safety. The builder pattern provides a clean separation between configuration construction and usage, following modern C# best practices and enabling safe concurrent access to options objects.
 
 ## 8. Dependencies & External Integrations
 
@@ -416,54 +520,198 @@ Documents (each with hierarchical partition key):
 ### Basic Usage - Local Disk
 
 ```csharp
-// Create and extract semantic model to local disk
-var localStrategy = serviceProvider.GetRequiredService<ILocalDiskPersistenceStrategy>();
+// Traditional boolean parameter approach (legacy)
 var provider = serviceProvider.GetRequiredService<ISemanticModelProvider>();
+var repository = serviceProvider.GetRequiredService<ISemanticModelRepository>();
 var model = await provider.ExtractSemanticModelAsync();
-await localStrategy.SaveModelAsync(model, new DirectoryInfo(@"C:\Models\Database"));
+await repository.SaveModelAsync(model, new DirectoryInfo(@"C:\Models\Database"));
 
-// Load existing model from local disk
-var loadedModel = await localStrategy.LoadModelAsync(new DirectoryInfo(@"C:\Models\Database"));
+// Load with specific features using boolean parameters (legacy)
+var loadedModel = await repository.LoadModelAsync(
+    new DirectoryInfo(@"C:\Models\Database"), 
+    enableLazyLoading: true, 
+    enableChangeTracking: true, 
+    enableCaching: false, 
+    strategyName: "localdisk");
+```
+
+### Builder Pattern Usage (Recommended)
+
+```csharp
+// Using builder pattern for complex configurations
+var provider = serviceProvider.GetRequiredService<ISemanticModelProvider>();
+var repository = serviceProvider.GetRequiredService<ISemanticModelRepository>();
+var optionsBuilder = serviceProvider.GetRequiredService<ISemanticModelRepositoryOptionsBuilder>();
+
+// Create and save semantic model
+var model = await provider.ExtractSemanticModelAsync();
+await repository.SaveModelAsync(model, new DirectoryInfo(@"C:\Models\Database"));
+
+// Load with builder pattern - basic configuration
+var basicOptions = optionsBuilder
+    .WithLazyLoading()
+    .WithChangeTracking()
+    .Build();
+var loadedModel = await repository.LoadModelAsync(new DirectoryInfo(@"C:\Models\Database"), basicOptions);
+
+// Load with builder pattern - advanced configuration
+var advancedOptions = optionsBuilder
+    .WithLazyLoading(true)
+    .WithChangeTracking(true)
+    .WithCaching(true, TimeSpan.FromMinutes(30))
+    .WithStrategyName("localdisk")
+    .WithMaxConcurrentOperations(5)
+    .Build();
+var optimizedModel = await repository.LoadModelAsync(new DirectoryInfo(@"C:\Models\Database"), advancedOptions);
+
+// Fluent interface for different scenarios
+var memoryOptimizedOptions = optionsBuilder
+    .WithLazyLoading()
+    .WithCaching(true, TimeSpan.FromHours(2))
+    .Build();
+
+var performanceOptimizedOptions = optionsBuilder
+    .WithChangeTracking()
+    .WithCaching()
+    .WithMaxConcurrentOperations(10)
+    .Build();
 ```
 
 ### Azure Blob Storage Usage
 
 ```csharp
-// Create and save to Azure Blob Storage
+// Create and save to Azure Blob Storage using builder pattern
 var blobStrategy = serviceProvider.GetRequiredService<IAzureBlobPersistenceStrategy>();
+var repository = serviceProvider.GetRequiredService<ISemanticModelRepository>();
+var optionsBuilder = serviceProvider.GetRequiredService<ISemanticModelRepositoryOptionsBuilder>();
+
 blobStrategy.ConnectionString = "DefaultEndpointsProtocol=https;AccountName=...";
 var model = await provider.ExtractSemanticModelAsync();
 await blobStrategy.SaveModelAsync(model, "semantic-models", "adventureworks");
 
-// Load from Azure Blob Storage
-var loadedModel = await blobStrategy.LoadModelAsync("semantic-models", "adventureworks");
+// Load from Azure Blob Storage with optimized settings
+var azureOptions = optionsBuilder
+    .WithLazyLoading()
+    .WithCaching(true, TimeSpan.FromMinutes(45))
+    .WithStrategyName("azureblob")
+    .WithMaxConcurrentOperations(8)
+    .Build();
+var loadedModel = await repository.LoadModelAsync(new DirectoryInfo("adventureworks"), azureOptions);
 ```
 
 ### Cosmos DB Usage
 
 ```csharp
-// Create and save to Cosmos DB
+// Create and save to Cosmos DB using builder pattern
 var cosmosStrategy = serviceProvider.GetRequiredService<ICosmosPersistenceStrategy>();
+var repository = serviceProvider.GetRequiredService<ISemanticModelRepository>();
+var optionsBuilder = serviceProvider.GetRequiredService<ISemanticModelRepositoryOptionsBuilder>();
+
 cosmosStrategy.ConnectionString = "AccountEndpoint=https://...;AccountKey=...";
 cosmosStrategy.PartitionKeyPath = "/partitionKey"; // Hierarchical partition key path
 var model = await provider.ExtractSemanticModelAsync();
 await cosmosStrategy.SaveModelAsync(model, "SemanticModels", "Models");
 
-// Load from Cosmos DB
-var loadedModel = await cosmosStrategy.LoadModelAsync("SemanticModels", "Models");
+// Load from Cosmos DB with high-performance settings
+var cosmosOptions = optionsBuilder
+    .WithLazyLoading()
+    .WithChangeTracking()
+    .WithCaching(true, TimeSpan.FromHours(1))
+    .WithStrategyName("cosmos")
+    .WithMaxConcurrentOperations(12)
+    .Build();
+var loadedModel = await repository.LoadModelAsync(new DirectoryInfo("Models"), cosmosOptions);
 
 // Query specific entity by partition key for optimal performance
 // Partition key format: "{model-name}/{entity-type}/{entity-name}"
 // Example: "adventureworks/table/Sales.Customer"
 ```
 
-### Repository Pattern
+### Repository Pattern with Builder
 
 ```csharp
-// Schema extraction
+// Schema extraction with repository pattern and builder configuration
 var schemaRepo = serviceProvider.GetRequiredService<ISchemaRepository>();
+var repository = serviceProvider.GetRequiredService<ISemanticModelRepository>();
+var optionsBuilder = serviceProvider.GetRequiredService<ISemanticModelRepositoryOptionsBuilder>();
+
 var tables = await schemaRepo.GetTablesAsync("Sales");
 var semanticTable = await schemaRepo.CreateSemanticModelTableAsync(tables.First().Value);
+
+// Configure different loading strategies based on use case
+var developmentOptions = optionsBuilder
+    .WithLazyLoading()
+    .WithChangeTracking()
+    .WithStrategyName("localdisk")
+    .Build();
+
+var productionOptions = optionsBuilder
+    .WithLazyLoading()
+    .WithCaching(true, TimeSpan.FromMinutes(30))
+    .WithStrategyName("azureblob")
+    .WithMaxConcurrentOperations(10)
+    .Build();
+
+// Load model with appropriate configuration
+var model = await repository.LoadModelAsync(modelPath, developmentOptions);
+```
+
+### Builder Pattern Validation
+
+```csharp
+// Builder with validation for option combinations
+var optionsBuilder = serviceProvider.GetRequiredService<ISemanticModelRepositoryOptionsBuilder>();
+
+try
+{
+    // This should work - valid combination
+    var validOptions = optionsBuilder
+        .WithLazyLoading()
+        .WithChangeTracking()
+        .WithCaching(true, TimeSpan.FromMinutes(30))
+        .Build();
+    
+    // This should throw validation exception - invalid cache expiration
+    var invalidOptions = optionsBuilder
+        .WithCaching(true, TimeSpan.FromSeconds(-1))
+        .Build();
+}
+catch (ArgumentException ex)
+{
+    // Handle validation errors
+    _logger.LogError(ex, "Invalid repository options configuration");
+}
+```
+
+### Builder Pattern Reuse
+
+```csharp
+// Builder instances can be reused for multiple configurations
+var optionsBuilder = serviceProvider.GetRequiredService<ISemanticModelRepositoryOptionsBuilder>();
+
+// Create different preset configurations
+var memoryOptimizedOptions = optionsBuilder
+    .WithLazyLoading()
+    .WithCaching(true, TimeSpan.FromHours(2))
+    .Build();
+
+var performanceOptimizedOptions = optionsBuilder
+    .WithChangeTracking()
+    .WithCaching()
+    .WithMaxConcurrentOperations(15)
+    .Build();
+
+var fullFeaturedOptions = optionsBuilder
+    .WithLazyLoading()
+    .WithChangeTracking()
+    .WithCaching(true, TimeSpan.FromMinutes(45))
+    .WithMaxConcurrentOperations(8)
+    .Build();
+
+// Each Build() call creates a new immutable options instance
+var model1 = await repository.LoadModelAsync(path1, memoryOptimizedOptions);
+var model2 = await repository.LoadModelAsync(path2, performanceOptimizedOptions);
+var model3 = await repository.LoadModelAsync(path3, fullFeaturedOptions);
 ```
 
 ### Error Handling
@@ -513,6 +761,9 @@ public async Task<SemanticModel> SafeLoadAsync(DirectoryInfo path)
 - Lazy loading reduces memory usage ≥70% for all storage types
 - Change tracking identifies modifications with 100% accuracy
 - Index document maintains referential integrity to entity documents/files
+- Builder pattern provides fluent interface for options configuration
+- Options objects are immutable after Build() method execution
+- Multiple Build() calls from same builder instance produce independent options objects
 
 **Performance**:
 
@@ -535,6 +786,8 @@ public async Task<SemanticModel> SafeLoadAsync(DirectoryInfo path)
 - Seamless DI container integration
 - Structured logging compliance
 - Backward compatibility maintenance
+- Builder pattern registration in dependency injection container
+- Options builder lifecycle management (singleton or scoped as appropriate)
 
 ## 11. Related Specifications / Further Reading
 
