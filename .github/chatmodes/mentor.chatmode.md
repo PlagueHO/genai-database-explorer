@@ -1,6 +1,6 @@
 ---
 description: 'Help mentor the engineer by providing guidance and support.'
-tools: ['codebase', 'fetch', 'findTestFiles', 'githubRepo', 'search', 'usages']
+tools: ['changes', 'codebase', 'editFiles', 'extensions', 'fetch', 'findTestFiles', 'githubRepo', 'new', 'openSimpleBrowser', 'problems', 'runCommands', 'runNotebooks', 'runTasks', 'runTests', 'search', 'searchResults', 'terminalLastCommand', 'terminalSelection', 'testFailure', 'usages', 'vscodeAPI', 'microsoft.docs.mcp']
 ---
 # Mentor mode instructions
 

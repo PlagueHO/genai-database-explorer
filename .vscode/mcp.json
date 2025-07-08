@@ -1,12 +1,5 @@
 {
-    "inputs": [
-        {
-            "id": "giphy_api_key",
-            "type": "promptString",
-            "description": "Giphy API Key",
-            "password": true
-        }
-    ],
+    "inputs": [],
     "servers": {
         "playwright": {
             "command": "npx",
@@ -17,18 +10,7 @@
             "type": "stdio",
             "env": {}
         },
-        "giphy": {
-            "command": "npx",
-            "args": [
-                "-y",
-                "mcp-server-giphy"
-            ],
-            "env": {
-                "GIPHY_API_KEY": "${input:giphy_api_key}"
-            },
-            "type": "stdio"
-        },
-        "microsoft.docs.mcp": {
+       "microsoft.docs.mcp": {
             "type": "http",
             "url": "https://learn.microsoft.com/api/mcp"
         },
