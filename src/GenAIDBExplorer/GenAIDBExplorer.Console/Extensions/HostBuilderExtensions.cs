@@ -11,6 +11,7 @@ using GenAIDBExplorer.Core.SemanticProviders;
 using GenAIDBExplorer.Core.Repository;
 using GenAIDBExplorer.Core.Repository.Configuration;
 using GenAIDBExplorer.Core.Repository.Caching;
+using GenAIDBExplorer.Core.Repository.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -63,6 +64,12 @@ public static class HostBuilderExtensions
                 services.Configure<CacheOptions>(
                     context.Configuration.GetSection(CacheOptions.SectionName));
 
+                // Configure security options for Phase 5b: Enhanced Security Features
+                services.Configure<SecureJsonSerializerOptions>(
+                    context.Configuration.GetSection("SecureJsonSerializer"));
+                services.Configure<KeyVaultOptions>(
+                    context.Configuration.GetSection("KeyVault"));
+
                 // Register command handlers
                 services.AddSingleton<InitProjectCommandHandler>();
                 services.AddSingleton<DataDictionaryCommandHandler>();
@@ -112,6 +119,25 @@ public static class HostBuilderExtensions
                 // Register caching services for Phase 5a: Basic Caching Foundation
                 services.AddMemoryCache();
                 services.AddSingleton<ISemanticModelCache, MemorySemanticModelCache>();
+
+                // Register security services for Phase 5b: Enhanced Security Features
+                services.AddSingleton<ISecureJsonSerializer, SecureJsonSerializer>();
+                
+                // Register Key Vault provider if enabled
+                services.AddSingleton<KeyVaultConfigurationProvider>(provider =>
+                {
+                    var options = provider.GetRequiredService<IConfiguration>()
+                        .GetSection("KeyVault").Get<KeyVaultOptions>();
+                    
+                    if (options?.EnableKeyVault == true && !string.IsNullOrWhiteSpace(options.KeyVaultUri))
+                    {
+                        var logger = provider.GetRequiredService<ILogger<KeyVaultConfigurationProvider>>();
+                        return new KeyVaultConfigurationProvider(options.KeyVaultUri, logger);
+                    }
+                    
+                    // Return null if Key Vault is not configured - this will be handled gracefully
+                    return null!;
+                });
 
                 // Register persistence strategies
                 services.AddSingleton<ILocalDiskPersistenceStrategy, LocalDiskPersistenceStrategy>();

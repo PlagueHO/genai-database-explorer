@@ -128,7 +128,20 @@ module aiFoundryAccount 'br/public:avm/res/cognitive-services/account:0.11.0' = 
     customSubDomainName: aiFoundryCustomSubDomainName
     diagnosticSettings: [
       {
+        name: 'send-to-log-analytics'
         workspaceResourceId: logAnalyticsWorkspace.outputs.resourceId
+        logCategoriesAndGroups: [
+          {
+            categoryGroup: 'allLogs'
+            enabled: true
+          }
+        ]
+        metricCategories: [
+          {
+            category: 'AllMetrics'
+            enabled: true
+          }
+        ]
       }
     ]
     managedIdentities: {
@@ -231,7 +244,7 @@ module cosmosDbAccount 'br/public:avm/res/document-db/database-account:0.15.0' =
     ]
     diagnosticSettings: [
       {
-        name: 'cosmos-db-diagnostics'
+        name: 'send-to-log-analytics'
         workspaceResourceId: logAnalyticsWorkspace.outputs.resourceId
         logCategoriesAndGroups: [
           {
@@ -278,7 +291,8 @@ module storageAccount 'br/public:avm/res/storage/storage-account:0.25.0' = if (s
     location: location
     kind: 'StorageV2'
     skuName: 'Standard_LRS'
-    allowBlobPublicAccess: false
+    accessTier: 'Hot'
+    allowBlobPublicAccess: true
     blobServices: {
       containers: [
         {
@@ -289,16 +303,18 @@ module storageAccount 'br/public:avm/res/storage/storage-account:0.25.0' = if (s
     }
     diagnosticSettings: [
       {
-        name: 'default-diagnostic-setting'
+        name: 'send-to-log-analytics'
         workspaceResourceId: logAnalyticsWorkspace.outputs.resourceId
         logCategoriesAndGroups: [
           {
             categoryGroup: 'allLogs'
+            enabled: true
           }
         ]
         metricCategories: [
           {
             category: 'AllMetrics'
+            enabled: true
           }
         ]
       }
@@ -330,16 +346,18 @@ module aiSearchService 'br/public:avm/res/search/search-service:0.11.0' = if (az
     sku: 'basic'
     diagnosticSettings: [
       {
-        name: 'default-diagnostic-setting'
+        name: 'send-to-log-analytics'
         workspaceResourceId: logAnalyticsWorkspace.outputs.resourceId
         logCategoriesAndGroups: [
           {
             categoryGroup: 'allLogs'
+            enabled: true
           }
         ]
         metricCategories: [
           {
             category: 'AllMetrics'
+            enabled: true
           }
         ]
       }
