@@ -179,7 +179,7 @@ namespace GenAIDBExplorer.Core.Repository
             try
             {
                 _logger.LogTrace("Attempting to retrieve Cosmos DB connection string from Key Vault");
-                
+
                 var connectionString = await _keyVaultProvider.GetConfigurationValueAsync(
                     "cosmos-db-connection-string",
                     "COSMOS_DB_CONNECTION_STRING", // Environment variable fallback
@@ -191,7 +191,7 @@ namespace GenAIDBExplorer.Core.Repository
                     _logger.LogTrace("Successfully retrieved Cosmos DB connection string from Key Vault");
                     return connectionString;
                 }
-                
+
                 return null;
             }
             catch (Exception ex)
@@ -635,7 +635,7 @@ namespace GenAIDBExplorer.Core.Repository
                 if (entity != null)
                 {
                     processEntity(entity);
-                    _logger.LogDebug("Loaded entity {DocumentId} from container {ContainerName} using secure JSON deserializer", 
+                    _logger.LogDebug("Loaded entity {DocumentId} from container {ContainerName} using secure JSON deserializer",
                         documentId, _entitiesContainer.Id);
                 }
             }

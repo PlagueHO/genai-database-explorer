@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using GenAIDBExplorer.Core.Models.SemanticModel;
 using GenAIDBExplorer.Core.Models.SemanticModel.ChangeTracking;
 using GenAIDBExplorer.Core.Repository.Caching;
+using GenAIDBExplorer.Core.Repository.Performance;
 using GenAIDBExplorer.Core.Security;
 using Microsoft.Extensions.Logging;
 
@@ -19,6 +20,7 @@ namespace GenAIDBExplorer.Core.Repository
     {
         private readonly IPersistenceStrategyFactory _strategyFactory;
         private readonly ISemanticModelCache? _cache;
+        private readonly IPerformanceMonitor? _performanceMonitor;
         private readonly ILoggerFactory? _loggerFactory;
         private readonly ILogger<SemanticModelRepository>? _logger;
         private readonly ConcurrentDictionary<string, SemaphoreSlim> _pathSemaphores;
@@ -31,12 +33,14 @@ namespace GenAIDBExplorer.Core.Repository
             ILogger<SemanticModelRepository>? logger = null,
             ILoggerFactory? loggerFactory = null,
             ISemanticModelCache? cache = null,
+            IPerformanceMonitor? performanceMonitor = null,
             int maxConcurrentOperations = 10)
         {
             _strategyFactory = strategyFactory;
             _logger = logger;
             _loggerFactory = loggerFactory;
             _cache = cache;
+            _performanceMonitor = performanceMonitor;
             _maxConcurrentOperations = maxConcurrentOperations;
             _pathSemaphores = new ConcurrentDictionary<string, SemaphoreSlim>();
             _globalSemaphore = new SemaphoreSlim(maxConcurrentOperations, maxConcurrentOperations);
@@ -61,98 +65,134 @@ namespace GenAIDBExplorer.Core.Repository
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
 
-            var sanitizedPath = await ValidateAndSanitizePathAsync(modelPath);
-
-            return await ExecuteWithConcurrencyProtectionAsync(sanitizedPath, async () =>
+            using var performanceContext = _performanceMonitor?.StartOperation("LoadModel", new Dictionary<string, object>
             {
-                SemanticModel? model = null;
-                string? cacheKey = null;
-                var strategy = _strategyFactory.GetStrategy(strategyName);
+                ["ModelPath"] = modelPath.FullName,
+                ["EnableLazyLoading"] = enableLazyLoading,
+                ["EnableChangeTracking"] = enableChangeTracking,
+                ["EnableCaching"] = enableCaching,
+                ["StrategyName"] = strategyName ?? "default"
+            });
 
-                // Try to load from cache if caching is enabled and cache is available
-                if (enableCaching && _cache != null)
+            try
+            {
+                var sanitizedPath = await ValidateAndSanitizePathAsync(modelPath);
+
+                return await ExecuteWithConcurrencyProtectionAsync(sanitizedPath, async () =>
                 {
-                    cacheKey = GenerateCacheKey(sanitizedPath, strategyName);
-                    _logger?.LogDebug("Attempting to load model from cache with key: {CacheKey}", cacheKey);
+                    SemanticModel? model = null;
+                    string? cacheKey = null;
+                    var strategy = _strategyFactory.GetStrategy(strategyName);
 
-                    try
+                    // Try to load from cache if caching is enabled and cache is available
+                    if (enableCaching && _cache != null)
                     {
-                        model = await _cache.GetAsync(cacheKey);
-                        if (model != null)
+                        cacheKey = GenerateCacheKey(sanitizedPath, strategyName);
+                        _logger?.LogDebug("Attempting to load model from cache with key: {CacheKey}", cacheKey);
+
+                        try
                         {
-                            _logger?.LogDebug("Model loaded from cache for path: {ModelPath}", sanitizedPath);
-
-                            // Apply lazy loading and change tracking to cached model if requested
-                            if (enableLazyLoading && !model.IsLazyLoadingEnabled)
+                            model = await _cache.GetAsync(cacheKey);
+                            if (model != null)
                             {
-                                model.EnableLazyLoading(new DirectoryInfo(sanitizedPath), strategy);
-                            }
+                                _logger?.LogDebug("Model loaded from cache for path: {ModelPath}", sanitizedPath);
+                                performanceContext?.AddMetadata("LoadedFromCache", true);
 
-                            if (enableChangeTracking && !model.IsChangeTrackingEnabled)
-                            {
-                                var changeTrackerLogger = _loggerFactory?.CreateLogger<ChangeTracker>();
-                                var changeTracker = new ChangeTracker(changeTrackerLogger);
-                                model.EnableChangeTracking(changeTracker);
-                            }
+                                // Apply lazy loading and change tracking to cached model if requested
+                                if (enableLazyLoading && !model.IsLazyLoadingEnabled)
+                                {
+                                    model.EnableLazyLoading(new DirectoryInfo(sanitizedPath), strategy);
+                                }
 
-                            return model;
+                                if (enableChangeTracking && !model.IsChangeTrackingEnabled)
+                                {
+                                    var changeTrackerLogger = _loggerFactory?.CreateLogger<ChangeTracker>();
+                                    var changeTracker = new ChangeTracker(changeTrackerLogger);
+                                    model.EnableChangeTracking(changeTracker);
+                                }
+
+                                return model;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogWarning(ex, "Failed to load model from cache, continuing with persistence load");
+                            model = null; // Ensure model is null if cache read failed
                         }
                     }
-                    catch (Exception ex)
+
+                    // Load from persistence if not found in cache
+                    _logger?.LogDebug("Loading semantic model from persistence at {ModelPath}", sanitizedPath);
+                    performanceContext?.AddMetadata("LoadedFromCache", false);
+
+                    model = await strategy.LoadModelAsync(new DirectoryInfo(sanitizedPath));
+
+                    if (enableLazyLoading)
                     {
-                        _logger?.LogWarning(ex, "Failed to load model from cache, continuing with persistence load");
-                        model = null; // Ensure model is null if cache read failed
+                        _logger?.LogDebug("Enabling lazy loading for semantic model at {ModelPath}", sanitizedPath);
+                        model.EnableLazyLoading(new DirectoryInfo(sanitizedPath), strategy);
                     }
-                }
 
-                // Load from persistence if not found in cache
-                _logger?.LogDebug("Loading semantic model from persistence at {ModelPath}", sanitizedPath);
-
-                model = await strategy.LoadModelAsync(new DirectoryInfo(sanitizedPath));
-
-                if (enableLazyLoading)
-                {
-                    _logger?.LogDebug("Enabling lazy loading for semantic model at {ModelPath}", sanitizedPath);
-                    model.EnableLazyLoading(new DirectoryInfo(sanitizedPath), strategy);
-                }
-
-                if (enableChangeTracking)
-                {
-                    _logger?.LogDebug("Enabling change tracking for semantic model at {ModelPath}", sanitizedPath);
-                    var changeTrackerLogger = _loggerFactory?.CreateLogger<ChangeTracker>();
-                    var changeTracker = new ChangeTracker(changeTrackerLogger);
-                    model.EnableChangeTracking(changeTracker);
-                }
-
-                // Store in cache if caching is enabled and cache is available
-                if (enableCaching && _cache != null && cacheKey != null)
-                {
-                    _logger?.LogDebug("Storing model in cache with key: {CacheKey}", cacheKey);
-                    try
+                    if (enableChangeTracking)
                     {
-                        await _cache.SetAsync(cacheKey, model);
+                        _logger?.LogDebug("Enabling change tracking for semantic model at {ModelPath}", sanitizedPath);
+                        var changeTrackerLogger = _loggerFactory?.CreateLogger<ChangeTracker>();
+                        var changeTracker = new ChangeTracker(changeTrackerLogger);
+                        model.EnableChangeTracking(changeTracker);
                     }
-                    catch (Exception ex)
-                    {
-                        _logger?.LogWarning(ex, "Failed to store model in cache, continuing without caching");
-                    }
-                }
 
-                return model;
-            });
+                    // Store in cache if caching is enabled and cache is available
+                    if (enableCaching && _cache != null && cacheKey != null)
+                    {
+                        _logger?.LogDebug("Storing model in cache with key: {CacheKey}", cacheKey);
+                        try
+                        {
+                            await _cache.SetAsync(cacheKey, model);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogWarning(ex, "Failed to store model in cache, continuing without caching");
+                        }
+                    }
+
+                    return model;
+                });
+            }
+            catch (Exception ex)
+            {
+                performanceContext?.MarkAsFailed(ex.Message);
+                throw;
+            }
         }
 
         public async Task SaveModelAsync(SemanticModel model, DirectoryInfo modelPath, string? strategyName = null)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
 
-            var sanitizedPath = await ValidateAndSanitizePathAsync(modelPath);
-            await ExecuteWithConcurrencyProtectionAsync(sanitizedPath, async () =>
+            using var performanceContext = _performanceMonitor?.StartOperation("SaveModel", new Dictionary<string, object>
             {
-                _logger?.LogDebug("Saving semantic model to {ModelPath}", sanitizedPath);
-                var strategy = _strategyFactory.GetStrategy(strategyName);
-                await strategy.SaveModelAsync(model, new DirectoryInfo(sanitizedPath));
+                ["ModelPath"] = modelPath.FullName,
+                ["StrategyName"] = strategyName ?? "default",
+                ["HasTables"] = model.Tables?.Count ?? 0,
+                ["HasViews"] = model.Views?.Count ?? 0,
+                ["HasStoredProcedures"] = model.StoredProcedures?.Count ?? 0
             });
+
+            try
+            {
+                var sanitizedPath = await ValidateAndSanitizePathAsync(modelPath);
+                await ExecuteWithConcurrencyProtectionAsync(sanitizedPath, async () =>
+                {
+                    _logger?.LogDebug("Saving semantic model to {ModelPath}", sanitizedPath);
+                    var strategy = _strategyFactory.GetStrategy(strategyName);
+                    await strategy.SaveModelAsync(model, new DirectoryInfo(sanitizedPath));
+                });
+            }
+            catch (Exception ex)
+            {
+                performanceContext?.MarkAsFailed(ex.Message);
+                throw;
+            }
         }
 
         public async Task SaveChangesAsync(SemanticModel model, DirectoryInfo modelPath, string? strategyName = null)

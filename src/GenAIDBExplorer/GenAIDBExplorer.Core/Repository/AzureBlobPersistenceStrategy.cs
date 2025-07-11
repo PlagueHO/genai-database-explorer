@@ -177,7 +177,7 @@ namespace GenAIDBExplorer.Core.Repository
             try
             {
                 _logger.LogTrace("Attempting to retrieve Azure Storage connection string from Key Vault");
-                
+
                 var connectionString = await _keyVaultProvider.GetConfigurationValueAsync(
                     "azure-storage-connection-string",
                     "AZURE_STORAGE_CONNECTION_STRING", // Environment variable fallback
@@ -189,7 +189,7 @@ namespace GenAIDBExplorer.Core.Repository
                     _logger.LogTrace("Successfully retrieved Azure Storage connection string from Key Vault");
                     return connectionString;
                 }
-                
+
                 return null;
             }
             catch (Exception ex)
@@ -615,16 +615,16 @@ namespace GenAIDBExplorer.Core.Repository
 
                 // Use secure JSON serializer with audit logging for enhanced security
                 var jsonContent = await _secureJsonSerializer.SerializeWithAuditAsync(
-                    data, 
+                    data,
                     $"AzureBlob:{blobName}",
                     jsonOptions);
-                
+
                 var content = BinaryData.FromString(jsonContent);
 
                 var blobClient = _containerClient.GetBlobClient(blobName);
                 await blobClient.UploadAsync(content, overwrite: true);
 
-                _logger.LogDebug("Saved blob {BlobName} ({Size} bytes) using secure JSON serializer", 
+                _logger.LogDebug("Saved blob {BlobName} ({Size} bytes) using secure JSON serializer",
                     blobName, content.ToArray().Length);
             }
             finally

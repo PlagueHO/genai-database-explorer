@@ -11,6 +11,7 @@ using GenAIDBExplorer.Core.SemanticProviders;
 using GenAIDBExplorer.Core.Repository;
 using GenAIDBExplorer.Core.Repository.Configuration;
 using GenAIDBExplorer.Core.Repository.Caching;
+using GenAIDBExplorer.Core.Repository.Performance;
 using GenAIDBExplorer.Core.Repository.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -122,19 +123,19 @@ public static class HostBuilderExtensions
 
                 // Register security services for Phase 5b: Enhanced Security Features
                 services.AddSingleton<ISecureJsonSerializer, SecureJsonSerializer>();
-                
+
                 // Register Key Vault provider if enabled
                 services.AddSingleton<KeyVaultConfigurationProvider>(provider =>
                 {
                     var options = provider.GetRequiredService<IConfiguration>()
                         .GetSection("KeyVault").Get<KeyVaultOptions>();
-                    
+
                     if (options?.EnableKeyVault == true && !string.IsNullOrWhiteSpace(options.KeyVaultUri))
                     {
                         var logger = provider.GetRequiredService<ILogger<KeyVaultConfigurationProvider>>();
                         return new KeyVaultConfigurationProvider(options.KeyVaultUri, logger);
                     }
-                    
+
                     // Return null if Key Vault is not configured - this will be handled gracefully
                     return null!;
                 });
@@ -143,6 +144,9 @@ public static class HostBuilderExtensions
                 services.AddSingleton<ILocalDiskPersistenceStrategy, LocalDiskPersistenceStrategy>();
                 services.AddSingleton<IAzureBlobPersistenceStrategy, AzureBlobPersistenceStrategy>();
                 services.AddSingleton<ICosmosPersistenceStrategy, CosmosPersistenceStrategy>();
+
+                // Register performance monitoring services (basic implementation, extensible for OpenTelemetry)
+                services.AddSingleton<IPerformanceMonitor, PerformanceMonitor>();
 
                 // Register persistence strategy factory and repository
                 services.AddSingleton<IPersistenceStrategyFactory, PersistenceStrategyFactory>();

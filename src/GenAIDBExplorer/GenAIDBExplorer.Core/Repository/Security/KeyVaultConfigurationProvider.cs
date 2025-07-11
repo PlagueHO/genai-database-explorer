@@ -64,21 +64,21 @@ public class KeyVaultConfigurationProvider(
     /// <exception cref="ArgumentException">Thrown when keyName is null or whitespace.</exception>
     /// <exception cref="ObjectDisposedException">Thrown when the provider has been disposed.</exception>
     public async Task<string?> GetConfigurationValueAsync(
-        string keyName, 
-        string? fallbackEnvironmentVariable = null, 
+        string keyName,
+        string? fallbackEnvironmentVariable = null,
         string? defaultValue = null)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentException.ThrowIfNullOrWhiteSpace(keyName);
 
         var normalizedKeyName = NormalizeKeyVaultSecretName(keyName);
-        
+
         try
         {
             logger.LogDebug("Retrieving configuration value for key: {KeyName}", normalizedKeyName);
 
             // Check cache first
-            if (_cache.TryGetValue(normalizedKeyName, out var cachedSecret) && 
+            if (_cache.TryGetValue(normalizedKeyName, out var cachedSecret) &&
                 cachedSecret.ExpiresAt > DateTime.UtcNow)
             {
                 logger.LogTrace("Configuration value retrieved from cache for key: {KeyName}", normalizedKeyName);
@@ -94,8 +94,8 @@ public class KeyVaultConfigurationProvider(
                 {
                     // Cache the retrieved value
                     _cache[normalizedKeyName] = new CachedSecret(secretValue, DateTime.UtcNow.Add(_cacheExpiration));
-                    
-                    logger.LogDebug("Configuration value successfully retrieved from Key Vault for key: {KeyName}", 
+
+                    logger.LogDebug("Configuration value successfully retrieved from Key Vault for key: {KeyName}",
                         normalizedKeyName);
                     return secretValue;
                 }
@@ -130,14 +130,14 @@ public class KeyVaultConfigurationProvider(
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to retrieve configuration value for key: {KeyName}", normalizedKeyName);
-            
+
             // In case of errors, try fallback mechanisms
             if (!string.IsNullOrWhiteSpace(fallbackEnvironmentVariable))
             {
                 var envValue = Environment.GetEnvironmentVariable(fallbackEnvironmentVariable);
                 if (!string.IsNullOrWhiteSpace(envValue))
                 {
-                    logger.LogWarning("Using environment variable fallback due to Key Vault error for key: {KeyName}", 
+                    logger.LogWarning("Using environment variable fallback due to Key Vault error for key: {KeyName}",
                         normalizedKeyName);
                     return envValue;
                 }
@@ -179,7 +179,7 @@ public class KeyVaultConfigurationProvider(
     public void RefreshCache()
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        
+
         logger.LogInformation("Refreshing Key Vault configuration cache");
         _cache.Clear();
     }
@@ -191,11 +191,11 @@ public class KeyVaultConfigurationProvider(
     public CacheStatistics GetCacheStatistics()
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        
+
         var totalItems = _cache.Count;
         var expiredItems = _cache.Values.Count(s => s.ExpiresAt <= DateTime.UtcNow);
         var activeItems = totalItems - expiredItems;
-        
+
         return new CacheStatistics(activeItems, expiredItems, totalItems);
     }
 
@@ -206,17 +206,17 @@ public class KeyVaultConfigurationProvider(
     public async Task<bool> TestConnectivityAsync()
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        
+
         try
         {
             logger.LogTrace("Testing Azure Key Vault connectivity");
-            
+
             // Try to get Key Vault properties as a connectivity test
             using var cts = new CancellationTokenSource(_keyVaultTimeout);
             var response = await _secretClient.GetPropertiesOfSecretsAsync(cancellationToken: cts.Token)
                 .AsPages()
                 .FirstAsync(cts.Token);
-            
+
             logger.LogTrace("Azure Key Vault connectivity test successful");
             return true;
         }
@@ -238,7 +238,7 @@ public class KeyVaultConfigurationProvider(
         {
             using var cts = new CancellationTokenSource(_keyVaultTimeout);
             var response = await _secretClient.GetSecretAsync(secretName, cancellationToken: cts.Token);
-            
+
             return response.Value?.Value;
         }
         catch (RequestFailedException ex) when (ex.Status == 404)
@@ -263,23 +263,23 @@ public class KeyVaultConfigurationProvider(
         // Key Vault secret names must match the pattern ^[0-9a-zA-Z-]+$
         // Replace invalid characters with hyphens and ensure it starts with alphanumeric
         var normalized = System.Text.RegularExpressions.Regex.Replace(keyName, @"[^0-9a-zA-Z-]", "-");
-        
+
         // Ensure it starts with alphanumeric character
         if (normalized.Length > 0 && !char.IsLetterOrDigit(normalized[0]))
         {
             normalized = "kv-" + normalized;
         }
-        
+
         // Remove consecutive hyphens and trim trailing hyphens
         normalized = System.Text.RegularExpressions.Regex.Replace(normalized, @"-+", "-");
         normalized = normalized.Trim('-');
-        
+
         // Ensure minimum length
         if (normalized.Length == 0)
         {
             normalized = "default-secret";
         }
-        
+
         return normalized;
     }
 
@@ -293,7 +293,7 @@ public class KeyVaultConfigurationProvider(
             _retrievalSemaphore?.Dispose();
             _cache.Clear();
             _disposed = true;
-            
+
             logger.LogDebug("KeyVaultConfigurationProvider disposed");
         }
     }

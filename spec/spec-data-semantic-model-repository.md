@@ -44,6 +44,9 @@ Repository pattern implementation for persisting AI-consumable semantic models e
 - **REQ-010**: Builder pattern for repository options configuration
 - **REQ-011**: Fluent interface for repository options construction
 - **REQ-012**: Immutable options objects after construction
+- **REQ-013**: Performance monitoring implementation that builds on and aligns with the core monitoring requirements defined in the [OpenTelemetry Application Monitoring Specification](./spec-monitoring-azure-application-insights-opentelemetry.md), with graceful degradation when telemetry infrastructure is unavailable
+- **REQ-014**: Zero external dependencies and full functionality when OpenTelemetry services are not configured or available
+- **REQ-015**: Compatibility with .NET Aspire telemetry configuration through standard OpenTelemetry environment variables and OTLP endpoints
 
 ### Security Requirements
 
@@ -58,8 +61,8 @@ Repository pattern implementation for persisting AI-consumable semantic models e
 - **PER-001**: Concurrent operations without corruption
 - **PER-002**: Entity loading ≤5s for 1000 entities
 - **PER-003**: Efficient caching mechanisms
-- **PER-004**: Parallel processing for bulk operations
-- **PER-005**: Memory optimization via lazy loading
+- **PER-004**: Memory optimization via lazy loading
+- **PER-005**: Performance monitoring that extends the core requirements defined in the [OpenTelemetry Application Monitoring Specification](./spec-monitoring-azure-application-insights-opentelemetry.md) with repository-specific metrics and operations, ensuring zero performance degradation when telemetry services are unavailable
 
 ### Constraints
 
@@ -118,6 +121,14 @@ public class SemanticModelRepositoryOptions
     public string? StrategyName { get; set; }
     public TimeSpan? CacheExpiration { get; set; }
     public int? MaxConcurrentOperations { get; set; }
+    public PerformanceMonitoringOptions? PerformanceMonitoring { get; set; }
+}
+
+/// <summary>Configuration options for performance monitoring and telemetry.</summary>
+public class PerformanceMonitoringOptions
+{
+    public bool EnableLocalMonitoring { get; set; } = true;
+    public TimeSpan? MetricsRetentionPeriod { get; set; } = TimeSpan.FromHours(24);
 }
 
 /// <summary>Builder for creating SemanticModelRepositoryOptions with fluent interface.</summary>
@@ -129,7 +140,15 @@ public interface ISemanticModelRepositoryOptionsBuilder
     ISemanticModelRepositoryOptionsBuilder WithCaching(bool enabled, TimeSpan expiration);
     ISemanticModelRepositoryOptionsBuilder WithStrategyName(string strategyName);
     ISemanticModelRepositoryOptionsBuilder WithMaxConcurrentOperations(int maxOperations);
+    ISemanticModelRepositoryOptionsBuilder WithPerformanceMonitoring(Action<IPerformanceMonitoringOptionsBuilder> configure);
     SemanticModelRepositoryOptions Build();
+}
+
+/// <summary>Builder for performance monitoring configuration.</summary>
+public interface IPerformanceMonitoringOptionsBuilder
+{
+    IPerformanceMonitoringOptionsBuilder EnableLocalMonitoring(bool enabled = true);
+    PerformanceMonitoringOptions Build();
 }
 
 /// <summary>Builder implementation for SemanticModelRepositoryOptions.</summary>
@@ -174,6 +193,14 @@ public class SemanticModelRepositoryOptionsBuilder : ISemanticModelRepositoryOpt
         return this;
     }
 
+    public ISemanticModelRepositoryOptionsBuilder WithPerformanceMonitoring(Action<IPerformanceMonitoringOptionsBuilder> configure)
+    {
+        var builder = new PerformanceMonitoringOptionsBuilder();
+        configure(builder);
+        _options.PerformanceMonitoring = builder.Build();
+        return this;
+    }
+
     public SemanticModelRepositoryOptions Build()
     {
         return new SemanticModelRepositoryOptions
@@ -183,7 +210,29 @@ public class SemanticModelRepositoryOptionsBuilder : ISemanticModelRepositoryOpt
             EnableCaching = _options.EnableCaching,
             StrategyName = _options.StrategyName,
             CacheExpiration = _options.CacheExpiration,
-            MaxConcurrentOperations = _options.MaxConcurrentOperations
+            MaxConcurrentOperations = _options.MaxConcurrentOperations,
+            PerformanceMonitoring = _options.PerformanceMonitoring
+        };
+    }
+}
+
+/// <summary>Builder implementation for PerformanceMonitoringOptions.</summary>
+public class PerformanceMonitoringOptionsBuilder : IPerformanceMonitoringOptionsBuilder
+{
+    private readonly PerformanceMonitoringOptions _options = new();
+
+    public IPerformanceMonitoringOptionsBuilder EnableLocalMonitoring(bool enabled = true)
+    {
+        _options.EnableLocalMonitoring = enabled;
+        return this;
+    }
+
+    public PerformanceMonitoringOptions Build()
+    {
+        return new PerformanceMonitoringOptions
+        {
+            EnableLocalMonitoring = _options.EnableLocalMonitoring,
+            MetricsRetentionPeriod = _options.MetricsRetentionPeriod
         };
     }
 }
@@ -228,6 +277,13 @@ public interface ICosmosPersistenceStrategy : ISemanticModelPersistenceStrategy
     Task<SemanticModel> LoadModelAsync(string databaseName, string containerName);
     string ConnectionString { get; set; }
     string PartitionKeyPath { get; set; } // Should be "/partitionKey" for hierarchical keys
+}
+
+/// <summary>Performance monitor interface for repository operations. Implementation details are defined in the OpenTelemetry Application Monitoring Specification.</summary>
+public interface IPerformanceMonitor : IDisposable
+{
+    IPerformanceTrackingContext StartOperation(string operationName, IDictionary<string, object>? metadata = null);
+    Task<OperationStatistics?> GetOperationStatisticsAsync(string operationName);
 }
 
 /// <summary>Semantic model with persistence and entity management.</summary>
@@ -419,6 +475,10 @@ Documents (each with hierarchical partition key):
 - **AC-015**: Given builder pattern usage, When Build() is called multiple times, Then each call returns a new immutable options instance
 - **AC-016**: Given invalid option combinations, When Build() is called, Then appropriate validation exceptions are thrown
 - **AC-017**: Given default builder usage, When no options are specified, Then safe defaults are applied (no lazy loading, no change tracking, no caching)
+- **AC-018**: Given performance monitoring integration, When enabled, Then implementation follows the requirements and acceptance criteria defined in the [OpenTelemetry Application Monitoring Specification](./spec-monitoring-azure-application-insights-opentelemetry.md)
+- **AC-019**: Given OpenTelemetry services are not configured, When repository operations are performed, Then full functionality is maintained with zero performance degradation and no errors or warnings related to telemetry
+- **AC-020**: Given .NET Aspire environment variables are configured, When EnableAspireCompatibility is true, Then telemetry is automatically sent to the configured OTLP endpoint without additional configuration
+- **AC-021**: Given OTEL_EXPORTER_OTLP_ENDPOINT environment variable is not set, When .NET Aspire compatibility is enabled, Then telemetry export is gracefully disabled and repository operations continue normally
 
 ## 6. Test Automation Strategy
 
@@ -453,6 +513,9 @@ Documents (each with hierarchical partition key):
 - Load testing for concurrent operations
 - Memory usage validation for lazy loading
 - Latency testing for large model operations
+- Telemetry backend connectivity and failover testing
+- Performance impact assessment for monitoring overhead
+- Cloud telemetry integration testing with mock services
 
 ## 7. Rationale & Context
 
@@ -466,13 +529,21 @@ Documents (each with hierarchical partition key):
 - **Azure Blob Storage JSON**: Cloud-native scenarios, scalable storage, cost-effective for large models, geo-replication support
 - **Cosmos DB Documents**: Global distribution, low-latency access, automatic indexing, integrated with Azure ecosystem
 
-**Hierarchical Structure with Index**: Separate entity files enable human readability, version control compatibility, lazy loading support, parallel processing capabilities, and efficient partial updates. Index document provides fast model discovery and metadata access.
+**Hierarchical Structure with Index**: Separate entity files enable human readability, version control compatibility, lazy loading support, efficient partial updates, and fast model discovery. Index document provides fast model discovery and metadata access.
 
 **JSON Serialization**: Selected for AI compatibility, human readability, language agnostic consumption, and extensive tooling ecosystem.
 
 **Change Tracking**: Essential for performance optimization (selective persistence), conflict resolution, audit trails, and network optimization in distributed scenarios.
 
 **Immutable Options Pattern**: Options objects are immutable after construction through the builder, preventing unintended modifications and ensuring thread safety. The builder pattern provides a clean separation between configuration construction and usage, following modern C# best practices and enabling safe concurrent access to options objects.
+
+**Performance Monitoring Architecture**: Repository operations integrate with the monitoring framework defined in the [OpenTelemetry Application Monitoring Specification](./spec-monitoring-azure-application-insights-opentelemetry.md). The implementation ensures:
+
+- **Zero External Dependencies**: When telemetry services are disabled or unavailable, the repository operates with full functionality and zero performance impact
+- **Graceful Degradation**: Automatic detection and handling of missing telemetry infrastructure without throwing exceptions or logging errors
+- **Multi-Backend Support**: Seamless integration with Azure Application Insights, .NET Aspire, Prometheus, Jaeger, and other OpenTelemetry-compatible backends when enabled and properly configured
+- **.NET Aspire Compatibility**: Native support for .NET Aspire's OpenTelemetry configuration through standard environment variables (OTEL_EXPORTER_OTLP_ENDPOINT, OTEL_SERVICE_NAME, etc.)
+- **Flexible Configuration**: Runtime configuration of telemetry backends without requiring code changes or application restarts
 
 ## 8. Dependencies & External Integrations
 
@@ -506,6 +577,10 @@ Documents (each with hierarchical partition key):
 - **PLT-002**: Azure SDK Libraries - Latest Azure client libraries for Blob Storage, Cosmos DB, Key Vault, and Identity services with DefaultAzureCredential support
 - **PLT-003**: Dependency Injection Framework - Microsoft.Extensions.DependencyInjection or compatible DI container supporting service lifetime management and configuration options
 - **PLT-004**: Logging Framework - Microsoft.Extensions.Logging or compatible structured logging framework for operational monitoring and diagnostics
+- **PLT-005**: OpenTelemetry .NET SDK - Industry-standard observability framework for metrics, traces, and logs with vendor-neutral telemetry collection
+- **PLT-006**: OpenTelemetry Exporters - Configurable exporters for Azure Application Insights, .NET Aspire, Prometheus, Jaeger, and other monitoring backends
+- **PLT-007**: Performance Counters Library - System.Diagnostics.PerformanceCounter or equivalent for local system metrics collection
+- **PLT-008**: .NET Aspire Integration - Optional integration with .NET Aspire's telemetry configuration through standard OpenTelemetry environment variables
 
 ### Compliance Dependencies
 
@@ -565,15 +640,96 @@ var advancedOptions = optionsBuilder
 var optimizedModel = await repository.LoadModelAsync(new DirectoryInfo(@"C:\Models\Database"), advancedOptions);
 
 // Fluent interface for different scenarios
+var developmentOptions = optionsBuilder
+    .WithLazyLoading()
+    .WithPerformanceMonitoring(perf => perf
+        .EnableLocalMonitoring()
+        .WithMetricsRetention(TimeSpan.FromHours(8)))
+    .Build();
+
+var productionOptions = optionsBuilder
+    .WithLazyLoading()
+    .WithCaching(true, TimeSpan.FromMinutes(15))
+    .WithPerformanceMonitoring(perf => perf
+        .EnableLocalMonitoring()
+        .EnableOpenTelemetry()
+        .EnableAzureApplicationInsights(true, "InstrumentationKey=abc123..."))
+    .Build();
+```
+
+### .NET Aspire Integration Examples
+
+```csharp
+// .NET Aspire automatic configuration - uses environment variables
+var aspireOptions = optionsBuilder
+    .WithLazyLoading()
+    .WithPerformanceMonitoring(perf => perf
+        .EnableLocalMonitoring()
+        .EnableAspireCompatibility()
+        .EnableOpenTelemetry())
+    .Build();
+
+// Explicit OTLP endpoint configuration for custom scenarios
+var customOtlpOptions = optionsBuilder
+    .WithPerformanceMonitoring(perf => perf
+        .EnableLocalMonitoring()
+        .EnableOpenTelemetry()
+        .WithOtlpEndpoint("http://localhost:4318"))
+    .Build();
+
+// Repository operations remain unchanged regardless of telemetry configuration
+var model = await repository.LoadModelAsync(modelPath, aspireOptions);
+// Telemetry automatically flows to .NET Aspire dashboard when available
+```
+
+### Performance Monitoring Examples
+
+```csharp
+// Basic configuration - works without any telemetry infrastructure
+var basicOptions = optionsBuilder
+    .WithLazyLoading()
+    .Build();
+
+// .NET Aspire integration - automatically uses environment variables
+var aspireOptions = optionsBuilder
+    .WithLazyLoading()
+    .Build();
+
+// Repository operations work regardless of telemetry configuration
+var monitor = serviceProvider.GetRequiredService<IPerformanceMonitor>();
+using var context = monitor.StartOperation("LoadSemanticModel");
+try
+{
+    var model = await repository.LoadModelAsync(modelPath, options);
+    // Telemetry is sent if available, ignored if not configured
+}
+catch (Exception ex)
+{
+    // Errors are tracked locally regardless of cloud telemetry status
+    throw;
+}
+```
+
+**Key Benefits**:
+
+- **Zero Configuration Required**: Repository works perfectly without any telemetry setup
+- **No Performance Impact**: When telemetry is unavailable, there's no performance penalty
+- **Automatic .NET Aspire Integration**: Respects standard OpenTelemetry environment variables
+- **Graceful Degradation**: No exceptions or errors when telemetry services are unavailable
+
+*Note*: For detailed performance monitoring implementation including OpenTelemetry integration, multi-backend support, and comprehensive observability configuration, see the [OpenTelemetry Application Monitoring Specification](./spec-monitoring-azure-application-insights-opentelemetry.md).
+
+*Note*: For detailed performance monitoring implementation including OpenTelemetry integration, multi-backend support, and comprehensive observability configuration, see the [OpenTelemetry Application Monitoring Specification](./spec-monitoring-azure-application-insights-opentelemetry.md).
+
+### Memory and Performance Optimization Examples
+
+```csharp
 var memoryOptimizedOptions = optionsBuilder
     .WithLazyLoading()
-    .WithCaching(true, TimeSpan.FromHours(2))
     .Build();
 
 var performanceOptimizedOptions = optionsBuilder
     .WithChangeTracking()
-    .WithCaching()
-    .WithMaxConcurrentOperations(10)
     .Build();
 ```
 
@@ -770,7 +926,6 @@ public async Task<SemanticModel> SafeLoadAsync(DirectoryInfo path)
 - Model extraction for 100 tables ≤30 seconds
 - Entity loading ≤500 milliseconds (Local Disk), ≤2 seconds (Azure Blob), ≤1 second (Cosmos DB)
 - Memory usage ≤2GB for 10,000 entities across all storage strategies
-- Parallel operations achieve ≥80% CPU utilization
 - Cosmos DB queries utilize hierarchical partition key for optimal performance and entity isolation
 - Azure Blob Storage operations leverage concurrent uploads/downloads
 
@@ -788,9 +943,13 @@ public async Task<SemanticModel> SafeLoadAsync(DirectoryInfo path)
 - Backward compatibility maintenance
 - Builder pattern registration in dependency injection container
 - Options builder lifecycle management (singleton or scoped as appropriate)
+- Graceful telemetry degradation without application impact
+- .NET Aspire compatibility through standard OpenTelemetry environment variables
+- Zero performance overhead when telemetry services are unavailable
 
 ## 11. Related Specifications / Further Reading
 
+- [Azure Application Insights OpenTelemetry Monitoring Specification](./spec-monitoring-azure-application-insights-opentelemetry.md)
 - [Infrastructure Deployment Bicep AVM Specification](./infrastructure-deployment-bicep-avm.md)
 - [Microsoft .NET Application Architecture Guides](https://docs.microsoft.com/en-us/dotnet/architecture/)
 - [Repository Pattern Documentation](https://docs.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/infrastructure-persistence-layer-design)
