@@ -321,49 +321,32 @@ The performance monitoring system provides enterprise-grade reliability and can 
 
 **Benefits**: Real-time performance tracking and recommendations for semantic model operations in production environments.
 
-### Phase 5d: Builder Pattern for Options Configuration (Optional - Priority 15)
+### Phase 5d: Immutable Builder Pattern for Options Configuration (Optional - Priority 15)
 
-1. **Implement fluent builder pattern for repository options**
+1. **Implement immutable builder pattern for repository options**
    - Create `ISemanticModelRepositoryOptionsBuilder` interface with fluent methods
-   - Implement `SemanticModelRepositoryOptionsBuilder` class
-   - Add `IPerformanceMonitoringOptionsBuilder` interface and implementation
+   - Implement thread-safe `SemanticModelRepositoryOptionsBuilder` using record types
+   - Convert options classes to immutable records with `init` properties
    - **ENSURE**: Builder pattern is completely optional and doesn't affect existing repository functionality
 
-**Phase 5d Status**: 🟡 **PENDING** - Builder pattern for options configuration not yet implemented.
+**Phase 5d Status**: 🟡 **PENDING** - Immutable builder pattern for options configuration not yet implemented.
 
-**Implementation Details**:
+**Implementation Approach**:
 
-- **`ISemanticModelRepositoryOptionsBuilder` interface** with fluent configuration methods:
-  - `WithLazyLoading(bool enabled = true)` - Configure lazy loading behavior
-  - `Build()` - Create immutable options instance
-- **`SemanticModelRepositoryOptionsBuilder` implementation** with:
-  - Internal options state management
-  - Fluent method chaining that returns `this`
-  - Immutable options creation in `Build()` method
-  - Thread-safe builder construction
-- **`IPerformanceMonitoringOptionsBuilder` interface** for performance configuration:
-  - `EnableLocalMonitoring(bool enabled = true)` - Configure local monitoring
-  - `Build()` - Create immutable performance options
-- **`PerformanceMonitoringOptionsBuilder` implementation** with proper state management
-- **Enhanced `SemanticModelRepositoryOptions`** to work seamlessly with builder pattern
-- **Dependency injection integration** in `HostBuilderExtensions` for builder registration
-- **Comprehensive unit tests** covering:
-  - Fluent interface method chaining (AC-013)
-  - Immutable options creation (AC-015)
-  - Default builder behavior (AC-017)
-  - Builder validation and error handling (AC-016)
-  - Thread safety and concurrent builder usage
+- **Immutable Options Records**: Convert `SemanticModelRepositoryOptions` to record with `init` properties
+- **Thread-Safe Builder**: Use factory methods and functional chaining for thread safety
+- **Factory Pattern**: `SemanticModelRepositoryOptionsBuilder.Create()` returns new builder instances
+- **Fluent Interface**: `WithLazyLoading()`, `WithChangeTracking()`, `WithCaching()` methods
+- **Immutable Creation**: `Build()` returns immutable record instance
 
-**Key Features**:
+**Key Benefits**:
 
-- **Fluent Interface Design**: Self-documenting method chaining for improved readability
-- **Immutable Options Pattern**: Options objects cannot be modified after `Build()` is called
-- **Backward Compatibility**: Existing repository APIs continue to work unchanged
-- **Boolean Parameter Hell Solution**: Replaces complex method signatures with readable builder pattern
-- **Extensible Architecture**: Easy to add new configuration options without breaking changes
-- **Validation Support**: Built-in validation for option combinations and constraints
+- **Thread Safety**: Eliminates "Boolean Parameter Hell" concurrency issues
+- **Immutable Design**: Options cannot be modified after creation
+- **Static Field Safe**: Multiple builders can coexist without shared state pollution
+- **Backward Compatibility**: Existing repository APIs continue unchanged
 
-**Benefits**: Addresses "Boolean Parameter Hell" problem with fluent, self-documenting interface for configuring repository options, improving code readability and maintainability.
+**Benefits**: Solves "Boolean Parameter Hell" with thread-safe immutable builder pattern, improving code readability and eliminating concurrency risks.
 
 ### Phase 6: Testing and Documentation (Priority 16-20)
 
@@ -472,12 +455,12 @@ The performance monitoring system provides enterprise-grade reliability and can 
 
 The performance monitoring implementation provides enterprise-grade reliability for production environments.
 
-**Phase 5d**: 🟡 **PENDING** - Builder pattern for options configuration not yet implemented.
+**Phase 5d**: 🟡 **PENDING** - Immutable builder pattern for options configuration not yet implemented.
 
-- Will provide fluent builder pattern for repository options configuration
-- Addresses "Boolean Parameter Hell" problem with self-documenting interfaces
+- Will provide thread-safe immutable builder pattern for repository options configuration
+- Addresses "Boolean Parameter Hell" problem with self-documenting interfaces using record types
 - Completely optional enhancement that doesn't affect existing repository functionality
-- Will enable complex configuration scenarios without breaking existing method signatures
+- Will enable complex configuration scenarios without breaking existing method signatures while ensuring thread safety
 
 **Phase 6**: ✅ **SAFE** - Testing and documentation don't affect runtime behavior.
 

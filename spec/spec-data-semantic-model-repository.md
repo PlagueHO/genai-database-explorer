@@ -112,23 +112,23 @@ public interface ISemanticModelRepository
     Task<SemanticModel> LoadModelAsync(DirectoryInfo modelPath, SemanticModelRepositoryOptions options);
 }
 
-/// <summary>Options for configuring semantic model repository operations.</summary>
-public class SemanticModelRepositoryOptions
+/// <summary>Immutable options record for configuring semantic model repository operations.</summary>
+public record SemanticModelRepositoryOptions
 {
-    public bool EnableLazyLoading { get; set; } = false;
-    public bool EnableChangeTracking { get; set; } = false;
-    public bool EnableCaching { get; set; } = false;
-    public string? StrategyName { get; set; }
-    public TimeSpan? CacheExpiration { get; set; }
-    public int? MaxConcurrentOperations { get; set; }
-    public PerformanceMonitoringOptions? PerformanceMonitoring { get; set; }
+    public bool EnableLazyLoading { get; init; } = false;
+    public bool EnableChangeTracking { get; init; } = false;
+    public bool EnableCaching { get; init; } = false;
+    public string? StrategyName { get; init; }
+    public TimeSpan? CacheExpiration { get; init; }
+    public int? MaxConcurrentOperations { get; init; }
+    public PerformanceMonitoringOptions? PerformanceMonitoring { get; init; }
 }
 
-/// <summary>Configuration options for performance monitoring and telemetry.</summary>
-public class PerformanceMonitoringOptions
+/// <summary>Immutable configuration record for performance monitoring and telemetry.</summary>
+public record PerformanceMonitoringOptions
 {
-    public bool EnableLocalMonitoring { get; set; } = true;
-    public TimeSpan? MetricsRetentionPeriod { get; set; } = TimeSpan.FromHours(24);
+    public bool EnableLocalMonitoring { get; init; } = true;
+    public TimeSpan? MetricsRetentionPeriod { get; init; } = TimeSpan.FromHours(24);
 }
 
 /// <summary>Builder for creating SemanticModelRepositoryOptions with fluent interface.</summary>
@@ -148,92 +148,117 @@ public interface ISemanticModelRepositoryOptionsBuilder
 public interface IPerformanceMonitoringOptionsBuilder
 {
     IPerformanceMonitoringOptionsBuilder EnableLocalMonitoring(bool enabled = true);
+    IPerformanceMonitoringOptionsBuilder WithMetricsRetention(TimeSpan retention);
     PerformanceMonitoringOptions Build();
 }
 
-/// <summary>Builder implementation for SemanticModelRepositoryOptions.</summary>
+/// <summary>Thread-safe immutable builder implementation for SemanticModelRepositoryOptions.</summary>
 public class SemanticModelRepositoryOptionsBuilder : ISemanticModelRepositoryOptionsBuilder
 {
-    private readonly SemanticModelRepositoryOptions _options = new();
+    private readonly SemanticModelRepositoryOptions _current;
+
+    // Private constructor - only used internally for immutable chaining
+    private SemanticModelRepositoryOptionsBuilder(SemanticModelRepositoryOptions options)
+    {
+        _current = options;
+    }
+
+    // Public factory method
+    public static ISemanticModelRepositoryOptionsBuilder Create()
+    {
+        return new SemanticModelRepositoryOptionsBuilder(new SemanticModelRepositoryOptions());
+    }
 
     public ISemanticModelRepositoryOptionsBuilder WithLazyLoading(bool enabled = true)
     {
-        _options.EnableLazyLoading = enabled;
-        return this;
+        // Create new instance instead of mutating current state (immutable pattern)
+        return new SemanticModelRepositoryOptionsBuilder(_current with { EnableLazyLoading = enabled });
     }
 
     public ISemanticModelRepositoryOptionsBuilder WithChangeTracking(bool enabled = true)
     {
-        _options.EnableChangeTracking = enabled;
-        return this;
+        // Create new instance instead of mutating current state (immutable pattern)
+        return new SemanticModelRepositoryOptionsBuilder(_current with { EnableChangeTracking = enabled });
     }
 
     public ISemanticModelRepositoryOptionsBuilder WithCaching(bool enabled = true)
     {
-        _options.EnableCaching = enabled;
-        return this;
+        // Create new instance instead of mutating current state (immutable pattern)
+        return new SemanticModelRepositoryOptionsBuilder(_current with { EnableCaching = enabled });
     }
 
     public ISemanticModelRepositoryOptionsBuilder WithCaching(bool enabled, TimeSpan expiration)
     {
-        _options.EnableCaching = enabled;
-        _options.CacheExpiration = expiration;
-        return this;
+        // Create new instance with multiple properties (immutable pattern)
+        return new SemanticModelRepositoryOptionsBuilder(_current with 
+        { 
+            EnableCaching = enabled,
+            CacheExpiration = expiration
+        });
     }
 
     public ISemanticModelRepositoryOptionsBuilder WithStrategyName(string strategyName)
     {
-        _options.StrategyName = strategyName;
-        return this;
+        // Create new instance instead of mutating current state (immutable pattern)
+        return new SemanticModelRepositoryOptionsBuilder(_current with { StrategyName = strategyName });
     }
 
     public ISemanticModelRepositoryOptionsBuilder WithMaxConcurrentOperations(int maxOperations)
     {
-        _options.MaxConcurrentOperations = maxOperations;
-        return this;
+        // Create new instance instead of mutating current state (immutable pattern)
+        return new SemanticModelRepositoryOptionsBuilder(_current with { MaxConcurrentOperations = maxOperations });
     }
 
     public ISemanticModelRepositoryOptionsBuilder WithPerformanceMonitoring(Action<IPerformanceMonitoringOptionsBuilder> configure)
     {
-        var builder = new PerformanceMonitoringOptionsBuilder();
+        var builder = PerformanceMonitoringOptionsBuilder.Create();
         configure(builder);
-        _options.PerformanceMonitoring = builder.Build();
-        return this;
+        var performanceOptions = builder.Build();
+        
+        // Create new instance instead of mutating current state (immutable pattern)
+        return new SemanticModelRepositoryOptionsBuilder(_current with { PerformanceMonitoring = performanceOptions });
     }
 
     public SemanticModelRepositoryOptions Build()
     {
-        return new SemanticModelRepositoryOptions
-        {
-            EnableLazyLoading = _options.EnableLazyLoading,
-            EnableChangeTracking = _options.EnableChangeTracking,
-            EnableCaching = _options.EnableCaching,
-            StrategyName = _options.StrategyName,
-            CacheExpiration = _options.CacheExpiration,
-            MaxConcurrentOperations = _options.MaxConcurrentOperations,
-            PerformanceMonitoring = _options.PerformanceMonitoring
-        };
+        // Return immutable current state (no copying needed)
+        return _current;
     }
 }
 
-/// <summary>Builder implementation for PerformanceMonitoringOptions.</summary>
+/// <summary>Thread-safe immutable builder implementation for PerformanceMonitoringOptions.</summary>
 public class PerformanceMonitoringOptionsBuilder : IPerformanceMonitoringOptionsBuilder
 {
-    private readonly PerformanceMonitoringOptions _options = new();
+    private readonly PerformanceMonitoringOptions _current;
+
+    // Private constructor - only used internally for immutable chaining
+    private PerformanceMonitoringOptionsBuilder(PerformanceMonitoringOptions options)
+    {
+        _current = options;
+    }
+
+    // Public factory method
+    public static IPerformanceMonitoringOptionsBuilder Create()
+    {
+        return new PerformanceMonitoringOptionsBuilder(new PerformanceMonitoringOptions());
+    }
 
     public IPerformanceMonitoringOptionsBuilder EnableLocalMonitoring(bool enabled = true)
     {
-        _options.EnableLocalMonitoring = enabled;
-        return this;
+        // Create new instance instead of mutating current state (immutable pattern)
+        return new PerformanceMonitoringOptionsBuilder(_current with { EnableLocalMonitoring = enabled });
+    }
+
+    public IPerformanceMonitoringOptionsBuilder WithMetricsRetention(TimeSpan retention)
+    {
+        // Create new instance instead of mutating current state (immutable pattern)
+        return new PerformanceMonitoringOptionsBuilder(_current with { MetricsRetentionPeriod = retention });
     }
 
     public PerformanceMonitoringOptions Build()
     {
-        return new PerformanceMonitoringOptions
-        {
-            EnableLocalMonitoring = _options.EnableLocalMonitoring,
-            MetricsRetentionPeriod = _options.MetricsRetentionPeriod
-        };
+        // Return immutable current state (no copying needed)
+        return _current;
     }
 }
 
@@ -475,6 +500,8 @@ Documents (each with hierarchical partition key):
 - **AC-015**: Given builder pattern usage, When Build() is called multiple times, Then each call returns a new immutable options instance
 - **AC-016**: Given invalid option combinations, When Build() is called, Then appropriate validation exceptions are thrown
 - **AC-017**: Given default builder usage, When no options are specified, Then safe defaults are applied (no lazy loading, no change tracking, no caching)
+- **AC-022**: Given multiple threads using same builder instance, When concurrent method chaining occurs, Then no thread interference or configuration pollution occurs due to immutable builder pattern
+- **AC-023**: Given builder instance stored in static field, When multiple threads access builder simultaneously, Then each thread gets independent configuration without cross-contamination
 - **AC-018**: Given performance monitoring integration, When enabled, Then implementation follows the requirements and acceptance criteria defined in the [OpenTelemetry Application Monitoring Specification](./spec-monitoring-azure-application-insights-opentelemetry.md)
 - **AC-019**: Given OpenTelemetry services are not configured, When repository operations are performed, Then full functionality is maintained with zero performance degradation and no errors or warnings related to telemetry
 - **AC-020**: Given .NET Aspire environment variables are configured, When EnableAspireCompatibility is true, Then telemetry is automatically sent to the configured OTLP endpoint without additional configuration
@@ -536,6 +563,17 @@ Documents (each with hierarchical partition key):
 **Change Tracking**: Essential for performance optimization (selective persistence), conflict resolution, audit trails, and network optimization in distributed scenarios.
 
 **Immutable Options Pattern**: Options objects are immutable after construction through the builder, preventing unintended modifications and ensuring thread safety. The builder pattern provides a clean separation between configuration construction and usage, following modern C# best practices and enabling safe concurrent access to options objects.
+
+**Immutable Builder Pattern Design**: The specification implements the immutable builder pattern to address critical concurrency issues with traditional mutable builders. Key design decisions:
+
+- **Thread Safety by Design**: Each builder method creates a new instance instead of mutating shared state, eliminating race conditions
+- **Static Field Safety**: Multiple threads can safely share builder instances stored in static fields without interference
+- **Record-Based Options**: Uses C# records with `init` properties for structural immutability and efficient copying with `with` expressions
+- **Factory Methods**: Builder construction through static `Create()` methods instead of public constructors for controlled instantiation
+- **Zero Shared Mutable State**: No internal fields are modified after builder creation, preventing configuration pollution between method chains
+- **Memory Efficiency**: .NET 9 record copying is highly optimized, making the performance overhead of immutable instances negligible compared to the safety benefits
+
+This approach prevents common concurrency bugs such as configuration pollution in multi-threaded scenarios, test interference, and unpredictable behavior when builder instances are shared between different parts of an application.
 
 **Performance Monitoring Architecture**: Repository operations integrate with the monitoring framework defined in the [OpenTelemetry Application Monitoring Specification](./spec-monitoring-azure-application-insights-opentelemetry.md). The implementation ensures:
 
@@ -613,24 +651,23 @@ var loadedModel = await repository.LoadModelAsync(
 ### Builder Pattern Usage (Recommended)
 
 ```csharp
-// Using builder pattern for complex configurations
+// Using immutable builder pattern for thread-safe configurations
 var provider = serviceProvider.GetRequiredService<ISemanticModelProvider>();
 var repository = serviceProvider.GetRequiredService<ISemanticModelRepository>();
-var optionsBuilder = serviceProvider.GetRequiredService<ISemanticModelRepositoryOptionsBuilder>();
 
 // Create and save semantic model
 var model = await provider.ExtractSemanticModelAsync();
 await repository.SaveModelAsync(model, new DirectoryInfo(@"C:\Models\Database"));
 
-// Load with builder pattern - basic configuration
-var basicOptions = optionsBuilder
+// Load with immutable builder pattern - basic configuration
+var basicOptions = SemanticModelRepositoryOptionsBuilder.Create()
     .WithLazyLoading()
     .WithChangeTracking()
     .Build();
 var loadedModel = await repository.LoadModelAsync(new DirectoryInfo(@"C:\Models\Database"), basicOptions);
 
-// Load with builder pattern - advanced configuration
-var advancedOptions = optionsBuilder
+// Load with immutable builder pattern - advanced configuration
+var advancedOptions = SemanticModelRepositoryOptionsBuilder.Create()
     .WithLazyLoading(true)
     .WithChangeTracking(true)
     .WithCaching(true, TimeSpan.FromMinutes(30))
@@ -639,21 +676,20 @@ var advancedOptions = optionsBuilder
     .Build();
 var optimizedModel = await repository.LoadModelAsync(new DirectoryInfo(@"C:\Models\Database"), advancedOptions);
 
-// Fluent interface for different scenarios
-var developmentOptions = optionsBuilder
+// Fluent interface for different scenarios - each chain is independent and thread-safe
+var developmentOptions = SemanticModelRepositoryOptionsBuilder.Create()
     .WithLazyLoading()
     .WithPerformanceMonitoring(perf => perf
         .EnableLocalMonitoring()
         .WithMetricsRetention(TimeSpan.FromHours(8)))
     .Build();
 
-var productionOptions = optionsBuilder
+var productionOptions = SemanticModelRepositoryOptionsBuilder.Create()
     .WithLazyLoading()
     .WithCaching(true, TimeSpan.FromMinutes(15))
     .WithPerformanceMonitoring(perf => perf
         .EnableLocalMonitoring()
-        .EnableOpenTelemetry()
-        .EnableAzureApplicationInsights(true, "InstrumentationKey=abc123..."))
+        .WithMetricsRetention(TimeSpan.FromHours(24)))
     .Build();
 ```
 
@@ -839,25 +875,46 @@ catch (ArgumentException ex)
 }
 ```
 
-### Builder Pattern Reuse
+### Builder Pattern Reuse (Thread-Safe)
 
 ```csharp
-// Builder instances can be reused for multiple configurations
-var optionsBuilder = serviceProvider.GetRequiredService<ISemanticModelRepositoryOptionsBuilder>();
+// Immutable builder instances are safe to use from static fields and across multiple threads
+public static class RepositoryConfiguration
+{
+    // This is now SAFE for concurrent access due to immutable builder pattern
+    private static readonly ISemanticModelRepositoryOptionsBuilder _baseBuilder 
+        = SemanticModelRepositoryOptionsBuilder.Create();
+    
+    public static SemanticModelRepositoryOptions GetDevelopmentOptions()
+    {
+        return _baseBuilder  // Each call creates independent immutable chain
+            .WithLazyLoading(true)
+            .WithChangeTracking(true)
+            .Build();
+    }
+    
+    public static SemanticModelRepositoryOptions GetProductionOptions()
+    {
+        return _baseBuilder  // Completely independent of other calls
+            .WithLazyLoading(false)
+            .WithCaching(true)
+            .Build();
+    }
+}
 
-// Create different preset configurations
-var memoryOptimizedOptions = optionsBuilder
+// Create different preset configurations - all thread-safe
+var memoryOptimizedOptions = SemanticModelRepositoryOptionsBuilder.Create()
     .WithLazyLoading()
     .WithCaching(true, TimeSpan.FromHours(2))
     .Build();
 
-var performanceOptimizedOptions = optionsBuilder
+var performanceOptimizedOptions = SemanticModelRepositoryOptionsBuilder.Create()
     .WithChangeTracking()
     .WithCaching()
     .WithMaxConcurrentOperations(15)
     .Build();
 
-var fullFeaturedOptions = optionsBuilder
+var fullFeaturedOptions = SemanticModelRepositoryOptionsBuilder.Create()
     .WithLazyLoading()
     .WithChangeTracking()
     .WithCaching(true, TimeSpan.FromMinutes(45))
