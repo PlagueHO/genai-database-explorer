@@ -115,17 +115,19 @@ module applicationInsights 'br/public:avm/res/insights/component:0.6.0' = {
 }
 
 // --------- AI FOUNDRY ---------
-module aiFoundryAccount 'br/public:avm/res/cognitive-services/account:0.11.0' = {
-  name: 'ai-foundry-account-deployment'
+module aiFoundryService './cognitive-services/accounts/main.bicep' = {
+  name: 'ai-foundry-service-deployment'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [
     rg
   ]
   params: {
-    kind: 'AIServices'
     name: aiFoundryName
+    kind: 'AIServices'
     location: location
     customSubDomainName: aiFoundryCustomSubDomainName
+    disableLocalAuth: false
+    allowProjectManagement: true
     diagnosticSettings: [
       {
         name: 'send-to-log-analytics'
@@ -150,24 +152,67 @@ module aiFoundryAccount 'br/public:avm/res/cognitive-services/account:0.11.0' = 
     sku: 'S0'
     deployments: openAiModelDeployments
     tags: tags
-    roleAssignments: [
-      {
-        roleDefinitionIdOrName: 'Cognitive Services OpenAI Contributor'
-        principalType: principalIdType
-        principalId: principalId
-      }
-      {
-        roleDefinitionIdOrName: 'Cognitive Services OpenAI Service User'
-        principalType: principalIdType
-        principalId: principalId
-      }
-    ]
-    allowProjectManagement: true
+  }
+}
+
+// The Service Principal of the Azure Machine Learning service.
+// This is used to assign the Reader role for AI Search and AI Services and used by the AI Foundry Hub
+resource azureMachineLearningServicePrincipal 'Microsoft.Graph/servicePrincipals@v1.0' = {
+  appId: '0736f41a-0425-4b46-bdb5-1563eff02385' // Azure Machine Learning service principal
+}
+
+// Add role assignments for AI Services using the role_aiservice.bicep module
+// This needs to be done after the AI Services account is created to avoid circular dependencies
+// between the AI Services account and the AI Search service.
+var aiFoundryRoleAssignmentsArray = [
+  // search–specific roles only when search is present
+  ...(azureAiSearchDeploy ? [
+    {
+      roleDefinitionIdOrName: 'Cognitive Services Contributor'
+      principalType: 'ServicePrincipal'
+      principalId: aiSearchService.outputs.?systemAssignedMIPrincipalId
+    }
+    {
+      roleDefinitionIdOrName: 'Cognitive Services OpenAI Contributor'
+      principalType: 'ServicePrincipal'
+      principalId: aiSearchService.outputs.?systemAssignedMIPrincipalId
+    }
+  ] : [])
+  // Developer role assignments
+  ...(!empty(principalId) ? [
+    {
+      roleDefinitionIdOrName: 'Contributor'
+      principalType: principalIdType
+      principalId: principalId
+    }
+    {
+      roleDefinitionIdOrName: 'Cognitive Services OpenAI Contributor'
+      principalType: principalIdType
+      principalId: principalId
+    }
+    {
+      roleDefinitionIdOrName: 'Reader'
+      principalType: 'ServicePrincipal'
+      principalId: azureMachineLearningServicePrincipal.id
+    }
+  ] : [])
+]
+
+module aiFoundryRoleAssignments './core/security/role_aifoundry.bicep' = {
+  name: 'ai-foundry-role-assignments'
+  scope: az.resourceGroup(resourceGroupName)
+  dependsOn: [
+    rg
+    aiFoundryService
+  ]
+  params: {
+    azureAiFoundryName: aiFoundryName
+    roleAssignments: aiFoundryRoleAssignmentsArray
   }
 }
 
 // --------- SQL DATABASE ---------
-module sqlServer 'br/public:avm/res/sql/server:0.19.1' = {
+module sqlServer 'br/public:avm/res/sql/server:0.20.0' = {
   name: 'sql-server-deployment'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [
@@ -402,10 +447,10 @@ output AZURE_AI_SEARCH_NAME string = azureAiSearchDeploy ? aiSearchService.outpu
 output AZURE_AI_SEARCH_ID   string = azureAiSearchDeploy ? aiSearchService.outputs.resourceId : ''
 
 // Output the AI Foundry resources
-output AZURE_AI_FOUNDRY_NAME string = aiFoundryAccount.outputs.name
-output AZURE_AI_FOUNDRY_ID string = aiFoundryAccount.outputs.resourceId
-output AZURE_AI_FOUNDRY_ENDPOINT string = aiFoundryAccount.outputs.endpoint
-output AZURE_AI_FOUNDRY_RESOURCE_ID string = aiFoundryAccount.outputs.resourceId
+output AZURE_AI_FOUNDRY_NAME string = aiFoundryService.outputs.name
+output AZURE_AI_FOUNDRY_ID string = aiFoundryService.outputs.resourceId
+output AZURE_AI_FOUNDRY_ENDPOINT string = aiFoundryService.outputs.endpoint
+output AZURE_AI_FOUNDRY_RESOURCE_ID string = aiFoundryService.outputs.resourceId
 
 // Output the SQL Server resources
 output SQL_SERVER_NAME string = sqlServer.outputs.name
