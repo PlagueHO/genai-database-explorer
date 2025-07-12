@@ -77,7 +77,7 @@ var openAiModelDeployments = openAiModels
 
 // The application resources that are deployed into the application resource group
 module rg 'br/public:avm/res/resources/resource-group:0.4.1' = {
-  name: 'resourceGroup'
+  name: 'resource-group-deployment'
   params: {
     name: resourceGroupName
     location: location
@@ -87,7 +87,7 @@ module rg 'br/public:avm/res/resources/resource-group:0.4.1' = {
 
 // --------- MONITORING RESOURCES ---------
 module logAnalyticsWorkspace 'br/public:avm/res/operational-insights/workspace:0.12.0' = {
-  name: 'logAnalyticsWorkspace'
+  name: 'log-analytics-workspace-deployment'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [
     rg
@@ -101,7 +101,7 @@ module logAnalyticsWorkspace 'br/public:avm/res/operational-insights/workspace:0
 }
 
 module applicationInsights 'br/public:avm/res/insights/component:0.6.0' = {
-  name: 'applicationInsights'
+  name: 'application-insights-deployment'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [
     rg
