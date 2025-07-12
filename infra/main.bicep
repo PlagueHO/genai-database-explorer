@@ -155,6 +155,26 @@ module aiFoundryService './cognitive-services/accounts/main.bicep' = {
   }
 }
 
+// Safe extraction of optional module outputs to avoid BCP318 warnings
+#disable-next-line BCP318 use-safe-access // Module is guaranteed to exist when azureAiSearchDeploy is true
+var aiSearchServiceMIPrincipalId = azureAiSearchDeploy ? aiSearchService.outputs.systemAssignedMIPrincipalId : ''
+#disable-next-line BCP318 // Module is guaranteed to exist when azureAiSearchDeploy is true
+var aiSearchServiceName = azureAiSearchDeploy ? aiSearchService.outputs.name : ''
+#disable-next-line BCP318 // Module is guaranteed to exist when azureAiSearchDeploy is true
+var aiSearchServiceResourceId = azureAiSearchDeploy ? aiSearchService.outputs.resourceId : ''
+#disable-next-line BCP318 // Module is guaranteed to exist when cosmosDbDeploy is true
+var cosmosDbAccountNameOut = cosmosDbDeploy ? cosmosDbAccount.outputs.name : ''
+#disable-next-line BCP318 // Module is guaranteed to exist when cosmosDbDeploy is true
+var cosmosDbAccountResourceIdOut = cosmosDbDeploy ? cosmosDbAccount.outputs.resourceId : ''
+#disable-next-line BCP318 // Module is guaranteed to exist when cosmosDbDeploy is true
+var cosmosDbAccountEndpointOut = cosmosDbDeploy ? cosmosDbAccount.outputs.endpoint : ''
+#disable-next-line BCP318 // Module is guaranteed to exist when storageAccountDeploy is true
+var storageAccountNameOut = storageAccountDeploy ? storageAccount.outputs.name : ''
+#disable-next-line BCP318 // Module is guaranteed to exist when storageAccountDeploy is true
+var storageAccountResourceIdOut = storageAccountDeploy ? storageAccount.outputs.resourceId : ''
+#disable-next-line BCP318 // Module is guaranteed to exist when storageAccountDeploy is true
+var storageAccountBlobEndpointOut = storageAccountDeploy ? storageAccount.outputs.primaryBlobEndpoint : ''
+
 // The Service Principal of the Azure Machine Learning service.
 // This is used to assign the Reader role for AI Search and AI Services and used by the AI Foundry Hub
 resource azureMachineLearningServicePrincipal 'Microsoft.Graph/servicePrincipals@v1.0' = {
@@ -170,12 +190,12 @@ var aiFoundryRoleAssignmentsArray = [
     {
       roleDefinitionIdOrName: 'Cognitive Services Contributor'
       principalType: 'ServicePrincipal'
-      principalId: aiSearchService.outputs.?systemAssignedMIPrincipalId
+      principalId: aiSearchServiceMIPrincipalId
     }
     {
       roleDefinitionIdOrName: 'Cognitive Services OpenAI Contributor'
       principalType: 'ServicePrincipal'
-      principalId: aiSearchService.outputs.?systemAssignedMIPrincipalId
+      principalId: aiSearchServiceMIPrincipalId
     }
   ] : [])
   // Developer role assignments
@@ -443,8 +463,8 @@ output APPLICATION_INSIGHTS_RESOURCE_ID string = applicationInsights.outputs.res
 output APPLICATION_INSIGHTS_INSTRUMENTATION_KEY string = applicationInsights.outputs.instrumentationKey
 
 // Output the AI Search resources
-output AZURE_AI_SEARCH_NAME string = azureAiSearchDeploy ? aiSearchService.outputs.name : ''
-output AZURE_AI_SEARCH_ID   string = azureAiSearchDeploy ? aiSearchService.outputs.resourceId : ''
+output AZURE_AI_SEARCH_NAME string = aiSearchServiceName
+output AZURE_AI_SEARCH_ID   string = aiSearchServiceResourceId
 
 // Output the AI Foundry resources
 output AZURE_AI_FOUNDRY_NAME string = aiFoundryService.outputs.name
@@ -457,11 +477,11 @@ output SQL_SERVER_NAME string = sqlServer.outputs.name
 output SQL_SERVER_RESOURCE_ID string = sqlServer.outputs.resourceId
 
 // Output the Cosmos DB resources
-output COSMOS_DB_ACCOUNT_NAME string = cosmosDbDeploy ? cosmosDbAccount.outputs.name : ''
-output COSMOS_DB_ACCOUNT_RESOURCE_ID string = cosmosDbDeploy ? cosmosDbAccount.outputs.resourceId : ''
-output COSMOS_DB_ACCOUNT_ENDPOINT string = cosmosDbDeploy ? cosmosDbAccount.outputs.endpoint : ''
+output COSMOS_DB_ACCOUNT_NAME string = cosmosDbAccountNameOut
+output COSMOS_DB_ACCOUNT_RESOURCE_ID string = cosmosDbAccountResourceIdOut
+output COSMOS_DB_ACCOUNT_ENDPOINT string = cosmosDbAccountEndpointOut
 
 // Output the Storage Account resources
-output STORAGE_ACCOUNT_NAME string = storageAccountDeploy ? storageAccount.outputs.name : ''
-output STORAGE_ACCOUNT_RESOURCE_ID string = storageAccountDeploy ? storageAccount.outputs.resourceId : ''
-output STORAGE_ACCOUNT_BLOB_ENDPOINT string = storageAccountDeploy ? storageAccount.outputs.primaryBlobEndpoint : ''
+output STORAGE_ACCOUNT_NAME string = storageAccountNameOut
+output STORAGE_ACCOUNT_RESOURCE_ID string = storageAccountResourceIdOut
+output STORAGE_ACCOUNT_BLOB_ENDPOINT string = storageAccountBlobEndpointOut
