@@ -26,6 +26,9 @@ The implementation includes basic performance monitoring through the existing `I
 - **REQ-007**: Error handling and logging (partially implemented)
 - **REQ-008**: Lazy loading for memory optimization
 - **REQ-009**: Dirty tracking for selective persistence
+- **REQ-010**: Builder pattern for repository options configuration
+- **REQ-011**: Fluent interface for repository options construction
+- **REQ-012**: Immutable options objects after construction
 
 ### Security Requirements
 
@@ -59,6 +62,10 @@ The implementation includes basic performance monitoring through the existing `I
 - **GUD-003**: Structured logging
 - **GUD-004**: Consistent async/await patterns
 - **GUD-005**: Repository pattern separation of concerns
+- **GUD-006**: Builder pattern for complex configuration scenarios
+- **GUD-007**: Immutable options objects to prevent unintended modifications
+- **GUD-008**: Fluent interface design for improved readability
+- **GUD-009**: Method chaining for builder pattern implementation
 
 ### Patterns
 
@@ -243,7 +250,7 @@ This phase is broken down into atomic sub-phases to ensure the solution remains 
 - **Zero breaking changes** - all existing APIs continue to function unchanged, with lazy loading remaining opt-in for applications that want memory optimization benefits
 - **Foundation for advanced scenarios** - complete lazy loading infrastructure now ready for advanced caching mechanisms and performance optimizations in Phase 5
 
-### Phase 5: Optional Performance Enhancements (Priority 12-14)
+### Phase 5: Optional Performance Enhancements (Priority 12-15)
 
 This phase is broken down into independent sub-phases to ensure the solution remains functional and incrementally deployable after each step. Each sub-phase provides specific performance benefits and can be implemented separately based on requirements and priorities.
 
@@ -314,7 +321,51 @@ The performance monitoring system provides enterprise-grade reliability and can 
 
 **Benefits**: Real-time performance tracking and recommendations for semantic model operations in production environments.
 
-### Phase 6: Testing and Documentation (Priority 15-19)
+### Phase 5d: Builder Pattern for Options Configuration (Optional - Priority 15)
+
+1. **Implement fluent builder pattern for repository options**
+   - Create `ISemanticModelRepositoryOptionsBuilder` interface with fluent methods
+   - Implement `SemanticModelRepositoryOptionsBuilder` class
+   - Add `IPerformanceMonitoringOptionsBuilder` interface and implementation
+   - **ENSURE**: Builder pattern is completely optional and doesn't affect existing repository functionality
+
+**Phase 5d Status**: 🟡 **PENDING** - Builder pattern for options configuration not yet implemented.
+
+**Implementation Details**:
+
+- **`ISemanticModelRepositoryOptionsBuilder` interface** with fluent configuration methods:
+  - `WithLazyLoading(bool enabled = true)` - Configure lazy loading behavior
+  - `Build()` - Create immutable options instance
+- **`SemanticModelRepositoryOptionsBuilder` implementation** with:
+  - Internal options state management
+  - Fluent method chaining that returns `this`
+  - Immutable options creation in `Build()` method
+  - Thread-safe builder construction
+- **`IPerformanceMonitoringOptionsBuilder` interface** for performance configuration:
+  - `EnableLocalMonitoring(bool enabled = true)` - Configure local monitoring
+  - `Build()` - Create immutable performance options
+- **`PerformanceMonitoringOptionsBuilder` implementation** with proper state management
+- **Enhanced `SemanticModelRepositoryOptions`** to work seamlessly with builder pattern
+- **Dependency injection integration** in `HostBuilderExtensions` for builder registration
+- **Comprehensive unit tests** covering:
+  - Fluent interface method chaining (AC-013)
+  - Immutable options creation (AC-015)
+  - Default builder behavior (AC-017)
+  - Builder validation and error handling (AC-016)
+  - Thread safety and concurrent builder usage
+
+**Key Features**:
+
+- **Fluent Interface Design**: Self-documenting method chaining for improved readability
+- **Immutable Options Pattern**: Options objects cannot be modified after `Build()` is called
+- **Backward Compatibility**: Existing repository APIs continue to work unchanged
+- **Boolean Parameter Hell Solution**: Replaces complex method signatures with readable builder pattern
+- **Extensible Architecture**: Easy to add new configuration options without breaking changes
+- **Validation Support**: Built-in validation for option combinations and constraints
+
+**Benefits**: Addresses "Boolean Parameter Hell" problem with fluent, self-documenting interface for configuring repository options, improving code readability and maintainability.
+
+### Phase 6: Testing and Documentation (Priority 16-20)
 
 1. **Implement comprehensive unit tests**
    - Test all persistence strategies independently
@@ -421,6 +472,13 @@ The performance monitoring system provides enterprise-grade reliability and can 
 
 The performance monitoring implementation provides enterprise-grade reliability for production environments.
 
+**Phase 5d**: 🟡 **PENDING** - Builder pattern for options configuration not yet implemented.
+
+- Will provide fluent builder pattern for repository options configuration
+- Addresses "Boolean Parameter Hell" problem with self-documenting interfaces
+- Completely optional enhancement that doesn't affect existing repository functionality
+- Will enable complex configuration scenarios without breaking existing method signatures
+
 **Phase 6**: ✅ **SAFE** - Testing and documentation don't affect runtime behavior.
 
 - No code changes that could break existing functionality
@@ -442,6 +500,7 @@ The performance monitoring implementation provides enterprise-grade reliability 
 - **SUB-TEST-005**: Phase 5a regression tests for basic caching without affecting persistence
 - **SUB-TEST-006**: Phase 5b regression tests for enhanced security without breaking authentication
 - **SUB-TEST-007**: Phase 5c regression tests for performance monitoring without impacting operations
+- **SUB-TEST-008**: Phase 5d regression tests for builder pattern without affecting existing repository functionality
 
 ## 3. Alternatives
 
