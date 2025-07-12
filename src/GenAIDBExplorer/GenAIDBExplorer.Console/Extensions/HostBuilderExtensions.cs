@@ -151,6 +151,12 @@ public static class HostBuilderExtensions
                 // Register persistence strategy factory and repository
                 services.AddSingleton<IPersistenceStrategyFactory, PersistenceStrategyFactory>();
                 services.AddSingleton<ISemanticModelRepository, SemanticModelRepository>();
+
+                // Register builder services for Phase 5d: Immutable Builder Pattern
+                services.AddTransient<ISemanticModelRepositoryOptionsBuilder>(provider =>
+                    SemanticModelRepositoryOptionsBuilder.Create());
+                services.AddTransient<IPerformanceMonitoringOptionsBuilder>(provider =>
+                    PerformanceMonitoringOptionsBuilder.Create());
             })
             .UseConsoleLifetime();
     }

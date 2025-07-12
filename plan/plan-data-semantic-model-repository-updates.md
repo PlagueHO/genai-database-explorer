@@ -329,7 +329,21 @@ The performance monitoring system provides enterprise-grade reliability and can 
    - Convert options classes to immutable records with `init` properties
    - **ENSURE**: Builder pattern is completely optional and doesn't affect existing repository functionality
 
-**Phase 5d Status**: 🟡 **PENDING** - Immutable builder pattern for options configuration not yet implemented.
+**Phase 5d Status**: ✅ **COMPLETED** on 2025-07-13 – Immutable builder pattern for options configuration successfully implemented with thread-safe design and comprehensive testing.
+
+**Implementation Details**:
+
+- ✅ **`SemanticModelRepositoryOptions` record** with immutable init properties for thread-safe configuration
+- ✅ **`PerformanceMonitoringOptions` record** with immutable design for monitoring configuration  
+- ✅ **`ISemanticModelRepositoryOptionsBuilder` interface** with comprehensive fluent methods
+- ✅ **`SemanticModelRepositoryOptionsBuilder` implementation** using factory methods and functional chaining
+- ✅ **`IPerformanceMonitoringOptionsBuilder` interface** for nested performance configuration
+- ✅ **`PerformanceMonitoringOptionsBuilder` implementation** with thread-safe immutable chaining
+- ✅ **Enhanced `ISemanticModelRepository`** with new `LoadModelAsync(DirectoryInfo, SemanticModelRepositoryOptions)` overload
+- ✅ **Enhanced `SemanticModelRepository`** with builder pattern integration that delegates to existing boolean overloads
+- ✅ **Dependency injection registration** in `HostBuilderExtensions` with factory method patterns
+- ✅ **Comprehensive unit tests** covering all builder scenarios including thread safety, immutability, validation, and concurrent usage
+- ✅ **All 349 tests passing** with zero regressions confirming full backward compatibility
 
 **Implementation Approach**:
 
@@ -455,12 +469,13 @@ The performance monitoring system provides enterprise-grade reliability and can 
 
 The performance monitoring implementation provides enterprise-grade reliability for production environments.
 
-**Phase 5d**: 🟡 **PENDING** - Immutable builder pattern for options configuration not yet implemented.
+**Phase 5d**: ✅ **COMPLETED SUCCESSFULLY** - Immutable builder pattern for options configuration implemented with thread-safe design.
 
-- Will provide thread-safe immutable builder pattern for repository options configuration
-- Addresses "Boolean Parameter Hell" problem with self-documenting interfaces using record types
-- Completely optional enhancement that doesn't affect existing repository functionality
-- Will enable complex configuration scenarios without breaking existing method signatures while ensuring thread safety
+- Provides thread-safe immutable builder pattern for repository options configuration using C# records
+- Addresses "Boolean Parameter Hell" problem with self-documenting fluent interfaces and factory methods
+- Completely optional enhancement that doesn't affect existing repository functionality - all existing boolean parameter methods continue unchanged
+- Enables complex configuration scenarios without breaking existing method signatures while ensuring thread safety through immutable design
+- New `LoadModelAsync(DirectoryInfo, SemanticModelRepositoryOptions)` overload delegates to existing boolean parameter overload ensuring zero behavioral changes
 
 **Phase 6**: ✅ **SAFE** - Testing and documentation don't affect runtime behavior.
 

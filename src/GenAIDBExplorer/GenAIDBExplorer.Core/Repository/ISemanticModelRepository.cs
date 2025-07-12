@@ -51,5 +51,13 @@ namespace GenAIDBExplorer.Core.Repository
         /// <param name="enableCaching">Whether to use caching for loading and storing the model.</param>
         /// <param name="strategyName">Optional strategy name to use for loading.</param>
         Task<SemanticModel> LoadModelAsync(DirectoryInfo modelPath, bool enableLazyLoading, bool enableChangeTracking, bool enableCaching, string? strategyName = null);
+
+        /// <summary>
+        /// Loads the semantic model using immutable options configuration.
+        /// This method provides a fluent, thread-safe alternative to boolean parameter overloads.
+        /// </summary>
+        /// <param name="modelPath">The path to load the model from.</param>
+        /// <param name="options">Immutable options configuration created via the builder pattern.</param>
+        Task<SemanticModel> LoadModelAsync(DirectoryInfo modelPath, SemanticModelRepositoryOptions options);
     }
 }

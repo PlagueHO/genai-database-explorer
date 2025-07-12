@@ -165,6 +165,18 @@ namespace GenAIDBExplorer.Core.Repository
             }
         }
 
+        public async Task<SemanticModel> LoadModelAsync(DirectoryInfo modelPath, SemanticModelRepositoryOptions options)
+        {
+            ArgumentNullException.ThrowIfNull(options);
+
+            return await LoadModelAsync(
+                modelPath,
+                options.EnableLazyLoading,
+                options.EnableChangeTracking,
+                options.EnableCaching,
+                options.StrategyName);
+        }
+
         public async Task SaveModelAsync(SemanticModel model, DirectoryInfo modelPath, string? strategyName = null)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
