@@ -140,6 +140,14 @@ public class SemanticModelRepositorySettings
     public LocalDiskConfiguration? LocalDisk { get; set; }
     public AzureBlobStorageConfiguration? AzureBlobStorage { get; set; }
     public CosmosDbConfiguration? CosmosDb { get; set; }
+    
+    public LazyLoadingConfiguration LazyLoading { get; set; } = new();
+    public CachingConfiguration Caching { get; set; } = new();
+    public ChangeTrackingConfiguration ChangeTracking { get; set; } = new();
+    public PerformanceMonitoringConfiguration PerformanceMonitoring { get; set; } = new();
+    
+    [Range(1, 50)]
+    public int MaxConcurrentOperations { get; set; } = 10;
 }
 
 public class LocalDiskConfiguration
@@ -206,6 +214,31 @@ public class CosmosDbConfiguration
     public CosmosConsistencyLevel ConsistencyLevel { get; set; } = CosmosConsistencyLevel.Session;
 }
 
+public class LazyLoadingConfiguration
+{
+    public bool Enabled { get; set; } = true;
+}
+
+public class CachingConfiguration
+{
+    public bool Enabled { get; set; } = true;
+    
+    [Range(1, 1440)]
+    public int ExpirationMinutes { get; set; } = 30;
+}
+
+public class ChangeTrackingConfiguration
+{
+    public bool Enabled { get; set; } = true;
+}
+
+public class PerformanceMonitoringConfiguration
+{
+    public bool Enabled { get; set; } = true;
+    public bool DetailedTiming { get; set; } = false;
+    public bool MetricsEnabled { get; set; } = true;
+}
+
 public enum CosmosConsistencyLevel
 {
     Eventual,
@@ -239,6 +272,9 @@ public enum CosmosConsistencyLevel
         "Directory": "SemanticModel"
     },
     "SemanticModelRepository": {
+        "LocalDisk": {
+            "Directory": "SemanticModel"
+        },
         "AzureBlobStorage": {
             "AccountEndpoint": "https://mystorageaccount.blob.core.windows.net",
             "ContainerName": "semantic-models",
@@ -260,7 +296,23 @@ public enum CosmosConsistencyLevel
             "MaxConcurrentOperations": 4,
             "MaxRetryAttempts": 3,
             "ConsistencyLevel": "Session"
-        }
+        },
+        "LazyLoading": {
+            "Enabled": true
+        },
+        "Caching": {
+            "Enabled": true,
+            "ExpirationMinutes": 30
+        },
+        "ChangeTracking": {
+            "Enabled": true
+        },
+        "PerformanceMonitoring": {
+            "Enabled": true,
+            "DetailedTiming": false,
+            "MetricsEnabled": true
+        },
+        "MaxConcurrentOperations": 10
     },
     "OpenAIService": {
         "Default": {

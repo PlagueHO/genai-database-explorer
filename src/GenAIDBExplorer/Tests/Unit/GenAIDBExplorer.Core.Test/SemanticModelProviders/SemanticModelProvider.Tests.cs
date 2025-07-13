@@ -56,7 +56,12 @@ public class SemanticModelProviderTests
                 LocalDisk = new LocalDiskConfiguration
                 {
                     Directory = "SemanticModel"
-                }
+                },
+                LazyLoading = new LazyLoadingConfiguration { Enabled = true },
+                Caching = new CachingConfiguration { Enabled = true, ExpirationMinutes = 30 },
+                ChangeTracking = new ChangeTrackingConfiguration { Enabled = true },
+                PerformanceMonitoring = new PerformanceMonitoringConfiguration { Enabled = true },
+                MaxConcurrentOperations = 10
             }
         };
 
@@ -177,7 +182,7 @@ public class SemanticModelProviderTests
         var expectedModel = _semanticModelProvider.CreateSemanticModel();
         await expectedModel.SaveModelAsync(_tempDirectory);
 
-        _mockSemanticModelRepository.Setup(r => r.LoadModelAsync(_tempDirectory, (string?)null))
+        _mockSemanticModelRepository.Setup(r => r.LoadModelAsync(_tempDirectory, It.IsAny<SemanticModelRepositoryOptions>()))
             .ReturnsAsync(expectedModel);
 
         // Act
@@ -186,7 +191,7 @@ public class SemanticModelProviderTests
         // Assert
         result.Should().NotBeNull();
         result.Should().BeSameAs(expectedModel);
-        _mockSemanticModelRepository.Verify(r => r.LoadModelAsync(_tempDirectory, (string?)null), Times.Once);
+        _mockSemanticModelRepository.Verify(r => r.LoadModelAsync(_tempDirectory, It.IsAny<SemanticModelRepositoryOptions>()), Times.Once);
     }
 
     [TestMethod]
@@ -194,7 +199,7 @@ public class SemanticModelProviderTests
     {
         // Arrange
         var expectedModel = _semanticModelProvider.CreateSemanticModel();
-        _mockSemanticModelRepository.Setup(r => r.LoadModelAsync(_tempDirectory, (string?)null))
+        _mockSemanticModelRepository.Setup(r => r.LoadModelAsync(_tempDirectory, It.IsAny<SemanticModelRepositoryOptions>()))
             .ReturnsAsync(expectedModel);
 
         // Act
@@ -203,7 +208,7 @@ public class SemanticModelProviderTests
         // Assert
         result.Should().NotBeNull();
         result.Should().BeSameAs(expectedModel);
-        _mockSemanticModelRepository.Verify(r => r.LoadModelAsync(_tempDirectory, (string?)null), Times.Once);
+        _mockSemanticModelRepository.Verify(r => r.LoadModelAsync(_tempDirectory, It.IsAny<SemanticModelRepositoryOptions>()), Times.Once);
     }
 
     [TestMethod]
@@ -213,7 +218,7 @@ public class SemanticModelProviderTests
         var model = _semanticModelProvider.CreateSemanticModel();
         await model.SaveModelAsync(_tempDirectory);
 
-        _mockSemanticModelRepository.Setup(r => r.LoadModelAsync(_tempDirectory, (string?)null))
+        _mockSemanticModelRepository.Setup(r => r.LoadModelAsync(_tempDirectory, It.IsAny<SemanticModelRepositoryOptions>()))
             .ThrowsAsync(new InvalidOperationException("Repository failure"));
 
         // Act
@@ -222,7 +227,7 @@ public class SemanticModelProviderTests
         // Assert
         result.Should().NotBeNull();
         result.Name.Should().Be("TestDatabase");
-        _mockSemanticModelRepository.Verify(r => r.LoadModelAsync(_tempDirectory, (string?)null), Times.Once);
+        _mockSemanticModelRepository.Verify(r => r.LoadModelAsync(_tempDirectory, It.IsAny<SemanticModelRepositoryOptions>()), Times.Once);
     }
 
     [TestMethod]
@@ -232,7 +237,7 @@ public class SemanticModelProviderTests
         var model = _semanticModelProvider.CreateSemanticModel();
         await model.SaveModelAsync(_tempDirectory);
 
-        _mockSemanticModelRepository.Setup(r => r.LoadModelAsync(_tempDirectory, (string?)null))
+        _mockSemanticModelRepository.Setup(r => r.LoadModelAsync(_tempDirectory, It.IsAny<SemanticModelRepositoryOptions>()))
             .ThrowsAsync(new InvalidOperationException("Repository failure"));
 
         // Act
@@ -241,7 +246,7 @@ public class SemanticModelProviderTests
         // Assert
         result.Should().NotBeNull();
         result.Name.Should().Be("TestDatabase");
-        _mockSemanticModelRepository.Verify(r => r.LoadModelAsync(_tempDirectory, (string?)null), Times.Once);
+        _mockSemanticModelRepository.Verify(r => r.LoadModelAsync(_tempDirectory, It.IsAny<SemanticModelRepositoryOptions>()), Times.Once);
     }
 
     [TestMethod]
@@ -250,7 +255,7 @@ public class SemanticModelProviderTests
         // Arrange
         var nonExistentPath = new DirectoryInfo(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
 
-        _mockSemanticModelRepository.Setup(r => r.LoadModelAsync(nonExistentPath, (string?)null))
+        _mockSemanticModelRepository.Setup(r => r.LoadModelAsync(nonExistentPath, It.IsAny<SemanticModelRepositoryOptions>()))
             .ThrowsAsync(new FileNotFoundException("Directory not found"));
 
         // Act & Assert
@@ -415,7 +420,7 @@ public class SemanticModelProviderTests
         var expectedSemanticModel = new SemanticModel("TestDatabase", "test-connection", "Test description");
 
         _mockProject.Setup(p => p.ProjectDirectory).Returns(projectDir);
-        _mockSemanticModelRepository.Setup(r => r.LoadModelAsync(It.Is<DirectoryInfo>(d => d.FullName == semanticModelDir.FullName), It.IsAny<string?>()))
+        _mockSemanticModelRepository.Setup(r => r.LoadModelAsync(It.Is<DirectoryInfo>(d => d.FullName == semanticModelDir.FullName), It.IsAny<SemanticModelRepositoryOptions>()))
             .ReturnsAsync(expectedSemanticModel);
 
         try
@@ -425,7 +430,7 @@ public class SemanticModelProviderTests
 
             // Assert
             result.Should().Be(expectedSemanticModel);
-            _mockSemanticModelRepository.Verify(r => r.LoadModelAsync(It.Is<DirectoryInfo>(d => d.FullName == semanticModelDir.FullName), It.IsAny<string?>()), Times.Once);
+            _mockSemanticModelRepository.Verify(r => r.LoadModelAsync(It.Is<DirectoryInfo>(d => d.FullName == semanticModelDir.FullName), It.IsAny<SemanticModelRepositoryOptions>()), Times.Once);
         }
         finally
         {
@@ -516,7 +521,7 @@ public class SemanticModelProviderTests
         await expectedSemanticModel.SaveModelAsync(semanticModelDir);
 
         _mockProject.Setup(p => p.ProjectDirectory).Returns(projectDir);
-        _mockSemanticModelRepository.Setup(r => r.LoadModelAsync(It.IsAny<DirectoryInfo>(), It.IsAny<string?>()))
+        _mockSemanticModelRepository.Setup(r => r.LoadModelAsync(It.IsAny<DirectoryInfo>(), It.IsAny<SemanticModelRepositoryOptions>()))
             .ThrowsAsync(new InvalidOperationException("Repository failed"));
 
         try
@@ -527,7 +532,7 @@ public class SemanticModelProviderTests
             // Assert
             result.Should().NotBeNull();
             result.Name.Should().Be("TestDatabase");
-            _mockSemanticModelRepository.Verify(r => r.LoadModelAsync(It.IsAny<DirectoryInfo>(), It.IsAny<string?>()), Times.Once);
+            _mockSemanticModelRepository.Verify(r => r.LoadModelAsync(It.IsAny<DirectoryInfo>(), It.IsAny<SemanticModelRepositoryOptions>()), Times.Once);
         }
         finally
         {
@@ -550,7 +555,7 @@ public class SemanticModelProviderTests
         var expectedSemanticModel = new SemanticModel("TestDatabase", "test-connection", "Test description");
 
         _mockProject.Setup(p => p.ProjectDirectory).Returns(projectDir);
-        _mockSemanticModelRepository.Setup(r => r.LoadModelAsync(It.IsAny<DirectoryInfo>(), It.IsAny<string?>()))
+        _mockSemanticModelRepository.Setup(r => r.LoadModelAsync(It.IsAny<DirectoryInfo>(), It.IsAny<SemanticModelRepositoryOptions>()))
             .ReturnsAsync(expectedSemanticModel);
 
         try

@@ -63,7 +63,7 @@ public sealed class SemanticModelProvider(
     }
 
     /// <summary>
-    /// Loads the semantic model from local disk using the configured directory path.
+    /// Loads the semantic model from local disk using the configured directory path with settings-driven lazy loading and caching.
     /// </summary>
     /// <returns>The loaded semantic model.</returns>
     private async Task<SemanticModel> LoadSemanticModelFromLocalDiskAsync()
@@ -79,12 +79,35 @@ public sealed class SemanticModelProvider(
         var projectDirectory = _project.ProjectDirectory;
         var semanticModelPath = new DirectoryInfo(Path.Combine(projectDirectory.FullName, localDiskConfig.Directory));
 
-        _logger.LogDebug("Loading semantic model from local disk path: '{SemanticModelPath}'", semanticModelPath.FullName);
+        var repositorySettings = _project.Settings.SemanticModelRepository!;
+        _logger.LogDebug("Loading semantic model from local disk path: '{SemanticModelPath}' with settings-driven configuration (LazyLoading: {LazyLoading}, Caching: {Caching}, ChangeTracking: {ChangeTracking})", 
+            semanticModelPath.FullName, 
+            repositorySettings.LazyLoading.Enabled, 
+            repositorySettings.Caching.Enabled, 
+            repositorySettings.ChangeTracking.Enabled);
 
-        // Use the repository for loading semantic models
+        // Create repository options using the builder pattern controlled by settings
+        var optionsBuilder = SemanticModelRepositoryOptionsBuilder.Create()
+            .WithLazyLoading(repositorySettings.LazyLoading.Enabled)
+            .WithChangeTracking(repositorySettings.ChangeTracking.Enabled)
+            .WithCaching(repositorySettings.Caching.Enabled, TimeSpan.FromMinutes(repositorySettings.Caching.ExpirationMinutes))
+            .WithMaxConcurrentOperations(repositorySettings.MaxConcurrentOperations)
+            .WithStrategyName("LocalDisk");
+
+        // Add performance monitoring if enabled
+        if (repositorySettings.PerformanceMonitoring.Enabled)
+        {
+            optionsBuilder = optionsBuilder.WithPerformanceMonitoring(builder =>
+                builder.EnableLocalMonitoring(true)
+                       .WithMetricsRetention(TimeSpan.FromHours(24)));
+        }
+
+        var options = optionsBuilder.Build();
+
+        // Use the repository for loading semantic models with settings-driven options
         try
         {
-            return await _semanticModelRepository.LoadModelAsync(semanticModelPath);
+            return await _semanticModelRepository.LoadModelAsync(semanticModelPath, options);
         }
         catch (Exception ex)
         {
@@ -97,15 +120,40 @@ public sealed class SemanticModelProvider(
     /// <inheritdoc/>
     public async Task<SemanticModel> LoadSemanticModelAsync(DirectoryInfo modelPath)
     {
-        _logger.LogInformation("{Message} '{ModelPath}'", _resourceManagerLogMessages.GetString("LoadingSemanticModel"), modelPath);
+        var repositorySettings = _project.Settings.SemanticModelRepository!;
+        _logger.LogInformation("{Message} '{ModelPath}' with settings-driven configuration (LazyLoading: {LazyLoading}, Caching: {Caching}, ChangeTracking: {ChangeTracking})", 
+            _resourceManagerLogMessages.GetString("LoadingSemanticModel"), 
+            modelPath, 
+            repositorySettings.LazyLoading.Enabled, 
+            repositorySettings.Caching.Enabled, 
+            repositorySettings.ChangeTracking.Enabled);
 
         SemanticModel semanticModel;
 
-        // Use the repository for loading semantic models
-        _logger.LogDebug("Using SemanticModelRepository to load semantic model from '{ModelPath}'", modelPath);
+        // Create repository options using the builder pattern controlled by settings
+        var optionsBuilder = SemanticModelRepositoryOptionsBuilder.Create()
+            .WithLazyLoading(repositorySettings.LazyLoading.Enabled)
+            .WithChangeTracking(repositorySettings.ChangeTracking.Enabled)
+            .WithCaching(repositorySettings.Caching.Enabled, TimeSpan.FromMinutes(repositorySettings.Caching.ExpirationMinutes))
+            .WithMaxConcurrentOperations(repositorySettings.MaxConcurrentOperations)
+            .WithStrategyName(_project.Settings.SemanticModel.PersistenceStrategy);
+
+        // Add performance monitoring if enabled
+        if (repositorySettings.PerformanceMonitoring.Enabled)
+        {
+            optionsBuilder = optionsBuilder.WithPerformanceMonitoring(builder =>
+                builder.EnableLocalMonitoring(true)
+                       .WithMetricsRetention(TimeSpan.FromHours(24)));
+        }
+
+        var options = optionsBuilder.Build();
+
+        // Use the repository for loading semantic models with settings-driven options
+        _logger.LogDebug("Using SemanticModelRepository to load semantic model from '{ModelPath}' with options: LazyLoading={EnableLazyLoading}, ChangeTracking={EnableChangeTracking}, Caching={EnableCaching}", 
+            modelPath, options.EnableLazyLoading, options.EnableChangeTracking, options.EnableCaching);
         try
         {
-            semanticModel = await _semanticModelRepository.LoadModelAsync(modelPath);
+            semanticModel = await _semanticModelRepository.LoadModelAsync(modelPath, options);
         }
         catch (Exception ex)
         {
@@ -114,7 +162,11 @@ public sealed class SemanticModelProvider(
             semanticModel = await CreateSemanticModel().LoadModelAsync(modelPath);
         }
 
-        _logger.LogInformation("{Message} '{SemanticModelName}'", _resourceManagerLogMessages.GetString("LoadedSemanticModelForDatabase"), semanticModel.Name);
+        _logger.LogInformation("{Message} '{SemanticModelName}' (LazyLoading: {IsLazyLoadingEnabled}, ChangeTracking: {IsChangeTrackingEnabled})", 
+            _resourceManagerLogMessages.GetString("LoadedSemanticModelForDatabase"), 
+            semanticModel.Name, 
+            semanticModel.IsLazyLoadingEnabled, 
+            semanticModel.IsChangeTrackingEnabled);
 
         return semanticModel;
     }

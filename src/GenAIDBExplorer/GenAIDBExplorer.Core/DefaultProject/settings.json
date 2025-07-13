@@ -54,7 +54,24 @@
             "MaxConcurrentOperations": 4,
             "MaxRetryAttempts": 3,
             "ConsistencyLevel": "Session" // Eventual, ConsistentPrefix, Session, BoundedStaleness, Strong
-        }
+        },
+        // Performance and behavior configuration
+        "LazyLoading": {
+            "Enabled": true // Enable lazy loading for entity collections (tables, views, stored procedures)
+        },
+        "Caching": {
+            "Enabled": true, // Enable in-memory caching of loaded semantic models
+            "ExpirationMinutes": 30 // Cache expiration time in minutes (1-1440)
+        },
+        "ChangeTracking": {
+            "Enabled": true // Enable change tracking for selective persistence
+        },
+        "PerformanceMonitoring": {
+            "Enabled": true, // Enable performance monitoring for repository operations
+            "DetailedTiming": false, // Collect detailed timing information
+            "MetricsEnabled": true // Enable metrics collection
+        },
+        "MaxConcurrentOperations": 10 // Maximum number of concurrent repository operations (1-50)
     },
     "OpenAIService": {
         "Default": {

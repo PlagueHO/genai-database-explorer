@@ -60,7 +60,35 @@ Each persistence strategy has its own dedicated configuration section under `Sem
             "AccountEndpoint": "https://mycosmosaccount.documents.azure.com:443/",
             "DatabaseName": "SemanticModels",
             "ModelsContainerName": "Models"
-        }
+        },
+        "LazyLoading": {
+            "Enabled": true
+        },
+        "Caching": {
+            "Enabled": true,
+            "ExpirationMinutes": 30
+        },
+        "ChangeTracking": {
+            "Enabled": true
+        },
+        "PerformanceMonitoring": {
+            "Enabled": true,
+            "DetailedTiming": false,
+            "MetricsEnabled": true
+        },
+        "MaxConcurrentOperations": 10
     }
 }
 ```
+
+### Performance and Behavior Configuration
+
+The `SemanticModelRepository` section now includes additional configuration options to control performance and behavior:
+
+- **LazyLoading**: Controls whether entity collections (tables, views, stored procedures) are loaded on-demand rather than eagerly
+- **Caching**: Enables in-memory caching of loaded semantic models with configurable expiration
+- **ChangeTracking**: Enables tracking of modifications to entities for more efficient saves  
+- **PerformanceMonitoring**: Configures performance monitoring and metrics collection
+- **MaxConcurrentOperations**: Sets the maximum number of concurrent repository operations
+
+These settings provide fine-grained control over the semantic model loading behavior while maintaining optimal performance for different scenarios.
