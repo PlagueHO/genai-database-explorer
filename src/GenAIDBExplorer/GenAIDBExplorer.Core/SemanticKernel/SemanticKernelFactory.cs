@@ -5,6 +5,9 @@ using Microsoft.SemanticKernel;
 
 namespace GenAIDBExplorer.Core.SemanticKernel;
 
+/// <summary>
+/// Factory for creating configured Semantic Kernel instances.
+/// </summary>
 public class SemanticKernelFactory(
     IProject project,
     ILogger<SemanticKernelFactory> logger
@@ -14,8 +17,9 @@ public class SemanticKernelFactory(
     private readonly ILogger<SemanticKernelFactory> _logger = logger;
 
     /// <summary>
-    /// Factory method for <see cref="IServiceCollection"/>
+    /// Creates a configured Semantic Kernel instance with chat completion services.
     /// </summary>
+    /// <returns>A configured <see cref="Kernel"/> instance.</returns>
     public Kernel CreateSemanticKernel()
     {
         var kernelBuilder = Kernel.CreateBuilder();
@@ -39,29 +43,31 @@ public class SemanticKernelFactory(
     /// <summary>
     /// Adds the appropriate chat completion service to the kernel builder based on the settings.
     /// </summary>
-    /// <param name="kernelBuilder">The kernel builder.</param>
-    /// <param name="settings">The chat completion settings.</param>
-    /// <param name="serviceId">The service ID.</param>
+    /// <param name="kernelBuilder">The kernel builder to configure.</param>
+    /// <param name="defaultSettings">The default OpenAI service settings.</param>
+    /// <param name="chatCompletionSettings">The chat completion specific settings.</param>
+    /// <param name="serviceId">The unique service identifier.</param>
+    /// <exception cref="InvalidOperationException">Thrown when required configuration is missing.</exception>
     private static void AddChatCompletionService(
             IKernelBuilder kernelBuilder,
-            OpenAIServiceDefaultSettings openAIServiceDefaultSettings,
-            IOpenAIServiceChatCompletionSettings openAIServiceChatCompletionSettings,
+            OpenAIServiceDefaultSettings defaultSettings,
+            IOpenAIServiceChatCompletionSettings chatCompletionSettings,
             string serviceId)
     {
-        if (openAIServiceDefaultSettings.ServiceType == "AzureOpenAI")
+        if (defaultSettings.ServiceType == "AzureOpenAI")
         {
             kernelBuilder.AddAzureOpenAIChatCompletion(
-                deploymentName: openAIServiceChatCompletionSettings.AzureOpenAIDeploymentId ?? throw new InvalidOperationException("AzureOpenAI deployment ID is required"),
-                endpoint: openAIServiceDefaultSettings.AzureOpenAIEndpoint ?? throw new InvalidOperationException("AzureOpenAI endpoint is required"),
-                apiKey: openAIServiceDefaultSettings.AzureOpenAIKey ?? throw new InvalidOperationException("AzureOpenAI API key is required"),
+                deploymentName: chatCompletionSettings.AzureOpenAIDeploymentId ?? throw new InvalidOperationException("AzureOpenAI deployment ID is required"),
+                endpoint: defaultSettings.AzureOpenAIEndpoint ?? throw new InvalidOperationException("AzureOpenAI endpoint is required"),
+                apiKey: defaultSettings.AzureOpenAIKey ?? throw new InvalidOperationException("AzureOpenAI API key is required"),
                 serviceId: serviceId
             );
         }
         else
         {
             kernelBuilder.AddOpenAIChatCompletion(
-                modelId: openAIServiceChatCompletionSettings.ModelId ?? throw new InvalidOperationException("OpenAI model ID is required"),
-                apiKey: openAIServiceDefaultSettings.OpenAIKey ?? throw new InvalidOperationException("OpenAI API key is required"),
+                modelId: chatCompletionSettings.ModelId ?? throw new InvalidOperationException("OpenAI model ID is required"),
+                apiKey: defaultSettings.OpenAIKey ?? throw new InvalidOperationException("OpenAI API key is required"),
                 serviceId: serviceId
             );
         }
