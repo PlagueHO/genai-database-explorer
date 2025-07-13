@@ -130,17 +130,21 @@ public class SemanticModelSettings
     public string PersistenceStrategy { get; set; } = "LocalDisk";
     
     public int MaxDegreeOfParallelism { get; set; } = 1;
-    
-    // For LocalDisk strategy
-    public string? Directory { get; set; } = "SemanticModel";
 }
 
 public class SemanticModelRepositorySettings
 {
     public const string PropertyName = "SemanticModelRepository";
     
+    public LocalDiskConfiguration? LocalDisk { get; set; }
     public AzureBlobStorageConfiguration? AzureBlobStorage { get; set; }
     public CosmosDbConfiguration? CosmosDb { get; set; }
+}
+
+public class LocalDiskConfiguration
+{
+    [Required, NotEmptyOrWhitespace]
+    public required string Directory { get; set; } = "SemanticModel";
 }
 
 public class AzureBlobStorageConfiguration
@@ -285,7 +289,7 @@ public enum CosmosConsistencyLevel
 - **AC-006**: Given Azure Key Vault configuration, When sensitive settings are accessed, Then credentials are retrieved securely without exposing plain text
 - **AC-007**: Given a command handler execution, When dependencies are resolved, Then all required services are available through constructor injection
 - **AC-008**: Given lazy loading requirements, When expensive services are registered, Then instantiation is deferred until actual usage
-- **AC-009**: Given SemanticModel section with PersistenceStrategy "LocalDisk", When project configuration is loaded, Then LocalDiskPersistenceStrategy is selected and Directory setting is applied
+- **AC-009**: Given SemanticModel section with PersistenceStrategy "LocalDisk", When project configuration is loaded, Then LocalDiskPersistenceStrategy is selected and LocalDisk.Directory setting is applied
 - **AC-010**: Given SemanticModel section with PersistenceStrategy "AzureBlob", When project configuration is loaded, Then AzureBlobPersistenceStrategy is selected and AzureBlobStorage settings are validated
 - **AC-011**: Given SemanticModel section with PersistenceStrategy "Cosmos", When project configuration is loaded, Then CosmosPersistenceStrategy is selected and CosmosDb settings are validated
 - **AC-012**: Given missing AzureBlobStorage configuration, When PersistenceStrategy is "AzureBlob", Then configuration validation fails with descriptive error message
@@ -422,6 +426,7 @@ services.AddSingleton<IPersistenceStrategyFactory, PersistenceStrategyFactory>()
 services.Configure<DatabaseSettings>(configuration.GetSection(DatabaseSettings.PropertyName));
 services.Configure<OpenAIServiceSettings>(configuration.GetSection(OpenAIServiceSettings.PropertyName));
 services.Configure<SemanticModelSettings>(configuration.GetSection(SemanticModelSettings.PropertyName));
+services.Configure<LocalDiskConfiguration>(configuration.GetSection("SemanticModelRepository:LocalDisk"));
 services.Configure<AzureBlobStorageConfiguration>(configuration.GetSection("SemanticModelRepository:AzureBlobStorage"));
 services.Configure<CosmosDbConfiguration>(configuration.GetSection("SemanticModelRepository:CosmosDb"));
 ```
@@ -434,8 +439,12 @@ services.Configure<CosmosDbConfiguration>(configuration.GetSection("SemanticMode
 {
     "SemanticModel": {
         "PersistenceStrategy": "LocalDisk",
-        "Directory": "SemanticModel",
         "MaxDegreeOfParallelism": 1
+    },
+    "SemanticModelRepository": {
+        "LocalDisk": {
+            "Directory": "SemanticModel"
+        }
     }
 }
 ```

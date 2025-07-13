@@ -23,7 +23,38 @@
         ] // Array of mappings to convert column types during data dictionary import.
     },
     "SemanticModel": {
+        "PersistenceStrategy": "LocalDisk", // LocalDisk, AzureBlob, Cosmos
         "MaxDegreeOfParallelism": 10 // Number of parallel semantic model tasks to run.
+    },
+    "SemanticModelRepository": {
+        // Configuration for LocalDisk persistence strategy
+        "LocalDisk": {
+            "Directory": "SemanticModel" // Directory path for storing semantic model files
+        },
+        // Configuration for Azure Blob Storage persistence strategy
+        "AzureBlobStorage": {
+            "AccountEndpoint": "https://<Set your Azure Storage account endpoint>.blob.core.windows.net",
+            "ContainerName": "semantic-models",
+            "BlobPrefix": "", // Optional prefix for organizing models
+            "OperationTimeoutSeconds": 300,
+            "MaxConcurrentOperations": 4,
+            "UseCustomerManagedKeys": false,
+            "CustomerManagedKeyUrl": "" // Required if UseCustomerManagedKeys is true
+        },
+        // Configuration for Azure Cosmos DB persistence strategy
+        "CosmosDb": {
+            "AccountEndpoint": "https://<Set your Azure Cosmos DB account endpoint>.documents.azure.com:443/",
+            "DatabaseName": "SemanticModels",
+            "ModelsContainerName": "Models",
+            "EntitiesContainerName": "ModelEntities",
+            "ModelsPartitionKeyPath": "/modelName",
+            "EntitiesPartitionKeyPath": "/modelName",
+            "DatabaseThroughput": 400, // RU/s - Set to null for serverless
+            "OperationTimeoutSeconds": 300,
+            "MaxConcurrentOperations": 4,
+            "MaxRetryAttempts": 3,
+            "ConsistencyLevel": "Session" // Eventual, ConsistentPrefix, Session, BoundedStaleness, Strong
+        }
     },
     "OpenAIService": {
         "Default": {

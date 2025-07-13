@@ -30,4 +30,37 @@ project/
 
 ## Settings File
 
-The `settings.json` file contains configuration settings for the project, such as the database connection details, storage strategy, and other project-specific options. This file is essential for initializing and managing the project.
+The `settings.json` file contains configuration settings for the project, such as the database connection details, persistence strategy, and other project-specific options. This file is essential for initializing and managing the project.
+
+### Configuration Structure
+
+The settings file supports three persistence strategies for semantic model storage:
+
+- **LocalDisk**: Stores semantic models in a local directory (development scenarios)
+- **AzureBlob**: Stores semantic models in Azure Blob Storage (cloud scenarios)  
+- **Cosmos**: Stores semantic models in Azure Cosmos DB (global scale scenarios)
+
+Each persistence strategy has its own dedicated configuration section under `SemanticModelRepository`:
+
+```json
+{
+    "SemanticModel": {
+        "PersistenceStrategy": "LocalDisk",
+        "MaxDegreeOfParallelism": 10
+    },
+    "SemanticModelRepository": {
+        "LocalDisk": {
+            "Directory": "SemanticModel"
+        },
+        "AzureBlobStorage": {
+            "AccountEndpoint": "https://mystorageaccount.blob.core.windows.net",
+            "ContainerName": "semantic-models"
+        },
+        "CosmosDb": {
+            "AccountEndpoint": "https://mycosmosaccount.documents.azure.com:443/",
+            "DatabaseName": "SemanticModels",
+            "ModelsContainerName": "Models"
+        }
+    }
+}
+```
