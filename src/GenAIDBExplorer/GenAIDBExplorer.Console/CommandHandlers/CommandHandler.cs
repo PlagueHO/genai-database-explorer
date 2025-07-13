@@ -151,7 +151,7 @@ public abstract class CommandHandler<TOptions>(
     protected DirectoryInfo GetSemanticModelDirectory(DirectoryInfo projectPath)
     {
         var persistenceStrategy = _project.Settings.SemanticModel.PersistenceStrategy;
-        
+
         return persistenceStrategy switch
         {
             "LocalDisk" => GetLocalDiskSemanticModelDirectory(projectPath),

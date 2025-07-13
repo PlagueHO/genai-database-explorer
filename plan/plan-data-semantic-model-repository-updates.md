@@ -51,9 +51,9 @@ The implementation includes basic performance monitoring through the existing `I
 - **CON-001**: .NET 9 compatibility
 - **CON-002**: UTF-8 encoding for file operations
 - **CON-003**: Human-readable JSON formatting
-- **CON-004**: Backward compatibility with existing local disk format - **CRITICAL**: All existing APIs must continue to function
+- **CON-004**: Data storage format backward compatibility (existing semantic model files must remain loadable) - **CRITICAL**: File format compatibility is maintained
 - **CON-005**: Entity names ≤128 characters
-- **CON-006**: No breaking changes to public APIs during implementation phases
+- **CON-006**: API breaking changes are acceptable for improved architecture and lazy loading support
 
 ### Guidelines
 
@@ -73,8 +73,8 @@ The implementation includes basic performance monitoring through the existing `I
 - **PAT-002**: Lazy loading pattern for entity access
 - **PAT-003**: Unit of Work pattern for change tracking
 - **PAT-004**: Factory pattern for persistence strategy selection
-- **PAT-005**: Adapter pattern to wrap existing functionality without breaking it
-- **PAT-006**: Facade pattern to provide unified interface while maintaining backward compatibility
+- **PAT-005**: Adapter pattern to support both sync and async operations during migration
+- **PAT-006**: Strategy pattern for loading behavior (lazy vs eager) transparent to consumers
 
 ## 2. Implementation Steps
 
@@ -362,7 +362,86 @@ The performance monitoring system provides enterprise-grade reliability and can 
 
 **Benefits**: Solves "Boolean Parameter Hell" with thread-safe immutable builder pattern, improving code readability and eliminating concurrency risks.
 
-### Phase 6: Testing and Documentation (Priority 16-20)
+### Phase 6: Async Find Methods Breaking Change (Priority 16)
+
+**BREAKING CHANGE PHASE**: This phase introduces intentional API breaking changes to resolve the lazy loading bug and improve architectural consistency.
+
+#### Phase 6a: Core SemanticModel API Breaking Changes (Required - Priority 16)
+
+1. **Update ISemanticModel interface with async Find methods**
+   - Replace `FindTable(string, string)` with `Task<SemanticModelTable?> FindTableAsync(string, string)`
+   - Replace `FindView(string, string)` with `Task<SemanticModelView?> FindViewAsync(string, string)`
+   - Replace `FindStoredProcedure(string, string)` with `Task<SemanticModelStoredProcedure?> FindStoredProcedureAsync(string, string)`
+   - **ENSURE**: Methods work transparently with both lazy and eager loading scenarios
+
+2. **Update SemanticModel implementation**
+   - Implement async Find methods that detect lazy loading state automatically
+   - Route to appropriate collection access (sync Collections vs async GetXxxAsync methods)
+   - **ENSURE**: No sync-over-async patterns - true async throughout
+
+3. **Remove synchronous Find methods entirely**
+   - Clean break from old API for clarity and consistency
+   - Compilation errors will guide consumers to new async methods
+   - **ENSURE**: Clear error messages help with migration
+
+**Phase 6a Status**: ⏳ **PLANNED** - Breaking changes to implement transparent lazy loading support
+
+**Implementation Strategy**:
+
+```csharp
+// New async implementation in SemanticModel.cs
+public async Task<SemanticModelTable?> FindTableAsync(string schemaName, string tableName)
+{
+    // Automatically choose correct loading strategy
+    var tables = IsLazyLoadingEnabled 
+        ? await GetTablesAsync()  // Uses lazy loading proxy
+        : Tables.AsEnumerable();  // Uses eager loaded collection
+    
+    return tables.FirstOrDefault(t => t.Schema == schemaName && t.Name == tableName);
+}
+```
+
+**Benefits**:
+
+- **Transparent Operation**: Consumers don't need to know about lazy loading implementation
+- **Consistent Performance**: No sync-over-async bottlenecks
+- **Future-Proof**: Foundation for advanced caching and optimization
+- **Clean Architecture**: Single API works for all loading strategies
+
+#### Phase 6b: Update All Consumers (Required - Priority 17)
+
+1. **Update Console CommandHandlers**
+   - Convert `ShowTableDetailsAsync` to use `await FindTableAsync()`
+   - Update `ShowViewDetailsAsync` to use `await FindViewAsync()`
+   - Update `ShowStoredProcedureDetailsAsync` to use `await FindStoredProcedureAsync()`
+
+2. **Update Core Library Usage**
+   - Update `DataDictionaryProvider.cs` Find method calls
+   - Update `EnrichModelCommandHandler.cs` Find method calls
+   - Ensure all consumers use async patterns consistently
+
+3. **Update Unit Tests**
+   - Convert all Find method test calls to async patterns
+   - Update test method signatures to async
+   - Validate both lazy and eager loading scenarios
+
+**Phase 6b Status**: ⏳ **PLANNED** - Update all consumers to use new async Find methods
+
+**Migration Tasks**:
+
+- Console app: ~5-8 method updates
+- Core library: ~3-4 usage locations  
+- Unit tests: ~20-30 test method updates
+- Integration tests: ~5-10 scenario updates
+
+**Benefits**:
+
+- **Complete Solution**: Fixes lazy loading bug at the root cause
+- **Better Architecture**: All I/O operations consistently async
+- **Performance**: Eliminates sync-over-async patterns
+- **Maintainability**: Single API approach reduces complexity
+
+### Phase 7: Testing and Documentation (Priority 18-20)
 
 1. **Implement comprehensive unit tests**
    - Test all persistence strategies independently
@@ -382,9 +461,39 @@ The performance monitoring system provides enterprise-grade reliability and can 
    - Create migration guide from existing implementation
    - Add troubleshooting guide
 
-## 2.1. Backward Compatibility Strategy
+## 2.1. Data Format Compatibility Strategy
 
-**CRITICAL REQUIREMENT**: The application must remain fully functional after each phase with zero breaking changes to existing APIs.
+**IMPORTANT**: This plan includes intentional API breaking changes in Phase 6 to resolve architectural issues and improve lazy loading support.
+
+### Data Format Compatibility (Maintained)
+
+**Storage Format**: ✅ **MAINTAINED** - All existing semantic model files remain loadable and compatible across all phases.
+
+- Existing `semanticmodel.json` files continue to work unchanged
+- Entity file formats (tables, views, stored procedures) remain identical
+- Hierarchical directory structure preserved
+- JSON schema backwards compatible
+
+### API Compatibility (Phase 6 Breaking Changes)
+
+**Phase 1-5**: ✅ **NO BREAKING CHANGES** - All existing APIs continue to function unchanged.
+
+**Phase 6**: ⚠️ **INTENTIONAL BREAKING CHANGES** - Async Find methods replace synchronous versions.
+
+#### Breaking Changes Summary
+
+**Removed (will cause compilation errors):**
+
+- `FindTable(string, string)` → `FindTableAsync(string, string)`
+- `FindView(string, string)` → `FindViewAsync(string, string)`
+- `FindStoredProcedure(string, string)` → `FindStoredProcedureAsync(string, string)`
+
+#### Migration Benefits
+
+- **Fixes Core Bug**: Resolves lazy loading table lookup failure at the architecture level
+- **Eliminates Technical Debt**: No sync-over-async patterns or complex workarounds
+- **Future-Proof**: Clean foundation for advanced caching and optimization features
+- **Consistent API**: All I/O operations follow async patterns uniformly
 
 ### Phase-by-Phase Compatibility Guarantee
 

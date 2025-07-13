@@ -79,6 +79,143 @@
                 "showReuseMessage": true,
                 "clear": false
             }
+        },
+        {
+            "label": "cli-init-project",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "run",
+                "--project",
+                "${workspaceFolder}/src/GenAIDBExplorer/GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
+                "--",
+                "init-project",
+                "--project",
+                "d:/temp"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "cli-extract-model",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "run",
+                "--project",
+                "${workspaceFolder}/src/GenAIDBExplorer/GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
+                "--",
+                "extract-model",
+                "--project",
+                "d:/temp",
+                "--skipTables",
+                "--skipViews",
+                "--skipStoredProcedures"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "cli-data-dictionary",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "run",
+                "--project",
+                "${workspaceFolder}/src/GenAIDBExplorer/GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
+                "--",
+                "data-dictionary",
+                "--project",
+                "d:/temp",
+                "--sourcePathPattern",
+                "d:/temp/dict/*.json",
+                "--objectType",
+                "table",
+                "--schemaName",
+                "dbo",
+                "--objectName",
+                "tblItemSellingLimit",
+                "--show"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "cli-enrich-model",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "run",
+                "--project",
+                "${workspaceFolder}/src/GenAIDBExplorer/GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
+                "--",
+                "enrich-model",
+                "--project",
+                "d:/temp",
+                "--skipTables",
+                "--skipViews",
+                "--skipStoredProcedures",
+                "--objectType",
+                "table",
+                "--schemaName",
+                "dbo",
+                "--objectName",
+                "tblItemSellingLimit",
+                "--show"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "cli-show-object",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "run",
+                "--project",
+                "${workspaceFolder}/src/GenAIDBExplorer/GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
+                "--",
+                "show-object",
+                "table",
+                "--project",
+                "d:/temp",
+                "--schemaName",
+                "dbo",
+                "--name",
+                "tblItemSellingLimit"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "cli-query-model",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "run",
+                "--project",
+                "${workspaceFolder}/src/GenAIDBExplorer/GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
+                "--",
+                "query-model",
+                "--project",
+                "d:/temp"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "cli-export-model",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "run",
+                "--project",
+                "${workspaceFolder}/src/GenAIDBExplorer/GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
+                "--",
+                "export-model",
+                "--project",
+                "d:/temp",
+                "--outputPath",
+                "d:/temp/exported_model.md",
+                "--fileType",
+                "markdown",
+                "--splitFiles"
+            ],
+            "problemMatcher": "$msCompile"
         }
     ]
 }

@@ -109,7 +109,7 @@ public class ProjectSettingsIntegrationTests
         // Assert
         var settings = _project.Settings;
         settings.Should().NotBeNull();
-        
+
         // Verify SemanticModel settings
         settings.SemanticModel.Should().NotBeNull();
         settings.SemanticModel.PersistenceStrategy.Should().Be("AzureBlob");
@@ -117,7 +117,7 @@ public class ProjectSettingsIntegrationTests
 
         // Verify SemanticModelRepository settings
         settings.SemanticModelRepository.Should().NotBeNull();
-        
+
         // Verify LocalDisk configuration
         settings.SemanticModelRepository.LocalDisk.Should().NotBeNull();
         settings.SemanticModelRepository.LocalDisk!.Directory.Should().Be("TestSemanticModel");

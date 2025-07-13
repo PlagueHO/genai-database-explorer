@@ -7,10 +7,10 @@
     "Schema": "dbo",
     "MaxDegreeOfParallelism": 10,
     "NotUsedTables": [ // Array of regex's to set NotUsed flag on tables in the database
-        "^.*\\.MSchange_tracking_history$"
+      "^.*\\.MSchange_tracking_history$"
     ],
     "NotUsedColumns": [ // Array of regex's to set NotUsed flag on columns in the database
-        ".*_old$"
+      ".*_old$"
     ],
     "NotUsedViews": [], // Array of regex's to set NotUsed flag on views in the database
     "NotUsedStoredProcedures": [] // Array of regex's to set NotUsed flag on stored procedures in the database
@@ -18,12 +18,60 @@
   "DataDictionary": {
     // Settings to control the data dictionary import processes.
     "ColumnTypeMapping": [
-        { "From": "VARCHAR", "To": "NVARCHAR" },
-        { "From": "CHAR", "To": "NCHAR" }
+      { "From": "VARCHAR", "To": "NVARCHAR" },
+      { "From": "CHAR", "To": "NCHAR" }
     ] // Array of mappings to convert column types during data dictionary import.
   },
   "SemanticModel": {
-    "MaxDegreeOfParallelism": 2 // Number of parallel semantic model tasks to run.
+    "PersistenceStrategy": "LocalDisk", // LocalDisk, AzureBlob, Cosmos
+    "MaxDegreeOfParallelism": 10 // Number of parallel semantic model tasks to run.
+  },
+  "SemanticModelRepository": {
+    // Configuration for LocalDisk persistence strategy
+    "LocalDisk": {
+      "Directory": "SemanticModel" // Directory path for storing semantic model files
+    },
+    // Configuration for Azure Blob Storage persistence strategy
+    "AzureBlobStorage": {
+      "AccountEndpoint": "https://<Set your Azure Storage account endpoint>.blob.core.windows.net",
+      "ContainerName": "semantic-models",
+      "BlobPrefix": "", // Optional prefix for organizing models
+      "OperationTimeoutSeconds": 300,
+      "MaxConcurrentOperations": 4,
+      "UseCustomerManagedKeys": false,
+      "CustomerManagedKeyUrl": "" // Required if UseCustomerManagedKeys is true
+    },
+    // Configuration for Azure Cosmos DB persistence strategy
+    "CosmosDb": {
+      "AccountEndpoint": "https://<Set your Azure Cosmos DB account endpoint>.documents.azure.com:443/",
+      "DatabaseName": "SemanticModels",
+      "ModelsContainerName": "Models",
+      "EntitiesContainerName": "ModelEntities",
+      "ModelsPartitionKeyPath": "/modelName",
+      "EntitiesPartitionKeyPath": "/modelName",
+      "DatabaseThroughput": 400, // RU/s - Set to null for serverless
+      "OperationTimeoutSeconds": 300,
+      "MaxConcurrentOperations": 4,
+      "MaxRetryAttempts": 3,
+      "ConsistencyLevel": "Session" // Eventual, ConsistentPrefix, Session, BoundedStaleness, Strong
+    },
+    // Performance and behavior configuration
+    "LazyLoading": {
+      "Enabled": true // Enable lazy loading for entity collections (tables, views, stored procedures)
+    },
+    "Caching": {
+      "Enabled": true, // Enable in-memory caching of loaded semantic models
+      "ExpirationMinutes": 30 // Cache expiration time in minutes (1-1440)
+    },
+    "ChangeTracking": {
+      "Enabled": true // Enable change tracking for selective persistence
+    },
+    "PerformanceMonitoring": {
+      "Enabled": true, // Enable performance monitoring for repository operations
+      "DetailedTiming": false, // Collect detailed timing information
+      "MetricsEnabled": true // Enable metrics collection
+    },
+    "MaxConcurrentOperations": 10 // Maximum number of concurrent repository operations (1-50)
   },
   "OpenAIService": {
     "Default": {

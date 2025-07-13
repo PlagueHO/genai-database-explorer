@@ -413,7 +413,7 @@ public class SemanticModelProviderTests
         // Arrange
         var projectDir = new DirectoryInfo(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
         projectDir.Create();
-        
+
         var semanticModelDir = new DirectoryInfo(Path.Combine(projectDir.FullName, "SemanticModel"));
         semanticModelDir.Create();
 
@@ -512,7 +512,7 @@ public class SemanticModelProviderTests
         // Arrange
         var projectDir = new DirectoryInfo(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
         projectDir.Create();
-        
+
         var semanticModelDir = new DirectoryInfo(Path.Combine(projectDir.FullName, "SemanticModel"));
         semanticModelDir.Create();
 
@@ -548,7 +548,7 @@ public class SemanticModelProviderTests
         // Arrange
         var projectDir = new DirectoryInfo(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
         projectDir.Create();
-        
+
         var semanticModelDir = new DirectoryInfo(Path.Combine(projectDir.FullName, "SemanticModel"));
         semanticModelDir.Create();
 
@@ -565,7 +565,7 @@ public class SemanticModelProviderTests
 
             // Assert
             result.Should().Be(expectedSemanticModel);
-            
+
             // Verify logging calls were made (note: exact verification depends on ILogger mock setup)
             _mockLogger.Verify(
                 x => x.Log(

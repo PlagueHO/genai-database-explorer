@@ -47,6 +47,10 @@ Repository pattern implementation for persisting AI-consumable semantic models e
 - **REQ-013**: Performance monitoring implementation that builds on and aligns with the core monitoring requirements defined in the [OpenTelemetry Application Monitoring Specification](./spec-monitoring-azure-application-insights-opentelemetry.md), with graceful degradation when telemetry infrastructure is unavailable
 - **REQ-014**: Zero external dependencies and full functionality when OpenTelemetry services are not configured or available
 - **REQ-015**: Compatibility with .NET Aspire telemetry configuration through standard OpenTelemetry environment variables and OTLP endpoints
+- **REQ-016**: Async Find methods support both lazy-loaded and eager-loaded scenarios transparently
+- **REQ-017**: Automatic loading strategy detection routes Find methods to appropriate collection access
+- **REQ-018**: Breaking API changes for Find methods to support lazy loading without consumer knowledge
+- **REQ-019**: Migration path documentation for existing Find method consumers
 
 ### Security Requirements
 
@@ -69,7 +73,7 @@ Repository pattern implementation for persisting AI-consumable semantic models e
 - **CON-001**: .NET 9 compatibility
 - **CON-002**: UTF-8 encoding for file operations
 - **CON-003**: Human-readable JSON formatting
-- **CON-004**: Backward compatibility
+- **CON-004**: Data storage format backward compatibility (existing semantic model files must remain loadable)
 - **CON-005**: Entity names ≤128 characters
 
 ### Guidelines
@@ -324,7 +328,17 @@ public interface ISemanticModel
     Task<SemanticModel> LoadModelAsync(DirectoryInfo modelPath);
     void AddTable(SemanticModelTable table);
     bool RemoveTable(SemanticModelTable table);
-    SemanticModelTable? FindTable(string schemaName, string tableName);
+    
+    // BREAKING CHANGE: Make Find methods async to support lazy loading transparently
+    Task<SemanticModelTable?> FindTableAsync(string schemaName, string tableName);
+    Task<SemanticModelView?> FindViewAsync(string schemaName, string viewName);
+    Task<SemanticModelStoredProcedure?> FindStoredProcedureAsync(string schemaName, string storedProcedureName);
+    
+    // Add async collection accessors for lazy loading scenarios
+    Task<IEnumerable<SemanticModelTable>> GetTablesAsync();
+    Task<IEnumerable<SemanticModelView>> GetViewsAsync();
+    Task<IEnumerable<SemanticModelStoredProcedure>> GetStoredProceduresAsync();
+    
     void Accept(ISemanticModelVisitor visitor);
 }
 
@@ -506,6 +520,11 @@ Documents (each with hierarchical partition key):
 - **AC-019**: Given OpenTelemetry services are not configured, When repository operations are performed, Then full functionality is maintained with zero performance degradation and no errors or warnings related to telemetry
 - **AC-020**: Given .NET Aspire environment variables are configured, When EnableAspireCompatibility is true, Then telemetry is automatically sent to the configured OTLP endpoint without additional configuration
 - **AC-021**: Given OTEL_EXPORTER_OTLP_ENDPOINT environment variable is not set, When .NET Aspire compatibility is enabled, Then telemetry export is gracefully disabled and repository operations continue normally
+- **AC-022**: Given lazy loading is enabled, When FindTableAsync is called, Then table is found using async collection loading without consumer knowledge of loading strategy
+- **AC-023**: Given lazy loading is disabled, When FindTableAsync is called, Then table is found using synchronous collection with automatic fallback
+- **AC-024**: Given existing synchronous Find method calls, When upgrading to new API, Then compilation errors guide migration to async methods with clear error messages
+- **AC-025**: Given mixed lazy and eager loading scenarios, When async Find methods are called, Then correct loading strategy is automatically selected based on model configuration
+- **AC-026**: Given semantic model storage format, When loading existing models, Then data format backward compatibility is maintained regardless of API changes
 
 ## 6. Test Automation Strategy
 
@@ -633,19 +652,21 @@ This approach prevents common concurrency bugs such as configuration pollution i
 ### Basic Usage - Local Disk
 
 ```csharp
-// Traditional boolean parameter approach (legacy)
+// BREAKING CHANGE: Find methods are now async for transparent lazy loading support
 var provider = serviceProvider.GetRequiredService<ISemanticModelProvider>();
 var repository = serviceProvider.GetRequiredService<ISemanticModelRepository>();
 var model = await provider.ExtractSemanticModelAsync();
 await repository.SaveModelAsync(model, new DirectoryInfo(@"C:\Models\Database"));
 
-// Load with specific features using boolean parameters (legacy)
+// Load with async Find methods (works with both lazy and eager loading)
 var loadedModel = await repository.LoadModelAsync(
     new DirectoryInfo(@"C:\Models\Database"), 
-    enableLazyLoading: true, 
-    enableChangeTracking: true, 
-    enableCaching: false, 
     strategyName: "localdisk");
+
+// BREAKING CHANGE: All Find operations are now async
+var table = await loadedModel.FindTableAsync("dbo", "Customer");
+var view = await loadedModel.FindViewAsync("dbo", "CustomerView");
+var storedProc = await loadedModel.FindStoredProcedureAsync("dbo", "GetCustomer");
 ```
 
 ### Builder Pattern Usage (Recommended)
@@ -1004,7 +1025,56 @@ public async Task<SemanticModel> SafeLoadAsync(DirectoryInfo path)
 - .NET Aspire compatibility through standard OpenTelemetry environment variables
 - Zero performance overhead when telemetry services are unavailable
 
-## 11. Related Specifications / Further Reading
+## 11. Breaking Change Migration Guide
+
+### API Changes Summary
+
+This specification introduces breaking changes to improve lazy loading support and provide a cleaner, more consistent API.
+
+**Before (v1.x):**
+
+```csharp
+var table = semanticModel.FindTable("dbo", "Customer");
+var view = semanticModel.FindView("dbo", "CustomerView");
+var storedProc = semanticModel.FindStoredProcedure("dbo", "GetCustomer");
+```
+
+**After (v2.0):**
+
+```csharp
+var table = await semanticModel.FindTableAsync("dbo", "Customer");
+var view = await semanticModel.FindViewAsync("dbo", "CustomerView");
+var storedProc = await semanticModel.FindStoredProcedureAsync("dbo", "GetCustomer");
+```
+
+### Consumer Updates Required
+
+1. **Console Applications**: Update all Find method calls to async patterns
+2. **Web APIs**: Ensure controller methods support async operations
+3. **Service Classes**: Update service method signatures to async
+4. **Unit Tests**: Convert test methods to async patterns with proper assertions
+
+### Migration Benefits
+
+- **Transparent Lazy Loading**: Find methods work seamlessly regardless of loading strategy
+- **Performance**: No sync-over-async patterns - true async throughout
+- **Consistency**: All I/O operations follow async patterns
+- **Future-Proof**: Foundation for advanced caching and optimization features
+
+### Data Format Compatibility
+
+- **Storage Format**: Existing semantic model files remain fully compatible
+- **Index Documents**: New format enhancements are backward compatible
+- **Entity Files**: No changes to entity file structure or content
+
+### Compatibility Strategy
+
+- **Clean Break**: Remove synchronous Find methods entirely for clarity
+- **Compilation Guidance**: Clear compiler errors guide migration process
+- **Documentation**: Comprehensive migration examples for all scenarios
+- **Testing Support**: Migration validation through existing test suites
+
+## 12. Related Specifications / Further Reading
 
 - [Azure Application Insights OpenTelemetry Monitoring Specification](./spec-monitoring-azure-application-insights-opentelemetry.md)
 - [Infrastructure Deployment Bicep AVM Specification](./infrastructure-deployment-bicep-avm.md)

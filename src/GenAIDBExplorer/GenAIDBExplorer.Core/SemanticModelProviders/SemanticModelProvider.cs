@@ -80,10 +80,10 @@ public sealed class SemanticModelProvider(
         var semanticModelPath = new DirectoryInfo(Path.Combine(projectDirectory.FullName, localDiskConfig.Directory));
 
         var repositorySettings = _project.Settings.SemanticModelRepository!;
-        _logger.LogDebug("Loading semantic model from local disk path: '{SemanticModelPath}' with settings-driven configuration (LazyLoading: {LazyLoading}, Caching: {Caching}, ChangeTracking: {ChangeTracking})", 
-            semanticModelPath.FullName, 
-            repositorySettings.LazyLoading.Enabled, 
-            repositorySettings.Caching.Enabled, 
+        _logger.LogDebug("Loading semantic model from local disk path: '{SemanticModelPath}' with settings-driven configuration (LazyLoading: {LazyLoading}, Caching: {Caching}, ChangeTracking: {ChangeTracking})",
+            semanticModelPath.FullName,
+            repositorySettings.LazyLoading.Enabled,
+            repositorySettings.Caching.Enabled,
             repositorySettings.ChangeTracking.Enabled);
 
         // Create repository options using the builder pattern controlled by settings
@@ -121,11 +121,11 @@ public sealed class SemanticModelProvider(
     public async Task<SemanticModel> LoadSemanticModelAsync(DirectoryInfo modelPath)
     {
         var repositorySettings = _project.Settings.SemanticModelRepository!;
-        _logger.LogInformation("{Message} '{ModelPath}' with settings-driven configuration (LazyLoading: {LazyLoading}, Caching: {Caching}, ChangeTracking: {ChangeTracking})", 
-            _resourceManagerLogMessages.GetString("LoadingSemanticModel"), 
-            modelPath, 
-            repositorySettings.LazyLoading.Enabled, 
-            repositorySettings.Caching.Enabled, 
+        _logger.LogInformation("{Message} '{ModelPath}' with settings-driven configuration (LazyLoading: {LazyLoading}, Caching: {Caching}, ChangeTracking: {ChangeTracking})",
+            _resourceManagerLogMessages.GetString("LoadingSemanticModel"),
+            modelPath,
+            repositorySettings.LazyLoading.Enabled,
+            repositorySettings.Caching.Enabled,
             repositorySettings.ChangeTracking.Enabled);
 
         SemanticModel semanticModel;
@@ -149,7 +149,7 @@ public sealed class SemanticModelProvider(
         var options = optionsBuilder.Build();
 
         // Use the repository for loading semantic models with settings-driven options
-        _logger.LogDebug("Using SemanticModelRepository to load semantic model from '{ModelPath}' with options: LazyLoading={EnableLazyLoading}, ChangeTracking={EnableChangeTracking}, Caching={EnableCaching}", 
+        _logger.LogDebug("Using SemanticModelRepository to load semantic model from '{ModelPath}' with options: LazyLoading={EnableLazyLoading}, ChangeTracking={EnableChangeTracking}, Caching={EnableCaching}",
             modelPath, options.EnableLazyLoading, options.EnableChangeTracking, options.EnableCaching);
         try
         {
@@ -162,10 +162,10 @@ public sealed class SemanticModelProvider(
             semanticModel = await CreateSemanticModel().LoadModelAsync(modelPath);
         }
 
-        _logger.LogInformation("{Message} '{SemanticModelName}' (LazyLoading: {IsLazyLoadingEnabled}, ChangeTracking: {IsChangeTrackingEnabled})", 
-            _resourceManagerLogMessages.GetString("LoadedSemanticModelForDatabase"), 
-            semanticModel.Name, 
-            semanticModel.IsLazyLoadingEnabled, 
+        _logger.LogInformation("{Message} '{SemanticModelName}' (LazyLoading: {IsLazyLoadingEnabled}, ChangeTracking: {IsChangeTrackingEnabled})",
+            _resourceManagerLogMessages.GetString("LoadedSemanticModelForDatabase"),
+            semanticModel.Name,
+            semanticModel.IsLazyLoadingEnabled,
             semanticModel.IsChangeTrackingEnabled);
 
         return semanticModel;
