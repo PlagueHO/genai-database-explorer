@@ -399,4 +399,185 @@ public class SemanticModelProviderTests
         // Assert
         provider.Should().NotBeNull();
     }
+
+    #region LoadSemanticModelAsync (Parameterless) Tests
+
+    [TestMethod]
+    public async Task LoadSemanticModelAsync_WithLocalDiskStrategy_ShouldLoadFromConfiguredDirectory()
+    {
+        // Arrange
+        var projectDir = new DirectoryInfo(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
+        projectDir.Create();
+        
+        var semanticModelDir = new DirectoryInfo(Path.Combine(projectDir.FullName, "SemanticModel"));
+        semanticModelDir.Create();
+
+        var expectedSemanticModel = new SemanticModel("TestDatabase", "test-connection", "Test description");
+
+        _mockProject.Setup(p => p.ProjectDirectory).Returns(projectDir);
+        _mockSemanticModelRepository.Setup(r => r.LoadModelAsync(It.Is<DirectoryInfo>(d => d.FullName == semanticModelDir.FullName), It.IsAny<string?>()))
+            .ReturnsAsync(expectedSemanticModel);
+
+        try
+        {
+            // Act
+            var result = await _semanticModelProvider.LoadSemanticModelAsync();
+
+            // Assert
+            result.Should().Be(expectedSemanticModel);
+            _mockSemanticModelRepository.Verify(r => r.LoadModelAsync(It.Is<DirectoryInfo>(d => d.FullName == semanticModelDir.FullName), It.IsAny<string?>()), Times.Once);
+        }
+        finally
+        {
+            // Cleanup
+            if (projectDir.Exists)
+                projectDir.Delete(true);
+        }
+    }
+
+    [TestMethod]
+    public async Task LoadSemanticModelAsync_WithAzureBlobStrategy_ShouldThrowNotSupportedException()
+    {
+        // Arrange
+        var projectSettings = _mockProject.Object.Settings;
+        projectSettings.SemanticModel.PersistenceStrategy = "AzureBlob";
+
+        // Act & Assert
+        var exception = await Assert.ThrowsExceptionAsync<NotSupportedException>(
+            () => _semanticModelProvider.LoadSemanticModelAsync());
+
+        exception.Message.Should().Contain("AzureBlob");
+        exception.Message.Should().Contain("not yet supported");
+    }
+
+    [TestMethod]
+    public async Task LoadSemanticModelAsync_WithCosmosStrategy_ShouldThrowNotSupportedException()
+    {
+        // Arrange
+        var projectSettings = _mockProject.Object.Settings;
+        projectSettings.SemanticModel.PersistenceStrategy = "Cosmos";
+
+        // Act & Assert
+        var exception = await Assert.ThrowsExceptionAsync<NotSupportedException>(
+            () => _semanticModelProvider.LoadSemanticModelAsync());
+
+        exception.Message.Should().Contain("Cosmos");
+        exception.Message.Should().Contain("not yet supported");
+    }
+
+    [TestMethod]
+    public async Task LoadSemanticModelAsync_WithUnknownStrategy_ShouldThrowArgumentException()
+    {
+        // Arrange
+        var projectSettings = _mockProject.Object.Settings;
+        projectSettings.SemanticModel.PersistenceStrategy = "UnknownStrategy";
+
+        // Act & Assert
+        var exception = await Assert.ThrowsExceptionAsync<ArgumentException>(
+            () => _semanticModelProvider.LoadSemanticModelAsync());
+
+        exception.Message.Should().Contain("Unknown persistence strategy");
+        exception.Message.Should().Contain("UnknownStrategy");
+    }
+
+    [TestMethod]
+    public async Task LoadSemanticModelAsync_WithLocalDiskButNoDirectoryConfigured_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        var projectSettings = _mockProject.Object.Settings;
+        projectSettings.SemanticModelRepository = new SemanticModelRepositorySettings
+        {
+            LocalDisk = new LocalDiskConfiguration
+            {
+                Directory = ""
+            }
+        };
+
+        // Act & Assert
+        var exception = await Assert.ThrowsExceptionAsync<InvalidOperationException>(
+            () => _semanticModelProvider.LoadSemanticModelAsync());
+
+        exception.Message.Should().Contain("LocalDisk persistence strategy is configured");
+        exception.Message.Should().Contain("no directory is specified");
+    }
+
+    [TestMethod]
+    public async Task LoadSemanticModelAsync_WithLocalDiskRepositoryFailure_ShouldFallbackToDirectLoading()
+    {
+        // Arrange
+        var projectDir = new DirectoryInfo(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
+        projectDir.Create();
+        
+        var semanticModelDir = new DirectoryInfo(Path.Combine(projectDir.FullName, "SemanticModel"));
+        semanticModelDir.Create();
+
+        // Create a real semantic model file for the fallback to load
+        var expectedSemanticModel = new SemanticModel("TestDatabase", "test-connection", "Test description");
+        await expectedSemanticModel.SaveModelAsync(semanticModelDir);
+
+        _mockProject.Setup(p => p.ProjectDirectory).Returns(projectDir);
+        _mockSemanticModelRepository.Setup(r => r.LoadModelAsync(It.IsAny<DirectoryInfo>(), It.IsAny<string?>()))
+            .ThrowsAsync(new InvalidOperationException("Repository failed"));
+
+        try
+        {
+            // Act
+            var result = await _semanticModelProvider.LoadSemanticModelAsync();
+
+            // Assert
+            result.Should().NotBeNull();
+            result.Name.Should().Be("TestDatabase");
+            _mockSemanticModelRepository.Verify(r => r.LoadModelAsync(It.IsAny<DirectoryInfo>(), It.IsAny<string?>()), Times.Once);
+        }
+        finally
+        {
+            // Cleanup
+            if (projectDir.Exists)
+                projectDir.Delete(true);
+        }
+    }
+
+    [TestMethod]
+    public async Task LoadSemanticModelAsync_ShouldLogAppropriateMessages()
+    {
+        // Arrange
+        var projectDir = new DirectoryInfo(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
+        projectDir.Create();
+        
+        var semanticModelDir = new DirectoryInfo(Path.Combine(projectDir.FullName, "SemanticModel"));
+        semanticModelDir.Create();
+
+        var expectedSemanticModel = new SemanticModel("TestDatabase", "test-connection", "Test description");
+
+        _mockProject.Setup(p => p.ProjectDirectory).Returns(projectDir);
+        _mockSemanticModelRepository.Setup(r => r.LoadModelAsync(It.IsAny<DirectoryInfo>(), It.IsAny<string?>()))
+            .ReturnsAsync(expectedSemanticModel);
+
+        try
+        {
+            // Act
+            var result = await _semanticModelProvider.LoadSemanticModelAsync();
+
+            // Assert
+            result.Should().Be(expectedSemanticModel);
+            
+            // Verify logging calls were made (note: exact verification depends on ILogger mock setup)
+            _mockLogger.Verify(
+                x => x.Log(
+                    LogLevel.Information,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("LocalDisk")),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                Times.AtLeastOnce);
+        }
+        finally
+        {
+            // Cleanup
+            if (projectDir.Exists)
+                projectDir.Delete(true);
+        }
+    }
+
+    #endregion
 }

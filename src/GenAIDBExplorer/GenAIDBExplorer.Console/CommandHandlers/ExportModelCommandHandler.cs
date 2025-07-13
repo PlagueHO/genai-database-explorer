@@ -103,8 +103,7 @@ public class ExportModelCommandHandler : CommandHandler<ExportModelCommandHandle
 
         _project.LoadProjectConfiguration(projectPath);
 
-        var semanticModelDirectory = GetSemanticModelDirectory(projectPath);
-        var semanticModel = await _semanticModelProvider.LoadSemanticModelAsync(semanticModelDirectory).ConfigureAwait(false);
+        var semanticModel = await _semanticModelProvider.LoadSemanticModelAsync().ConfigureAwait(false);
 
         if (_exportStrategies.TryGetValue(commandOptions.FileType, out var exportStrategy))
         {

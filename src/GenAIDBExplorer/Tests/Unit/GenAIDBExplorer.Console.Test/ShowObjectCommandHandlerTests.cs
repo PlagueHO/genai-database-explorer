@@ -37,12 +37,22 @@ public class ShowObjectCommandHandlerTests
         {
             Database = new DatabaseSettings { Name = "TestDatabase" },
             DataDictionary = new DataDictionarySettings(),
-            SemanticModel = new SemanticModelSettings(),
+            SemanticModel = new SemanticModelSettings
+            {
+                PersistenceStrategy = "LocalDisk"
+            },
             OpenAIService = new OpenAIServiceSettings(),
-            SemanticModelRepository = new SemanticModelRepositorySettings()
+            SemanticModelRepository = new SemanticModelRepositorySettings
+            {
+                LocalDisk = new LocalDiskConfiguration
+                {
+                    Directory = "SemanticModel"
+                }
+            }
         };
 
         _mockProject.Setup(p => p.Settings).Returns(mockProjectSettings);
+        _mockProject.Setup(p => p.ProjectDirectory).Returns(new DirectoryInfo(@"C:\TestProject"));
 
         // Arrange: Initialize the handler with mock dependencies
         _handler = new ShowObjectCommandHandler(
@@ -66,6 +76,8 @@ public class ShowObjectCommandHandlerTests
         var table = new SemanticModelTable("dbo", "TestTable");
         semanticModel.AddTable(table);
 
+        _mockSemanticModelProvider.Setup(p => p.LoadSemanticModelAsync())
+            .ReturnsAsync(semanticModel);
         _mockSemanticModelProvider.Setup(p => p.LoadSemanticModelAsync(It.IsAny<DirectoryInfo>()))
             .ReturnsAsync(semanticModel);
 
@@ -73,7 +85,7 @@ public class ShowObjectCommandHandlerTests
         await _handler.HandleAsync(commandOptions);
 
         // Assert
-        _mockSemanticModelProvider.Verify(p => p.LoadSemanticModelAsync(It.Is<DirectoryInfo>(d => d.FullName == Path.Combine(projectPath.FullName, "TestDatabase"))), Times.Once);
+        _mockSemanticModelProvider.Verify(p => p.LoadSemanticModelAsync(), Times.Once);
         _mockOutputService.Verify(o => o.WriteLine(It.Is<string>(s => s.Contains("TestTable"))), Times.Once);
         _mockLogger.Verify(
             x => x.Log(
@@ -96,6 +108,8 @@ public class ShowObjectCommandHandlerTests
         var view = new SemanticModelView("dbo", "TestView");
         semanticModel.AddView(view);
 
+        _mockSemanticModelProvider.Setup(p => p.LoadSemanticModelAsync())
+            .ReturnsAsync(semanticModel);
         _mockSemanticModelProvider.Setup(p => p.LoadSemanticModelAsync(It.IsAny<DirectoryInfo>()))
             .ReturnsAsync(semanticModel);
 
@@ -103,7 +117,7 @@ public class ShowObjectCommandHandlerTests
         await _handler.HandleAsync(commandOptions);
 
         // Assert
-        _mockSemanticModelProvider.Verify(p => p.LoadSemanticModelAsync(It.Is<DirectoryInfo>(d => d.FullName == Path.Combine(projectPath.FullName, "TestDatabase"))), Times.Once);
+        _mockSemanticModelProvider.Verify(p => p.LoadSemanticModelAsync(), Times.Once);
         _mockOutputService.Verify(o => o.WriteLine(It.Is<string>(s => s.Contains("TestView"))), Times.Once);
         _mockLogger.Verify(
             x => x.Log(
@@ -126,6 +140,8 @@ public class ShowObjectCommandHandlerTests
         var storedProcedure = new SemanticModelStoredProcedure("dbo", "TestStoredProcedure", "CREATE PROCEDURE TestStoredProcedure AS BEGIN SELECT 1 END");
         semanticModel.AddStoredProcedure(storedProcedure);
 
+        _mockSemanticModelProvider.Setup(p => p.LoadSemanticModelAsync())
+            .ReturnsAsync(semanticModel);
         _mockSemanticModelProvider.Setup(p => p.LoadSemanticModelAsync(It.IsAny<DirectoryInfo>()))
             .ReturnsAsync(semanticModel);
 
@@ -133,7 +149,7 @@ public class ShowObjectCommandHandlerTests
         await _handler.HandleAsync(commandOptions);
 
         // Assert
-        _mockSemanticModelProvider.Verify(p => p.LoadSemanticModelAsync(It.Is<DirectoryInfo>(d => d.FullName == Path.Combine(projectPath.FullName, "TestDatabase"))), Times.Once);
+        _mockSemanticModelProvider.Verify(p => p.LoadSemanticModelAsync(), Times.Once);
         _mockOutputService.Verify(o => o.WriteLine(It.Is<string>(s => s.Contains("TestStoredProcedure"))), Times.Once);
         _mockLogger.Verify(
             x => x.Log(
@@ -156,7 +172,7 @@ public class ShowObjectCommandHandlerTests
 
         // Assert
         await act.Should().ThrowAsync<ArgumentNullException>();
-        _mockSemanticModelProvider.Verify(p => p.LoadSemanticModelAsync(It.IsAny<DirectoryInfo>()), Times.Never);
+        _mockSemanticModelProvider.Verify(p => p.LoadSemanticModelAsync(), Times.Never);
     }
 
     [TestMethod]
@@ -170,6 +186,6 @@ public class ShowObjectCommandHandlerTests
 
         // Assert
         await act.Should().ThrowAsync<ArgumentNullException>();
-        _mockSemanticModelProvider.Verify(p => p.LoadSemanticModelAsync(It.IsAny<DirectoryInfo>()), Times.Never);
+        _mockSemanticModelProvider.Verify(p => p.LoadSemanticModelAsync(), Times.Never);
     }
 }

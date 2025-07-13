@@ -34,6 +34,67 @@ public sealed class SemanticModelProvider(
     }
 
     /// <inheritdoc/>
+    public async Task<SemanticModel> LoadSemanticModelAsync()
+    {
+        var persistenceStrategy = _project.Settings.SemanticModel.PersistenceStrategy;
+        _logger.LogInformation("{Message} using strategy '{PersistenceStrategy}'", _resourceManagerLogMessages.GetString("LoadingSemanticModel"), persistenceStrategy);
+
+        SemanticModel semanticModel;
+
+        switch (persistenceStrategy)
+        {
+            case "LocalDisk":
+                semanticModel = await LoadSemanticModelFromLocalDiskAsync();
+                break;
+
+            case "AzureBlob":
+                throw new NotSupportedException($"Persistence strategy '{persistenceStrategy}' is not yet supported for loading semantic models.");
+
+            case "Cosmos":
+                throw new NotSupportedException($"Persistence strategy '{persistenceStrategy}' is not yet supported for loading semantic models.");
+
+            default:
+                throw new ArgumentException($"Unknown persistence strategy '{persistenceStrategy}' specified in project settings.", nameof(persistenceStrategy));
+        }
+
+        _logger.LogInformation("{Message} '{SemanticModelName}' using strategy '{PersistenceStrategy}'", _resourceManagerLogMessages.GetString("LoadedSemanticModelForDatabase"), semanticModel.Name, persistenceStrategy);
+
+        return semanticModel;
+    }
+
+    /// <summary>
+    /// Loads the semantic model from local disk using the configured directory path.
+    /// </summary>
+    /// <returns>The loaded semantic model.</returns>
+    private async Task<SemanticModel> LoadSemanticModelFromLocalDiskAsync()
+    {
+        // Get the configured directory for LocalDisk storage
+        var localDiskConfig = _project.Settings.SemanticModelRepository?.LocalDisk;
+        if (localDiskConfig?.Directory == null || string.IsNullOrWhiteSpace(localDiskConfig.Directory))
+        {
+            throw new InvalidOperationException("LocalDisk persistence strategy is configured but no directory is specified in SemanticModelRepository.LocalDisk.Directory.");
+        }
+
+        // Build the full path using the project's working directory and configured semantic model directory
+        var projectDirectory = _project.ProjectDirectory;
+        var semanticModelPath = new DirectoryInfo(Path.Combine(projectDirectory.FullName, localDiskConfig.Directory));
+
+        _logger.LogDebug("Loading semantic model from local disk path: '{SemanticModelPath}'", semanticModelPath.FullName);
+
+        // Use the repository for loading semantic models
+        try
+        {
+            return await _semanticModelRepository.LoadModelAsync(semanticModelPath);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to load semantic model using repository from '{SemanticModelPath}', falling back to direct loading", semanticModelPath.FullName);
+            // TODO: Remove this fallback once SemanticModelRepository is fully integrated and tested
+            return await CreateSemanticModel().LoadModelAsync(semanticModelPath);
+        }
+    }
+
+    /// <inheritdoc/>
     public async Task<SemanticModel> LoadSemanticModelAsync(DirectoryInfo modelPath)
     {
         _logger.LogInformation("{Message} '{ModelPath}'", _resourceManagerLogMessages.GetString("LoadingSemanticModel"), modelPath);

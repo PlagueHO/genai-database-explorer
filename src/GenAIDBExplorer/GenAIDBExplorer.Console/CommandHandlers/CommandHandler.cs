@@ -133,23 +133,48 @@ public abstract class CommandHandler<TOptions>(
     {
         _project.LoadProjectConfiguration(projectPath);
 
-        // Load the Semantic Model
+        // Load the Semantic Model using the configured persistence strategy
         _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("LoadingSemanticModel"), projectPath.FullName);
-        var semanticModelDirectory = GetSemanticModelDirectory(projectPath);
-        var semanticModel = await _semanticModelProvider.LoadSemanticModelAsync(semanticModelDirectory);
+        var semanticModel = await _semanticModelProvider.LoadSemanticModelAsync();
         _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("LoadedSemanticModel"), projectPath.FullName);
 
         return semanticModel;
     }
 
     /// <summary>
-    /// Gets the semantic model directory for the specified project path.
+    /// Gets the semantic model directory for the specified project path using the configured persistence strategy.
     /// </summary>
-    /// <param name="projectPath"></param>
-    /// <returns></returns>
+    /// <param name="projectPath">The project path.</param>
+    /// <returns>The semantic model directory path.</returns>
+    /// <exception cref="NotSupportedException">Thrown when the persistence strategy is not LocalDisk.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when LocalDisk directory is not configured.</exception>
     protected DirectoryInfo GetSemanticModelDirectory(DirectoryInfo projectPath)
     {
-        return new DirectoryInfo(Path.Combine(projectPath.FullName, _project.Settings.Database.Name));
+        var persistenceStrategy = _project.Settings.SemanticModel.PersistenceStrategy;
+        
+        return persistenceStrategy switch
+        {
+            "LocalDisk" => GetLocalDiskSemanticModelDirectory(projectPath),
+            "AzureBlob" => throw new NotSupportedException($"Persistence strategy '{persistenceStrategy}' is not yet supported for saving semantic models."),
+            "Cosmos" => throw new NotSupportedException($"Persistence strategy '{persistenceStrategy}' is not yet supported for saving semantic models."),
+            _ => throw new ArgumentException($"Unknown persistence strategy '{persistenceStrategy}' specified in project settings.")
+        };
+    }
+
+    /// <summary>
+    /// Gets the local disk semantic model directory path.
+    /// </summary>
+    /// <param name="projectPath">The project path.</param>
+    /// <returns>The local disk semantic model directory.</returns>
+    private DirectoryInfo GetLocalDiskSemanticModelDirectory(DirectoryInfo projectPath)
+    {
+        var localDiskConfig = _project.Settings.SemanticModelRepository?.LocalDisk;
+        if (localDiskConfig?.Directory == null || string.IsNullOrWhiteSpace(localDiskConfig.Directory))
+        {
+            throw new InvalidOperationException("LocalDisk persistence strategy is configured but no directory is specified in SemanticModelRepository.LocalDisk.Directory.");
+        }
+
+        return new DirectoryInfo(Path.Combine(projectPath.FullName, localDiskConfig.Directory));
     }
 
     protected Task ShowTableDetailsAsync(SemanticModel semanticModel, string schemaName, string tableName)
@@ -157,7 +182,8 @@ public abstract class CommandHandler<TOptions>(
         var table = semanticModel.FindTable(schemaName, tableName);
         if (table == null)
         {
-            _logger.LogError("{ErrorMessage} [{SchemaName}].[{TableName}]", _resourceManagerErrorMessages.GetString("TableNotFound"), schemaName, tableName);
+            var errorMessage = _resourceManagerErrorMessages.GetString("TableNotFound") ?? "Table not found";
+            _logger.LogError("{ErrorMessage} [{SchemaName}].[{TableName}]", errorMessage, schemaName, tableName);
         }
         else
         {
@@ -171,7 +197,8 @@ public abstract class CommandHandler<TOptions>(
         var view = semanticModel.FindView(schemaName, viewName);
         if (view == null)
         {
-            _logger.LogError("{ErrorMessage} [{SchemaName}].[{ViewName}]", _resourceManagerErrorMessages.GetString("ViewNotFound"), schemaName, viewName);
+            var errorMessage = _resourceManagerErrorMessages.GetString("ViewNotFound") ?? "View not found";
+            _logger.LogError("{ErrorMessage} [{SchemaName}].[{ViewName}]", errorMessage, schemaName, viewName);
         }
         else
         {
@@ -185,7 +212,8 @@ public abstract class CommandHandler<TOptions>(
         var storedProcedure = semanticModel.FindStoredProcedure(schemaName, storedProcedureName);
         if (storedProcedure == null)
         {
-            _logger.LogError("{ErrorMessage} [{SchemaName}].[{StoredProcedureName}]", _resourceManagerErrorMessages.GetString("StoredProcedureNotFound"), schemaName, storedProcedureName);
+            var errorMessage = _resourceManagerErrorMessages.GetString("StoredProcedureNotFound") ?? "Stored procedure not found";
+            _logger.LogError("{ErrorMessage} [{SchemaName}].[{StoredProcedureName}]", errorMessage, schemaName, storedProcedureName);
         }
         else
         {
