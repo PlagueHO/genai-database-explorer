@@ -126,6 +126,7 @@ public class SemanticModelSettings
 {
     public const string PropertyName = "SemanticModel";
     
+    // Default persistence strategy is LocalDisk
     [Required, NotEmptyOrWhitespace]
     public string PersistenceStrategy { get; set; } = "LocalDisk";
     
@@ -143,8 +144,9 @@ public class SemanticModelRepositorySettings
 
 public class LocalDiskConfiguration
 {
+    // If Directory is not set, it will automatically default to "SemanticModel"
     [Required, NotEmptyOrWhitespace]
-    public required string Directory { get; set; } = "SemanticModel";
+    public string Directory { get; set; } = "SemanticModel";
 }
 
 public class AzureBlobStorageConfiguration

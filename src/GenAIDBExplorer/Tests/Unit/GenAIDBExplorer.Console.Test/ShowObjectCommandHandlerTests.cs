@@ -38,7 +38,8 @@ public class ShowObjectCommandHandlerTests
             Database = new DatabaseSettings { Name = "TestDatabase" },
             DataDictionary = new DataDictionarySettings(),
             SemanticModel = new SemanticModelSettings(),
-            OpenAIService = new OpenAIServiceSettings()
+            OpenAIService = new OpenAIServiceSettings(),
+            SemanticModelRepository = new SemanticModelRepositorySettings()
         };
 
         _mockProject.Setup(p => p.Settings).Returns(mockProjectSettings);

@@ -18,7 +18,6 @@ public class ProjectSettings
     /// </summary>
     public required DatabaseSettings Database { get; set; }
 
-
     /// <summary>
     /// Gets or sets the data dictionary settings.
     /// </summary>
@@ -33,4 +32,9 @@ public class ProjectSettings
     /// Gets or sets the semantic model settings.
     /// </summary>
     public required SemanticModelSettings SemanticModel { get; set; }
+
+    /// <summary>
+    /// Gets or sets the semantic model repository settings.
+    /// </summary>
+    public required SemanticModelRepositorySettings SemanticModelRepository { get; set; }
 }

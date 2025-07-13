@@ -36,7 +36,7 @@ The `settings.json` file contains configuration settings for the project, such a
 
 The settings file supports three persistence strategies for semantic model storage:
 
-- **LocalDisk**: Stores semantic models in a local directory (development scenarios)
+- **LocalDisk**: Stores semantic models in a local directory (development scenarios) - Default strategy.
 - **AzureBlob**: Stores semantic models in Azure Blob Storage (cloud scenarios)  
 - **Cosmos**: Stores semantic models in Azure Cosmos DB (global scale scenarios)
 
@@ -45,7 +45,7 @@ Each persistence strategy has its own dedicated configuration section under `Sem
 ```json
 {
     "SemanticModel": {
-        "PersistenceStrategy": "LocalDisk",
+        "PersistenceStrategy": "LocalDisk", // Default strategy is LocalDisk
         "MaxDegreeOfParallelism": 10
     },
     "SemanticModelRepository": {

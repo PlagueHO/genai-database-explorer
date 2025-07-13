@@ -9,7 +9,6 @@ using GenAIDBExplorer.Core.SemanticKernel;
 using GenAIDBExplorer.Core.SemanticModelProviders;
 using GenAIDBExplorer.Core.SemanticProviders;
 using GenAIDBExplorer.Core.Repository;
-using GenAIDBExplorer.Core.Repository.Configuration;
 using GenAIDBExplorer.Core.Repository.Caching;
 using GenAIDBExplorer.Core.Repository.Performance;
 using GenAIDBExplorer.Core.Repository.Security;
@@ -57,9 +56,11 @@ public static class HostBuilderExtensions
             {
                 // Configure Azure persistence strategy options
                 services.Configure<AzureBlobStorageConfiguration>(
-                    context.Configuration.GetSection("AzureBlobStorage"));
+                    context.Configuration.GetSection(AzureBlobStorageConfiguration.SectionName));
                 services.Configure<CosmosDbConfiguration>(
-                    context.Configuration.GetSection("CosmosDb"));
+                    context.Configuration.GetSection(CosmosDbConfiguration.SectionName));
+                services.Configure<LocalDiskConfiguration>(
+                    context.Configuration.GetSection(LocalDiskConfiguration.SectionName));
 
                 // Configure caching options for Phase 5a: Basic Caching Foundation
                 services.Configure<CacheOptions>(

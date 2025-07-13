@@ -50,6 +50,13 @@ public class SemanticModelProviderTests
             SemanticModel = new SemanticModelSettings
             {
                 MaxDegreeOfParallelism = 2
+            },
+            SemanticModelRepository = new SemanticModelRepositorySettings
+            {
+                LocalDisk = new LocalDiskConfiguration
+                {
+                    Directory = "SemanticModel"
+                }
             }
         };
 

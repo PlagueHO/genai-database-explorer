@@ -77,7 +77,8 @@ public class Project(
             Database = new DatabaseSettings(),
             DataDictionary = new DataDictionarySettings(),
             SemanticModel = new SemanticModelSettings(),
-            OpenAIService = new OpenAIServiceSettings()
+            OpenAIService = new OpenAIServiceSettings(),
+            SemanticModelRepository = new SemanticModelRepositorySettings()
         };
 
         // Read the SettingsVersion
@@ -87,6 +88,7 @@ public class Project(
         _configuration?.GetSection(DataDictionarySettings.PropertyName).Bind(Settings.DataDictionary);
         _configuration?.GetSection(SemanticModelSettings.PropertyName).Bind(Settings.SemanticModel);
         _configuration?.GetSection(OpenAIServiceSettings.PropertyName).Bind(Settings.OpenAIService);
+        _configuration?.GetSection(SemanticModelRepositorySettings.PropertyName).Bind(Settings.SemanticModelRepository);
 
         ValidateSettings();
     }
@@ -110,10 +112,58 @@ public class Project(
         Validator.ValidateObject(Settings.SemanticModel, validationContext, validateAllProperties: true);
         logger.LogInformation("{Message} '{Section}'", _resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "SemanticModel");
 
+        // Validate persistence strategy-specific configuration
+        ValidatePersistenceStrategyConfiguration();
+
+        validationContext = new ValidationContext(Settings.SemanticModelRepository);
+        Validator.ValidateObject(Settings.SemanticModelRepository, validationContext, validateAllProperties: true);
+        logger.LogInformation("{Message} '{Section}'", _resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "SemanticModelRepository");
+
         validationContext = new ValidationContext(Settings.OpenAIService);
         Validator.ValidateObject(Settings.OpenAIService, validationContext, validateAllProperties: true);
         logger.LogInformation("{Message} '{Section}'", _resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "OpenAIService");
 
         logger.LogInformation("{Message}", _resourceManagerLogMessages.GetString("ProjectSettingsValidationCompleted"));
+    }
+
+    /// <summary>
+    /// Validates that the appropriate configuration exists for the selected persistence strategy.
+    /// </summary>
+    private void ValidatePersistenceStrategyConfiguration()
+    {
+        var strategy = Settings.SemanticModel.PersistenceStrategy;
+        
+        switch (strategy?.ToLowerInvariant())
+        {
+            case "localdisk":
+                if (Settings.SemanticModelRepository.LocalDisk == null)
+                {
+                    throw new ValidationException("LocalDisk configuration is required when PersistenceStrategy is 'LocalDisk'.");
+                }
+                var localDiskContext = new ValidationContext(Settings.SemanticModelRepository.LocalDisk);
+                Validator.ValidateObject(Settings.SemanticModelRepository.LocalDisk, localDiskContext, validateAllProperties: true);
+                break;
+
+            case "azureblob":
+                if (Settings.SemanticModelRepository.AzureBlobStorage == null)
+                {
+                    throw new ValidationException("AzureBlobStorage configuration is required when PersistenceStrategy is 'AzureBlob'.");
+                }
+                var azureBlobContext = new ValidationContext(Settings.SemanticModelRepository.AzureBlobStorage);
+                Validator.ValidateObject(Settings.SemanticModelRepository.AzureBlobStorage, azureBlobContext, validateAllProperties: true);
+                break;
+
+            case "cosmos":
+                if (Settings.SemanticModelRepository.CosmosDb == null)
+                {
+                    throw new ValidationException("CosmosDb configuration is required when PersistenceStrategy is 'Cosmos'.");
+                }
+                var cosmosContext = new ValidationContext(Settings.SemanticModelRepository.CosmosDb);
+                Validator.ValidateObject(Settings.SemanticModelRepository.CosmosDb, cosmosContext, validateAllProperties: true);
+                break;
+
+            default:
+                throw new ValidationException($"Invalid PersistenceStrategy '{strategy}'. Valid values are: LocalDisk, AzureBlob, Cosmos.");
+        }
     }
 }

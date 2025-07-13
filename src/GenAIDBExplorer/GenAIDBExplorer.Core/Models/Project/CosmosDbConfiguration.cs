@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace GenAIDBExplorer.Core.Repository.Configuration;
+namespace GenAIDBExplorer.Core.Models.Project;
 
 /// <summary>
 /// Configuration options for Cosmos DB persistence strategy.
