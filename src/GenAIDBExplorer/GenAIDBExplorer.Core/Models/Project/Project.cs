@@ -44,7 +44,19 @@ public class Project(
             throw new InvalidOperationException(_resourceManagerErrorMessages.GetString("ErrorProjectFolderNotEmpty"));
         }
 
-        var defaultProjectDirectory = new DirectoryInfo("DefaultProject");
+        var defaultProjectPath = Path.Combine(AppContext.BaseDirectory, "DefaultProject");
+        var defaultProjectDirectory = new DirectoryInfo(defaultProjectPath);
+        
+        logger.LogDebug("Looking for DefaultProject directory at: {DefaultProjectPath}", defaultProjectPath);
+        
+        if (!defaultProjectDirectory.Exists)
+        {
+            var errorMessage = $"DefaultProject directory not found at: {defaultProjectPath}";
+            logger.LogError("{ErrorMessage}", errorMessage);
+            throw new DirectoryNotFoundException(errorMessage);
+        }
+        
+        logger.LogDebug("Copying DefaultProject from {SourcePath} to {DestinationPath}", defaultProjectPath, projectDirectory.FullName);
         ProjectUtils.CopyDirectory(defaultProjectDirectory, projectDirectory);
     }
 
