@@ -99,7 +99,15 @@ public static class HostBuilderExtensions
                 services.AddSingleton<ISchemaRepository, SchemaRepository>();
 
                 // Register the Semantic Model provider
-                services.AddSingleton<ISemanticModelProvider, SemanticModelProvider>();
+                services.AddSingleton<ISemanticModelProvider>(provider =>
+                {
+                    var project = provider.GetRequiredService<IProject>();
+                    var schemaRepository = provider.GetRequiredService<ISchemaRepository>();
+                    var logger = provider.GetRequiredService<ILogger<SemanticModelProvider>>();
+                    var semanticModelRepository = provider.GetRequiredService<ISemanticModelRepository>();
+
+                    return new SemanticModelProvider(project, schemaRepository, logger, semanticModelRepository);
+                });
 
                 // Register the Semantic Description provider
                 services.AddSingleton<ISemanticDescriptionProvider, SemanticDescriptionProvider>();
@@ -148,11 +156,9 @@ public static class HostBuilderExtensions
                 // Register performance monitoring services (basic implementation, extensible for OpenTelemetry)
                 services.AddSingleton<IPerformanceMonitor, PerformanceMonitor>();
 
-                // Register persistence strategy factory and repository
+                // SEmantic Repository Repository, Options Builders and persistence strategies
                 services.AddSingleton<IPersistenceStrategyFactory, PersistenceStrategyFactory>();
                 services.AddSingleton<ISemanticModelRepository, SemanticModelRepository>();
-
-                // Register builder services for Phase 5d: Immutable Builder Pattern
                 services.AddTransient<ISemanticModelRepositoryOptionsBuilder>(provider =>
                     SemanticModelRepositoryOptionsBuilder.Create());
                 services.AddTransient<IPerformanceMonitoringOptionsBuilder>(provider =>

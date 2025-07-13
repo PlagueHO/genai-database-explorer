@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using GenAIDBExplorer.Core.Repository;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace GenAIDBExplorer.Core.Repository
 {
@@ -18,23 +19,28 @@ namespace GenAIDBExplorer.Core.Repository
         {
             _serviceProvider = serviceProvider;
             _configuration = configuration;
-            _strategies = new Dictionary<string, ISemanticModelPersistenceStrategy>(StringComparer.OrdinalIgnoreCase)
-            {
-                { "LocalDisk", (ISemanticModelPersistenceStrategy)serviceProvider.GetService(typeof(ILocalDiskPersistenceStrategy))! },
-                { "AzureBlob", (ISemanticModelPersistenceStrategy)serviceProvider.GetService(typeof(IAzureBlobPersistenceStrategy))! },
-                { "Cosmos", (ISemanticModelPersistenceStrategy)serviceProvider.GetService(typeof(ICosmosPersistenceStrategy))! }
-            };
+            _strategies = new Dictionary<string, ISemanticModelPersistenceStrategy>(StringComparer.OrdinalIgnoreCase);
         }
 
         public ISemanticModelPersistenceStrategy GetStrategy(string? strategyName = null)
         {
             var name = strategyName ?? _configuration["PersistenceStrategy"] ?? "LocalDisk";
-            if (_strategies.TryGetValue(name, out var strategy))
+
+            // Lazy-load strategies only when requested
+            if (!_strategies.TryGetValue(name, out var strategy))
             {
-                return strategy;
+                strategy = name.ToLowerInvariant() switch
+                {
+                    "localdisk" => (ISemanticModelPersistenceStrategy)(_serviceProvider.GetService(typeof(ILocalDiskPersistenceStrategy)) ?? throw new InvalidOperationException("LocalDiskPersistenceStrategy service not registered")),
+                    "azureblob" => (ISemanticModelPersistenceStrategy)(_serviceProvider.GetService(typeof(IAzureBlobPersistenceStrategy)) ?? throw new InvalidOperationException("AzureBlobPersistenceStrategy service not registered")),
+                    "cosmos" => (ISemanticModelPersistenceStrategy)(_serviceProvider.GetService(typeof(ICosmosPersistenceStrategy)) ?? throw new InvalidOperationException("CosmosPersistenceStrategy service not registered")),
+                    _ => throw new ArgumentException($"Persistence strategy '{name}' is not supported.", nameof(strategyName))
+                };
+
+                _strategies[name] = strategy;
             }
 
-            throw new ArgumentException($"Persistence strategy '{name}' is not registered.", nameof(strategyName));
+            return strategy;
         }
     }
 }

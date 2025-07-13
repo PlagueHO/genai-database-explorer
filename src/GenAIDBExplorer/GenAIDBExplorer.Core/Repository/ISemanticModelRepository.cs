@@ -21,36 +21,9 @@ namespace GenAIDBExplorer.Core.Repository
         Task SaveChangesAsync(SemanticModel model, DirectoryInfo modelPath, string? strategyName = null);
 
         /// <summary>
-        /// Loads the semantic model using the specified persistence strategy.
+        /// Loads the semantic model using default options (no lazy loading, change tracking, or caching).
         /// </summary>
         Task<SemanticModel> LoadModelAsync(DirectoryInfo modelPath, string? strategyName = null);
-
-        /// <summary>
-        /// Loads the semantic model with optional lazy loading for entity collections.
-        /// </summary>
-        /// <param name="modelPath">The path to load the model from.</param>
-        /// <param name="enableLazyLoading">Whether to enable lazy loading for entity collections.</param>
-        /// <param name="strategyName">Optional strategy name to use for loading.</param>
-        Task<SemanticModel> LoadModelAsync(DirectoryInfo modelPath, bool enableLazyLoading, string? strategyName = null);
-
-        /// <summary>
-        /// Loads the semantic model with optional lazy loading and change tracking.
-        /// </summary>
-        /// <param name="modelPath">The path to load the model from.</param>
-        /// <param name="enableLazyLoading">Whether to enable lazy loading for entity collections.</param>
-        /// <param name="enableChangeTracking">Whether to enable change tracking for the model.</param>
-        /// <param name="strategyName">Optional strategy name to use for loading.</param>
-        Task<SemanticModel> LoadModelAsync(DirectoryInfo modelPath, bool enableLazyLoading, bool enableChangeTracking, string? strategyName = null);
-
-        /// <summary>
-        /// Loads the semantic model with optional lazy loading, change tracking, and caching.
-        /// </summary>
-        /// <param name="modelPath">The path to load the model from.</param>
-        /// <param name="enableLazyLoading">Whether to enable lazy loading for entity collections.</param>
-        /// <param name="enableChangeTracking">Whether to enable change tracking for the model.</param>
-        /// <param name="enableCaching">Whether to use caching for loading and storing the model.</param>
-        /// <param name="strategyName">Optional strategy name to use for loading.</param>
-        Task<SemanticModel> LoadModelAsync(DirectoryInfo modelPath, bool enableLazyLoading, bool enableChangeTracking, bool enableCaching, string? strategyName = null);
 
         /// <summary>
         /// Loads the semantic model using immutable options configuration.

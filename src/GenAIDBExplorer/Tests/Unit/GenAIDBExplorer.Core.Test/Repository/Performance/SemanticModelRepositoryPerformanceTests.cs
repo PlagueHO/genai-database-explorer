@@ -204,8 +204,14 @@ public sealed class SemanticModelRepositoryPerformanceTests
         _mockStrategy.Setup(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()))
             .ReturnsAsync(semanticModel);
 
+        var options = SemanticModelRepositoryOptionsBuilder.Create()
+            .WithLazyLoading()
+            .WithChangeTracking()
+            .WithStrategyName("testStrategy")
+            .Build();
+
         // Act
-        await _repository.LoadModelAsync(_testDirectory, enableLazyLoading: true, enableChangeTracking: true, enableCaching: false, "testStrategy");
+        await _repository.LoadModelAsync(_testDirectory, options);
 
         // Assert
         var statistics = await _performanceMonitor.GetOperationStatisticsAsync("LoadModel");

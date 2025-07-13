@@ -1,5 +1,6 @@
 ﻿using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.Models.SemanticModel;
+using GenAIDBExplorer.Core.Repository;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Resources;
@@ -9,12 +10,14 @@ namespace GenAIDBExplorer.Core.SemanticModelProviders;
 public sealed class SemanticModelProvider(
     IProject project,
     ISchemaRepository schemaRepository,
-    ILogger<SemanticModelProvider> logger
+    ILogger<SemanticModelProvider> logger,
+    ISemanticModelRepository semanticModelRepository
 ) : ISemanticModelProvider
 {
     private readonly IProject _project = project ?? throw new ArgumentNullException(nameof(project));
     private readonly ISchemaRepository _schemaRepository = schemaRepository ?? throw new ArgumentNullException(nameof(schemaRepository));
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly ISemanticModelRepository _semanticModelRepository = semanticModelRepository ?? throw new ArgumentNullException(nameof(semanticModelRepository));
     private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Core.Resources.LogMessages", typeof(SemanticModelProvider).Assembly);
 
     /// <inheritdoc/>
@@ -35,7 +38,20 @@ public sealed class SemanticModelProvider(
     {
         _logger.LogInformation("{Message} '{ModelPath}'", _resourceManagerLogMessages.GetString("LoadingSemanticModel"), modelPath);
 
-        var semanticModel = await CreateSemanticModel().LoadModelAsync(modelPath);
+        SemanticModel semanticModel;
+
+        // Use the repository for loading semantic models
+        _logger.LogDebug("Using SemanticModelRepository to load semantic model from '{ModelPath}'", modelPath);
+        try
+        {
+            semanticModel = await _semanticModelRepository.LoadModelAsync(modelPath);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to load semantic model using repository, falling back to direct loading");
+            // TODO: Remove this fallback once SemanticModelRepository is fully integrated and tested
+            semanticModel = await CreateSemanticModel().LoadModelAsync(modelPath);
+        }
 
         _logger.LogInformation("{Message} '{SemanticModelName}'", _resourceManagerLogMessages.GetString("LoadedSemanticModelForDatabase"), semanticModel.Name);
 

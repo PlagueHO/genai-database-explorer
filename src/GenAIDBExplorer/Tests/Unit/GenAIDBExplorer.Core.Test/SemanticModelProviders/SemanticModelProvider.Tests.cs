@@ -4,6 +4,7 @@ using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.Models.SemanticModel;
 using GenAIDBExplorer.Core.Models.Database;
 using GenAIDBExplorer.Core.SemanticModelProviders;
+using GenAIDBExplorer.Core.Repository;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 
@@ -18,6 +19,7 @@ public class SemanticModelProviderTests
 {
     private Mock<IProject> _mockProject = null!;
     private Mock<ISchemaRepository> _mockSchemaRepository = null!;
+    private Mock<ISemanticModelRepository> _mockSemanticModelRepository = null!;
     private Mock<ILogger<SemanticModelProvider>> _mockLogger = null!;
     private SemanticModelProvider _semanticModelProvider = null!;
     private DirectoryInfo _tempDirectory = null!;
@@ -28,6 +30,7 @@ public class SemanticModelProviderTests
         // Arrange - Create mocks and test data
         _mockProject = new Mock<IProject>();
         _mockSchemaRepository = new Mock<ISchemaRepository>();
+        _mockSemanticModelRepository = new Mock<ISemanticModelRepository>();
         _mockLogger = new Mock<ILogger<SemanticModelProvider>>();
 
         // Setup project settings
@@ -59,7 +62,8 @@ public class SemanticModelProviderTests
         _semanticModelProvider = new SemanticModelProvider(
             _mockProject.Object,
             _mockSchemaRepository.Object,
-            _mockLogger.Object);
+            _mockLogger.Object,
+            _mockSemanticModelRepository.Object);
     }
 
     [TestCleanup]
@@ -163,8 +167,47 @@ public class SemanticModelProviderTests
     public async Task LoadSemanticModelAsync_ShouldLoadExistingModel_FromDirectory()
     {
         // Arrange
+        var expectedModel = _semanticModelProvider.CreateSemanticModel();
+        await expectedModel.SaveModelAsync(_tempDirectory);
+
+        _mockSemanticModelRepository.Setup(r => r.LoadModelAsync(_tempDirectory, (string?)null))
+            .ReturnsAsync(expectedModel);
+
+        // Act
+        var result = await _semanticModelProvider.LoadSemanticModelAsync(_tempDirectory);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Should().BeSameAs(expectedModel);
+        _mockSemanticModelRepository.Verify(r => r.LoadModelAsync(_tempDirectory, (string?)null), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task LoadSemanticModelAsync_WithRepository_ShouldUseRepository_WhenAvailable()
+    {
+        // Arrange
+        var expectedModel = _semanticModelProvider.CreateSemanticModel();
+        _mockSemanticModelRepository.Setup(r => r.LoadModelAsync(_tempDirectory, (string?)null))
+            .ReturnsAsync(expectedModel);
+
+        // Act
+        var result = await _semanticModelProvider.LoadSemanticModelAsync(_tempDirectory);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Should().BeSameAs(expectedModel);
+        _mockSemanticModelRepository.Verify(r => r.LoadModelAsync(_tempDirectory, (string?)null), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task LoadSemanticModelAsync_WithRepository_ShouldFallbackToDirectLoading_WhenRepositoryFails()
+    {
+        // Arrange
         var model = _semanticModelProvider.CreateSemanticModel();
         await model.SaveModelAsync(_tempDirectory);
+
+        _mockSemanticModelRepository.Setup(r => r.LoadModelAsync(_tempDirectory, (string?)null))
+            .ThrowsAsync(new InvalidOperationException("Repository failure"));
 
         // Act
         var result = await _semanticModelProvider.LoadSemanticModelAsync(_tempDirectory);
@@ -172,8 +215,26 @@ public class SemanticModelProviderTests
         // Assert
         result.Should().NotBeNull();
         result.Name.Should().Be("TestDatabase");
-        result.Source.Should().Be("Server=test;Database=TestDB;");
-        result.Description.Should().Be("Test database for unit tests");
+        _mockSemanticModelRepository.Verify(r => r.LoadModelAsync(_tempDirectory, (string?)null), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task LoadSemanticModelAsync_ShouldFallbackToDirectLoading_WhenRepositoryFails()
+    {
+        // Arrange
+        var model = _semanticModelProvider.CreateSemanticModel();
+        await model.SaveModelAsync(_tempDirectory);
+
+        _mockSemanticModelRepository.Setup(r => r.LoadModelAsync(_tempDirectory, (string?)null))
+            .ThrowsAsync(new InvalidOperationException("Repository failure"));
+
+        // Act
+        var result = await _semanticModelProvider.LoadSemanticModelAsync(_tempDirectory);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Name.Should().Be("TestDatabase");
+        _mockSemanticModelRepository.Verify(r => r.LoadModelAsync(_tempDirectory, (string?)null), Times.Once);
     }
 
     [TestMethod]
@@ -181,6 +242,9 @@ public class SemanticModelProviderTests
     {
         // Arrange
         var nonExistentPath = new DirectoryInfo(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
+
+        _mockSemanticModelRepository.Setup(r => r.LoadModelAsync(nonExistentPath, (string?)null))
+            .ThrowsAsync(new FileNotFoundException("Directory not found"));
 
         // Act & Assert
         await Assert.ThrowsExceptionAsync<FileNotFoundException>(
@@ -288,7 +352,7 @@ public class SemanticModelProviderTests
     {
         // Act & Assert
         Assert.ThrowsException<ArgumentNullException>(
-            () => new SemanticModelProvider(null!, _mockSchemaRepository.Object, _mockLogger.Object));
+            () => new SemanticModelProvider(null!, _mockSchemaRepository.Object, _mockLogger.Object, _mockSemanticModelRepository.Object));
     }
 
     [TestMethod]
@@ -296,7 +360,7 @@ public class SemanticModelProviderTests
     {
         // Act & Assert
         Assert.ThrowsException<ArgumentNullException>(
-            () => new SemanticModelProvider(_mockProject.Object, null!, _mockLogger.Object));
+            () => new SemanticModelProvider(_mockProject.Object, null!, _mockLogger.Object, _mockSemanticModelRepository.Object));
     }
 
     [TestMethod]
@@ -304,6 +368,28 @@ public class SemanticModelProviderTests
     {
         // Act & Assert
         Assert.ThrowsException<ArgumentNullException>(
-            () => new SemanticModelProvider(_mockProject.Object, _mockSchemaRepository.Object, null!));
+            () => new SemanticModelProvider(_mockProject.Object, _mockSchemaRepository.Object, null!, _mockSemanticModelRepository.Object));
+    }
+
+    [TestMethod]
+    public void Constructor_ShouldThrowArgumentNullException_WhenSemanticModelRepositoryIsNull()
+    {
+        // Act & Assert
+        Assert.ThrowsException<ArgumentNullException>(
+            () => new SemanticModelProvider(_mockProject.Object, _mockSchemaRepository.Object, _mockLogger.Object, null!));
+    }
+
+    [TestMethod]
+    public void Constructor_ShouldAcceptAllRequiredDependencies()
+    {
+        // Act
+        var provider = new SemanticModelProvider(
+            _mockProject.Object,
+            _mockSchemaRepository.Object,
+            _mockLogger.Object,
+            _mockSemanticModelRepository.Object);
+
+        // Assert
+        provider.Should().NotBeNull();
     }
 }

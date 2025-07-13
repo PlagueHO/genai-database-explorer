@@ -66,7 +66,11 @@ public class SemanticModelRepositoryChangeTrackingTests
             .ReturnsAsync(expectedModel);
 
         // Act
-        var result = await _repository!.LoadModelAsync(_testModelPath!, enableLazyLoading: false, enableChangeTracking: true);
+        var options = SemanticModelRepositoryOptionsBuilder.Create()
+            .WithChangeTracking()
+            .Build();
+
+        var result = await _repository!.LoadModelAsync(_testModelPath!, options);
 
         // Assert
         result.Should().NotBeNull();
@@ -84,7 +88,10 @@ public class SemanticModelRepositoryChangeTrackingTests
             .ReturnsAsync(expectedModel);
 
         // Act
-        var result = await _repository!.LoadModelAsync(_testModelPath!, enableLazyLoading: false, enableChangeTracking: false);
+        var options = SemanticModelRepositoryOptionsBuilder.Create()
+            .Build(); // Default is change tracking disabled
+
+        var result = await _repository!.LoadModelAsync(_testModelPath!, options);
 
         // Assert
         result.Should().NotBeNull();
@@ -102,7 +109,12 @@ public class SemanticModelRepositoryChangeTrackingTests
             .ReturnsAsync(expectedModel);
 
         // Act
-        var result = await _repository!.LoadModelAsync(_testModelPath!, enableLazyLoading: true, enableChangeTracking: true);
+        var options = SemanticModelRepositoryOptionsBuilder.Create()
+            .WithLazyLoading()
+            .WithChangeTracking()
+            .Build();
+
+        var result = await _repository!.LoadModelAsync(_testModelPath!, options);
 
         // Assert
         result.Should().NotBeNull();
@@ -211,7 +223,11 @@ public class SemanticModelRepositoryChangeTrackingTests
         _mockStrategy!.Setup(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()))
             .ReturnsAsync(expectedModel);
 
-        var model = await _repository!.LoadModelAsync(_testModelPath!, enableLazyLoading: false, enableChangeTracking: true);
+        var options = SemanticModelRepositoryOptionsBuilder.Create()
+            .WithChangeTracking()
+            .Build();
+
+        var model = await _repository!.LoadModelAsync(_testModelPath!, options);
 
         // Act & Assert - Adding entities should mark them as dirty
         var testTable = new SemanticModelTable("TestSchema", "TestTable");
@@ -246,7 +262,11 @@ public class SemanticModelRepositoryChangeTrackingTests
         _mockStrategy!.Setup(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()))
             .ReturnsAsync(expectedModel);
 
-        var model = await _repository!.LoadModelAsync(_testModelPath!, enableLazyLoading: false, enableChangeTracking: true);
+        var options = SemanticModelRepositoryOptionsBuilder.Create()
+            .WithChangeTracking()
+            .Build();
+
+        var model = await _repository!.LoadModelAsync(_testModelPath!, options);
 
         var testTable = new SemanticModelTable("TestSchema", "TestTable");
         model.AddTable(testTable);

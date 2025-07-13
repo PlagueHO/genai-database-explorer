@@ -48,30 +48,26 @@ namespace GenAIDBExplorer.Core.Repository
 
         public Task<SemanticModel> LoadModelAsync(DirectoryInfo modelPath, string? strategyName = null)
         {
-            return LoadModelAsync(modelPath, enableLazyLoading: false, strategyName);
+            // Use default options (no lazy loading, change tracking, or caching)
+            var defaultOptions = new SemanticModelRepositoryOptions
+            {
+                StrategyName = strategyName
+            };
+            return LoadModelAsync(modelPath, defaultOptions);
         }
 
-        public async Task<SemanticModel> LoadModelAsync(DirectoryInfo modelPath, bool enableLazyLoading, string? strategyName = null)
+        public async Task<SemanticModel> LoadModelAsync(DirectoryInfo modelPath, SemanticModelRepositoryOptions options)
         {
-            return await LoadModelAsync(modelPath, enableLazyLoading, enableChangeTracking: false, strategyName);
-        }
-
-        public async Task<SemanticModel> LoadModelAsync(DirectoryInfo modelPath, bool enableLazyLoading, bool enableChangeTracking, string? strategyName = null)
-        {
-            return await LoadModelAsync(modelPath, enableLazyLoading, enableChangeTracking, enableCaching: false, strategyName);
-        }
-
-        public async Task<SemanticModel> LoadModelAsync(DirectoryInfo modelPath, bool enableLazyLoading, bool enableChangeTracking, bool enableCaching, string? strategyName = null)
-        {
+            ArgumentNullException.ThrowIfNull(options);
             ObjectDisposedException.ThrowIf(_disposed, this);
 
             using var performanceContext = _performanceMonitor?.StartOperation("LoadModel", new Dictionary<string, object>
             {
                 ["ModelPath"] = modelPath.FullName,
-                ["EnableLazyLoading"] = enableLazyLoading,
-                ["EnableChangeTracking"] = enableChangeTracking,
-                ["EnableCaching"] = enableCaching,
-                ["StrategyName"] = strategyName ?? "default"
+                ["EnableLazyLoading"] = options.EnableLazyLoading,
+                ["EnableChangeTracking"] = options.EnableChangeTracking,
+                ["EnableCaching"] = options.EnableCaching,
+                ["StrategyName"] = options.StrategyName ?? "default"
             });
 
             try
@@ -82,12 +78,12 @@ namespace GenAIDBExplorer.Core.Repository
                 {
                     SemanticModel? model = null;
                     string? cacheKey = null;
-                    var strategy = _strategyFactory.GetStrategy(strategyName);
+                    var strategy = _strategyFactory.GetStrategy(options.StrategyName);
 
                     // Try to load from cache if caching is enabled and cache is available
-                    if (enableCaching && _cache != null)
+                    if (options.EnableCaching && _cache != null)
                     {
-                        cacheKey = GenerateCacheKey(sanitizedPath, strategyName);
+                        cacheKey = GenerateCacheKey(sanitizedPath, options.StrategyName);
                         _logger?.LogDebug("Attempting to load model from cache with key: {CacheKey}", cacheKey);
 
                         try
@@ -99,12 +95,12 @@ namespace GenAIDBExplorer.Core.Repository
                                 performanceContext?.AddMetadata("LoadedFromCache", true);
 
                                 // Apply lazy loading and change tracking to cached model if requested
-                                if (enableLazyLoading && !model.IsLazyLoadingEnabled)
+                                if (options.EnableLazyLoading && !model.IsLazyLoadingEnabled)
                                 {
                                     model.EnableLazyLoading(new DirectoryInfo(sanitizedPath), strategy);
                                 }
 
-                                if (enableChangeTracking && !model.IsChangeTrackingEnabled)
+                                if (options.EnableChangeTracking && !model.IsChangeTrackingEnabled)
                                 {
                                     var changeTrackerLogger = _loggerFactory?.CreateLogger<ChangeTracker>();
                                     var changeTracker = new ChangeTracker(changeTrackerLogger);
@@ -127,13 +123,13 @@ namespace GenAIDBExplorer.Core.Repository
 
                     model = await strategy.LoadModelAsync(new DirectoryInfo(sanitizedPath));
 
-                    if (enableLazyLoading)
+                    if (options.EnableLazyLoading)
                     {
                         _logger?.LogDebug("Enabling lazy loading for semantic model at {ModelPath}", sanitizedPath);
                         model.EnableLazyLoading(new DirectoryInfo(sanitizedPath), strategy);
                     }
 
-                    if (enableChangeTracking)
+                    if (options.EnableChangeTracking)
                     {
                         _logger?.LogDebug("Enabling change tracking for semantic model at {ModelPath}", sanitizedPath);
                         var changeTrackerLogger = _loggerFactory?.CreateLogger<ChangeTracker>();
@@ -142,7 +138,7 @@ namespace GenAIDBExplorer.Core.Repository
                     }
 
                     // Store in cache if caching is enabled and cache is available
-                    if (enableCaching && _cache != null && cacheKey != null)
+                    if (options.EnableCaching && _cache != null && cacheKey != null)
                     {
                         _logger?.LogDebug("Storing model in cache with key: {CacheKey}", cacheKey);
                         try
@@ -163,18 +159,6 @@ namespace GenAIDBExplorer.Core.Repository
                 performanceContext?.MarkAsFailed(ex.Message);
                 throw;
             }
-        }
-
-        public async Task<SemanticModel> LoadModelAsync(DirectoryInfo modelPath, SemanticModelRepositoryOptions options)
-        {
-            ArgumentNullException.ThrowIfNull(options);
-
-            return await LoadModelAsync(
-                modelPath,
-                options.EnableLazyLoading,
-                options.EnableChangeTracking,
-                options.EnableCaching,
-                options.StrategyName);
         }
 
         public async Task SaveModelAsync(SemanticModel model, DirectoryInfo modelPath, string? strategyName = null)

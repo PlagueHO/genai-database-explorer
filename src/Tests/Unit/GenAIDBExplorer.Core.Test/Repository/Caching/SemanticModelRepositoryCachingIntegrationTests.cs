@@ -5,6 +5,7 @@ using FluentAssertions;
 using GenAIDBExplorer.Core.Models.SemanticModel;
 using GenAIDBExplorer.Core.Repository;
 using GenAIDBExplorer.Core.Repository.Caching;
+using GenAIDBExplorer.Core.Repository.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -69,8 +70,12 @@ public class SemanticModelRepositoryCachingIntegrationTests
         _mockCache.Setup(x => x.GetAsync(It.IsAny<string>()))
             .ReturnsAsync(model);
 
+        var options = SemanticModelRepositoryOptionsBuilder.Create()
+            .WithCaching()
+            .Build();
+
         // Act
-        var result = await _repository.LoadModelAsync(_testDirectory, false, false, true);
+        var result = await _repository.LoadModelAsync(_testDirectory, options);
 
         // Assert
         result.Should().NotBeNull();
