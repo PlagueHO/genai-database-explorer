@@ -34,8 +34,6 @@ internal static class Program
         rootCommand.Subcommands.Add(QueryModelCommandHandler.SetupCommand(host));
         rootCommand.Subcommands.Add(ShowObjectCommandHandler.SetupCommand(host));
 
-        // For beta5, the pattern might be different - let me try parsing and executing directly
-        // Since we can't find the right invocation method, let's try command line argument parsing 
         try
         {
             await rootCommand.Parse(args).InvokeAsync();
