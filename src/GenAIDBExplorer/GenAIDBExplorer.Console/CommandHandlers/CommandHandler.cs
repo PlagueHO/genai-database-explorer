@@ -177,9 +177,9 @@ public abstract class CommandHandler<TOptions>(
         return new DirectoryInfo(Path.Combine(projectPath.FullName, localDiskConfig.Directory));
     }
 
-    protected Task ShowTableDetailsAsync(SemanticModel semanticModel, string schemaName, string tableName)
+    protected async Task ShowTableDetailsAsync(SemanticModel semanticModel, string schemaName, string tableName)
     {
-        var table = semanticModel.FindTable(schemaName, tableName);
+        var table = await semanticModel.FindTableAsync(schemaName, tableName);
         if (table == null)
         {
             var errorMessage = _resourceManagerErrorMessages.GetString("TableNotFound") ?? "Table not found";
@@ -189,12 +189,11 @@ public abstract class CommandHandler<TOptions>(
         {
             OutputInformation(table.ToString());
         }
-        return Task.CompletedTask;
     }
 
-    protected Task ShowViewDetailsAsync(SemanticModel semanticModel, string schemaName, string viewName)
+    protected async Task ShowViewDetailsAsync(SemanticModel semanticModel, string schemaName, string viewName)
     {
-        var view = semanticModel.FindView(schemaName, viewName);
+        var view = await semanticModel.FindViewAsync(schemaName, viewName);
         if (view == null)
         {
             var errorMessage = _resourceManagerErrorMessages.GetString("ViewNotFound") ?? "View not found";
@@ -204,12 +203,11 @@ public abstract class CommandHandler<TOptions>(
         {
             OutputInformation(view.ToString());
         }
-        return Task.CompletedTask;
     }
 
-    protected Task ShowStoredProcedureDetailsAsync(SemanticModel semanticModel, string schemaName, string storedProcedureName)
+    protected async Task ShowStoredProcedureDetailsAsync(SemanticModel semanticModel, string schemaName, string storedProcedureName)
     {
-        var storedProcedure = semanticModel.FindStoredProcedure(schemaName, storedProcedureName);
+        var storedProcedure = await semanticModel.FindStoredProcedureAsync(schemaName, storedProcedureName);
         if (storedProcedure == null)
         {
             var errorMessage = _resourceManagerErrorMessages.GetString("StoredProcedureNotFound") ?? "Stored procedure not found";
@@ -219,6 +217,5 @@ public abstract class CommandHandler<TOptions>(
         {
             OutputInformation(storedProcedure.ToString());
         }
-        return Task.CompletedTask;
     }
 }

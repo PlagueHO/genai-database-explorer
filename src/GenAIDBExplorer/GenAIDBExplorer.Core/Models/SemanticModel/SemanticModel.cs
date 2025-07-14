@@ -216,14 +216,19 @@ public sealed class SemanticModel(
     }
 
     /// <summary>
-    /// Finds a table in the semantic model by name and schema.
+    /// Finds a table in the semantic model by name and schema asynchronously.
     /// </summary>
     /// <param name="schemaName">The schema name of the table.</param>
     /// <param name="tableName">The name of the table.</param>
     /// <returns>The table if found; otherwise, null.</returns>
-    public SemanticModelTable? FindTable(string schemaName, string tableName)
+    public async Task<SemanticModelTable?> FindTableAsync(string schemaName, string tableName)
     {
-        return Tables.FirstOrDefault(t => t.Schema == schemaName && t.Name == tableName);
+        if (_disposed)
+        {
+            throw new ObjectDisposedException(nameof(SemanticModel));
+        }
+        var tables = await GetTablesAsync();
+        return tables.FirstOrDefault(t => t.Schema == schemaName && t.Name == tableName);
     }
 
     /// <summary>
@@ -467,14 +472,19 @@ public sealed class SemanticModel(
     }
 
     /// <summary>
-    /// Finds a view in the semantic model by name and schema.
+    /// Finds a view in the semantic model by name and schema asynchronously.
     /// </summary>
     /// <param name="schemaName">The schema name of the view.</param>
     /// <param name="viewName">The name of the view.</param>
-    /// <returns>The view if found; otherwise, null.</returns></returns>
-    public SemanticModelView? FindView(string schemaName, string viewName)
+    /// <returns>The view if found; otherwise, null.</returns>
+    public async Task<SemanticModelView?> FindViewAsync(string schemaName, string viewName)
     {
-        return Views.FirstOrDefault(v => v.Schema == schemaName && v.Name == viewName);
+        if (_disposed)
+        {
+            throw new ObjectDisposedException(nameof(SemanticModel));
+        }
+        var views = await GetViewsAsync();
+        return views.FirstOrDefault(v => v.Schema == schemaName && v.Name == viewName);
     }
 
     /// <summary>
@@ -508,14 +518,19 @@ public sealed class SemanticModel(
     }
 
     /// <summary>
-    /// Finds a stored procedure in the semantic model by name and schema.
+    /// Finds a stored procedure in the semantic model by name and schema asynchronously.
     /// </summary>
     /// <param name="schemaName">The schema name of the stored procedure.</param>
     /// <param name="storedProcedureName">The name of the stored procedure.</param>
     /// <returns>The stored procedure if found; otherwise, null.</returns>
-    public SemanticModelStoredProcedure? FindStoredProcedure(string schemaName, string storedProcedureName)
+    public async Task<SemanticModelStoredProcedure?> FindStoredProcedureAsync(string schemaName, string storedProcedureName)
     {
-        return StoredProcedures.FirstOrDefault(sp => sp.Schema == schemaName && sp.Name == storedProcedureName);
+        if (_disposed)
+        {
+            throw new ObjectDisposedException(nameof(SemanticModel));
+        }
+        var storedProcedures = await GetStoredProceduresAsync();
+        return storedProcedures.FirstOrDefault(sp => sp.Schema == schemaName && sp.Name == storedProcedureName);
     }
 
     /// <summary>

@@ -83,7 +83,7 @@ public class DataDictionaryProvider(
                 continue;
             }
 
-            var semanticModelTable = semanticModel.FindTable(table.SchemaName, table.TableName);
+            var semanticModelTable = await semanticModel.FindTableAsync(table.SchemaName, table.TableName);
             if (semanticModelTable != null)
             {
                 logger.LogInformation(

@@ -299,7 +299,7 @@ public class EnrichModelCommandHandler(
     /// <returns></returns>
     private async Task EnrichTableAsync(SemanticModel semanticModel, string schemaName, string tableName)
     {
-        var table = semanticModel.FindTable(schemaName, tableName);
+        var table = await semanticModel.FindTableAsync(schemaName, tableName);
         if (table == null)
         {
             _logger.LogError("{Message} [{SchemaName}].[{TableName}]", _resourceManagerLogMessages.GetString("TableNotFound"), schemaName, tableName);
@@ -319,7 +319,7 @@ public class EnrichModelCommandHandler(
     /// <returns></returns>
     private async Task EnrichViewAsync(SemanticModel semanticModel, string schemaName, string viewName)
     {
-        var view = semanticModel.FindView(schemaName, viewName);
+        var view = await semanticModel.FindViewAsync(schemaName, viewName);
         if (view == null)
         {
             _logger.LogError("{Message} [{SchemaName}].[{ViewName}]", _resourceManagerLogMessages.GetString("ViewNotFound"), schemaName, viewName);
@@ -339,7 +339,7 @@ public class EnrichModelCommandHandler(
     /// <returns></returns>
     private async Task EnrichStoredProcedureAsync(SemanticModel semanticModel, string schemaName, string storedProcedureName)
     {
-        var storedProcedure = semanticModel.FindStoredProcedure(schemaName, storedProcedureName);
+        var storedProcedure = await semanticModel.FindStoredProcedureAsync(schemaName, storedProcedureName);
         if (storedProcedure == null)
         {
             _logger.LogError("{Message} [{SchemaName}].[{StoredProcedureName}]", _resourceManagerLogMessages.GetString("StoredProcedureNotFound"), schemaName, storedProcedureName);

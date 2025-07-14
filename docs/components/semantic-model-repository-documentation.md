@@ -1,9 +1,9 @@
 ---
 title: Semantic Model Repository - Technical Documentation
 component_path: src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository
-version: 1.2
+version: 1.3
 date_created: 2025-07-05
-last_updated: 2025-07-12
+last_updated: 2025-07-14
 owner: GenAI Database Explorer Team
 tags: [component, repository, persistence, architecture, semantic-model, strategy-pattern, caching, async, security, keyvault, lazy-loading, change-tracking, performance-monitoring]
 ---
@@ -11,8 +11,6 @@ tags: [component, repository, persistence, architecture, semantic-model, strateg
 ## Semantic Model Repository Documentation
 
 The Semantic Model Repository component provides a unified abstraction layer for persisting and retrieving semantic models across different storage backends. It implements the Repository Pattern with Strategy Pattern for multiple persistence backends, supporting advanced features like lazy loading, change tracking, caching, concurrent operation protection, and enterprise-grade security.
-
-**Implementation Status**: ✅ **FULLY IMPLEMENTED** - All core features are complete and production-ready with 349 passing tests. Only advanced property-level change tracking (Phase 5d) remains as an optional future enhancement.
 
 ## 1. Component Overview
 
@@ -36,15 +34,9 @@ The Semantic Model Repository component provides a unified abstraction layer for
 - Azure Key Vault integration for secure credential management
 - Thread-safe performance monitoring with real-time metrics and recommendations
 - Asynchronous operations throughout for I/O performance
-- Complete backward compatibility with existing APIs
-
-🟡 **Future Enhancements** (Optional):
-
-- **Property-level change tracking** (Phase 5d) - Fine-grained audit capabilities for tracking individual property changes within entities, enabling:
-  - Detailed audit logs with property-level history
-  - Optimized persistence of only changed properties
-  - Advanced conflict resolution for concurrent edits
-  - Enhanced compliance and regulatory reporting
+- **Async Find methods for Table, View, and StoredProcedure replace synchronous versions for transparent lazy/eager loading**
+- **all Find methods are now async for architectural consistency and lazy loading support**
+- Complete backward compatibility with existing APIs (except for async Find migration)
 
 ## 2. Architecture Section
 
@@ -57,9 +49,10 @@ The Semantic Model Repository component provides a unified abstraction layer for
 - **ARC-005**: **Unit of Work Pattern** - [`IChangeTracker`](../../src/GenAIDBExplorer/GenAIDBExplorer.Core/Models/SemanticModel/ChangeTracking/IChangeTracker.cs) for change tracking and selective persistence
 - **ARC-006**: **Dependency Injection Pattern** - All dependencies injected via constructor for testability and flexibility
 - **ARC-007**: **Options Pattern** - Configuration provided via `IOptions<T>` for various components (`CacheOptions`, `SecureJsonSerializerOptions`, `KeyVaultOptions`)
-- **ARC-008**: **Adapter Pattern** - Wraps existing functionality without breaking APIs for backward compatibility
-- **ARC-009**: **Facade Pattern** - Provides unified interface while maintaining backward compatibility
+- **ARC-008**: **Adapter Pattern** - Wraps existing functionality for migration support
+- **ARC-009**: **Facade Pattern** - Provides unified interface
 - **ARC-010**: **Disposable Pattern** - Proper resource cleanup for semaphores, caches, and strategy-specific resources
+- **ARC-011**: **Async Find Methods** - All Find methods in ISemanticModel and SemanticModel are now async; all consumers updated to use async/await. Synchronous Find methods removed in favor of async versions.
 
 ### Dependencies
 
@@ -236,6 +229,24 @@ graph TB
 | `LoadModelAsync` | Loads with lazy loading | `modelPath`, `enableLazyLoading`, `strategyName?` | `Task<SemanticModel>` | Memory-optimized loading |
 | `LoadModelAsync` | Loads with lazy loading + change tracking | `modelPath`, `enableLazyLoading`, `enableChangeTracking`, `strategyName?` | `Task<SemanticModel>` | Feature combination |
 | `LoadModelAsync` | Loads with all features | `modelPath`, `enableLazyLoading`, `enableChangeTracking`, `enableCaching`, `strategyName?` | `Task<SemanticModel>` | Full feature set |
+
+### [ISemanticModel](../../src/GenAIDBExplorer/GenAIDBExplorer.Core/Models/SemanticModel/ISemanticModel.cs)
+
+**Purpose**: Defines the semantic model domain interface, including entity access and advanced features.
+
+**Key Features**:
+
+- Asynchronous Find methods for Table, View, and StoredProcedure
+- Transparent support for lazy and eager loading
+- Change tracking, caching, and performance monitoring
+
+| Method | Purpose | Parameters | Return Type | Usage Notes |
+|--------|---------|------------|-------------|-------------|
+| `Task<SemanticModelTable?> FindTableAsync(string schema, string name)` | Finds a table by schema/name | `schema`, `name` | `Task<SemanticModelTable?>` | Async, supports lazy/eager loading |
+| `Task<SemanticModelView?> FindViewAsync(string schema, string name)` | Finds a view by schema/name | `schema`, `name` | `Task<SemanticModelView?>` | Async, supports lazy/eager loading |
+| `Task<SemanticModelStoredProcedure?> FindStoredProcedureAsync(string schema, string name)` | Finds a stored procedure by schema/name | `schema`, `name` | `Task<SemanticModelStoredProcedure?>` | Async, supports lazy/eager loading |
+
+**Note:** All Find methods are now async and transparently support lazy/eager loading. Synchronous Find methods have been removed as of Phase 6.
 
 ### [ISecureJsonSerializer](../../src/GenAIDBExplorer/GenAIDBExplorer.Core/Security/ISecureJsonSerializer.cs)
 
@@ -430,6 +441,21 @@ await repository.SaveModelAsync(model, new DirectoryInfo("/path/to/model"));
 var loadedModel = await repository.LoadModelAsync(new DirectoryInfo("/path/to/model"));
 ```
 
+### Async Find Method Usage
+
+```csharp
+// Find entities using async methods (Phase 6 - Breaking Change)
+var table = await model.FindTableAsync("dbo", "Users");
+var view = await model.FindViewAsync("dbo", "UserSummary");
+var procedure = await model.FindStoredProcedureAsync("dbo", "GetUserById");
+
+// Works transparently with both lazy and eager loading
+if (table != null)
+{
+    logger.LogInformation("Found table: {TableName}", table.Name);
+}
+```
+
 ### Advanced Usage with Features
 
 ```csharp
@@ -620,7 +646,7 @@ logger.LogInformation("Load operation took {Duration}ms. Recommendations: {Recom
 
 ### Testing Guidelines (REF-003)
 
-**Current Test Status**: ✅ **349 tests passing** with 100% success rate across all components
+**Current Test Status**: ✅ **374 tests passing** with 100% success rate across all components
 
 **Unit Test Setup**:
 
@@ -654,6 +680,7 @@ var repository = new SemanticModelRepository(
 - Performance monitoring (metrics collection, recommendations)
 - Concurrent operations and thread safety
 - Error handling and resource disposal
+- **Async Find methods migration and transparent lazy/eager loading**
 
 ### Troubleshooting (REF-004)
 
@@ -676,6 +703,18 @@ var repository = new SemanticModelRepository(
 - [Performance Optimization Guide](../performance/README.md) - Performance tuning recommendations
 
 ### Change History (REF-006)
+
+**Version 1.3 (2025-07-14)**:
+
+- **Phase 6 Breaking Changes - Async Find Methods**
+  - **BREAKING CHANGE**: All Find methods in ISemanticModel and SemanticModel are now async
+  - Replaced `FindTable(string, string)` with `Task<SemanticModelTable?> FindTableAsync(string, string)`
+  - Replaced `FindView(string, string)` with `Task<SemanticModelView?> FindViewAsync(string, string)`
+  - Replaced `FindStoredProcedure(string, string)` with `Task<SemanticModelStoredProcedure?> FindStoredProcedureAsync(string, string)`
+  - All consumers updated to use async/await pattern (CommandHandler.cs, EnrichModelCommandHandler.cs, DataDictionaryProvider.cs)
+  - Transparent support for both lazy and eager loading scenarios
+  - 374 tests passing with full validation of async Find migration
+  - Clear migration path with helpful error messages for consumers
 
 **Version 1.2 (2025-07-12)**:
 
@@ -715,7 +754,10 @@ var repository = new SemanticModelRepository(
 
 **Migration Notes**:
 
+- **BREAKING CHANGE (Phase 6)**: Synchronous Find methods have been removed and replaced with async versions
+- **Migration Required**: Update all calls from `FindTable()`, `FindView()`, `FindStoredProcedure()` to their async equivalents with await
+- **Migration Example**: `var table = model.FindTable("dbo", "Users");` becomes `var table = await model.FindTableAsync("dbo", "Users");`
 - Backward compatible with existing [`SemanticModel.SaveModelAsync()` and `LoadModelAsync()`](../../src/GenAIDBExplorer/GenAIDBExplorer.Core/Models/SemanticModel/SemanticModel.cs) methods
-- All new features are opt-in and don't affect existing functionality
+- All new features (except async Find migration) are opt-in and don't affect existing functionality
 - Configuration-driven strategy selection allows gradual migration to cloud storage
-- Zero breaking changes across all implementation phases
+- Zero breaking changes across phases 1-5 implementation phases
