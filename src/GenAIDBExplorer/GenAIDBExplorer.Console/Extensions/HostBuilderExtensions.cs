@@ -50,8 +50,7 @@ public static class HostBuilderExtensions
                         options.IncludeScopes = true;
                         options.SingleLine = true;
                         options.TimestampFormat = "HH:mm:ss ";
-                    })
-                    .SetMinimumLevel(LogLevel.Trace); // TODO: Set this via Console Command
+                    });
             })
             .ConfigureServices((context, services) =>
             {
