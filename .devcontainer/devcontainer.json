@@ -53,12 +53,9 @@
                 }
             },
             "extensions": [
-                // .NET and C# Development
                 "ms-dotnettools.csharp",
                 "ms-dotnettools.csdevkit",
                 "ms-dotnettools.vscode-dotnet-runtime",
-                
-                // Azure Development
                 "ms-azuretools.vscode-bicep",
                 "ms-azuretools.azure-dev",
                 "ms-vscode.azurecli",
@@ -69,26 +66,21 @@
                 "ms-azuretools.vscode-azurestorage",
                 "ms-azuretools.vscode-cosmosdb",
                 "ms-vscode.vscode-node-azure-pack",
-                
-                // GitHub and DevOps
                 "GitHub.copilot",
                 "GitHub.copilot-chat",
                 "GitHub.vscode-github-actions",
                 "GitHub.vscode-pull-request-github",
-                
-                // AI and Semantic Kernel
                 "ms-semantic-kernel.semantic-kernel",
                 "ms-toolsai.jupyter",
                 "ms-python.python",
-                
-                // Development Tools
                 "ms-vscode.powershell",
                 "ms-vscode-remote.remote-containers",
                 "redhat.vscode-yaml",
                 "ms-vscode.vscode-json",
                 "bradlc.vscode-tailwindcss",
                 "esbenp.prettier-vscode",
-                "ms-vsliveshare.vsliveshare"
+                "ms-vsliveshare.vsliveshare",
+                "microsoft-aspire.aspire-vscode"
             ]
         }
     },

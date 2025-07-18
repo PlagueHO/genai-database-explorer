@@ -3,12 +3,10 @@ title: Semantic Model Repository - Technical Documentation
 component_path: src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository
 version: 1.3
 date_created: 2025-07-05
-last_updated: 2025-07-14
+last_updated: 2025-07-18
 owner: GenAI Database Explorer Team
 tags: [component, repository, persistence, architecture, semantic-model, strategy-pattern, caching, async, security, keyvault, lazy-loading, change-tracking, performance-monitoring]
 ---
-
-## Semantic Model Repository Documentation
 
 The Semantic Model Repository component provides a unified abstraction layer for persisting and retrieving semantic models across different storage backends. It implements the Repository Pattern with Strategy Pattern for multiple persistence backends, supporting advanced features like lazy loading, change tracking, caching, concurrent operation protection, and enterprise-grade security.
 
@@ -80,19 +78,55 @@ The repository acts as a facade coordinating between multiple subsystems: strate
 ### Component Structure and Dependencies Diagram
 
 ```mermaid
-graph TB
-    subgraph "Client Layer"
-        Client[Client Applications]
-        Console[Console Application]
-        API[API Services]
-    end
-    
-    subgraph "Repository Layer"
-        IRepo[ISemanticModelRepository]
-        Repo[SemanticModelRepository]
+graph TD
+    subgraph "Semantic Model Repository System"
+        SMR[SemanticModelRepository] --> PSF[PersistenceStrategyFactory]
+        SMR --> MSMC[MemorySemanticModelCache]
+        SMR --> PM[PerformanceMonitor]
         
-        IRepo --> Repo
+        PSF --> LDPS[LocalDiskPersistenceStrategy]
+        PSF --> ABPS[AzureBlobPersistenceStrategy]
+        PSF --> CPS[CosmosPersistenceStrategy]
+        
+        LDPS --> SJS[SecureJsonSerializer]
+        ABPS --> SJS
+        CPS --> SJS
+        
+        SJS --> PV[PathValidator]
+        SJS --> ENS[EntityNameSanitizer]
     end
+
+    subgraph "Semantic Model Domain"
+        SM[SemanticModel]
+        SM --> SMT[SemanticModelTable]
+        SM --> SMV[SemanticModelView]
+        SM --> SMSP[SemanticModelStoredProcedure]
+        SM --> LLP[LazyLoadingProxy]
+        SM --> CT[ChangeTracker]
+    end
+
+    subgraph "External Dependencies"
+        SJS --> STJ["System.Text.Json"]
+        ABPS --> ABS["Azure.Storage.Blobs"]
+        CPS --> CDB["Microsoft.Azure.Cosmos"]
+        MSMC --> MEC["Microsoft.Extensions.Caching"]
+        SMR --> MEL["Microsoft.Extensions.Logging"]
+        KVC[KeyVaultConfigurationProvider] --> AKV["Azure.Security.KeyVault"]
+    end
+
+    SMR --> SM
+    LDPS --> SM
+    ABPS --> SM
+    CPS --> SM
+    SMR --> KVC
+
+    classDef interface fill:#f9f,stroke:#333,stroke-dasharray: 5 5
+    classDef implementation fill:#bbf,stroke:#333
+    classDef external fill:#dfd,stroke:#333
+
+    class ISemanticModelRepository,IPersistenceStrategyFactory,ISemanticModelPersistenceStrategy,ISemanticModelCache,IPerformanceMonitor,ISecureJsonSerializer,ISemanticModel interface
+    class SemanticModelRepository,PersistenceStrategyFactory,LocalDiskPersistenceStrategy,AzureBlobPersistenceStrategy,CosmosPersistenceStrategy,MemorySemanticModelCache,PerformanceMonitor,SecureJsonSerializer,SemanticModel implementation
+    class STJ,ABS,CDB,MEC,MEL,AKV external
     
     subgraph "Strategy Layer"
         IFactory[IPersistenceStrategyFactory]
