@@ -7,10 +7,13 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/src/GenAIDBExplorer/GenAIDBExplorer.sln",
+                "GenAIDBExplorer.sln",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
+            "options": {
+                "cwd": "${workspaceFolder}/src/GenAIDBExplorer"
+            },
             "problemMatcher": "$msCompile"
         },
         {
@@ -19,10 +22,13 @@
             "type": "process",
             "args": [
                 "publish",
-                "${workspaceFolder}/src/GenAIDBExplorer/GenAIDBExplorer.sln",
+                "GenAIDBExplorer.sln",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
+            "options": {
+                "cwd": "${workspaceFolder}/src/GenAIDBExplorer"
+            },
             "problemMatcher": "$msCompile"
         },
         {
@@ -33,8 +39,11 @@
                 "watch",
                 "run",
                 "--project",
-                "${workspaceFolder}/src/GenAIDBExplorer/GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj"
+                "GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj"
             ],
+            "options": {
+                "cwd": "${workspaceFolder}/src/GenAIDBExplorer"
+            },
             "problemMatcher": "$msCompile"
         },
         {
@@ -43,9 +52,12 @@
             "type": "process",
             "args": [
                 "test",
-                "${workspaceFolder}/src/GenAIDBExplorer/GenAIDBExplorer.sln",
+                "GenAIDBExplorer.sln",
                 "--no-build"
             ],
+            "options": {
+                "cwd": "${workspaceFolder}/src/GenAIDBExplorer"
+            },
             "group": {
                 "kind": "test",
                 "isDefault": true
@@ -58,13 +70,13 @@
             "type": "process",
             "args": [
                 "format",
-                "${workspaceFolder}/src/GenAIDBExplorer/GenAIDBExplorer.sln",
+                "GenAIDBExplorer.sln",
                 "--verify-no-changes",
                 "--severity",
                 "error"
             ],
             "options": {
-                "cwd": "${workspaceFolder}"
+                "cwd": "${workspaceFolder}/src/GenAIDBExplorer"
             },
             "group": {
                 "kind": "build",
@@ -87,12 +99,15 @@
             "args": [
                 "run",
                 "--project",
-                "${workspaceFolder}/src/GenAIDBExplorer/GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
+                "GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
                 "--",
                 "init-project",
                 "--project",
                 "d:/temp"
             ],
+            "options": {
+                "cwd": "${workspaceFolder}/src/GenAIDBExplorer"
+            },
             "problemMatcher": "$msCompile"
         },
         {
@@ -102,7 +117,7 @@
             "args": [
                 "run",
                 "--project",
-                "${workspaceFolder}/src/GenAIDBExplorer/GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
+                "GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
                 "--",
                 "extract-model",
                 "--project",
@@ -111,6 +126,9 @@
                 "--skipViews",
                 "--skipStoredProcedures"
             ],
+            "options": {
+                "cwd": "${workspaceFolder}/src/GenAIDBExplorer"
+            },
             "problemMatcher": "$msCompile"
         },
         {
@@ -120,7 +138,7 @@
             "args": [
                 "run",
                 "--project",
-                "${workspaceFolder}/src/GenAIDBExplorer/GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
+                "GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
                 "--",
                 "data-dictionary",
                 "--project",
@@ -135,6 +153,9 @@
                 "tblItemSellingLimit",
                 "--show"
             ],
+            "options": {
+                "cwd": "${workspaceFolder}/src/GenAIDBExplorer"
+            },
             "problemMatcher": "$msCompile"
         },
         {
@@ -144,7 +165,7 @@
             "args": [
                 "run",
                 "--project",
-                "${workspaceFolder}/src/GenAIDBExplorer/GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
+                "GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
                 "--",
                 "enrich-model",
                 "--project",
@@ -160,6 +181,9 @@
                 "tblItemSellingLimit",
                 "--show"
             ],
+            "options": {
+                "cwd": "${workspaceFolder}/src/GenAIDBExplorer"
+            },
             "problemMatcher": "$msCompile"
         },
         {
@@ -169,7 +193,7 @@
             "args": [
                 "run",
                 "--project",
-                "${workspaceFolder}/src/GenAIDBExplorer/GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
+                "GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
                 "--",
                 "show-object",
                 "table",
@@ -180,6 +204,9 @@
                 "--name",
                 "tblItemSellingLimit"
             ],
+            "options": {
+                "cwd": "${workspaceFolder}/src/GenAIDBExplorer"
+            },
             "problemMatcher": "$msCompile"
         },
         {
@@ -189,12 +216,15 @@
             "args": [
                 "run",
                 "--project",
-                "${workspaceFolder}/src/GenAIDBExplorer/GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
+                "GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
                 "--",
                 "query-model",
                 "--project",
                 "d:/temp"
             ],
+            "options": {
+                "cwd": "${workspaceFolder}/src/GenAIDBExplorer"
+            },
             "problemMatcher": "$msCompile"
         },
         {
@@ -204,7 +234,7 @@
             "args": [
                 "run",
                 "--project",
-                "${workspaceFolder}/src/GenAIDBExplorer/GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
+                "GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
                 "--",
                 "export-model",
                 "--project",
@@ -215,6 +245,9 @@
                 "markdown",
                 "--splitFiles"
             ],
+            "options": {
+                "cwd": "${workspaceFolder}/src/GenAIDBExplorer"
+            },
             "problemMatcher": "$msCompile"
         }
     ]

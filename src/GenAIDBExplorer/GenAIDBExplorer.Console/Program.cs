@@ -1,5 +1,7 @@
 ﻿using System.CommandLine;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 using GenAIDBExplorer.Console.CommandHandlers;
 using GenAIDBExplorer.Console.Extensions;
 
@@ -21,9 +23,9 @@ internal static class Program
         var rootCommand = new RootCommand("GenAI Database Explorer console application");
 
         // Build the host
-        var host = Host.CreateDefaultBuilder(args)
-            .ConfigureHost(args)
-            .Build();
+        var builder = Host.CreateApplicationBuilder(args);
+        builder.ConfigureHost(args);
+        var host = builder.Build();
 
         // Set up commands
         rootCommand.Subcommands.Add(InitProjectCommandHandler.SetupCommand(host));
