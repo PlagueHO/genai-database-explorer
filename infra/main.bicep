@@ -336,7 +336,7 @@ module cosmosDbAccount 'br/public:avm/res/document-db/database-account:0.15.0' =
         principalId: principalId
       }
       {
-        roleDefinitionIdOrName: 'Cosmos DB Data Contributor'
+        roleDefinitionIdOrName: 'Cosmos DB Built-in Data Contributor'
         principalType: principalIdType
         principalId: principalId
       }
