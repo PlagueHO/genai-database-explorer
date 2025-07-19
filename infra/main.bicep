@@ -77,7 +77,7 @@ var openAiModelDeployments = openAiModels
 
 // The application resources that are deployed into the application resource group
 module rg 'br/public:avm/res/resources/resource-group:0.4.1' = {
-  name: 'resource-group-deployment'
+  name: 'resource-group-deployment-${resourceToken}'
   params: {
     name: resourceGroupName
     location: location
@@ -87,7 +87,7 @@ module rg 'br/public:avm/res/resources/resource-group:0.4.1' = {
 
 // --------- MONITORING RESOURCES ---------
 module logAnalyticsWorkspace 'br/public:avm/res/operational-insights/workspace:0.12.0' = {
-  name: 'log-analytics-workspace-deployment'
+  name: 'log-analytics-workspace-deployment-${resourceToken}'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [
     rg
@@ -101,7 +101,7 @@ module logAnalyticsWorkspace 'br/public:avm/res/operational-insights/workspace:0
 }
 
 module applicationInsights 'br/public:avm/res/insights/component:0.6.0' = {
-  name: 'application-insights-deployment'
+  name: 'application-insights-deployment-${resourceToken}'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [
     rg
@@ -116,7 +116,7 @@ module applicationInsights 'br/public:avm/res/insights/component:0.6.0' = {
 
 // --------- AI FOUNDRY ---------
 module aiFoundryService './cognitive-services/accounts/main.bicep' = {
-  name: 'ai-foundry-service-deployment'
+  name: 'ai-foundry-service-deployment-${resourceToken}'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [
     rg
@@ -219,7 +219,7 @@ var aiFoundryRoleAssignmentsArray = [
 ]
 
 module aiFoundryRoleAssignments './core/security/role_aifoundry.bicep' = {
-  name: 'ai-foundry-role-assignments'
+  name: 'ai-foundry-role-assignments-${resourceToken}'
   scope: az.resourceGroup(resourceGroupName)
   dependsOn: [
     rg
@@ -233,7 +233,7 @@ module aiFoundryRoleAssignments './core/security/role_aifoundry.bicep' = {
 
 // --------- SQL DATABASE ---------
 module sqlServer 'br/public:avm/res/sql/server:0.20.0' = {
-  name: 'sql-server-deployment'
+  name: 'sql-server-deployment-${resourceToken}'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [
     rg
@@ -285,7 +285,7 @@ module sqlServer 'br/public:avm/res/sql/server:0.20.0' = {
 
 // --------- COSMOS DB ---------
 module cosmosDbAccount 'br/public:avm/res/document-db/database-account:0.15.0' = if (cosmosDbDeploy) {
-  name: 'cosmos-db-account-deployment'
+  name: 'cosmos-db-account-deployment-${resourceToken}'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [
     rg
@@ -346,7 +346,7 @@ module cosmosDbAccount 'br/public:avm/res/document-db/database-account:0.15.0' =
 
 // --------- STORAGE ACCOUNT ---------
 module storageAccount 'br/public:avm/res/storage/storage-account:0.25.0' = if (storageAccountDeploy) {
-  name: 'storage-account-deployment'
+  name: 'storage-account-deployment-${resourceToken}'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [
     rg
@@ -400,7 +400,7 @@ module storageAccount 'br/public:avm/res/storage/storage-account:0.25.0' = if (s
 
 // --------- AI SEARCH (OPTIONAL) ---------
 module aiSearchService 'br/public:avm/res/search/search-service:0.11.0' = if (azureAiSearchDeploy) {
-  name: 'ai-search-service-deployment'
+  name: 'ai-search-service-deployment-${resourceToken}'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [
     rg
