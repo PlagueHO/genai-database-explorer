@@ -293,7 +293,7 @@ module cosmosDbAccount 'br/public:avm/res/document-db/database-account:0.15.0' =
   params: {
     name: cosmosDbAccountName
     location: location
-    enableFreeTier: true
+    enableFreeTier: false
     sqlDatabases: [
       {
         name: 'genaidbexp'
@@ -345,7 +345,7 @@ module cosmosDbAccount 'br/public:avm/res/document-db/database-account:0.15.0' =
 }
 
 // --------- STORAGE ACCOUNT ---------
-module storageAccount 'br/public:avm/res/storage/storage-account:0.25.0' = if (storageAccountDeploy) {
+module storageAccount 'br/public:avm/res/storage/storage-account:0.25.1' = if (storageAccountDeploy) {
   name: 'storage-account-deployment-${resourceToken}'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [

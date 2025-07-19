@@ -20,7 +20,7 @@
     "name": "gpt-4-1-mini",
     "sku": {
       "name": "GlobalStandard",
-      "capacity": 75
+      "capacity": 100
     }
   },
   {
