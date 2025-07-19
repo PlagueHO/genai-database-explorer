@@ -98,4 +98,3 @@ TBC
 [python-url]: https://www.python.org
 [learn-sk]: https://img.shields.io/badge/Semantic%20Kernel-5E5E5E?style=for-the-badge&logo=microsoft
 [sk-url]: https://learn.microsoft.com/en-us/semantic-kernel/
-
