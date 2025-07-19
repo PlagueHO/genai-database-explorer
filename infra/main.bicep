@@ -291,7 +291,7 @@ module cosmosDbAccount 'br/public:avm/res/document-db/database-account:0.15.0' =
   params: {
     name: cosmosDbAccountName
     location: location
-    enableFreeTier: true
+    enableFreeTier: false
     sqlDatabases: [
       {
         name: 'genaidbexp'
