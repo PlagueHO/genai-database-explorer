@@ -1,52 +1,47 @@
 ---
 title: CI/CD Workflow Specification - Continuous Delivery
 version: 1.0
-date_created: 2025-07-20
-last_updated: 2025-07-20
+date_created: 2025-01-20
+last_updated: 2025-01-20
 owner: DevOps Team
-tags: [process, cicd, github-actions, automation, azure, infrastructure, dotnet]
+tags: [process, cicd, github-actions, automation, continuous-delivery, azure, infrastructure, validation, e2e-testing]
 ---
 
 ## Workflow Overview
 
-**Purpose**: Orchestrate continuous delivery pipeline for GenAI Database Explorer, validating infrastructure changes and performing end-to-end testing on main branch commits and releases.
-
-**Trigger Events**: Push to main branch, version tags (v*), manual dispatch, changes to infrastructure/source/test paths
-
-**Target Environments**: Test environment with ephemeral Azure resources
+**Purpose**: Orchestrates continuous delivery pipeline for GenAI Database Explorer application with Azure infrastructure validation and end-to-end testing  
+**Trigger Events**: Push to main branch, version tags (v*), specific path changes (infra/**, src/**, tests/**), manual workflow dispatch  
+**Target Environments**: Test environment with ephemeral Azure infrastructure
 
 ## Execution Flow Diagram
 
 ```mermaid
 graph TD
-    A[Push/Tag/Manual Trigger] --> B[Set Build Variables]
-    A --> C[Lint and Publish Bicep]
+    A[Push to main/Tag/Manual] --> B[Set Build Variables]
+    A --> C[Lint & Publish Bicep]
     
     B --> D[Validate Infrastructure]
     C --> D
+    
     D --> E[E2E Test]
     
-    subgraph "E2E Test Flow"
-        E --> F[Provision Infrastructure]
-        F --> G[Delete Infrastructure]
-    end
-    
-    G --> H[Pipeline Complete]
+    E --> F[Provision Infrastructure]
+    F --> G[Delete Infrastructure]
     
     style A fill:#e1f5fe
-    style H fill:#e8f5e8
-    style F fill:#fff3e0
-    style G fill:#ffebee
+    style G fill:#e8f5e8
+    style D fill:#f3e5f5
+    style E fill:#f3e5f5
 ```
 
 ## Jobs & Dependencies
 
 | Job Name | Purpose | Dependencies | Execution Context |
 |----------|---------|--------------|-------------------|
-| set-build-variables | Generate semantic version using GitVersion | None | ubuntu-latest |
+| set-build-variables | Generate semantic versioning using GitVersion | None | ubuntu-latest |
 | lint-and-publish-bicep | Validate Bicep templates and create artifacts | None | ubuntu-latest |
-| validate-infrastructure | Perform Azure infrastructure validation | set-build-variables, lint-and-publish-bicep | ubuntu-latest + Test environment |
-| e2e-test | Execute end-to-end testing with infrastructure lifecycle | set-build-variables, validate-infrastructure | ubuntu-latest + Test environment |
+| validate-infrastructure | Perform Azure deployment validation (what-if) | set-build-variables, lint-and-publish-bicep | ubuntu-latest, Test environment |
+| e2e-test | Execute end-to-end testing with infrastructure lifecycle | set-build-variables, validate-infrastructure | Delegates to sub-workflows |
 
 ## Requirements Matrix
 
@@ -54,90 +49,91 @@ graph TD
 
 | ID | Requirement | Priority | Acceptance Criteria |
 |----|-------------|----------|-------------------|
-| REQ-001 | Version generation from Git history | High | GitVersion produces valid semantic version |
-| REQ-002 | Bicep template validation | High | All templates pass linting without errors |
-| REQ-003 | Infrastructure validation | High | Azure deployment validation succeeds |
-| REQ-004 | End-to-end testing | High | E2E tests pass with ephemeral infrastructure |
-| REQ-005 | Resource cleanup | High | All provisioned resources are deleted after testing |
+| REQ-001 | Generate consistent build versions across pipeline | High | GitVersion produces semantic version for all downstream jobs |
+| REQ-002 | Validate Azure infrastructure before deployment | High | Bicep what-if analysis completes without errors |
+| REQ-003 | Execute comprehensive end-to-end testing | High | E2E tests pass against provisioned Azure resources |
+| REQ-004 | Ensure infrastructure cleanup after testing | Medium | Test infrastructure deleted regardless of test outcome |
 
 ### Security Requirements
 
 | ID | Requirement | Implementation Constraint |
 |----|-------------|---------------------------|
-| SEC-001 | Azure OIDC authentication | Use workload identity, no long-lived secrets |
-| SEC-002 | Least privilege access | Minimal permissions for infrastructure operations |
-| SEC-003 | Secret management | Encrypted secrets for SQL credentials |
-| SEC-004 | Environment isolation | Test environment isolated from production |
+| SEC-001 | Use Azure service principal authentication | OIDC token-based authentication with federated credentials |
+| SEC-002 | Protect sensitive deployment secrets | Store in GitHub secrets with environment-based access control |
+| SEC-003 | Generate ephemeral environment names | Use GitHub run ID to create unique, temporary environments |
 
 ### Performance Requirements
 
 | ID | Metric | Target | Measurement Method |
 |----|-------|--------|-------------------|
-| PERF-001 | Pipeline execution time | < 30 minutes | GitHub Actions duration |
-| PERF-002 | Infrastructure provisioning | < 15 minutes | Azure deployment time |
-| PERF-003 | Resource cleanup time | < 5 minutes | Deletion workflow duration |
+| PERF-001 | Pipeline execution time | < 15 minutes | GitHub Actions workflow duration |
+| PERF-002 | Infrastructure validation time | < 5 minutes | Azure what-if operation duration |
+| PERF-003 | E2E test completion | < 10 minutes | Sub-workflow execution time |
 
 ## Input/Output Contracts
 
 ### Inputs
 
 ```yaml
-# Trigger Conditions
-branches: ["main"]
-tags: ["v*"]
-paths: ["infra/**", "src/**", "tests/**"]
-
-# Manual Dispatch
-workflow_dispatch: enabled
+# Trigger Events
+push:
+  branches: [main]
+  tags: [v*]
+  paths: [infra/**, src/**, tests/**]
+workflow_dispatch: {}
 
 # Repository Variables
-AZURE_LOCATION: string  # Target Azure region
+vars.AZURE_LOCATION: string  # Purpose: Azure region for deployment
 ```
 
 ### Outputs
 
 ```yaml
-# Job Outputs
-BUILD_VERSION: string  # Semantic version from GitVersion
-infrastructure_bicep: artifact  # Validated Bicep templates
-validation_results: status  # Infrastructure validation outcome
-e2e_test_results: status  # End-to-end test results
+# Build Variables (from set-build-variables)
+BUILD_VERSION: string         # GitVersion FullSemVer
+FullSemVer: string           # Complete semantic version
+MajorMinorPatch: string      # Version without pre-release
+SemVer: string               # Semantic version
+NuGetVersion: string         # NuGet package version
+
+# Artifacts
+infrastructure_bicep: archive # Bicep templates and parameters
 ```
 
 ### Secrets & Variables
 
 | Type | Name | Purpose | Scope |
 |------|------|---------|-------|
-| Secret | AZURE_TENANT_ID | Azure authentication | Repository |
-| Secret | AZURE_SUBSCRIPTION_ID | Azure subscription access | Repository |
-| Secret | AZURE_CLIENT_ID | Azure service principal | Repository |
+| Secret | AZURE_TENANT_ID | Azure AD tenant authentication | Repository |
+| Secret | AZURE_SUBSCRIPTION_ID | Azure subscription targeting | Repository |
+| Secret | AZURE_CLIENT_ID | Service principal identification | Repository |
 | Secret | SQL_SERVER_USERNAME | Database authentication | Repository |
 | Secret | SQL_SERVER_PASSWORD | Database credentials | Repository |
-| Variable | AZURE_LOCATION | Deployment region | Repository |
+| Variable | AZURE_LOCATION | Azure region configuration | Repository |
 
 ## Execution Constraints
 
 ### Runtime Constraints
 
-- **Timeout**: 60 minutes (default GitHub Actions limit)
-- **Concurrency**: Single execution per workflow (implicit)
-- **Resource Limits**: Standard GitHub-hosted runner limits
+- **Timeout**: 60 minutes maximum per workflow run
+- **Concurrency**: Limited by GitHub Actions plan and Azure resource limits
+- **Resource Limits**: Standard GitHub-hosted runner limitations
 
 ### Environmental Constraints
 
-- **Runner Requirements**: ubuntu-latest with Azure CLI
-- **Network Access**: Azure API endpoints, GitHub APIs
-- **Permissions**: id-token:write, contents:read, checks:write, pull-requests:write
+- **Runner Requirements**: ubuntu-latest for all jobs
+- **Network Access**: Requires Azure API access and artifact storage
+- **Permissions**: id-token write, contents read, checks write, pull-requests write
 
 ## Error Handling Strategy
 
 | Error Type | Response | Recovery Action |
 |------------|----------|-----------------|
-| Version Generation Failure | Fail pipeline | Check GitVersion configuration |
-| Bicep Lint Failure | Fail pipeline | Fix template syntax errors |
-| Infrastructure Validation Failure | Fail pipeline | Review Azure deployment errors |
-| E2E Test Failure | Fail pipeline, cleanup resources | Investigate test failures |
-| Resource Cleanup Failure | Continue, log warning | Manual cleanup required |
+| GitVersion Failure | Fail fast | Check GitVersion.yml configuration |
+| Bicep Lint Error | Fail fast | Fix template syntax errors |
+| Azure Authentication | Fail fast | Verify OIDC configuration and secrets |
+| Infrastructure Validation | Fail fast | Review Bicep template and parameters |
+| E2E Test Failure | Continue to cleanup | Infrastructure still deleted |
 
 ## Quality Gates
 
@@ -145,26 +141,25 @@ e2e_test_results: status  # End-to-end test results
 
 | Gate | Criteria | Bypass Conditions |
 |------|----------|-------------------|
-| Bicep Linting | Zero linting errors | None |
-| Infrastructure Validation | What-if deployment succeeds | None |
-| E2E Test Execution | All tests pass | None |
-| Resource Cleanup | Deletion completes successfully | Acceptable on failure (with logging) |
+| Bicep Linting | No syntax errors | None - mandatory |
+| Infrastructure Validation | What-if analysis succeeds | None - mandatory |
+| E2E Tests | All tests pass | None - but cleanup always runs |
 
 ## Monitoring & Observability
 
 ### Key Metrics
 
-- **Success Rate**: 95%+ pipeline success rate
-- **Execution Time**: Average pipeline duration
-- **Resource Usage**: Azure resource consumption during testing
+- **Success Rate**: Target 95% successful deployments
+- **Execution Time**: Monitor pipeline duration trends
+- **Resource Usage**: Track Azure consumption during testing
 
 ### Alerting
 
 | Condition | Severity | Notification Target |
 |-----------|----------|-------------------|
-| Pipeline Failure | High | Development team |
-| Resource Cleanup Failure | Medium | DevOps team |
-| Performance Degradation | Low | Monitoring dashboard |
+| Pipeline Failure | High | Repository maintainers |
+| Infrastructure Validation Failure | Medium | DevOps team |
+| Cleanup Failure | Medium | Azure resource alerts |
 
 ## Integration Points
 
@@ -172,32 +167,32 @@ e2e_test_results: status  # End-to-end test results
 
 | System | Integration Type | Data Exchange | SLA Requirements |
 |--------|------------------|---------------|------------------|
-| Azure Resource Manager | REST API | Bicep templates, deployment status | 99.9% availability |
-| GitHub Actions | Platform native | Workflow orchestration | Platform SLA |
-| GitVersion | Tool integration | Version calculation | Local execution |
+| Azure Resource Manager | REST API | Bicep deployment validation | < 5min response |
+| GitHub Actions | Workflow orchestration | YAML configuration | 99.9% availability |
+| GitVersion | CLI tool | Version calculation | Local execution |
 
 ### Dependent Workflows
 
 | Workflow | Relationship | Trigger Mechanism |
 |----------|--------------|-------------------|
-| set-build-variables.yml | Called workflow | Direct invocation |
-| lint-and-publish-bicep.yml | Called workflow | Direct invocation |
-| validate-infrastructure.yml | Called workflow | Direct invocation |
-| e2e-test.yml | Called workflow | Direct invocation |
+| set-build-variables.yml | Reusable | workflow_call |
+| lint-and-publish-bicep.yml | Reusable | workflow_call |
+| validate-infrastructure.yml | Reusable | workflow_call |
+| e2e-test.yml | Reusable | workflow_call |
 
 ## Compliance & Governance
 
 ### Audit Requirements
 
-- **Execution Logs**: 30-day retention in GitHub Actions
-- **Approval Gates**: None (automated execution)
-- **Change Control**: Git-based version control
+- **Execution Logs**: Retained per GitHub Actions retention policy
+- **Approval Gates**: None - automated pipeline
+- **Change Control**: Git-based with branch protection
 
 ### Security Controls
 
-- **Access Control**: Repository write access required for manual triggers
-- **Secret Management**: GitHub Secrets with Azure Key Vault integration
-- **Vulnerability Scanning**: Implicit in GitHub Actions security model
+- **Access Control**: Environment-based protection for secrets
+- **Secret Management**: GitHub Secrets with OIDC tokens
+- **Vulnerability Scanning**: Bicep template validation
 
 ## Edge Cases & Exceptions
 
@@ -205,46 +200,43 @@ e2e_test_results: status  # End-to-end test results
 
 | Scenario | Expected Behavior | Validation Method |
 |----------|-------------------|-------------------|
-| Concurrent push events | Queue executions sequentially | GitHub Actions concurrency control |
-| Azure service outage | Pipeline failure with retry | Monitor Azure status page |
-| Invalid Bicep syntax | Early failure at lint stage | Bicep CLI validation |
-| Resource quota exceeded | Infrastructure validation failure | Azure error messages |
-| Network connectivity issues | Timeout and failure | GitHub Actions logging |
+| Tag push without code changes | Pipeline runs with infrastructure validation | Check workflow run logs |
+| Manual dispatch | Pipeline executes with current branch state | Verify manual trigger works |
+| Azure service outage | Graceful failure with clear error messages | Test with invalid credentials |
+| Concurrent runs | GitHub prevents overlapping executions | Multiple simultaneous pushes |
 
 ## Validation Criteria
 
 ### Workflow Validation
 
-- **VLD-001**: All reusable workflows execute successfully
-- **VLD-002**: Build version is generated and propagated
-- **VLD-003**: Infrastructure artifacts are created and validated
-- **VLD-004**: Test environment is provisioned and cleaned up
+- **VLD-001**: All jobs complete successfully on main branch push
+- **VLD-002**: Infrastructure artifacts are properly generated and consumed
+- **VLD-003**: Azure authentication succeeds with OIDC tokens
+- **VLD-004**: Environment cleanup occurs regardless of test outcomes
 
 ### Performance Benchmarks
 
-- **PERF-001**: Version generation completes within 2 minutes
-- **PERF-002**: Bicep linting completes within 5 minutes
-- **PERF-003**: Infrastructure validation completes within 10 minutes
-- **PERF-004**: E2E test cycle completes within 20 minutes
+- **PERF-001**: Complete pipeline execution under 15 minutes
+- **PERF-002**: Infrastructure validation completes under 5 minutes
 
 ## Change Management
 
 ### Update Process
 
 1. **Specification Update**: Modify this document first
-2. **Review & Approval**: Pull request review by DevOps team
+2. **Review & Approval**: Pull request review by repository maintainers
 3. **Implementation**: Apply changes to workflow files
-4. **Testing**: Validate changes in feature branch
+4. **Testing**: Validate with feature branch or manual dispatch
 5. **Deployment**: Merge to main branch
 
 ### Version History
 
 | Version | Date | Changes | Author |
 |---------|------|---------|--------|
-| 1.0 | 2025-07-20 | Initial specification | DevOps Team |
+| 1.0 | 2025-01-20 | Initial specification | GitHub Copilot |
 
 ## Related Specifications
 
-- [Infrastructure Deployment Bicep AVM Specification](spec-infrastructure-deployment-bicep-avm.md)
-- [.NET Aspire Integration Specification](spec-infrastructure-dotnet-aspire-integration.md)
-- [Continuous Integration Workflow Specification](spec-process-cicd-continuous-integration.md)
+- [Infrastructure Deployment Bicep AVM Specification](./spec-infrastructure-deployment-bicep-avm.md)
+- [Project Structure Specification](./spec-project-structure-genai-database-explorer.md)
+- [Azure Application Insights Monitoring Specification](./spec-monitoring-azure-application-insights-opentelemetry.md)
