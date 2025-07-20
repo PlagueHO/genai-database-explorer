@@ -57,6 +57,32 @@ jobs:
           $pesterVersion = Get-Module Pester | Select-Object -ExpandProperty Version
           Write-Host "Pester version loaded: $pesterVersion" -ForegroundColor Green
           
+          # Debug environment variables
+          Write-Host "=== Environment Variables Debug ===" -ForegroundColor Magenta
+          Write-Host "SQL_CONNECTION_STRING: $($env:SQL_CONNECTION_STRING.Length) characters" -ForegroundColor Yellow
+          Write-Host "AZURE_OPENAI_ENDPOINT: '$env:AZURE_OPENAI_ENDPOINT'" -ForegroundColor Yellow
+          Write-Host "Input AZURE_AI_FOUNDRY_ENDPOINT: '${{ inputs.AZURE_AI_FOUNDRY_ENDPOINT }}'" -ForegroundColor Yellow
+          
+          # Check if endpoint is available for AI tests
+          if ([string]::IsNullOrEmpty($env:AZURE_OPENAI_ENDPOINT)) {
+            Write-Warning "Azure AI Foundry endpoint not provided. AI-related integration tests will be skipped or may fail gracefully."
+            Write-Host "This is expected behavior when AI services are not deployed or configured." -ForegroundColor Yellow
+            Write-Host "To enable AI tests, ensure AZURE_AI_FOUNDRY_ENDPOINT is passed correctly from infrastructure provisioning." -ForegroundColor Yellow
+          } else {
+            Write-Host "Azure AI services configured. AI integration tests will run." -ForegroundColor Green
+            Write-Host "Endpoint format: $($env:AZURE_OPENAI_ENDPOINT)" -ForegroundColor Cyan
+            
+            # Validate endpoint format
+            if ($env:AZURE_OPENAI_ENDPOINT -match 'https://.*\.cognitiveservices\.azure\.com') {
+              Write-Host "✅ Valid Azure Cognitive Services endpoint format detected" -ForegroundColor Green
+            } elseif ($env:AZURE_OPENAI_ENDPOINT -match 'https://.*\.openai\.azure\.com') {
+              Write-Host "✅ Valid Azure OpenAI endpoint format detected" -ForegroundColor Green
+            } else {
+              Write-Warning "⚠️  Unexpected endpoint format - tests may still work but verify configuration"
+            }
+          }
+          Write-Host "===================================" -ForegroundColor Magenta
+          
           # Create test results directory
           New-Item -ItemType Directory -Path "./test-results" -Force | Out-Null
           
@@ -73,7 +99,7 @@ jobs:
           try {
             Write-Host "Starting console integration tests..." -ForegroundColor Green
             Write-Host "SQL Server: ${{ inputs.SQL_SERVER_NAME }}" -ForegroundColor Yellow
-            Write-Host "Azure OpenAI Endpoint: ${{ inputs.AZURE_AI_FOUNDRY_ENDPOINT }}" -ForegroundColor Yellow
+            Write-Host "Azure AI Foundry Endpoint: ${{ inputs.AZURE_AI_FOUNDRY_ENDPOINT }}" -ForegroundColor Yellow
             Invoke-Pester -Configuration $config
             Write-Host "Integration tests completed" -ForegroundColor Green
           } catch {
