@@ -326,6 +326,8 @@ module cosmosDbAccount 'br/public:avm/res/document-db/database-account:0.15.0' =
 }
 
 // Add data plane role assignments for Cosmos DB using the new role_cosmosdb.bicep module
+// TODO: This can be replaced by using the dataPlaneRoleAssignments parameter in the cosmosDbAccount module directly once the issue is resolved.
+// https://github.com/Azure/bicep-registry-modules/issues/5631
 var cosmosDbDataPlaneRoleAssignmentsArray = [
   ...(!empty(principalId) ? [
     {
@@ -454,7 +456,6 @@ module aiSearchService 'br/public:avm/res/search/search-service:0.11.0' = if (az
   }
 }
 
-
 output AZURE_RESOURCE_GROUP string = rg.outputs.name
 output AZURE_PRINCIPAL_ID string = principalId
 output AZURE_PRINCIPAL_ID_TYPE string = principalIdType
@@ -480,6 +481,9 @@ output AZURE_AI_FOUNDRY_RESOURCE_ID string = aiFoundryService.outputs.resourceId
 // Output the SQL Server resources
 output SQL_SERVER_NAME string = sqlServer.outputs.name
 output SQL_SERVER_RESOURCE_ID string = sqlServer.outputs.resourceId
+output SQL_SERVER_ADMIN_USERNAME string = sqlServerUsername
+output SQL_DATABASE_ENDPOINT string = sqlServer.outputs.fullyQualifiedDomainName
+
 
 // Output the Cosmos DB resources
 output COSMOS_DB_ACCOUNT_NAME string = cosmosDbAccountNameOut
