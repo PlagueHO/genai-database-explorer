@@ -7,7 +7,7 @@ tools: ['changes', 'codebase', 'editFiles', 'extensions', 'fetch', 'findTestFile
 
 Create a comprehensive specification for the GitHub Actions workflow: `${input:WorkflowFile}`.
 
-This specification serves as the **single source of truth** for the workflow's behavior, requirements, and constraints. It must be implementation-agnostic, focusing on **what** the workflow accomplishes rather than **how** it's implemented.
+This specification serves as a specification for the workflow's behavior, requirements, and constraints. It must be implementation-agnostic, focusing on **what** the workflow accomplishes rather than **how** it's implemented.
 
 ## AI-Optimized Requirements
 
