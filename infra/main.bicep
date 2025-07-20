@@ -326,8 +326,7 @@ module cosmosDbAccount 'br/public:avm/res/document-db/database-account:0.15.0' =
       {
         principalId: principalId
         name: '00000000-0000-0000-0000-000000000002'
-        // TODO: Fix this once https://github.com/Azure/bicep-registry-modules/issues/5631 resolved
-        roleDefinitionId: '/subscriptions/${subscription().id}/resourceGroups/${resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/${cosmosDbAccountName}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002'
+        roleDefinitionId: '00000000-0000-0000-0000-000000000002'
       }
     ]
   }
