@@ -1,0 +1,100 @@
+name: Console App Integration Tests
+
+on:
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        description: "The environment to use for integration testing"
+        required: true
+        type: string
+      SQL_SERVER_NAME:
+        description: "The SQL Server name for database connection"
+        required: true
+        type: string
+      AZURE_AI_FOUNDRY_ENDPOINT:
+        description: "The Azure AI Foundry endpoint for AI operations"
+        required: false
+        type: string
+        
+    secrets:
+      SQL_SERVER_USERNAME:
+        description: "The SQL Server username for the application"
+        required: true
+      SQL_SERVER_PASSWORD:
+        description: "The SQL Server password for the application"
+        required: true
+
+jobs:
+  console-app-integration-tests:
+    name: Console App Integration Tests
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.ENVIRONMENT }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download Console App Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: console-app-published
+          path: ./publish
+
+      - name: Make Console App Executable
+        run: chmod +x ./publish/GenAIDBExplorer.Console
+
+      - name: Setup PowerShell and Run Console Integration Tests
+        shell: pwsh
+        env:
+          SQL_CONNECTION_STRING: "Server=${{ inputs.SQL_SERVER_NAME }}.database.windows.net;Database=AdventureWorksLT;User Id=${{ secrets.SQL_SERVER_USERNAME }};Password=${{ secrets.SQL_SERVER_PASSWORD }};Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+          AZURE_OPENAI_ENDPOINT: ${{ inputs.AZURE_AI_FOUNDRY_ENDPOINT }}
+        run: |
+          # Install and import Pester in the same session
+          Write-Host "Installing and importing Pester module..." -ForegroundColor Yellow
+          Install-Module -Name Pester -Force -Scope CurrentUser -MinimumVersion 5.7.1 -AllowClobber
+          Import-Module Pester -Force -PassThru
+          
+          # Verify Pester is loaded
+          $pesterVersion = Get-Module Pester | Select-Object -ExpandProperty Version
+          Write-Host "Pester version loaded: $pesterVersion" -ForegroundColor Green
+          
+          # Create test results directory
+          New-Item -ItemType Directory -Path "./test-results" -Force | Out-Null
+          
+          # Configure Pester
+          $config = [PesterConfiguration]::Default
+          $config.Run.Path = './src/Tests/Integration/Console.Integration.Tests.ps1'
+          $config.Output.Verbosity = 'Detailed'
+          $config.TestResult.Enabled = $true
+          $config.TestResult.OutputFormat = 'NUnitXml'
+          $config.TestResult.OutputPath = './test-results/integration-tests.xml'
+          $config.CodeCoverage.Enabled = $false
+          $config.Should.ErrorAction = 'Continue'
+          
+          try {
+            Write-Host "Starting console integration tests..." -ForegroundColor Green
+            Write-Host "SQL Server: ${{ inputs.SQL_SERVER_NAME }}" -ForegroundColor Yellow
+            Write-Host "Azure OpenAI Endpoint: ${{ inputs.AZURE_AI_FOUNDRY_ENDPOINT }}" -ForegroundColor Yellow
+            Invoke-Pester -Configuration $config
+            Write-Host "Integration tests completed" -ForegroundColor Green
+          } catch {
+            Write-Error "Integration tests failed: $($_.Exception.Message)"
+            throw
+          }
+
+      - name: Publish Integration Test Results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Console Integration Test Results
+          path: './test-results/integration-tests.xml'
+          reporter: java-junit
+
+      - name: Upload Integration Test Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: console-integration-test-results
+          path: |
+            ./test-results/
+            ./temp-workspaces/
+          retention-days: 7

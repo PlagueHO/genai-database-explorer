@@ -217,6 +217,9 @@ module aiFoundryRoleAssignments './core/security/role_aifoundry.bicep' = {
   }
 }
 
+// Map principalIdType to SQL administrator principalType
+var sqlAdminPrincipalType = principalIdType == 'ServicePrincipal' ? 'Application' : (principalIdType == 'User' ? 'User' : 'Application')
+
 // --------- SQL DATABASE ---------
 module sqlServer 'br/public:avm/res/sql/server:0.20.0' = {
   name: 'sql-server-deployment-${resourceToken}'
@@ -229,6 +232,14 @@ module sqlServer 'br/public:avm/res/sql/server:0.20.0' = {
     location: location
     administratorLogin: sqlServerUsername
     administratorLoginPassword: sqlServerPassword
+    administrators: {
+      azureADOnlyAuthentication: false
+      login: principalId // Use the principal ID as the login name (can be email for users, application name for service principals)
+      principalType: sqlAdminPrincipalType // 'Application', 'Group', or 'User'
+      sid: principalId // The object ID (principal ID) of the administrator
+      administratorType: 'ActiveDirectory'
+      tenantId: tenant().tenantId // Current tenant ID
+    }
     databases: [
       {
         name: 'AdventureWorksLT'
