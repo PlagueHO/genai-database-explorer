@@ -52,8 +52,79 @@ jobs:
       SQL_SERVER_USERNAME: ${{ secrets.SQL_SERVER_USERNAME }}
       SQL_SERVER_PASSWORD: ${{ secrets.SQL_SERVER_PASSWORD }}
 
-  delete-infrastructure:
+  console-app-integration-tests:
+    name: Console App Integration Tests
+    runs-on: ubuntu-latest
     needs: [provision-infrastructure]
+    environment: ${{ inputs.ENVIRONMENT }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download Console App Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: console-app-published
+          path: ./publish
+
+      - name: Make Console App Executable
+        run: chmod +x ./publish/GenAIDBExplorer.Console
+
+      - name: Setup PowerShell and Pester
+        shell: pwsh
+        run: |
+          Install-Module -Name Pester -Force -Scope CurrentUser -MinimumVersion 5.7.1
+          Import-Module Pester -PassThru
+
+      - name: Run Console Integration Tests
+        shell: pwsh
+        env:
+          SQL_CONNECTION_STRING: "Server=${{ needs.provision-infrastructure.outputs.SQL_SERVER_NAME }}.database.windows.net;Database=AdventureWorksLT;User Id=${{ secrets.SQL_SERVER_USERNAME }};Password=${{ secrets.SQL_SERVER_PASSWORD }};Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+          AZURE_OPENAI_ENDPOINT: ${{ needs.provision-infrastructure.outputs.AZURE_AI_FOUNDRY_ENDPOINT }}
+        run: |
+          # Create test results directory
+          New-Item -ItemType Directory -Path "./test-results" -Force | Out-Null
+          
+          $config = [PesterConfiguration]::Default
+          $config.Run.Path = './src/Tests/Integration/Console.Integration.Tests.ps1'
+          $config.Output.Verbosity = 'Detailed'
+          $config.TestResult.Enabled = $true
+          $config.TestResult.OutputFormat = 'NUnitXml'
+          $config.TestResult.OutputPath = './test-results/integration-tests.xml'
+          $config.CodeCoverage.Enabled = $false
+          $config.Should.ErrorAction = 'Continue'
+          
+          try {
+            Write-Host "Starting console integration tests..." -ForegroundColor Green
+            Write-Host "SQL Server: ${{ needs.provision-infrastructure.outputs.SQL_SERVER_NAME }}" -ForegroundColor Yellow
+            Write-Host "Azure OpenAI Endpoint: ${{ needs.provision-infrastructure.outputs.AZURE_AI_FOUNDRY_ENDPOINT }}" -ForegroundColor Yellow
+            Invoke-Pester -Configuration $config
+            Write-Host "Integration tests completed" -ForegroundColor Green
+          } catch {
+            Write-Error "Integration tests failed: $($_.Exception.Message)"
+            throw
+          }
+
+      - name: Publish Integration Test Results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Console Integration Test Results
+          path: './test-results/integration-tests.xml'
+          reporter: java-junit
+
+      - name: Upload Integration Test Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: console-integration-test-results
+          path: |
+            ./test-results/
+            ./temp-workspaces/
+          retention-days: 7
+
+  delete-infrastructure:
+    needs: [provision-infrastructure, console-app-integration-tests]
     if: always()
     uses: ./.github/workflows/delete-infrastructure.yml
     with:

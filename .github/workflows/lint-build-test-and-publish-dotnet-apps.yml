@@ -55,3 +55,38 @@ jobs:
         with:
           name: ${{ matrix.project }}-test-results
           path: '**/TestResults/*.trx'
+
+  publish-console-app:
+    name: Publish Console Application
+    runs-on: ubuntu-latest
+    needs: dotnet-lint-build-test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore src/GenAIDBExplorer/GenAIDBExplorer.sln
+
+      - name: Publish Console Application
+        run: |
+          dotnet publish src/GenAIDBExplorer/GenAIDBExplorer.Console \
+            --configuration Release \
+            --output ./publish \
+            --no-restore \
+            --self-contained false \
+            --framework net9.0
+
+      - name: Make Console App Executable
+        run: chmod +x ./publish/GenAIDBExplorer.Console
+
+      - name: Upload Console Application Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: console-app-published
+          path: ./publish/
+          retention-days: 1

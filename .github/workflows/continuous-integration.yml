@@ -22,7 +22,7 @@ jobs:
     permissions:
       contents: read
 
-  lint-build-and-test-dotnet-apps:
+  lint-build-test-and-publish-dotnet-apps:
     name: Lint, Build, Test and Publish .NET Apps
     uses: ./.github/workflows/lint-build-test-and-publish-dotnet-apps.yml
     permissions:

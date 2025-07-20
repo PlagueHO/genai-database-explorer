@@ -28,11 +28,18 @@ jobs:
     name: Lint and Publish Bicep
     uses: ./.github/workflows/lint-and-publish-bicep.yml
 
+  lint-build-test-and-publish-dotnet-apps:
+    name: Lint, Build, Test and Publish .NET Apps
+    uses: ./.github/workflows/lint-build-test-and-publish-dotnet-apps.yml
+    with:
+      build_configuration: 'Release'
+
   validate-infrastructure:
     name: Validate Infrastructure
     needs:
       - set-build-variables
       - lint-and-publish-bicep
+      - lint-build-test-and-publish-dotnet-apps
     uses: ./.github/workflows/validate-infrastructure.yml
     with:
       ENVIRONMENT: Test

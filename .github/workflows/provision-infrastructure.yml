@@ -67,12 +67,13 @@ jobs:
       APPLICATION_INSIGHTS_INSTRUMENTATION_KEY: ${{ steps.get_endpoints.outputs.APPLICATION_INSIGHTS_INSTRUMENTATION_KEY }}
       AZURE_AI_SEARCH_NAME: ${{ steps.get_endpoints.outputs.AZURE_AI_SEARCH_NAME }}
       AZURE_AI_SEARCH_ID: ${{ steps.get_endpoints.outputs.AZURE_AI_SEARCH_ID }}
-      AZURE_AI_SERVICES_NAME: ${{ steps.get_endpoints.outputs.AZURE_AI_SERVICES_NAME }}
-      AZURE_AI_SERVICES_ID: ${{ steps.get_endpoints.outputs.AZURE_AI_SERVICES_ID }}
-      AZURE_AI_SERVICES_ENDPOINT: ${{ steps.get_endpoints.outputs.AZURE_AI_SERVICES_ENDPOINT }}
-      AZURE_AI_SERVICES_RESOURCE_ID: ${{ steps.get_endpoints.outputs.AZURE_AI_SERVICES_RESOURCE_ID }}
+      AZURE_AI_FOUNDRY_NAME: ${{ steps.get_endpoints.outputs.AZURE_AI_FOUNDRY_NAME }}
+      AZURE_AI_FOUNDRY_ID: ${{ steps.get_endpoints.outputs.AZURE_AI_FOUNDRY_ID }}
+      AZURE_AI_FOUNDRY_ENDPOINT: ${{ steps.get_endpoints.outputs.AZURE_AI_FOUNDRY_ENDPOINT }}
+      AZURE_AI_FOUNDRY_RESOURCE_ID: ${{ steps.get_endpoints.outputs.AZURE_AI_FOUNDRY_RESOURCE_ID }}
       SQL_SERVER_NAME: ${{ steps.get_endpoints.outputs.SQL_SERVER_NAME }}
       SQL_SERVER_RESOURCE_ID: ${{ steps.get_endpoints.outputs.SQL_SERVER_RESOURCE_ID }}
+      SQL_DATABASE_ENDPOINT: ${{ steps.get_endpoints.outputs.SQL_DATABASE_ENDPOINT }}
       COSMOS_DB_ACCOUNT_NAME: ${{ steps.get_endpoints.outputs.COSMOS_DB_ACCOUNT_NAME }}
       COSMOS_DB_ACCOUNT_RESOURCE_ID: ${{ steps.get_endpoints.outputs.COSMOS_DB_ACCOUNT_RESOURCE_ID }}
       COSMOS_DB_ACCOUNT_ENDPOINT: ${{ steps.get_endpoints.outputs.COSMOS_DB_ACCOUNT_ENDPOINT }}
