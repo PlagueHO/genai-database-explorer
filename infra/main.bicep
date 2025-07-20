@@ -322,13 +322,30 @@ module cosmosDbAccount 'br/public:avm/res/document-db/database-account:0.15.0' =
         principalId: principalId
       }
     ]
-    dataPlaneRoleAssignments: [
-      {
-        principalId: principalId
-        // TODO: Fix this once https://github.com/Azure/bicep-registry-modules/issues/5631 resolved
-        roleDefinitionId: '/resourceGroups/${resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/${cosmosDbAccountName}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002'
-      }
-    ]
+  }
+}
+
+// Add data plane role assignments for Cosmos DB using the new role_cosmosdb.bicep module
+var cosmosDbDataPlaneRoleAssignmentsArray = [
+  ...(!empty(principalId) ? [
+    {
+      roleDefinitionIdOrName: 'Cosmos DB Built-in Data Contributor'
+      principalType: principalIdType
+      principalId: principalId
+    }
+  ] : [])
+]
+
+module cosmosDbDataPlaneRoleAssignments './core/security/role_cosmosdb.bicep' = if (cosmosDbDeploy) {
+  name: 'cosmos-db-dataplane-role-assignments-${resourceToken}'
+  scope: az.resourceGroup(resourceGroupName)
+  dependsOn: [
+    rg
+    cosmosDbAccount
+  ]
+  params: {
+    cosmosDbAccountName: cosmosDbAccountName
+    roleAssignments: cosmosDbDataPlaneRoleAssignmentsArray
   }
 }
 
