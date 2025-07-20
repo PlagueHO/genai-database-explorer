@@ -1,5 +1,4 @@
 targetScope = 'subscription'
-extension microsoftGraphV1
 
 @sys.description('Name of the the environment which is used to generate a short unique hash used in all resources.')
 @minLength(1)
@@ -173,12 +172,6 @@ var storageAccountResourceIdOut = storageAccountDeploy ? storageAccount.outputs.
 #disable-next-line BCP318 // Module is guaranteed to exist when storageAccountDeploy is true
 var storageAccountBlobEndpointOut = storageAccountDeploy ? storageAccount.outputs.primaryBlobEndpoint : ''
 
-// The Service Principal of the Azure Machine Learning service.
-// This is used to assign the Reader role for AI Search and AI Services and used by the AI Foundry Hub
-resource azureMachineLearningServicePrincipal 'Microsoft.Graph/servicePrincipals@v1.0' = {
-  appId: '0736f41a-0425-4b46-bdb5-1563eff02385' // Azure Machine Learning service principal
-}
-
 // Add role assignments for AI Services using the role_aiservice.bicep module
 // This needs to be done after the AI Services account is created to avoid circular dependencies
 // between the AI Services account and the AI Search service.
@@ -207,11 +200,6 @@ var aiFoundryRoleAssignmentsArray = [
       roleDefinitionIdOrName: 'Cognitive Services OpenAI Contributor'
       principalType: principalIdType
       principalId: principalId
-    }
-    {
-      roleDefinitionIdOrName: 'Reader'
-      principalType: 'ServicePrincipal'
-      principalId: azureMachineLearningServicePrincipal.id
     }
   ] : [])
 ]
