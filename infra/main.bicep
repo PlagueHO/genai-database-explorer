@@ -337,8 +337,13 @@ module cosmosDbAccount 'br/public:avm/res/document-db/database-account:0.15.0' =
     dataPlaneRoleAssignments: [
       {
         principalId: principalId
-        name: '00000000-0000-0000-0000-000000000002'
-        roleDefinitionId: resourceId('Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions', cosmosDbAccountName, '00000000-0000-0000-0000-000000000002') // 00000000-0000-0000-0000-000000000002 is 
+        name: 'Cosmos DB Built-in Data Contributor'
+        roleDefinitionId: resourceId(
+          resourceGroupName,
+          'Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions',
+          cosmosDbAccountName,
+          '00000000-0000-0000-0000-000000000002'
+        )
       }
     ]
   }
