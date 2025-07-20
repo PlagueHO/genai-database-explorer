@@ -327,6 +327,7 @@ module cosmosDbAccount 'br/public:avm/res/document-db/database-account:0.15.0' =
         principalId: principalId
         name: 'Cosmos DB Built-in Data Contributor'
         roleDefinitionId: resourceId(
+          subscription().id,
           resourceGroupName,
           'Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions',
           cosmosDbAccountName,
