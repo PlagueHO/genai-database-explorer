@@ -108,7 +108,7 @@ jobs:
           }
 
       - name: Publish Integration Test Results
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v2
         if: always()
         with:
           name: Console Integration Test Results
