@@ -20,6 +20,80 @@ on:
         required: true
         type: string
 
+    outputs:
+      AZURE_RESOURCE_GROUP:
+        description: "The Azure resource group name"
+        value: ${{ jobs.provision-infrastructure.outputs.AZURE_RESOURCE_GROUP }}
+      AZURE_PRINCIPAL_ID:
+        description: "The Azure principal ID"
+        value: ${{ jobs.provision-infrastructure.outputs.AZURE_PRINCIPAL_ID }}
+      AZURE_PRINCIPAL_ID_TYPE:
+        description: "The Azure principal ID type"
+        value: ${{ jobs.provision-infrastructure.outputs.AZURE_PRINCIPAL_ID_TYPE }}
+      LOG_ANALYTICS_WORKSPACE_NAME:
+        description: "The Log Analytics workspace name"
+        value: ${{ jobs.provision-infrastructure.outputs.LOG_ANALYTICS_WORKSPACE_NAME }}
+      LOG_ANALYTICS_RESOURCE_ID:
+        description: "The Log Analytics resource ID"
+        value: ${{ jobs.provision-infrastructure.outputs.LOG_ANALYTICS_RESOURCE_ID }}
+      LOG_ANALYTICS_WORKSPACE_ID:
+        description: "The Log Analytics workspace ID"
+        value: ${{ jobs.provision-infrastructure.outputs.LOG_ANALYTICS_WORKSPACE_ID }}
+      APPLICATION_INSIGHTS_NAME:
+        description: "The Application Insights name"
+        value: ${{ jobs.provision-infrastructure.outputs.APPLICATION_INSIGHTS_NAME }}
+      APPLICATION_INSIGHTS_RESOURCE_ID:
+        description: "The Application Insights resource ID"
+        value: ${{ jobs.provision-infrastructure.outputs.APPLICATION_INSIGHTS_RESOURCE_ID }}
+      APPLICATION_INSIGHTS_INSTRUMENTATION_KEY:
+        description: "The Application Insights instrumentation key"
+        value: ${{ jobs.provision-infrastructure.outputs.APPLICATION_INSIGHTS_INSTRUMENTATION_KEY }}
+      AZURE_AI_SEARCH_NAME:
+        description: "The Azure AI Search service name"
+        value: ${{ jobs.provision-infrastructure.outputs.AZURE_AI_SEARCH_NAME }}
+      AZURE_AI_SEARCH_ID:
+        description: "The Azure AI Search service resource ID"
+        value: ${{ jobs.provision-infrastructure.outputs.AZURE_AI_SEARCH_ID }}
+      AZURE_AI_FOUNDRY_NAME:
+        description: "The Azure AI Foundry service name"
+        value: ${{ jobs.provision-infrastructure.outputs.AZURE_AI_FOUNDRY_NAME }}
+      AZURE_AI_FOUNDRY_ID:
+        description: "The Azure AI Foundry service resource ID"
+        value: ${{ jobs.provision-infrastructure.outputs.AZURE_AI_FOUNDRY_ID }}
+      AZURE_AI_FOUNDRY_ENDPOINT:
+        description: "The Azure AI Foundry service endpoint"
+        value: ${{ jobs.provision-infrastructure.outputs.AZURE_AI_FOUNDRY_ENDPOINT }}
+      AZURE_AI_FOUNDRY_RESOURCE_ID:
+        description: "The Azure AI Foundry service resource ID"
+        value: ${{ jobs.provision-infrastructure.outputs.AZURE_AI_FOUNDRY_RESOURCE_ID }}
+      SQL_SERVER_NAME:
+        description: "The SQL Server name"
+        value: ${{ jobs.provision-infrastructure.outputs.SQL_SERVER_NAME }}
+      SQL_SERVER_RESOURCE_ID:
+        description: "The SQL Server resource ID"
+        value: ${{ jobs.provision-infrastructure.outputs.SQL_SERVER_RESOURCE_ID }}
+      SQL_DATABASE_ENDPOINT:
+        description: "The SQL Database endpoint"
+        value: ${{ jobs.provision-infrastructure.outputs.SQL_DATABASE_ENDPOINT }}
+      COSMOS_DB_ACCOUNT_NAME:
+        description: "The Cosmos DB account name"
+        value: ${{ jobs.provision-infrastructure.outputs.COSMOS_DB_ACCOUNT_NAME }}
+      COSMOS_DB_ACCOUNT_RESOURCE_ID:
+        description: "The Cosmos DB account resource ID"
+        value: ${{ jobs.provision-infrastructure.outputs.COSMOS_DB_ACCOUNT_RESOURCE_ID }}
+      COSMOS_DB_ACCOUNT_ENDPOINT:
+        description: "The Cosmos DB account endpoint"
+        value: ${{ jobs.provision-infrastructure.outputs.COSMOS_DB_ACCOUNT_ENDPOINT }}
+      STORAGE_ACCOUNT_NAME:
+        description: "The Storage Account name"
+        value: ${{ jobs.provision-infrastructure.outputs.STORAGE_ACCOUNT_NAME }}
+      STORAGE_ACCOUNT_RESOURCE_ID:
+        description: "The Storage Account resource ID"
+        value: ${{ jobs.provision-infrastructure.outputs.STORAGE_ACCOUNT_RESOURCE_ID }}
+      STORAGE_ACCOUNT_BLOB_ENDPOINT:
+        description: "The Storage Account blob endpoint"
+        value: ${{ jobs.provision-infrastructure.outputs.STORAGE_ACCOUNT_BLOB_ENDPOINT }}
+
     secrets:
       AZURE_TENANT_ID:
         description: "The Azure tenant ID to use for authentication to Azure for deployment"
