@@ -56,30 +56,30 @@ jobs:
       STORAGE_ACCOUNT_DEPLOY: 'true'
 
     outputs:
-      AZURE_RESOURCE_GROUP: ${{ steps.get_endpoints.outputs.AZURE_RESOURCE_GROUP }}
-      AZURE_PRINCIPAL_ID: ${{ steps.get_endpoints.outputs.AZURE_PRINCIPAL_ID }}
-      AZURE_PRINCIPAL_ID_TYPE: ${{ steps.get_endpoints.outputs.AZURE_PRINCIPAL_ID_TYPE }}
-      LOG_ANALYTICS_WORKSPACE_NAME: ${{ steps.get_endpoints.outputs.LOG_ANALYTICS_WORKSPACE_NAME }}
-      LOG_ANALYTICS_RESOURCE_ID: ${{ steps.get_endpoints.outputs.LOG_ANALYTICS_RESOURCE_ID }}
-      LOG_ANALYTICS_WORKSPACE_ID: ${{ steps.get_endpoints.outputs.LOG_ANALYTICS_WORKSPACE_ID }}
-      APPLICATION_INSIGHTS_NAME: ${{ steps.get_endpoints.outputs.APPLICATION_INSIGHTS_NAME }}
-      APPLICATION_INSIGHTS_RESOURCE_ID: ${{ steps.get_endpoints.outputs.APPLICATION_INSIGHTS_RESOURCE_ID }}
-      APPLICATION_INSIGHTS_INSTRUMENTATION_KEY: ${{ steps.get_endpoints.outputs.APPLICATION_INSIGHTS_INSTRUMENTATION_KEY }}
-      AZURE_AI_SEARCH_NAME: ${{ steps.get_endpoints.outputs.AZURE_AI_SEARCH_NAME }}
-      AZURE_AI_SEARCH_ID: ${{ steps.get_endpoints.outputs.AZURE_AI_SEARCH_ID }}
-      AZURE_AI_FOUNDRY_NAME: ${{ steps.get_endpoints.outputs.AZURE_AI_FOUNDRY_NAME }}
-      AZURE_AI_FOUNDRY_ID: ${{ steps.get_endpoints.outputs.AZURE_AI_FOUNDRY_ID }}
-      AZURE_AI_FOUNDRY_ENDPOINT: ${{ steps.get_endpoints.outputs.AZURE_AI_FOUNDRY_ENDPOINT }}
-      AZURE_AI_FOUNDRY_RESOURCE_ID: ${{ steps.get_endpoints.outputs.AZURE_AI_FOUNDRY_RESOURCE_ID }}
-      SQL_SERVER_NAME: ${{ steps.get_endpoints.outputs.SQL_SERVER_NAME }}
-      SQL_SERVER_RESOURCE_ID: ${{ steps.get_endpoints.outputs.SQL_SERVER_RESOURCE_ID }}
-      SQL_DATABASE_ENDPOINT: ${{ steps.get_endpoints.outputs.SQL_DATABASE_ENDPOINT }}
-      COSMOS_DB_ACCOUNT_NAME: ${{ steps.get_endpoints.outputs.COSMOS_DB_ACCOUNT_NAME }}
-      COSMOS_DB_ACCOUNT_RESOURCE_ID: ${{ steps.get_endpoints.outputs.COSMOS_DB_ACCOUNT_RESOURCE_ID }}
-      COSMOS_DB_ACCOUNT_ENDPOINT: ${{ steps.get_endpoints.outputs.COSMOS_DB_ACCOUNT_ENDPOINT }}
-      STORAGE_ACCOUNT_NAME: ${{ steps.get_endpoints.outputs.STORAGE_ACCOUNT_NAME }}
-      STORAGE_ACCOUNT_RESOURCE_ID: ${{ steps.get_endpoints.outputs.STORAGE_ACCOUNT_RESOURCE_ID }}
-      STORAGE_ACCOUNT_BLOB_ENDPOINT: ${{ steps.get_endpoints.outputs.STORAGE_ACCOUNT_BLOB_ENDPOINT }}
+      AZURE_RESOURCE_GROUP: ${{ steps.get_infrastructure_outputs.outputs.AZURE_RESOURCE_GROUP }}
+      AZURE_PRINCIPAL_ID: ${{ steps.get_infrastructure_outputs.outputs.AZURE_PRINCIPAL_ID }}
+      AZURE_PRINCIPAL_ID_TYPE: ${{ steps.get_infrastructure_outputs.outputs.AZURE_PRINCIPAL_ID_TYPE }}
+      LOG_ANALYTICS_WORKSPACE_NAME: ${{ steps.get_infrastructure_outputs.outputs.LOG_ANALYTICS_WORKSPACE_NAME }}
+      LOG_ANALYTICS_RESOURCE_ID: ${{ steps.get_infrastructure_outputs.outputs.LOG_ANALYTICS_RESOURCE_ID }}
+      LOG_ANALYTICS_WORKSPACE_ID: ${{ steps.get_infrastructure_outputs.outputs.LOG_ANALYTICS_WORKSPACE_ID }}
+      APPLICATION_INSIGHTS_NAME: ${{ steps.get_infrastructure_outputs.outputs.APPLICATION_INSIGHTS_NAME }}
+      APPLICATION_INSIGHTS_RESOURCE_ID: ${{ steps.get_infrastructure_outputs.outputs.APPLICATION_INSIGHTS_RESOURCE_ID }}
+      APPLICATION_INSIGHTS_INSTRUMENTATION_KEY: ${{ steps.get_infrastructure_outputs.outputs.APPLICATION_INSIGHTS_INSTRUMENTATION_KEY }}
+      AZURE_AI_SEARCH_NAME: ${{ steps.get_infrastructure_outputs.outputs.AZURE_AI_SEARCH_NAME }}
+      AZURE_AI_SEARCH_ID: ${{ steps.get_infrastructure_outputs.outputs.AZURE_AI_SEARCH_ID }}
+      AZURE_AI_FOUNDRY_NAME: ${{ steps.get_infrastructure_outputs.outputs.AZURE_AI_FOUNDRY_NAME }}
+      AZURE_AI_FOUNDRY_ID: ${{ steps.get_infrastructure_outputs.outputs.AZURE_AI_FOUNDRY_ID }}
+      AZURE_AI_FOUNDRY_ENDPOINT: ${{ steps.get_infrastructure_outputs.outputs.AZURE_AI_FOUNDRY_ENDPOINT }}
+      AZURE_AI_FOUNDRY_RESOURCE_ID: ${{ steps.get_infrastructure_outputs.outputs.AZURE_AI_FOUNDRY_RESOURCE_ID }}
+      SQL_SERVER_NAME: ${{ steps.get_infrastructure_outputs.outputs.SQL_SERVER_NAME }}
+      SQL_SERVER_RESOURCE_ID: ${{ steps.get_infrastructure_outputs.outputs.SQL_SERVER_RESOURCE_ID }}
+      SQL_DATABASE_ENDPOINT: ${{ steps.get_infrastructure_outputs.outputs.SQL_DATABASE_ENDPOINT }}
+      COSMOS_DB_ACCOUNT_NAME: ${{ steps.get_infrastructure_outputs.outputs.COSMOS_DB_ACCOUNT_NAME }}
+      COSMOS_DB_ACCOUNT_RESOURCE_ID: ${{ steps.get_infrastructure_outputs.outputs.COSMOS_DB_ACCOUNT_RESOURCE_ID }}
+      COSMOS_DB_ACCOUNT_ENDPOINT: ${{ steps.get_infrastructure_outputs.outputs.COSMOS_DB_ACCOUNT_ENDPOINT }}
+      STORAGE_ACCOUNT_NAME: ${{ steps.get_infrastructure_outputs.outputs.STORAGE_ACCOUNT_NAME }}
+      STORAGE_ACCOUNT_RESOURCE_ID: ${{ steps.get_infrastructure_outputs.outputs.STORAGE_ACCOUNT_RESOURCE_ID }}
+      STORAGE_ACCOUNT_BLOB_ENDPOINT: ${{ steps.get_infrastructure_outputs.outputs.STORAGE_ACCOUNT_BLOB_ENDPOINT }}
 
     steps:
       - name: Checkout
@@ -98,14 +98,18 @@ jobs:
       - name: Provision Infrastructure
         run: azd provision --no-prompt
 
-      - name: Get Output Endpoints
-        id: get_endpoints
+      - name: Display Infrastructure Outputs
+        id: get_infrastructure_outputs
         run: |
           # Get all outputs from azd env get-values and pass them through directly
           echo "Getting azd environment outputs..."
           AZD_OUTPUTS=$(azd env get-values)
           
-          # Define all the output variables we want to extract from Bicep
+          echo "=== RAW AZD OUTPUTS ==="
+          echo "$AZD_OUTPUTS"
+          echo "======================="
+          
+          # Define all the output variables we want to extract from azd outputs
           OUTPUT_VARS=(
             "AZURE_RESOURCE_GROUP"
             "AZURE_PRINCIPAL_ID"
@@ -133,9 +137,31 @@ jobs:
             "STORAGE_ACCOUNT_BLOB_ENDPOINT"
           )
           
-          # Extract and set each output variable directly from Bicep
+          echo "=== EXTRACTING OUTPUT VARIABLES ==="
+          # Extract and set each output variable directly from azd outputs
           for VAR_NAME in "${OUTPUT_VARS[@]}"; do
             VAR_VALUE=$(echo "$AZD_OUTPUTS" | grep "^${VAR_NAME}=" | cut -d'=' -f2- | xargs)
-            echo "$VAR_NAME=$VAR_VALUE" >> $GITHUB_OUTPUT
-            echo "Set $VAR_NAME=$VAR_VALUE"
+            if [[ -n "$VAR_VALUE" ]]; then
+              echo "$VAR_NAME=$VAR_VALUE" >> $GITHUB_OUTPUT
+              echo "✅ Set $VAR_NAME=$VAR_VALUE"
+            else
+              echo "$VAR_NAME=" >> $GITHUB_OUTPUT
+              echo "⚠️  Set $VAR_NAME=(empty)"
+            fi
           done
+          echo "===================================="
+          
+          echo "=== FINAL OUTPUT VERIFICATION ==="
+          echo "The following values will be available as job outputs:"
+          echo "SQL_SERVER_NAME: $(echo "$AZD_OUTPUTS" | grep "^SQL_SERVER_NAME=" | cut -d'=' -f2- | xargs)"
+          echo "AZURE_AI_FOUNDRY_NAME: $(echo "$AZD_OUTPUTS" | grep "^AZURE_AI_FOUNDRY_NAME=" | cut -d'=' -f2- | xargs)"
+          echo "AZURE_AI_FOUNDRY_ENDPOINT: $(echo "$AZD_OUTPUTS" | grep "^AZURE_AI_FOUNDRY_ENDPOINT=" | cut -d'=' -f2- | xargs)"
+          echo "===================================="
+          
+          echo "=== GITHUB_OUTPUT FILE CONTENTS ==="
+          if [[ -f "$GITHUB_OUTPUT" ]]; then
+            cat "$GITHUB_OUTPUT"
+          else
+            echo "ERROR: GITHUB_OUTPUT file not found at: $GITHUB_OUTPUT"
+          fi
+          echo "===================================="
