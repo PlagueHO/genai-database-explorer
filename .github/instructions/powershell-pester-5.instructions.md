@@ -1,11 +1,11 @@
 ---
-applyTo: '**/*.tests.ps1,**/*.Tests.ps1'
+applyTo: '**/*.tests.ps1'
 description: 'PowerShell Pester testing best practices based on Pester v5 conventions'
----  
+---
 
 # PowerShell Pester v5 Testing Guidelines
 
-This guide provides PowerShell-specific instructions for creating automated tests using PowerShell Pester v5 module. Follow PowerShell cmdlet development guidelines in [powershell-best-practices.instructions.md](./powershell-best-practices.instructions.md) for general PowerShell scripting best practices.
+This guide provides PowerShell-specific instructions for creating automated tests using PowerShell Pester v5 module. Follow PowerShell cmdlet development guidelines in [powershell.instructions.md](./powershell.instructions.md) for general PowerShell scripting best practices.
 
 ```powershell
 
@@ -32,7 +32,7 @@ Describe 'FunctionName' {
 ## Core Keywords
 
 - **`Describe`**: Top-level grouping, typically named after function being tested
-- **`Context`**: Sub-grouping within Describe for specific scenarios  
+- **`Context`**: Sub-grouping within Describe for specific scenarios
 - **`It`**: Individual test cases, use descriptive names
 - **`Should`**: Assertion keyword for test validation
 - **`BeforeAll/AfterAll`**: Setup/teardown once per block
@@ -98,7 +98,7 @@ It 'Returns <Expected> for <Name>' -ForEach @(
     @{ Name = 'test2'; Expected = 'result2' }
 ) { Get-Function $Name | Should -Be $Expected }
 
-# Array approach  
+# Array approach
 It 'Contains <_>' -ForEach 'item1', 'item2' { Get-Collection | Should -Contain $_ }
 ```
 
@@ -156,24 +156,24 @@ Describe 'Get-UserInfo' {
         BeforeAll {
             Mock Get-ADUser { @{ Name = 'TestUser'; Enabled = $true } }
         }
-        
+
         It 'Should return user object' {
             $result = Get-UserInfo -Username 'TestUser'
             $result | Should -Not -BeNullOrEmpty
             $result.Name | Should -Be 'TestUser'
         }
-        
+
         It 'Should call Get-ADUser once' {
             Get-UserInfo -Username 'TestUser'
             Should -Invoke Get-ADUser -Exactly 1
         }
     }
-    
+
     Context 'When user does not exist' {
         BeforeAll {
             Mock Get-ADUser { throw "User not found" }
         }
-        
+
         It 'Should throw exception' {
             { Get-UserInfo -Username 'NonExistent' } | Should -Throw "*not found*"
         }
