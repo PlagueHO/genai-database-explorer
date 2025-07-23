@@ -64,20 +64,6 @@ jobs:
       SQL_SERVER_USERNAME: ${{ secrets.SQL_SERVER_USERNAME }}
       SQL_SERVER_PASSWORD: ${{ secrets.SQL_SERVER_PASSWORD }}
 
-  test-simple-output:
-    needs: [provision-infrastructure]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Test Simple Output Access
-        run: |
-          echo "Testing if we can access provision-infrastructure outputs..."
-          echo "SQL_SERVER_NAME from outputs: '${{ needs.provision-infrastructure.outputs.SQL_SERVER_NAME }}'"
-          if [[ -z "${{ needs.provision-infrastructure.outputs.SQL_SERVER_NAME }}" ]]; then
-            echo "ERROR: SQL_SERVER_NAME is empty!"
-          else
-            echo "SUCCESS: SQL_SERVER_NAME has a value"
-          fi
-
   delete-infrastructure:
     needs: [provision-infrastructure, console-app-integration-tests]
     if: always()
