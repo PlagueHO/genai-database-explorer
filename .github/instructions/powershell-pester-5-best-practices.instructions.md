@@ -1,5 +1,5 @@
 ---
-applyTo: '**/*.tests.ps1,**/*.Tests.ps1'
+applyTo: '**/*.tests.ps1'
 description: 'PowerShell Pester testing best practices based on Pester v5 conventions'
 ---  
 
@@ -16,7 +16,7 @@ This guide provides PowerShell-specific instructions for creating automated test
 - **Error Handling**: Use `Write-Verbose`/`Write-Error` for test output, `try/catch` for exception testing
 - **Style**: 4-space indentation, opening braces same line, full parameter names
 - **Parameters**: Use `param()` block at start of script, include `[CmdletBinding()]` for advanced functions.
-- **Function Calling**: Only named parameters, no positional parameters.
+- **Function Calling**: Never use positional parameters. Always use full parameter name in call `Write-Verbose -Message "Test message"` instead of `Write-Verbose "Test message"`.
 
 ```powershell
 

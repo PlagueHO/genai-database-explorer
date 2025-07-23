@@ -1,92 +1,97 @@
+
 <#
-.SYNOPSIS
-    Integration tests for GenAI Database Explorer Console Application
-.DESCRIPTION
-    Comprehensive integration tests that validate all CLI commands against live Azure infrastructure.
-    Tests include project initialization, database model extraction, AI enrichment, and export functionality.
-.NOTES
-    Framework: PowerShell Pester v5.7+
-    Author: GenAI Database Explorer Team
-    Requirements: Azure SQL Database (AdventureWorksLT), Azure OpenAI Services
+    .SYNOPSIS
+        Integration tests for GenAI Database Explorer Console Application
+    .DESCRIPTION
+        Comprehensive integration tests that validate all CLI commands against live Azure infrastructure.
+        Tests include project initialization, database model extraction, AI enrichment, and export functionality.
+    .NOTES
+        Framework: PowerShell Pester v5.7+
+        Author: GenAI Database Explorer Team
+        Requirements: Azure SQL Database (AdventureWorksLT), Azure OpenAI Services
 #>
 #Requires -Version 5.1
 
 using namespace System.Management.Automation
 
-BeforeAll {
-    # Arrange: Create test workspace and validate console app
-    $script:TestWorkspace = New-Item -ItemType Directory -Path (Join-Path ([System.IO.Path]::GetTempPath()) "genaidb-integration-test-$(Get-Random)") -Force
-    $script:ConsoleApp = "./publish/GenAIDBExplorer.Console"
-    $script:BaseProjectPath = Join-Path $script:TestWorkspace.FullName "projects"
-    New-Item -ItemType Directory -Path $script:BaseProjectPath -Force | Out-Null
+$config = [PesterConfiguration]::Default
+$config.Run.Path = $PSScriptRoot
+$config.Output.Verbosity = 'Detailed'
+$config.TestResult.Enabled = $true
+$config.TestResult.OutputFormat = 'NUnitXml'
+$config.Should.ErrorAction = 'Continue'
 
-    if (-not (Test-Path $script:ConsoleApp)) {
-        throw "Console application not found at: $($script:ConsoleApp)"
-    }
-    if ($env:RUNNER_OS -ne 'Windows') {
-        & chmod +x $script:ConsoleApp 2>&1 | Out-Null
-    }
-    $requiredEnvVars = @('SQL_CONNECTION_STRING', 'AZURE_OPENAI_ENDPOINT')
-    foreach ($envVar in $requiredEnvVars) {
-        if ($null -eq $env:$envVar -or $env:$envVar -eq '') {
-            Write-Warning "Environment variable '$envVar' is not set. Some tests may fail."
+Describe 'GenAI Database Explorer Console Application' {
+    BeforeAll {
+        # Arrange: Create test workspace and validate console app
+        $script:TestWorkspace = New-Item -ItemType Directory -Path (Join-Path ([System.IO.Path]::GetTempPath()) "genaidb-integration-test-$(Get-Random)") -Force
+        $script:ConsoleApp = "./publish/GenAIDBExplorer.Console"
+        $script:BaseProjectPath = Join-Path $script:TestWorkspace.FullName "projects"
+        New-Item -ItemType Directory -Path $script:BaseProjectPath -Force | Out-Null
+
+        if (-not (Test-Path $script:ConsoleApp)) {
+            throw "Console application not found at: $($script:ConsoleApp)"
+        }
+        if ($env:RUNNER_OS -ne 'Windows') {
+            & chmod +x $script:ConsoleApp 2>&1 | Out-Null
+        }
+        $requiredEnvVars = @('SQL_CONNECTION_STRING', 'AZURE_OPENAI_ENDPOINT')
+        foreach ($envVar in $requiredEnvVars) {
+            if ($null -eq ${env:$envVar} -or ${env:$envVar} -eq '') {
+                Write-Warning "Environment variable '$envVar' is not set. Some tests may fail."
+            }
         }
     }
-}
 
-Describe "GenAI Database Explorer Console Application" {
-    Context "init-project command" {
-        Context "When initializing a new project" {
+    Context 'init-project command' {
+        Context 'When initializing a new project' {
             BeforeAll {
                 # Arrange
-                $script:InitProjectPath = Join-Path $script:BaseProjectPath "init-test"
+                $script:InitProjectPath = Join-Path $script:BaseProjectPath 'init-test'
             }
-            
-            It "Should create proper project structure and settings.json" {
+            It 'Should create proper project structure and settings.json' {
                 # Act
                 Write-Host "Executing: $script:ConsoleApp init-project --project $script:InitProjectPath" -ForegroundColor Cyan
                 $result = & $script:ConsoleApp init-project --project $script:InitProjectPath 2>&1
                 $exitCode = $LASTEXITCODE
-                
+
                 Write-Host "Console Output:" -ForegroundColor Yellow
                 $result | ForEach-Object { Write-Host "  $_" -ForegroundColor Gray }
                 Write-Host "Exit Code: $exitCode" -ForegroundColor Yellow
-                
+
                 # Assert
-                $exitCode | Should -Be 0 -Because "init-project command should succeed"
-                $result | Should -Not -Match "ERROR|FAIL|Exception" -Because "No errors should be reported"
-                Test-Path (Join-Path $script:InitProjectPath "settings.json") | Should -Be $true -Because "settings.json should be created"
-                
+                $exitCode | Should -Be 0 -Because 'init-project command should succeed'
+                $result | Should -Not -Match 'ERROR|FAIL|Exception' -Because 'No errors should be reported'
+                Test-Path (Join-Path $script:InitProjectPath 'settings.json') | Should -Be $true -Because 'settings.json should be created'
+
                 # Validate settings.json structure
-                $settingsPath = Join-Path $script:InitProjectPath "settings.json"
+                $settingsPath = Join-Path $script:InitProjectPath 'settings.json'
                 $settings = Get-Content $settingsPath | ConvertFrom-Json -ErrorAction Stop
-                $settings | Should -Not -BeNullOrEmpty -Because "settings.json should contain valid configuration"
-                $settings.PSObject.Properties.Name | Should -Contain "connectionStrings" -Because "settings should include connection strings configuration"
-                
+                $settings | Should -Not -BeNullOrEmpty -Because 'settings.json should contain valid configuration'
+                $settings.PSObject.Properties.Name | Should -Contain 'connectionStrings' -Because 'settings should include connection strings configuration'
+
                 Write-Host "✅ Project initialized successfully" -ForegroundColor Green
             }
         }
-        
-        Context "When project path already exists" {
+        Context 'When project path already exists' {
             BeforeAll {
                 # Arrange
-                $script:ExistingProjectPath = Join-Path $script:BaseProjectPath "existing-test"
+                $script:ExistingProjectPath = Join-Path $script:BaseProjectPath 'existing-test'
                 New-Item -ItemType Directory -Path $script:ExistingProjectPath -Force | Out-Null
             }
-            
-            It "Should handle existing directory gracefully" {
+            It 'Should handle existing directory gracefully' {
                 # Act
                 Write-Host "Executing: $script:ConsoleApp init-project --project $script:ExistingProjectPath" -ForegroundColor Cyan
                 $result = & $script:ConsoleApp init-project --project $script:ExistingProjectPath 2>&1
                 $exitCode = $LASTEXITCODE
-                
+
                 Write-Host "Console Output:" -ForegroundColor Yellow
                 $result | ForEach-Object { Write-Host "  $_" -ForegroundColor Gray }
                 Write-Host "Exit Code: $exitCode" -ForegroundColor Yellow
-                
+
                 # Assert
-                $exitCode | Should -BeIn @(0, 1) -Because "Should succeed or indicate directory exists"
-                
+                $exitCode | Should -BeIn @(0, 1) -Because 'Should succeed or indicate directory exists'
+
                 Write-Host "✅ Existing directory handled appropriately" -ForegroundColor Green
             }
         }
@@ -520,13 +525,17 @@ Describe "GenAI Database Explorer Console Application" {
     }
 }
 
-AfterAll {
-    # Cleanup: Remove test workspace if it exists
-    if ($script:TestWorkspace -and (Test-Path $script:TestWorkspace)) {
-        try {
-            Remove-Item $script:TestWorkspace -Recurse -Force -ErrorAction SilentlyContinue
-        } catch {
-            Write-Warning "Failed to clean up test workspace: $($_.Exception.Message)"
+
+    AfterAll {
+        # Cleanup: Remove test workspace if it exists
+        if ($script:TestWorkspace -and (Test-Path $script:TestWorkspace)) {
+            try {
+                Remove-Item $script:TestWorkspace -Recurse -Force -ErrorAction SilentlyContinue
+            } catch {
+                Write-Warning "Failed to clean up test workspace: $($_.Exception.Message)"
+            }
         }
     }
 }
+
+Invoke-Pester -Configuration $config
