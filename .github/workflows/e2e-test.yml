@@ -59,6 +59,7 @@ jobs:
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
       SQL_SERVER_NAME: ${{ needs.provision-infrastructure.outputs.SQL_SERVER_NAME }}
       AZURE_AI_FOUNDRY_ENDPOINT: ${{ needs.provision-infrastructure.outputs.AZURE_AI_FOUNDRY_ENDPOINT }}
+      AZURE_AI_FOUNDRY_NAME: ${{ needs.provision-infrastructure.outputs.AZURE_AI_FOUNDRY_NAME }}
     secrets:
       SQL_SERVER_USERNAME: ${{ secrets.SQL_SERVER_USERNAME }}
       SQL_SERVER_PASSWORD: ${{ secrets.SQL_SERVER_PASSWORD }}

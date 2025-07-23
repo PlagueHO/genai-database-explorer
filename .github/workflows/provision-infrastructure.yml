@@ -101,7 +101,11 @@ jobs:
       - name: Get Output Endpoints
         id: get_endpoints
         run: |
-          # Define the output variables we want to extract and pass through
+          # Get all outputs from azd env get-values and pass them through directly
+          echo "Getting azd environment outputs..."
+          AZD_OUTPUTS=$(azd env get-values)
+          
+          # Define all the output variables we want to extract from Bicep
           OUTPUT_VARS=(
             "AZURE_RESOURCE_GROUP"
             "AZURE_PRINCIPAL_ID"
@@ -116,6 +120,7 @@ jobs:
             "AZURE_AI_SEARCH_ID"
             "AZURE_AI_FOUNDRY_NAME"
             "AZURE_AI_FOUNDRY_ID"
+            "AZURE_AI_FOUNDRY_ENDPOINT"
             "AZURE_AI_FOUNDRY_RESOURCE_ID"
             "SQL_SERVER_NAME"
             "SQL_SERVER_RESOURCE_ID"
@@ -128,46 +133,9 @@ jobs:
             "STORAGE_ACCOUNT_BLOB_ENDPOINT"
           )
           
-          # Get all outputs from azd env get-values
-          echo "Getting azd environment outputs..."
-          AZD_OUTPUTS=$(azd env get-values)
-          
-          # Extract and set each output variable
+          # Extract and set each output variable directly from Bicep
           for VAR_NAME in "${OUTPUT_VARS[@]}"; do
             VAR_VALUE=$(echo "$AZD_OUTPUTS" | grep "^${VAR_NAME}=" | cut -d'=' -f2- | xargs)
             echo "$VAR_NAME=$VAR_VALUE" >> $GITHUB_OUTPUT
             echo "Set $VAR_NAME=$VAR_VALUE"
           done
-          
-          # Get the Azure AI Foundry OpenAI endpoint using Azure CLI
-          echo "Retrieving Azure AI Foundry OpenAI endpoint..."
-          AZURE_AI_FOUNDRY_NAME=$(echo "$AZD_OUTPUTS" | grep "^AZURE_AI_FOUNDRY_NAME=" | cut -d'=' -f2- | xargs)
-          AZURE_RESOURCE_GROUP=$(echo "$AZD_OUTPUTS" | grep "^AZURE_RESOURCE_GROUP=" | cut -d'=' -f2- | xargs)
-          
-          if [[ -n "$AZURE_AI_FOUNDRY_NAME" && -n "$AZURE_RESOURCE_GROUP" ]]; then
-            echo "Looking up OpenAI endpoint for AI Foundry resource: $AZURE_AI_FOUNDRY_NAME in resource group: $AZURE_RESOURCE_GROUP"
-            
-            # Get the AI Services endpoint and derive the OpenAI endpoint
-            # Azure AI Services with kind 'AIServices' provides OpenAI endpoints at a specific path
-            AI_SERVICES_ENDPOINT=$(az cognitiveservices account show \
-              --name "$AZURE_AI_FOUNDRY_NAME" \
-              --resource-group "$AZURE_RESOURCE_GROUP" \
-              --query "properties.endpoint" \
-              --output tsv 2>/dev/null || echo "")
-            
-            if [[ -n "$AI_SERVICES_ENDPOINT" ]]; then
-              # For Azure AI Services (AIServices kind), the OpenAI endpoint is the same as the main endpoint
-              # The endpoint format is typically: https://<name>.cognitiveservices.azure.com/
-              AZURE_AI_FOUNDRY_ENDPOINT="$AI_SERVICES_ENDPOINT"
-              echo "AZURE_AI_FOUNDRY_ENDPOINT=$AZURE_AI_FOUNDRY_ENDPOINT" >> $GITHUB_OUTPUT
-              echo "Set AZURE_AI_FOUNDRY_ENDPOINT=$AZURE_AI_FOUNDRY_ENDPOINT"
-            else
-              echo "Warning: Could not retrieve AI Services endpoint for $AZURE_AI_FOUNDRY_NAME"
-              echo "AZURE_AI_FOUNDRY_ENDPOINT=" >> $GITHUB_OUTPUT
-              echo "Set AZURE_AI_FOUNDRY_ENDPOINT=(empty)"
-            fi
-          else
-            echo "Warning: Azure AI Foundry name or resource group not found in outputs"
-            echo "AZURE_AI_FOUNDRY_ENDPOINT=" >> $GITHUB_OUTPUT
-            echo "Set AZURE_AI_FOUNDRY_ENDPOINT=(empty)"
-          fi

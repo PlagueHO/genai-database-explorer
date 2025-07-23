@@ -15,6 +15,10 @@ on:
         description: "The Azure AI Foundry endpoint for AI operations"
         required: false
         type: string
+      AZURE_AI_FOUNDRY_NAME:
+        description: "The Azure AI Foundry resource name for endpoint construction"
+        required: false
+        type: string
         
     secrets:
       SQL_SERVER_USERNAME:
@@ -62,6 +66,14 @@ jobs:
           Write-Host "SQL_CONNECTION_STRING: $($env:SQL_CONNECTION_STRING.Length) characters" -ForegroundColor Yellow
           Write-Host "AZURE_OPENAI_ENDPOINT: '$env:AZURE_OPENAI_ENDPOINT'" -ForegroundColor Yellow
           Write-Host "Input AZURE_AI_FOUNDRY_ENDPOINT: '${{ inputs.AZURE_AI_FOUNDRY_ENDPOINT }}'" -ForegroundColor Yellow
+          Write-Host "Input AZURE_AI_FOUNDRY_NAME: '${{ inputs.AZURE_AI_FOUNDRY_NAME }}'" -ForegroundColor Yellow
+          
+          # Construct OpenAI endpoint if not provided but name is available
+          if ([string]::IsNullOrEmpty($env:AZURE_OPENAI_ENDPOINT) -and -not [string]::IsNullOrEmpty('${{ inputs.AZURE_AI_FOUNDRY_NAME }}')) {
+            $constructedEndpoint = "https://${{ inputs.AZURE_AI_FOUNDRY_NAME }}.cognitiveservices.azure.com/"
+            Write-Host "Constructing OpenAI endpoint from AI Foundry name: $constructedEndpoint" -ForegroundColor Cyan
+            $env:AZURE_OPENAI_ENDPOINT = $constructedEndpoint
+          }
           
           # Check if endpoint is available for AI tests
           if ([string]::IsNullOrEmpty($env:AZURE_OPENAI_ENDPOINT)) {
