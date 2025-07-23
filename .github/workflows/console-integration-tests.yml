@@ -82,7 +82,7 @@ jobs:
             } else {
               Write-Warning "⚠️  Unexpected endpoint format - tests may still work but verify configuration"
               Write-Host "   Expected: https://<name>.cognitiveservices.azure.com/ or https://<name>.openai.azure.com/" -ForegroundColor Yellow
-            fi
+            }
           }
           Write-Host "===================================" -ForegroundColor Magenta
           
