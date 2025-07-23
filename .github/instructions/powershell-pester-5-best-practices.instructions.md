@@ -1,22 +1,11 @@
 ---
-applyTo: '**/*.tests.ps1'
+applyTo: '**/*.tests.ps1,**/*.Tests.ps1'
 description: 'PowerShell Pester testing best practices based on Pester v5 conventions'
 ---  
 
 # PowerShell Pester v5 Testing Guidelines
 
-This guide provides PowerShell-specific instructions for creating automated tests using PowerShell Pester v5 module. Follow PowerShell cmdlet development guidelines and Pester v5 conventions. Pester v5 Docs Reference [https://pester.dev/docs/v5/](https://pester.dev/docs/v5/).
-
-## PowerShell Fundamentals
-
-- **Naming**: Use PascalCase for functions/parameters, descriptive names, avoid abbreviations
-- **No Aliases**: Use full cmdlet names (`Where-Object` not `?`, `Get-ChildItem` not `gci`)
-- **Variables**: PascalCase for public, camelCase for private/local test variables
-- **Validation**: Use `[ValidateNotNullOrEmpty()]`, `[ValidateSet()]` for test helper functions
-- **Error Handling**: Use `Write-Verbose`/`Write-Error` for test output, `try/catch` for exception testing
-- **Style**: 4-space indentation, opening braces same line, full parameter names
-- **Parameters**: Use `param()` block at start of script, include `[CmdletBinding()]` for advanced functions.
-- **Function Calling**: Never use positional parameters. Always use full parameter name in call `Write-Verbose -Message "Test message"` instead of `Write-Verbose "Test message"`.
+This guide provides PowerShell-specific instructions for creating automated tests using PowerShell Pester v5 module. Follow PowerShell cmdlet development guidelines in [powershell-best-practices.instructions.md](./powershell-best-practices.instructions.md) for general PowerShell scripting best practices.
 
 ```powershell
 
@@ -94,6 +83,52 @@ It 'Should return <Expected> for <Input>' -TestCases @(
 }
 ```
 
+## Data-Driven Tests
+
+- **`-ForEach`**: Available on `Describe`, `Context`, and `It` for generating multiple tests from data
+- **`-TestCases`**: Alias for `-ForEach` on `It` blocks (backwards compatibility)
+- **Hashtable Data**: Each item defines variables available in test (e.g., `@{ Name = 'value'; Expected = 'result' }`)
+- **Array Data**: Uses `$_` variable for current item
+- **Templates**: Use `<variablename>` in test names for dynamic expansion
+
+```powershell
+# Hashtable approach
+It 'Returns <Expected> for <Name>' -ForEach @(
+    @{ Name = 'test1'; Expected = 'result1' }
+    @{ Name = 'test2'; Expected = 'result2' }
+) { Get-Function $Name | Should -Be $Expected }
+
+# Array approach  
+It 'Contains <_>' -ForEach 'item1', 'item2' { Get-Collection | Should -Contain $_ }
+```
+
+## Tags
+
+- **Available on**: `Describe`, `Context`, and `It` blocks
+- **Filtering**: Use `-TagFilter` and `-ExcludeTagFilter` with `Invoke-Pester`
+- **Wildcards**: Tags support `-like` wildcards for flexible filtering
+
+```powershell
+Describe 'Function' -Tag 'Unit' {
+    It 'Should work' -Tag 'Fast', 'Stable' { }
+    It 'Should be slow' -Tag 'Slow', 'Integration' { }
+}
+
+# Run only fast unit tests
+Invoke-Pester -TagFilter 'Unit' -ExcludeTagFilter 'Slow'
+```
+
+## Skip
+
+- **`-Skip`**: Available on `Describe`, `Context`, and `It` to skip tests
+- **Conditional**: Use `-Skip:$condition` for dynamic skipping
+- **Runtime Skip**: Use `Set-ItResult -Skipped` during test execution (setup/teardown still run)
+
+```powershell
+It 'Should work on Windows' -Skip:(-not $IsWindows) { }
+Context 'Integration tests' -Skip { }
+```
+
 ## Error Handling
 
 - **Continue on Failure**: Use `Should.ErrorAction = 'Continue'` to collect multiple failures
@@ -109,19 +144,7 @@ It 'Should return <Expected> for <Input>' -TestCases @(
 - **Single Responsibility**: One assertion per test when possible
 - **Test File Organization**: Group related tests in Context blocks. Context blocks can be nested.
 
-## Configuration
-
-```powershell
-$config = [PesterConfiguration]::Default
-$config.Run.Path = './Tests'
-$config.Output.Verbosity = 'Detailed'
-$config.TestResult.Enabled = $true
-$config.TestResult.OutputFormat = 'NUnitXml'
-$config.Should.ErrorAction = 'Continue'
-Invoke-Pester -Configuration $config
-```
-
-## Example Pattern
+## Example Test Pattern
 
 ```powershell
 BeforeAll {
@@ -157,3 +180,20 @@ Describe 'Get-UserInfo' {
     }
 }
 ```
+
+## Configuration
+
+Configuration is defined **outside** test files when calling `Invoke-Pester` to control execution behavior.
+
+```powershell
+# Create configuration (Pester 5.2+)
+$config = New-PesterConfiguration
+$config.Run.Path = './Tests'
+$config.Output.Verbosity = 'Detailed'
+$config.TestResult.Enabled = $true
+$config.TestResult.OutputFormat = 'NUnitXml'
+$config.Should.ErrorAction = 'Continue'
+Invoke-Pester -Configuration $config
+```
+
+**Key Sections**: Run (Path, Exit), Filter (Tag, ExcludeTag), Output (Verbosity), TestResult (Enabled, OutputFormat), CodeCoverage (Enabled, Path), Should (ErrorAction), Debug
