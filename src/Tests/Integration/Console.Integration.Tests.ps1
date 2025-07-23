@@ -1,5 +1,3 @@
-#Requires -Version 5.1
-
 <#
 .SYNOPSIS
     Integration tests for GenAI Database Explorer Console Application
@@ -11,58 +9,43 @@
     Author: GenAI Database Explorer Team
     Requirements: Azure SQL Database (AdventureWorksLT), Azure OpenAI Services
 #>
+#Requires -Version 5.1
 
 using namespace System.Management.Automation
 
 BeforeAll {
-    # Global test setup following Pester 5.7+ best practices
+    # Arrange: Create test workspace and validate console app
     $script:TestWorkspace = New-Item -ItemType Directory -Path (Join-Path ([System.IO.Path]::GetTempPath()) "genaidb-integration-test-$(Get-Random)") -Force
     $script:ConsoleApp = "./publish/GenAIDBExplorer.Console"
     $script:BaseProjectPath = Join-Path $script:TestWorkspace.FullName "projects"
     New-Item -ItemType Directory -Path $script:BaseProjectPath -Force | Out-Null
-    
-    Write-Host "Integration test workspace: $($script:TestWorkspace.FullName)" -ForegroundColor Green
-    Write-Host "Console app path: $($script:ConsoleApp)" -ForegroundColor Green
-    
-    # Validate console app exists and is executable
+
     if (-not (Test-Path $script:ConsoleApp)) {
         throw "Console application not found at: $($script:ConsoleApp)"
     }
-    
-    # Make console app executable on Unix-like systems
     if ($env:RUNNER_OS -ne 'Windows') {
-        $chmodResult = & chmod +x $script:ConsoleApp 2>&1
-        if ($LASTEXITCODE -eq 0) {
-            Write-Host "Made console app executable" -ForegroundColor Green
-        } else {
-            Write-Warning "Failed to make console app executable: $chmodResult"
-        }
+        & chmod +x $script:ConsoleApp 2>&1 | Out-Null
     }
-    
-    # Validate required environment variables
     $requiredEnvVars = @('SQL_CONNECTION_STRING', 'AZURE_OPENAI_ENDPOINT')
     foreach ($envVar in $requiredEnvVars) {
-        $envValue = Get-ChildItem Env: | Where-Object { $_.Name -eq $envVar } | Select-Object -ExpandProperty Value
-        if ([string]::IsNullOrEmpty($envValue)) {
+        if ($null -eq $env:$envVar -or $env:$envVar -eq '') {
             Write-Warning "Environment variable '$envVar' is not set. Some tests may fail."
-        } else {
-            Write-Host "Environment variable '$envVar' is configured" -ForegroundColor Green
         }
     }
-    
-    Write-Host "Environment variables validated" -ForegroundColor Green
 }
 
 Describe "GenAI Database Explorer Console Application" {
     Context "init-project command" {
         Context "When initializing a new project" {
-            It "Should create proper project structure and settings.json" {
+            BeforeAll {
                 # Arrange
-                $projectPath = Join-Path $script:BaseProjectPath "init-test"
-                
+                $script:InitProjectPath = Join-Path $script:BaseProjectPath "init-test"
+            }
+            
+            It "Should create proper project structure and settings.json" {
                 # Act
-                Write-Host "Executing: $script:ConsoleApp init-project --project $projectPath" -ForegroundColor Cyan
-                $result = & $script:ConsoleApp init-project --project $projectPath 2>&1
+                Write-Host "Executing: $script:ConsoleApp init-project --project $script:InitProjectPath" -ForegroundColor Cyan
+                $result = & $script:ConsoleApp init-project --project $script:InitProjectPath 2>&1
                 $exitCode = $LASTEXITCODE
                 
                 Write-Host "Console Output:" -ForegroundColor Yellow
@@ -72,10 +55,10 @@ Describe "GenAI Database Explorer Console Application" {
                 # Assert
                 $exitCode | Should -Be 0 -Because "init-project command should succeed"
                 $result | Should -Not -Match "ERROR|FAIL|Exception" -Because "No errors should be reported"
-                Test-Path (Join-Path $projectPath "settings.json") | Should -Be $true -Because "settings.json should be created"
+                Test-Path (Join-Path $script:InitProjectPath "settings.json") | Should -Be $true -Because "settings.json should be created"
                 
                 # Validate settings.json structure
-                $settingsPath = Join-Path $projectPath "settings.json"
+                $settingsPath = Join-Path $script:InitProjectPath "settings.json"
                 $settings = Get-Content $settingsPath | ConvertFrom-Json -ErrorAction Stop
                 $settings | Should -Not -BeNullOrEmpty -Because "settings.json should contain valid configuration"
                 $settings.PSObject.Properties.Name | Should -Contain "connectionStrings" -Because "settings should include connection strings configuration"
@@ -85,14 +68,16 @@ Describe "GenAI Database Explorer Console Application" {
         }
         
         Context "When project path already exists" {
-            It "Should handle existing directory gracefully" {
+            BeforeAll {
                 # Arrange
-                $projectPath = Join-Path $script:BaseProjectPath "existing-test"
-                New-Item -ItemType Directory -Path $projectPath -Force | Out-Null
-                
+                $script:ExistingProjectPath = Join-Path $script:BaseProjectPath "existing-test"
+                New-Item -ItemType Directory -Path $script:ExistingProjectPath -Force | Out-Null
+            }
+            
+            It "Should handle existing directory gracefully" {
                 # Act
-                Write-Host "Executing: $script:ConsoleApp init-project --project $projectPath" -ForegroundColor Cyan
-                $result = & $script:ConsoleApp init-project --project $projectPath 2>&1
+                Write-Host "Executing: $script:ConsoleApp init-project --project $script:ExistingProjectPath" -ForegroundColor Cyan
+                $result = & $script:ConsoleApp init-project --project $script:ExistingProjectPath 2>&1
                 $exitCode = $LASTEXITCODE
                 
                 Write-Host "Console Output:" -ForegroundColor Yellow
@@ -190,11 +175,11 @@ Describe "GenAI Database Explorer Console Application" {
         }
         
         Context "When applying data dictionary files" {
-            It "Should process dictionary files without errors" {
+            BeforeAll {
                 # Arrange - Create a sample data dictionary file
-                $dictDir = Join-Path $script:DbProjectPath "dict"
-                New-Item -ItemType Directory -Path $dictDir -Force | Out-Null
-                $dictPath = Join-Path $dictDir "test-dictionary.json"
+                $script:DictDir = Join-Path $script:DbProjectPath "dict"
+                New-Item -ItemType Directory -Path $script:DictDir -Force | Out-Null
+                $script:DictPath = Join-Path $script:DictDir "test-dictionary.json"
                 $sampleDict = @{
                     objectType = "table"
                     schemaName = "dbo"
@@ -207,11 +192,13 @@ Describe "GenAI Database Explorer Console Application" {
                         }
                     )
                 }
-                $sampleDict | ConvertTo-Json -Depth 3 | Set-Content $dictPath
-                
+                $sampleDict | ConvertTo-Json -Depth 3 | Set-Content $script:DictPath
+            }
+            
+            It "Should process dictionary files without errors" {
                 # Act
-                Write-Host "Executing: $script:ConsoleApp data-dictionary --project $script:DbProjectPath --sourcePathPattern $dictPath --objectType table" -ForegroundColor Cyan
-                $result = & $script:ConsoleApp data-dictionary --project $script:DbProjectPath --sourcePathPattern "$dictPath" --objectType table 2>&1
+                Write-Host "Executing: $script:ConsoleApp data-dictionary --project $script:DbProjectPath --sourcePathPattern $script:DictPath --objectType table" -ForegroundColor Cyan
+                $result = & $script:ConsoleApp data-dictionary --project $script:DbProjectPath --sourcePathPattern "$script:DictPath" --objectType table 2>&1
                 $exitCode = $LASTEXITCODE
                 
                 Write-Host "Console Output:" -ForegroundColor Yellow
@@ -227,21 +214,23 @@ Describe "GenAI Database Explorer Console Application" {
         }
         
         Context "When showing applied dictionaries" {
-            It "Should display dictionary information with --show option" {
+            BeforeAll {
                 # Arrange
-                $dictDir = Join-Path $script:DbProjectPath "dict"
-                $dictPath = Join-Path $dictDir "show-test-dictionary.json"
+                $script:ShowDictDir = Join-Path $script:DbProjectPath "dict"
+                $script:ShowDictPath = Join-Path $script:ShowDictDir "show-test-dictionary.json"
                 $sampleDict = @{
                     objectType = "table"
                     schemaName = "dbo"
                     objectName = "Product"
                     description = "Product catalog table"
                 }
-                $sampleDict | ConvertTo-Json -Depth 3 | Set-Content $dictPath
-                
+                $sampleDict | ConvertTo-Json -Depth 3 | Set-Content $script:ShowDictPath
+            }
+            
+            It "Should display dictionary information with --show option" {
                 # Act
-                Write-Host "Executing: $script:ConsoleApp data-dictionary --project $script:DbProjectPath --sourcePathPattern $dictPath --objectType table --show" -ForegroundColor Cyan
-                $result = & $script:ConsoleApp data-dictionary --project $script:DbProjectPath --sourcePathPattern "$dictPath" --objectType table --show 2>&1
+                Write-Host "Executing: $script:ConsoleApp data-dictionary --project $script:DbProjectPath --sourcePathPattern $script:ShowDictPath --objectType table --show" -ForegroundColor Cyan
+                $result = & $script:ConsoleApp data-dictionary --project $script:DbProjectPath --sourcePathPattern "$script:ShowDictPath" --objectType table --show 2>&1
                 $exitCode = $LASTEXITCODE
                 
                 Write-Host "Console Output:" -ForegroundColor Yellow
@@ -532,12 +521,10 @@ Describe "GenAI Database Explorer Console Application" {
 }
 
 AfterAll {
-    # Global cleanup following Pester 5.7+ best practices
+    # Cleanup: Remove test workspace if it exists
     if ($script:TestWorkspace -and (Test-Path $script:TestWorkspace)) {
-        Write-Host "Cleaning up test workspace: $($script:TestWorkspace.FullName)" -ForegroundColor Yellow
         try {
-            Remove-Item $script:TestWorkspace -Recurse -Force -ErrorAction Stop
-            Write-Host "Test workspace cleaned up successfully" -ForegroundColor Green
+            Remove-Item $script:TestWorkspace -Recurse -Force -ErrorAction SilentlyContinue
         } catch {
             Write-Warning "Failed to clean up test workspace: $($_.Exception.Message)"
         }
