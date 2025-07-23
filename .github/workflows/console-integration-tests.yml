@@ -51,16 +51,6 @@ jobs:
       - name: Make Console App Executable
         run: chmod +x ./publish/GenAIDBExplorer.Console
 
-      - name: Debug Inputs
-        shell: pwsh
-        run: |
-          Write-Host "=== DEBUGGING WORKFLOW INPUTS ===" -ForegroundColor Magenta
-          Write-Host "ENVIRONMENT: '${{ inputs.ENVIRONMENT }}'" -ForegroundColor Yellow
-          Write-Host "SQL_SERVER_NAME: '${{ inputs.SQL_SERVER_NAME }}'" -ForegroundColor Yellow
-          Write-Host "AZURE_AI_FOUNDRY_ENDPOINT: '${{ inputs.AZURE_AI_FOUNDRY_ENDPOINT }}'" -ForegroundColor Yellow
-          Write-Host "AZURE_AI_FOUNDRY_NAME: '${{ inputs.AZURE_AI_FOUNDRY_NAME }}'" -ForegroundColor Yellow
-          Write-Host "=================================" -ForegroundColor Magenta
-
       - name: Setup PowerShell and Run Console Integration Tests
         shell: pwsh
         env:
