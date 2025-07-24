@@ -1,4 +1,3 @@
-
 <#
     .SYNOPSIS
         Integration tests for GenAI Database Explorer Console Application
@@ -72,16 +71,26 @@ Describe 'GenAI Database Explorer Console Application' {
                     # Arrange
                     $script:InitProjectPath = Join-Path -Path $script:BaseProjectPath -ChildPath 'init-test'
 
-                    # Verify parent directory exists and is accessible
+                    # Ensure parent directory structure exists with proper permissions
                     Write-Verbose "BaseProjectPath: $script:BaseProjectPath" -Verbose
                     Write-Verbose "InitProjectPath: $script:InitProjectPath" -Verbose
-                    Write-Verbose "BaseProjectPath exists: $(Test-Path -Path $script:BaseProjectPath)" -Verbose
 
-                    # The init-project command should create the target directory,
-                    # but ensure parent directory exists and is accessible
+                    # Create parent directory structure if it doesn't exist
                     if (-not (Test-Path -Path $script:BaseProjectPath)) {
                         New-Item -ItemType Directory -Path $script:BaseProjectPath -Force | Out-Null
                     }
+
+                    # Verify parent directory is accessible
+                    try {
+                        $null = Get-ChildItem -Path $script:BaseProjectPath -ErrorAction Stop
+                        Write-Verbose "BaseProjectPath is accessible" -Verbose
+                    }
+                    catch {
+                        Write-Error "BaseProjectPath is not accessible: $($_.Exception.Message)"
+                        throw "Cannot access parent directory for test"
+                    }
+
+                    Write-Verbose "BaseProjectPath exists: $(Test-Path -Path $script:BaseProjectPath)" -Verbose
                 }
 
                 It 'Should create proper project structure and settings.json' {
@@ -98,9 +107,16 @@ Describe 'GenAI Database Explorer Console Application' {
                     # Act
                     $commandResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleApp -Arguments @('init-project', '--project', $script:InitProjectPath)
 
-                    # Assert
+                    # Assert - Check for specific error patterns that indicate failure
+                    if ($commandResult.Output -match 'Could not find a part of the path|Access.*denied|Permission.*denied|Path.*not.*found') {
+                        throw "Command failed with path error: $($commandResult.Output)"
+                    }
+
                     $commandResult.ExitCode | Should -Be 0 -Because 'init-project command should succeed'
-                    $commandResult.Output | Should -Not -Match 'ERROR|FAIL|Exception|Could not find' -Because 'No errors should be reported'
+                    $commandResult.Output | Should -Not -Match 'ERROR|FAIL|Exception|Could not find|Access.*denied' -Because 'No errors should be reported'
+
+                    # Verify project directory was created
+                    $script:InitProjectPath | Should -Exist -Because 'Project directory should be created'
                     $expectedSettingsPath | Should -Exist -Because 'settings.json should be created'
 
                     # Validate settings.json structure

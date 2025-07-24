@@ -80,7 +80,8 @@
                 "bradlc.vscode-tailwindcss",
                 "esbenp.prettier-vscode",
                 "ms-vsliveshare.vsliveshare",
-                "microsoft-aspire.aspire-vscode"
+                "microsoft-aspire.aspire-vscode",
+                "github.vscode-github-actions"
             ]
         }
     },
