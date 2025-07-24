@@ -66,7 +66,7 @@ Describe 'GenAI Database Explorer Console Application' {
 
     Context 'Project Management Commands' {
         Context 'init-project command' {
-            Context 'When initializing a new project' {
+            Context 'When initializing a new project and project path does not exist' {
                 BeforeAll {
                     # Arrange
                     $script:InitProjectPath = Join-Path -Path $script:BaseProjectPath -ChildPath 'init-test'
@@ -91,11 +91,6 @@ Describe 'GenAI Database Explorer Console Application' {
                     }
 
                     Write-Verbose "BaseProjectPath exists: $(Test-Path -Path $script:BaseProjectPath)" -Verbose
-                }
-
-                It 'Should create proper project structure and settings.json' {
-                    # Arrange
-                    $expectedSettingsPath = Join-Path -Path $script:InitProjectPath -ChildPath 'settings.json'
 
                     # Ensure the target directory does NOT exist (testing new project creation)
                     if (Test-Path -Path $script:InitProjectPath) {
@@ -104,6 +99,17 @@ Describe 'GenAI Database Explorer Console Application' {
 
                     Write-Verbose "Target directory exists before test: $(Test-Path -Path $script:InitProjectPath)" -Verbose
 
+                    $script:expectedSettingsPath = Join-Path -Path $script:InitProjectPath -ChildPath 'settings.json'
+                }
+
+                AfterAll {
+                    # Cleanup: Remove project directory after test
+                    if (Test-Path -Path $script:InitProjectPath) {
+                        Remove-Item -Path $script:InitProjectPath -Recurse -Force -ErrorAction SilentlyContinue
+                    }
+                }
+
+                It 'Should create proper project structure and settings.json' {
                     # Act
                     $commandResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleApp -Arguments @('init-project', '--project', $script:InitProjectPath)
 
@@ -117,23 +123,30 @@ Describe 'GenAI Database Explorer Console Application' {
 
                     # Verify project directory was created
                     $script:InitProjectPath | Should -Exist -Because 'Project directory should be created'
-                    $expectedSettingsPath | Should -Exist -Because 'settings.json should be created'
+                    $script:expectedSettingsPath | Should -Exist -Because 'settings.json should be created'
 
                     # Validate settings.json structure
-                    { Get-Content -Path $expectedSettingsPath | ConvertFrom-Json -ErrorAction Stop } |
+                    { Get-Content -Path $script:expectedSettingsPath | ConvertFrom-Json -ErrorAction Stop } |
                         Should -Not -Throw -Because 'settings.json should contain valid JSON'
 
-                    $settings = Get-Content -Path $expectedSettingsPath | ConvertFrom-Json
+                    $settings = Get-Content -Path $script:expectedSettingsPath | ConvertFrom-Json
                     $settings | Should -Not -BeNullOrEmpty -Because 'settings.json should contain valid configuration'
                     $settings.PSObject.Properties.Name | Should -Contain 'connectionStrings' -Because 'settings should include connection strings configuration'
                 }
             }
 
-            Context 'When project path already exists' {
+            Context 'When initializing a new project and project path already exists and is empty' {
                 BeforeAll {
                     # Arrange
                     $script:ExistingProjectPath = Join-Path -Path $script:BaseProjectPath -ChildPath 'existing-test'
                     New-Item -ItemType Directory -Path $script:ExistingProjectPath -Force | Out-Null
+                }
+
+                AfterAll {
+                    # Cleanup: Remove existing project directory after test
+                    if (Test-Path -Path $script:ExistingProjectPath) {
+                        Remove-Item -Path $script:ExistingProjectPath -Recurse -Force -ErrorAction SilentlyContinue
+                    }
                 }
 
                 It 'Should handle existing directory gracefully' {
@@ -142,6 +155,30 @@ Describe 'GenAI Database Explorer Console Application' {
 
                     # Assert
                     $commandResult.ExitCode | Should -BeIn @(0, 1) -Because 'Should succeed or indicate directory exists'
+                }
+            }
+
+            Context 'When initializing a new project and project path already exists but is not empty' {
+                BeforeAll {
+                    # Arrange
+                    $script:ExistingProjectPath = Join-Path -Path $script:BaseProjectPath -ChildPath 'existing-test'
+                    New-Item -ItemType Directory -Path $script:ExistingProjectPath -Force | Out-Null
+                    New-Item -ItemType File -Path (Join-Path -Path $script:ExistingProjectPath -ChildPath 'dummy.txt') -Force | Out-Null
+                }
+
+                AfterAll {
+                    # Cleanup: Remove existing project directory after test
+                    if (Test-Path -Path $script:ExistingProjectPath) {
+                        Remove-Item -Path $script:ExistingProjectPath -Recurse -Force -ErrorAction SilentlyContinue
+                    }
+                }
+
+                It 'Should throw an exception for non-empty directory' {
+                    # Act
+                    $commandResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleApp -Arguments @('init-project', '--project', $script:ExistingProjectPath)
+
+                    # Assert
+                    $commandResult.ExitCode | Should -Be 1 -Because 'Should indicate directory is not empty'
                 }
             }
         }
