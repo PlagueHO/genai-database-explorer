@@ -4,7 +4,7 @@ The GenAI Database Explorer (GAIDBEXP) is a console tool that produces semantic 
 
 ## init-project
 
-The `init-project` command is part of the `gaidbexp` console application, which is designed to initialize a GenAI Database Explorer project. This command sets up the necessary project structure and configurations to start using the GenAI Database Explorer.
+Initializes a new GenAI Database Explorer project.
 
 ### Usage
 
@@ -18,7 +18,7 @@ gaidbexp init-project --project <project path>
 
 ### Description
 
-The `init-project` command initializes a new GenAI Database Explorer project at the specified path. It ensures that the project directory is properly set up and ready for further development and usage.
+The `init-project` command initializes a new GenAI Database Explorer project at the specified path. If the directory does not exist, it will be created. If the directory exists and is not empty, the command will fail with an error. This ensures that the project directory is properly set up and ready for further development and usage.
 
 ### Example
 

@@ -36,10 +36,16 @@ public class Project(
     {
         ProjectDirectory = projectDirectory;
 
+        // Create the directory if it does not exist
+        if (!projectDirectory.Exists)
+        {
+            logger.LogInformation("Project directory does not exist. Creating: {ProjectDirectory}", projectDirectory.FullName);
+            projectDirectory.Create();
+        }
+
         if (ProjectUtils.IsDirectoryNotEmpty(projectDirectory))
         {
             logger.LogError("{ErrorMessage}", _resourceManagerErrorMessages.GetString("ErrorProjectFolderNotEmpty"));
-
             // Throw exception directory is not empty
             throw new InvalidOperationException(_resourceManagerErrorMessages.GetString("ErrorProjectFolderNotEmpty"));
         }
