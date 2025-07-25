@@ -57,12 +57,16 @@ jobs:
     uses: ./.github/workflows/console-integration-tests.yml
     with:
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+      RESOURCE_GROUP_NAME: ${{ needs.provision-infrastructure.outputs.AZURE_RESOURCE_GROUP }}
       SQL_SERVER_NAME: ${{ needs.provision-infrastructure.outputs.SQL_SERVER_NAME }}
       AZURE_AI_FOUNDRY_ENDPOINT: ${{ needs.provision-infrastructure.outputs.AZURE_AI_FOUNDRY_ENDPOINT }}
       AZURE_AI_FOUNDRY_NAME: ${{ needs.provision-infrastructure.outputs.AZURE_AI_FOUNDRY_NAME }}
     secrets:
       SQL_SERVER_USERNAME: ${{ secrets.SQL_SERVER_USERNAME }}
       SQL_SERVER_PASSWORD: ${{ secrets.SQL_SERVER_PASSWORD }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
   delete-infrastructure:
     needs: [provision-infrastructure, console-app-integration-tests]
