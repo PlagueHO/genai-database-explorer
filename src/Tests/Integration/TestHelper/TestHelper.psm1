@@ -132,17 +132,17 @@ function Set-ProjectSettings {
     $settings = Get-Content -Path $settingsPath | ConvertFrom-Json
 
     if ($ConnectionString) {
-        $settings.connectionStrings.defaultConnection = $ConnectionString
+        $settings.Database.ConnectionString = $ConnectionString
         Write-Verbose "Connection string configured in settings.json" -Verbose
     }
 
     if ($AzureOpenAIEndpoint) {
-        $settings.azureOpenAI.endpoint = $AzureOpenAIEndpoint
+        $settings.OpenAIService.Default.AzureOpenAIEndpoint = $AzureOpenAIEndpoint
         Write-Verbose "Azure OpenAI endpoint configured in settings.json" -Verbose
     }
 
     if ($AzureOpenAIApiKey) {
-        $settings.azureOpenAI.apiKey = $AzureOpenAIApiKey
+        $settings.OpenAIService.Default.AzureOpenAIKey = $AzureOpenAIApiKey
         Write-Verbose "Azure OpenAI API key configured in settings.json" -Verbose
     }
 
