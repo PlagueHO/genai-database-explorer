@@ -12,7 +12,7 @@
         Module: TestHelper
         Author: GenAI Database Explorer Team
         Version: 1.0.0
-        PowerShell Version: 5.1+
+        PowerShell Version: 7+
         Dependencies: None
 
     .EXAMPLE
@@ -20,7 +20,7 @@
         $result = Initialize-TestProject -ProjectPath "C:\temp\test" -ConsoleApp ".\app.exe"
 #>
 
-#Requires -Version 5.1
+#Requires -Version 7
 
 using namespace System.Management.Automation
 
@@ -195,7 +195,10 @@ function Invoke-ConsoleCommand {
     $result = & $ConsoleApp @Arguments 2>&1
     $exitCode = $LASTEXITCODE
 
-    Write-Verbose "Console Output: $($result -join '; ')" -Verbose
+    Write-Verbose "Console Output:" -Verbose
+    foreach ($line in $result) {
+        Write-Verbose "  $line" -Verbose
+    }
     Write-Verbose "Exit Code: $exitCode" -Verbose
 
     return @{

@@ -82,12 +82,29 @@
                 "kind": "build",
                 "isDefault": false
             },
-            "problemMatcher": "$msCompile",
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "console-integration-tests",
+            "type": "shell",
+            "command": "pwsh",
+            "args": [
+                "-Command",
+                "New-Item -ItemType Directory -Path './test-results' -Force | Out-Null; $config = New-PesterConfiguration; $config.Run.Path = './src/Tests/Integration/Console.Integration.Tests.ps1'; $config.Output.Verbosity = 'Detailed'; $config.TestResult.Enabled = $true; $config.TestResult.OutputFormat = 'NUnitXml'; $config.TestResult.OutputPath = './test-results/integration-tests.xml'; $config.CodeCoverage.Enabled = $false; $config.Should.ErrorAction = 'Continue'; Invoke-Pester -Configuration $config"
+            ],
+            "group": {
+                "kind": "test",
+                "isDefault": false
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
             "presentation": {
                 "echo": true,
                 "reveal": "always",
                 "focus": false,
-                "panel": "shared",
+                "panel": "new",
                 "showReuseMessage": true,
                 "clear": false
             }

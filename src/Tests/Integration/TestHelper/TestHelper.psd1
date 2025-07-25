@@ -9,7 +9,7 @@
     Description = 'Test Helper module providing fixture support functions for GenAI Database Explorer Console integration tests'
 
     # PowerShell version requirements
-    PowerShellVersion = '5.1'
+    PowerShellVersion = '7.0'
 
     # Functions to export from this module
     FunctionsToExport = @(

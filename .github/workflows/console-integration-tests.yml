@@ -7,6 +7,10 @@ on:
         description: "The environment to use for integration testing"
         required: true
         type: string
+      RESOURCE_GROUP_NAME:
+        description: "The Azure resource group name containing the SQL Server"
+        required: true
+        type: string
       SQL_SERVER_NAME:
         description: "The SQL Server name for database connection"
         required: true
@@ -19,7 +23,7 @@ on:
         description: "The Azure AI Foundry resource name for endpoint construction"
         required: false
         type: string
-        
+
     secrets:
       SQL_SERVER_USERNAME:
         description: "The SQL Server username for the application"
@@ -27,12 +31,24 @@ on:
       SQL_SERVER_PASSWORD:
         description: "The SQL Server password for the application"
         required: true
+      AZURE_CLIENT_ID:
+        description: "Azure service principal client ID for authentication"
+        required: true
+      AZURE_TENANT_ID:
+        description: "Azure tenant ID for authentication"
+        required: true
+      AZURE_SUBSCRIPTION_ID:
+        description: "Azure subscription ID for resource access"
+        required: true
 
 jobs:
   console-app-integration-tests:
     name: Console App Integration Tests
     runs-on: ubuntu-latest
     environment: ${{ inputs.ENVIRONMENT }}
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -51,35 +67,68 @@ jobs:
       - name: Make Console App Executable
         run: chmod +x ./publish/GenAIDBExplorer.Console
 
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Configure SQL Server Firewall for GitHub Runner
+        shell: bash
+        run: |
+          # Get the current runner's public IP address
+          RUNNER_IP=$(curl -s https://ipinfo.io/ip)
+          echo "GitHub Runner IP: $RUNNER_IP"
+
+          # Use the provided resource group and SQL server names
+          SQL_SERVER_NAME="${{ inputs.SQL_SERVER_NAME }}"
+          RESOURCE_GROUP="${{ inputs.RESOURCE_GROUP_NAME }}"
+
+          echo "Adding firewall rule for SQL Server: $SQL_SERVER_NAME"
+          echo "Resource Group: $RESOURCE_GROUP"
+          echo "Runner IP: $RUNNER_IP"
+
+          # Add firewall rule for the GitHub runner IP
+          az sql server firewall-rule create \
+            --resource-group "$RESOURCE_GROUP" \
+            --server "$SQL_SERVER_NAME" \
+            --name "GitHubRunner-${{ github.run_id }}" \
+            --start-ip-address "$RUNNER_IP" \
+            --end-ip-address "$RUNNER_IP"
+
+          echo "Firewall rule created successfully"
+
       - name: Setup PowerShell and Run Console Integration Tests
         shell: pwsh
         env:
           SQL_CONNECTION_STRING: "Server=${{ inputs.SQL_SERVER_NAME }}.database.windows.net;Database=AdventureWorksLT;User Id=${{ secrets.SQL_SERVER_USERNAME }};Password=${{ secrets.SQL_SERVER_PASSWORD }};Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
           AZURE_OPENAI_ENDPOINT: ${{ inputs.AZURE_AI_FOUNDRY_ENDPOINT }}
+          CONSOLE_APP_PATH: ./publish/GenAIDBExplorer.Console
         run: |
           # Install and import Pester in the same session
           Write-Host "Installing and importing Pester module..." -ForegroundColor Yellow
           Install-Module -Name Pester -Force -Scope CurrentUser -MinimumVersion 5.7.1 -AllowClobber
           Import-Module Pester -Force -PassThru
-          
+
           # Verify Pester is loaded
           $pesterVersion = Get-Module Pester | Select-Object -ExpandProperty Version
           Write-Host "Pester version loaded: $pesterVersion" -ForegroundColor Green
-          
+
           # Debug environment variables
           Write-Host "=== Environment Variables Debug ===" -ForegroundColor Magenta
           Write-Host "SQL_CONNECTION_STRING: $($env:SQL_CONNECTION_STRING.Length) characters" -ForegroundColor Yellow
           Write-Host "AZURE_OPENAI_ENDPOINT: '$env:AZURE_OPENAI_ENDPOINT'" -ForegroundColor Yellow
           Write-Host "Input AZURE_AI_FOUNDRY_ENDPOINT: '${{ inputs.AZURE_AI_FOUNDRY_ENDPOINT }}'" -ForegroundColor Yellow
           Write-Host "Input AZURE_AI_FOUNDRY_NAME: '${{ inputs.AZURE_AI_FOUNDRY_NAME }}'" -ForegroundColor Yellow
-          
+
           # Construct OpenAI endpoint if not provided but name is available
           if ([string]::IsNullOrEmpty($env:AZURE_OPENAI_ENDPOINT) -and -not [string]::IsNullOrEmpty('${{ inputs.AZURE_AI_FOUNDRY_NAME }}')) {
             $constructedEndpoint = "https://${{ inputs.AZURE_AI_FOUNDRY_NAME }}.cognitiveservices.azure.com/"
             Write-Host "Constructing OpenAI endpoint from AI Foundry name: $constructedEndpoint" -ForegroundColor Cyan
             $env:AZURE_OPENAI_ENDPOINT = $constructedEndpoint
           }
-          
+
           # If we still don't have an endpoint and we know the SQL server name, try to construct from that pattern
           if ([string]::IsNullOrEmpty($env:AZURE_OPENAI_ENDPOINT) -and -not [string]::IsNullOrEmpty('${{ inputs.SQL_SERVER_NAME }}')) {
             # Extract the environment suffix from SQL server name (e.g., sql-gaidbexp-16461932142 -> gaidbexp-16461932142)
@@ -91,7 +140,7 @@ jobs:
               $env:AZURE_OPENAI_ENDPOINT = $constructedEndpoint
             }
           }
-          
+
           # Check if endpoint is available for AI tests
           if ([string]::IsNullOrEmpty($env:AZURE_OPENAI_ENDPOINT)) {
             Write-Warning "Azure AI Foundry endpoint not provided. AI-related integration tests will be skipped or may fail gracefully."
@@ -101,7 +150,7 @@ jobs:
           } else {
             Write-Host "Azure AI services configured. AI integration tests will run." -ForegroundColor Green
             Write-Host "Endpoint format: $($env:AZURE_OPENAI_ENDPOINT)" -ForegroundColor Cyan
-            
+
             # Validate endpoint format
             if ($env:AZURE_OPENAI_ENDPOINT -match 'https://.*\.cognitiveservices\.azure\.com/?$') {
               Write-Host "✅ Valid Azure Cognitive Services endpoint format detected" -ForegroundColor Green
@@ -114,12 +163,12 @@ jobs:
             }
           }
           Write-Host "===================================" -ForegroundColor Magenta
-          
+
           # Create test results directory
           New-Item -ItemType Directory -Path "./test-results" -Force | Out-Null
-          
+
           # Configure Pester
-          $config = [PesterConfiguration]::Default
+          $config = New-PesterConfiguration
           $config.Run.Path = './src/Tests/Integration/Console.Integration.Tests.ps1'
           $config.Output.Verbosity = 'Detailed'
           $config.TestResult.Enabled = $true
@@ -127,7 +176,7 @@ jobs:
           $config.TestResult.OutputPath = './test-results/integration-tests.xml'
           $config.CodeCoverage.Enabled = $false
           $config.Should.ErrorAction = 'Continue'
-          
+
           try {
             Write-Host "Starting console integration tests..." -ForegroundColor Green
             Write-Host "SQL Server: ${{ inputs.SQL_SERVER_NAME }}" -ForegroundColor Yellow
@@ -156,3 +205,23 @@ jobs:
             ./test-results/
             ./temp-workspaces/
           retention-days: 7
+
+      - name: Remove SQL Server Firewall Rule
+        if: always()
+        shell: bash
+        run: |
+          # Use the provided resource group and SQL server names
+          RESOURCE_GROUP="${{ inputs.RESOURCE_GROUP_NAME }}"
+          SQL_SERVER_NAME="${{ inputs.SQL_SERVER_NAME }}"
+
+          echo "Removing firewall rule for SQL Server: $SQL_SERVER_NAME"
+          echo "Resource Group: $RESOURCE_GROUP"
+
+          # Remove the firewall rule (ignore errors if rule doesn't exist)
+          az sql server firewall-rule delete \
+            --resource-group "$RESOURCE_GROUP" \
+            --server "$SQL_SERVER_NAME" \
+            --name "GitHubRunner-${{ github.run_id }}" \
+            --yes || echo "Firewall rule not found or already removed"
+
+          echo "Firewall rule cleanup completed"
