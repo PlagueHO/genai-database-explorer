@@ -132,6 +132,17 @@ function Set-ProjectSettings {
     $settings = Get-Content -Path $settingsPath | ConvertFrom-Json
 
     if ($ConnectionString) {
+        # Ensure MultipleActiveResultSets=True is included for the GenAI Database Explorer
+        if ($ConnectionString -notmatch 'MultipleActiveResultSets\s*=') {
+            # Add MultipleActiveResultSets=True if not present
+            $ConnectionString = if ($ConnectionString.EndsWith(';')) {
+                $ConnectionString + 'MultipleActiveResultSets=True;'
+            } else {
+                $ConnectionString + ';MultipleActiveResultSets=True;'
+            }
+            Write-Verbose "Added MultipleActiveResultSets=True to connection string" -Verbose
+        }
+        
         $settings.Database.ConnectionString = $ConnectionString
         Write-Verbose "Connection string configured in settings.json" -Verbose
     }
