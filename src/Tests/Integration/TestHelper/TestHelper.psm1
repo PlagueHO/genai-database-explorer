@@ -147,6 +147,9 @@ function Set-ProjectSettings {
         Write-Verbose "Connection string configured in settings.json" -Verbose
     }
 
+    # Set the Schema to empty to ensure all schemas are used
+    $settings.Database.Schema = ''
+
     if ($AzureOpenAIEndpoint) {
         $settings.OpenAIService.Default.AzureOpenAIEndpoint = $AzureOpenAIEndpoint
         Write-Verbose "Azure OpenAI endpoint configured in settings.json" -Verbose
