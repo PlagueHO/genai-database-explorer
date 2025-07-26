@@ -244,8 +244,8 @@ Describe 'GenAI Database Explorer Console Application' {
                             Should -Not -Throw -Because 'semanticmodel.json should be valid JSON'
 
                         $model = Get-Content -Path $expectedSemanticModelPath | ConvertFrom-Json
-                        $model.Database | Should -Not -BeNullOrEmpty -Because 'Model should contain database information'
-                        $model.Database.Name | Should -Match 'AdventureWorksLT|Adventure' -Because 'Should connect to AdventureWorksLT or similar sample database'
+                        $model.Name | Should -Not -BeNullOrEmpty -Because 'Model should contain database name information'
+                        $model.Name | Should -Match 'AdventureWorksLT|Adventure' -Because 'Should connect to AdventureWorksLT or similar sample database'
                     } else {
                         # Handle case where database is not available
                         Write-Verbose "Database extraction failed, likely due to connection issues" -Verbose
