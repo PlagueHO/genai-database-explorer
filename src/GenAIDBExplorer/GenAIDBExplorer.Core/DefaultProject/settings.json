@@ -10,7 +10,7 @@
             "^.*\\.MSchange_tracking_history$"
         ],
         "NotUsedColumns": [ // Array of regex's to set NotUsed flag on columns in the database
-            "*_old$"
+            ".*_old$"
         ],
         "NotUsedViews": [], // Array of regex's to set NotUsed flag on views in the database
         "NotUsedStoredProcedures": [] // Array of regex's to set NotUsed flag on stored procedures in the database
