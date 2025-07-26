@@ -230,7 +230,7 @@ Describe 'GenAI Database Explorer Console Application' {
             Context 'When extracting from valid database connection' {
                 It 'Should create semanticmodel.json with database schema' {
                     # Arrange
-                    $expectedSemanticModelPath = Join-Path -Path $script:DbProjectPath -ChildPath 'semanticmodel.json'
+                    $expectedSemanticModelPath = Join-Path -Path $script:DbProjectPath -ChildPath 'SemanticModel' -AdditionalChildPath 'semanticmodel.json'
 
                     # Act
                     $commandResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $script:DbProjectPath)

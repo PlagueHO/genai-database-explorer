@@ -97,8 +97,8 @@ public class ExtractModelCommandHandler(
         // Extract the Semantic Model
         var semanticModel = await _semanticModelProvider.ExtractSemanticModelAsync().ConfigureAwait(false);
 
-        // Save the Semantic Model into the project directory into a subdirectory with the name of the semanticModel.Name
-        var semanticModelDirectory = new DirectoryInfo(Path.Combine(projectPath.FullName, semanticModel.Name));
+        // Save the Semantic Model using the configured semantic model directory from settings
+        var semanticModelDirectory = GetSemanticModelDirectory(projectPath);
 
         _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("SavingSemanticModel"), semanticModelDirectory);
         await semanticModel.SaveModelAsync(semanticModelDirectory);

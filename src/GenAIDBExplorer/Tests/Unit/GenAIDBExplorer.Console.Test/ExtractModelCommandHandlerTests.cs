@@ -32,6 +32,43 @@ public class ExtractModelCommandHandlerTests
         _mockLogger = new Mock<ILogger<ICommandHandler<ExtractModelCommandHandlerOptions>>>();
         _mockOutputService = new Mock<IOutputService>();
 
+        // Arrange: Configure project settings with SemanticModelRepository settings
+        var projectSettings = new ProjectSettings
+        {
+            Database = new DatabaseSettings
+            {
+                Name = "TestDatabase",
+                ConnectionString = "test-connection",
+                Description = "Test database"
+            },
+            DataDictionary = new DataDictionarySettings
+            {
+                ColumnTypeMapping = []
+            },
+            OpenAIService = new OpenAIServiceSettings
+            {
+                Default = new OpenAIServiceDefaultSettings
+                {
+                    ServiceType = "AzureOpenAI",
+                    AzureOpenAIKey = "test-key",
+                    AzureOpenAIEndpoint = "https://test.openai.azure.com/"
+                }
+            },
+            SemanticModel = new SemanticModelSettings
+            {
+                PersistenceStrategy = "LocalDisk"
+            },
+            SemanticModelRepository = new SemanticModelRepositorySettings
+            {
+                LocalDisk = new LocalDiskConfiguration
+                {
+                    Directory = "SemanticModel"
+                }
+            }
+        };
+
+        _mockProject.Setup(p => p.Settings).Returns(projectSettings);
+
         // Arrange: Initialize the handler with mock dependencies
         _handler = new ExtractModelCommandHandler(
             _mockProject.Object,
@@ -75,7 +112,7 @@ public class ExtractModelCommandHandlerTests
             x => x.Log(
                 LogLevel.Information,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains($"Saving semantic model. '{Path.Combine(projectPath.FullName, semanticModel.Name)}'")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains($"Saving semantic model. '{Path.Combine(projectPath.FullName, "SemanticModel")}'")),
                 null,
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
