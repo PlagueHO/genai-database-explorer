@@ -130,7 +130,8 @@ public class SemanticDescriptionProvider(
             }
 
             var promptyFilename = $"describe_{entityType.ToLower()}.prompty";
-            promptyFilename = Path.Combine(_promptyFolder, promptyFilename);
+            var applicationDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            promptyFilename = Path.Combine(applicationDirectory, _promptyFolder, promptyFilename);
 
             var semanticKernel = _semanticKernelFactory.CreateSemanticKernel();
 #pragma warning disable SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
@@ -328,7 +329,8 @@ public class SemanticDescriptionProvider(
         _logger.LogInformation("{Message} [{SchemaName}].[{ViewName}]", _resourceManagerLogMessages.GetString("GetTableListFromViewDefinition"), view.Schema, view.Name);
 
         var promptyFilename = "get_tables_from_view_definition.prompty";
-        promptyFilename = System.IO.Path.Combine(_promptyFolder, promptyFilename);
+        var applicationDirectory = AppDomain.CurrentDomain.BaseDirectory;
+        promptyFilename = System.IO.Path.Combine(applicationDirectory, _promptyFolder, promptyFilename);
         var semanticKernel = _semanticKernelFactory.CreateSemanticKernel();
 
 #pragma warning disable SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
@@ -382,7 +384,8 @@ public class SemanticDescriptionProvider(
         _logger.LogInformation("{Message} [{SchemaName}].[{ViewName}]", _resourceManagerLogMessages.GetString("GetTableListFromStoredProcedureDefinition"), storedProcedure.Schema, storedProcedure.Name);
 
         var promptyFilename = "get_tables_from_storedprocedure_definition.prompty";
-        promptyFilename = System.IO.Path.Combine(_promptyFolder, promptyFilename);
+        var applicationDirectory = AppDomain.CurrentDomain.BaseDirectory;
+        promptyFilename = System.IO.Path.Combine(applicationDirectory, _promptyFolder, promptyFilename);
         var semanticKernel = _semanticKernelFactory.CreateSemanticKernel();
 
 #pragma warning disable SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.

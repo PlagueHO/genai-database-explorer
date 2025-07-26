@@ -137,8 +137,9 @@ public class DataDictionaryProvider(
         // Initialize Semantic Kernel
         var semanticKernel = _semanticKernelFactory.CreateSemanticKernel();
 
-        // Load the prompty function
-        var promptyFilename = Path.Combine(_promptyFolder, "get_table_from_data_dictionary_markdown.prompty");
+        // Load the prompty function - use application base directory to ensure correct path resolution
+        var applicationDirectory = AppDomain.CurrentDomain.BaseDirectory;
+        var promptyFilename = Path.Combine(applicationDirectory, _promptyFolder, "get_table_from_data_dictionary_markdown.prompty");
 #pragma warning disable SKEXP0040 // Experimental API
         var function = semanticKernel.CreateFunctionFromPromptyFile(promptyFilename);
 #pragma warning restore SKEXP0040 // Experimental API
