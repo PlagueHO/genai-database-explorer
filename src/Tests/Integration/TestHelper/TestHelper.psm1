@@ -179,17 +179,17 @@ function Set-ProjectSettings {
     }
 
     if ($ChatCompletionDeploymentId) {
-        $settings.OpenAIService.Default.ChatCompletionDeploymentName = $ChatCompletionDeploymentId
+        $settings.OpenAIService.ChatCompletion.AzureOpenAIDeploymentId = $ChatCompletionDeploymentId
         Write-Verbose "Chat completion deployment ID configured in settings.json: $ChatCompletionDeploymentId" -Verbose
     }
 
     if ($ChatCompletionStructuredDeploymentId) {
-        $settings.OpenAIService.Default.ChatCompletionStructuredDeploymentName = $ChatCompletionStructuredDeploymentId
+        $settings.OpenAIService.ChatCompletionStructured.AzureOpenAIDeploymentId = $ChatCompletionStructuredDeploymentId
         Write-Verbose "Structured chat completion deployment ID configured in settings.json: $ChatCompletionStructuredDeploymentId" -Verbose
     }
 
     if ($EmbeddingDeploymentId) {
-        $settings.OpenAIService.Default.EmbeddingDeploymentName = $EmbeddingDeploymentId
+        $settings.OpenAIService.Embedding.AzureOpenAIDeploymentId = $EmbeddingDeploymentId
         Write-Verbose "Embedding deployment ID configured in settings.json: $EmbeddingDeploymentId" -Verbose
     }
 
