@@ -96,6 +96,15 @@ function Set-ProjectSettings {
     .PARAMETER AzureOpenAIApiKey
         The Azure OpenAI API key (optional).
 
+    .PARAMETER ChatCompletionDeploymentId
+        The deployment ID for chat completion operations.
+
+    .PARAMETER ChatCompletionStructuredDeploymentId
+        The deployment ID for structured chat completion operations.
+
+    .PARAMETER EmbeddingDeploymentId
+        The deployment ID for embedding operations.
+
     .EXAMPLE
         Set-ProjectSettings -ProjectPath "C:\temp\project" -ConnectionString "Server=localhost;Database=Test;Integrated Security=true"
 
@@ -119,7 +128,16 @@ function Set-ProjectSettings {
         [string]$AzureOpenAIEndpoint,
 
         [Parameter()]
-        [string]$AzureOpenAIApiKey
+        [string]$AzureOpenAIApiKey,
+
+        [Parameter()]
+        [string]$ChatCompletionDeploymentId,
+
+        [Parameter()]
+        [string]$ChatCompletionStructuredDeploymentId,
+
+        [Parameter()]
+        [string]$EmbeddingDeploymentId
     )
 
     $settingsPath = Join-Path -Path $ProjectPath -ChildPath 'settings.json'
@@ -158,6 +176,21 @@ function Set-ProjectSettings {
     if ($AzureOpenAIApiKey) {
         $settings.OpenAIService.Default.AzureOpenAIKey = $AzureOpenAIApiKey
         Write-Verbose "Azure OpenAI API key configured in settings.json" -Verbose
+    }
+
+    if ($ChatCompletionDeploymentId) {
+        $settings.OpenAIService.Default.ChatCompletionDeploymentName = $ChatCompletionDeploymentId
+        Write-Verbose "Chat completion deployment ID configured in settings.json: $ChatCompletionDeploymentId" -Verbose
+    }
+
+    if ($ChatCompletionStructuredDeploymentId) {
+        $settings.OpenAIService.Default.ChatCompletionStructuredDeploymentName = $ChatCompletionStructuredDeploymentId
+        Write-Verbose "Structured chat completion deployment ID configured in settings.json: $ChatCompletionStructuredDeploymentId" -Verbose
+    }
+
+    if ($EmbeddingDeploymentId) {
+        $settings.OpenAIService.Default.EmbeddingDeploymentName = $EmbeddingDeploymentId
+        Write-Verbose "Embedding deployment ID configured in settings.json: $EmbeddingDeploymentId" -Verbose
     }
 
     $settings | ConvertTo-Json -Depth 10 | Set-Content -Path $settingsPath

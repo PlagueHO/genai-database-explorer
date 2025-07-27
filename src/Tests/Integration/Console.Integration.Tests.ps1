@@ -219,40 +219,8 @@ Describe 'GenAI Database Explorer Console Application' {
                 throw "Failed to initialize database test project"
             }
 
-            # Configure settings in settings.json if provided
-            $connectionString = Get-Item -Path 'Env:SQL_CONNECTION_STRING' -ErrorAction SilentlyContinue
-            $openAiEndpoint = Get-Item -Path 'Env:AZURE_OPENAI_ENDPOINT' -ErrorAction SilentlyContinue
-            $openAiApiKey = Get-Item -Path 'Env:AZURE_OPENAI_API_KEY' -ErrorAction SilentlyContinue
-
-            # Configure project settings with available environment variables
-            $configParams = @{
-                ProjectPath = $script:DbProjectPath
-            }
-
-            if ($connectionString -and -not [string]::IsNullOrEmpty($connectionString.Value)) {
-                $configParams.ConnectionString = $connectionString.Value
-            }
-
-            if ($openAiEndpoint -and -not [string]::IsNullOrEmpty($openAiEndpoint.Value)) {
-                $configParams.AzureOpenAIEndpoint = $openAiEndpoint.Value
-            } else {
-                # Provide a valid default OpenAI endpoint for validation
-                $configParams.AzureOpenAIEndpoint = 'https://test-openai-resource.cognitiveservices.azure.com/'
-            }
-
-            # Always set API key (dummy if not present)
-            if ($openAiApiKey -and -not [string]::IsNullOrEmpty($openAiApiKey.Value)) {
-                $configParams.AzureOpenAIApiKey = $openAiApiKey.Value
-            } else {
-                $configParams.AzureOpenAIApiKey = 'dummy-key-for-ci-or-local'
-            }
-
-            # Set required deployment IDs
-            $configParams.ChatCompletionDeploymentId = 'gpt-4-1'
-            $configParams.ChatCompletionStructuredDeploymentId = 'gpt-4-1-mini'
-            $configParams.EmbeddingDeploymentId = 'text-embedding-ada-002'
-
-            Set-ProjectSettings @configParams
+            # Configure settings for database tests using helper function
+            Set-TestProjectConfiguration -ProjectPath $script:DbProjectPath
         }
 
         Context 'extract-model command' {
@@ -342,40 +310,8 @@ Describe 'GenAI Database Explorer Console Application' {
                 Write-Warning "Failed to initialize AI test project: $($projectSetup.InitResult)"
             }
 
-            # Configure settings for AI operations
-            $connectionString = Get-Item -Path 'Env:SQL_CONNECTION_STRING' -ErrorAction SilentlyContinue
-            $openAiEndpoint = Get-Item -Path 'Env:AZURE_OPENAI_ENDPOINT' -ErrorAction SilentlyContinue
-            $openAiApiKey = Get-Item -Path 'Env:AZURE_OPENAI_API_KEY' -ErrorAction SilentlyContinue
-
-            # Configure project settings with available environment variables
-            $configParams = @{
-                ProjectPath = $script:AiProjectPath
-            }
-
-            if ($connectionString -and -not [string]::IsNullOrEmpty($connectionString.Value)) {
-                $configParams.ConnectionString = $connectionString.Value
-            }
-
-            if ($openAiEndpoint -and -not [string]::IsNullOrEmpty($openAiEndpoint.Value)) {
-                $configParams.AzureOpenAIEndpoint = $openAiEndpoint.Value
-            } else {
-                # Provide a valid default OpenAI endpoint for validation
-                $configParams.AzureOpenAIEndpoint = 'https://test-openai-resource.cognitiveservices.azure.com/'
-            }
-
-            # Always set API key (dummy if not present)
-            if ($openAiApiKey -and -not [string]::IsNullOrEmpty($openAiApiKey.Value)) {
-                $configParams.AzureOpenAIApiKey = $openAiApiKey.Value
-            } else {
-                $configParams.AzureOpenAIApiKey = 'dummy-key-for-ci-or-local'
-            }
-
-            # Set required deployment IDs
-            $configParams.ChatCompletionDeploymentId = 'gpt-4-1'
-            $configParams.ChatCompletionStructuredDeploymentId = 'gpt-4-1-mini'
-            $configParams.EmbeddingDeploymentId = 'text-embedding-ada-002'
-
-            Set-ProjectSettings @configParams
+            # Configure settings for AI operations using helper function
+            Set-TestProjectConfiguration -ProjectPath $script:AiProjectPath
 
             # Extract model first for AI operations (suppress output if fails)
             Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $script:AiProjectPath) | Out-Null
@@ -415,40 +351,8 @@ Describe 'GenAI Database Explorer Console Application' {
             $script:DisplayProjectPath = Join-Path -Path $script:BaseProjectPath -ChildPath 'display-test'
             Initialize-TestProject -ProjectPath $script:DisplayProjectPath -ConsoleApp $script:ConsoleAppPath | Out-Null
 
-            # Configure settings if available
-            $connectionString = Get-Item -Path 'Env:SQL_CONNECTION_STRING' -ErrorAction SilentlyContinue
-            $openAiEndpoint = Get-Item -Path 'Env:AZURE_OPENAI_ENDPOINT' -ErrorAction SilentlyContinue
-            $openAiApiKey = Get-Item -Path 'Env:AZURE_OPENAI_API_KEY' -ErrorAction SilentlyContinue
-
-            # Configure project settings with available environment variables
-            $configParams = @{
-                ProjectPath = $script:DisplayProjectPath
-            }
-
-            if ($connectionString -and -not [string]::IsNullOrEmpty($connectionString.Value)) {
-                $configParams.ConnectionString = $connectionString.Value
-            }
-
-            if ($openAiEndpoint -and -not [string]::IsNullOrEmpty($openAiEndpoint.Value)) {
-                $configParams.AzureOpenAIEndpoint = $openAiEndpoint.Value
-            } else {
-                # Provide a valid default OpenAI endpoint for validation
-                $configParams.AzureOpenAIEndpoint = 'https://test-openai-resource.cognitiveservices.azure.com/'
-            }
-
-            # Always set API key (dummy if not present)
-            if ($openAiApiKey -and -not [string]::IsNullOrEmpty($openAiApiKey.Value)) {
-                $configParams.AzureOpenAIApiKey = $openAiApiKey.Value
-            } else {
-                $configParams.AzureOpenAIApiKey = 'dummy-key-for-ci-or-local'
-            }
-
-            # Set required deployment IDs
-            $configParams.ChatCompletionDeploymentId = 'gpt-4-1'
-            $configParams.ChatCompletionStructuredDeploymentId = 'gpt-4-1-mini'
-            $configParams.EmbeddingDeploymentId = 'text-embedding-ada-002'
-
-            Set-ProjectSettings @configParams
+            # Configure settings for display operations using helper function
+            Set-TestProjectConfiguration -ProjectPath $script:DisplayProjectPath
 
             # Extract model for display operations (suppress output if fails)
             Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $script:DisplayProjectPath) | Out-Null
