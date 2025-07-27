@@ -219,11 +219,32 @@ Describe 'GenAI Database Explorer Console Application' {
                 throw "Failed to initialize database test project"
             }
 
-            # Configure connection string in settings.json if provided
+            # Configure settings in settings.json if provided
             $connectionString = Get-Item -Path 'Env:SQL_CONNECTION_STRING' -ErrorAction SilentlyContinue
-            if ($connectionString -and -not [string]::IsNullOrEmpty($connectionString.Value)) {
-                Set-ProjectSettings -ProjectPath $script:DbProjectPath -ConnectionString $connectionString.Value
+            $openAiEndpoint = Get-Item -Path 'Env:AZURE_OPENAI_ENDPOINT' -ErrorAction SilentlyContinue
+            $openAiApiKey = Get-Item -Path 'Env:AZURE_OPENAI_API_KEY' -ErrorAction SilentlyContinue
+
+            # Configure project settings with available environment variables
+            $configParams = @{
+                ProjectPath = $script:DbProjectPath
             }
+
+            if ($connectionString -and -not [string]::IsNullOrEmpty($connectionString.Value)) {
+                $configParams.ConnectionString = $connectionString.Value
+            }
+
+            if ($openAiEndpoint -and -not [string]::IsNullOrEmpty($openAiEndpoint.Value)) {
+                $configParams.AzureOpenAIEndpoint = $openAiEndpoint.Value
+            } else {
+                # Provide a valid default OpenAI endpoint for validation
+                $configParams.AzureOpenAIEndpoint = 'https://test-openai-resource.cognitiveservices.azure.com/'
+            }
+
+            if ($openAiApiKey -and -not [string]::IsNullOrEmpty($openAiApiKey.Value)) {
+                $configParams.AzureOpenAIApiKey = $openAiApiKey.Value
+            }
+
+            Set-ProjectSettings @configParams
         }
 
         Context 'extract-model command' {
@@ -318,22 +339,27 @@ Describe 'GenAI Database Explorer Console Application' {
             $openAiEndpoint = Get-Item -Path 'Env:AZURE_OPENAI_ENDPOINT' -ErrorAction SilentlyContinue
             $openAiApiKey = Get-Item -Path 'Env:AZURE_OPENAI_API_KEY' -ErrorAction SilentlyContinue
 
-            if ($connectionString -and $openAiEndpoint -and
-                -not [string]::IsNullOrEmpty($connectionString.Value) -and
-                -not [string]::IsNullOrEmpty($openAiEndpoint.Value)) {
-
-                $configParams = @{
-                    ProjectPath = $script:AiProjectPath
-                    ConnectionString = $connectionString.Value
-                    AzureOpenAIEndpoint = $openAiEndpoint.Value
-                }
-
-                if ($openAiApiKey -and -not [string]::IsNullOrEmpty($openAiApiKey.Value)) {
-                    $configParams.AzureOpenAIApiKey = $openAiApiKey.Value
-                }
-
-                Set-ProjectSettings @configParams
+            # Configure project settings with available environment variables
+            $configParams = @{
+                ProjectPath = $script:AiProjectPath
             }
+
+            if ($connectionString -and -not [string]::IsNullOrEmpty($connectionString.Value)) {
+                $configParams.ConnectionString = $connectionString.Value
+            }
+
+            if ($openAiEndpoint -and -not [string]::IsNullOrEmpty($openAiEndpoint.Value)) {
+                $configParams.AzureOpenAIEndpoint = $openAiEndpoint.Value
+            } else {
+                # Provide a valid default OpenAI endpoint for validation
+                $configParams.AzureOpenAIEndpoint = 'https://test-openai-resource.cognitiveservices.azure.com/'
+            }
+
+            if ($openAiApiKey -and -not [string]::IsNullOrEmpty($openAiApiKey.Value)) {
+                $configParams.AzureOpenAIApiKey = $openAiApiKey.Value
+            }
+
+            Set-ProjectSettings @configParams
 
             # Extract model first for AI operations (suppress output if fails)
             Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $script:AiProjectPath) | Out-Null
@@ -373,11 +399,32 @@ Describe 'GenAI Database Explorer Console Application' {
             $script:DisplayProjectPath = Join-Path -Path $script:BaseProjectPath -ChildPath 'display-test'
             Initialize-TestProject -ProjectPath $script:DisplayProjectPath -ConsoleApp $script:ConsoleAppPath | Out-Null
 
-            # Configure connection if available
+            # Configure settings if available
             $connectionString = Get-Item -Path 'Env:SQL_CONNECTION_STRING' -ErrorAction SilentlyContinue
-            if ($connectionString -and -not [string]::IsNullOrEmpty($connectionString.Value)) {
-                Set-ProjectSettings -ProjectPath $script:DisplayProjectPath -ConnectionString $connectionString.Value
+            $openAiEndpoint = Get-Item -Path 'Env:AZURE_OPENAI_ENDPOINT' -ErrorAction SilentlyContinue
+            $openAiApiKey = Get-Item -Path 'Env:AZURE_OPENAI_API_KEY' -ErrorAction SilentlyContinue
+
+            # Configure project settings with available environment variables
+            $configParams = @{
+                ProjectPath = $script:DisplayProjectPath
             }
+
+            if ($connectionString -and -not [string]::IsNullOrEmpty($connectionString.Value)) {
+                $configParams.ConnectionString = $connectionString.Value
+            }
+
+            if ($openAiEndpoint -and -not [string]::IsNullOrEmpty($openAiEndpoint.Value)) {
+                $configParams.AzureOpenAIEndpoint = $openAiEndpoint.Value
+            } else {
+                # Provide a valid default OpenAI endpoint for validation
+                $configParams.AzureOpenAIEndpoint = 'https://test-openai-resource.cognitiveservices.azure.com/'
+            }
+
+            if ($openAiApiKey -and -not [string]::IsNullOrEmpty($openAiApiKey.Value)) {
+                $configParams.AzureOpenAIApiKey = $openAiApiKey.Value
+            }
+
+            Set-ProjectSettings @configParams
 
             # Extract model for display operations (suppress output if fails)
             Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $script:DisplayProjectPath) | Out-Null
