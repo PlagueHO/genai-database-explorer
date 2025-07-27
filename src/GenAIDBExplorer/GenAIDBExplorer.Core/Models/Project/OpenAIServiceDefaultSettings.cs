@@ -17,6 +17,7 @@ public class OpenAIServiceDefaultSettings
     public string? AzureOpenAIKey { get; set; }
 
     [RequiredOnPropertyValue(nameof(ServiceType), "AzureOpenAI")]
+    [Url(ErrorMessage = "AzureOpenAIEndpoint must be a valid URL")]
     public string? AzureOpenAIEndpoint { get; set; }
 
     public string? AzureOpenAIAppId { get; set; }

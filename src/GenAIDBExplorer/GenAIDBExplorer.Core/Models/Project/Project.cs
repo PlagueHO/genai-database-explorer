@@ -1,6 +1,7 @@
 ﻿using GenAIDBExplorer.Core.SemanticProviders;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.Resources;
 
@@ -141,6 +142,9 @@ public class Project(
         Validator.ValidateObject(Settings.OpenAIService, validationContext, validateAllProperties: true);
         logger.LogInformation("{Message} '{Section}'", _resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "OpenAIService");
 
+        // Validate OpenAI service-specific configuration
+        ValidateOpenAIConfiguration();
+
         logger.LogInformation("{Message}", _resourceManagerLogMessages.GetString("ProjectSettingsValidationCompleted"));
     }
 
@@ -182,6 +186,83 @@ public class Project(
 
             default:
                 throw new ValidationException($"Invalid PersistenceStrategy '{strategy}'. Valid values are: LocalDisk, AzureBlob, Cosmos.");
+        }
+    }
+
+    /// <summary>
+    /// Validates OpenAI service configuration to ensure endpoints are valid URIs and required settings are present.
+    /// </summary>
+    private void ValidateOpenAIConfiguration()
+    {
+        var openAISettings = Settings.OpenAIService?.Default;
+        if (openAISettings == null)
+        {
+            return; // Basic validation will catch this
+        }
+
+        // Validate Azure OpenAI endpoint URL format
+        if (openAISettings.ServiceType == "AzureOpenAI" && !string.IsNullOrEmpty(openAISettings.AzureOpenAIEndpoint))
+        {
+            if (!Uri.TryCreate(openAISettings.AzureOpenAIEndpoint, UriKind.Absolute, out var endpointUri))
+            {
+                throw new ValidationException(
+                    $"AzureOpenAIEndpoint '{openAISettings.AzureOpenAIEndpoint}' is not a valid URL. " +
+                    "Expected format: https://your-resource.cognitiveservices.azure.com/");
+            }
+
+            // Validate that it's an HTTPS URL
+            if (endpointUri.Scheme != Uri.UriSchemeHttps)
+            {
+                throw new ValidationException(
+                    $"AzureOpenAIEndpoint must use HTTPS. Current URL: {openAISettings.AzureOpenAIEndpoint}");
+            }
+
+            // Validate that it looks like an Azure endpoint
+            var host = endpointUri.Host.ToLowerInvariant();
+            if (!host.EndsWith(".cognitiveservices.azure.com") && !host.EndsWith(".openai.azure.com"))
+            {
+                throw new ValidationException(
+                    $"AzureOpenAIEndpoint '{openAISettings.AzureOpenAIEndpoint}' does not appear to be a valid Azure OpenAI or Azure Cognitive Services endpoint. " +
+                    "Expected format: https://your-resource.cognitiveservices.azure.com/ or https://your-resource.openai.azure.com/");
+            }
+        }
+
+        // Validate deployment IDs are provided when using Azure OpenAI
+        if (openAISettings.ServiceType == "AzureOpenAI")
+        {
+            if (string.IsNullOrWhiteSpace(Settings.OpenAIService?.ChatCompletion?.AzureOpenAIDeploymentId))
+            {
+                throw new ValidationException("ChatCompletion.AzureOpenAIDeploymentId is required when using Azure OpenAI service.");
+            }
+
+            if (string.IsNullOrWhiteSpace(Settings.OpenAIService?.ChatCompletionStructured?.AzureOpenAIDeploymentId))
+            {
+                throw new ValidationException("ChatCompletionStructured.AzureOpenAIDeploymentId is required when using Azure OpenAI service.");
+            }
+
+            if (string.IsNullOrWhiteSpace(Settings.OpenAIService?.Embedding?.AzureOpenAIDeploymentId))
+            {
+                throw new ValidationException("Embedding.AzureOpenAIDeploymentId is required when using Azure OpenAI service.");
+            }
+        }
+
+        // Validate model IDs are provided when using OpenAI
+        if (openAISettings.ServiceType == "OpenAI")
+        {
+            if (string.IsNullOrWhiteSpace(Settings.OpenAIService?.ChatCompletion?.ModelId))
+            {
+                throw new ValidationException("ChatCompletion.ModelId is required when using OpenAI service.");
+            }
+
+            if (string.IsNullOrWhiteSpace(Settings.OpenAIService?.ChatCompletionStructured?.ModelId))
+            {
+                throw new ValidationException("ChatCompletionStructured.ModelId is required when using OpenAI service.");
+            }
+
+            if (string.IsNullOrWhiteSpace(Settings.OpenAIService?.Embedding?.ModelId))
+            {
+                throw new ValidationException("Embedding.ModelId is required when using OpenAI service.");
+            }
         }
     }
 }
