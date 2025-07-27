@@ -298,5 +298,76 @@ function New-TestDataDictionary {
     Write-Verbose "Created test data dictionary at: $DictionaryPath" -Verbose
 }
 
+
+function Set-TestProjectConfiguration {
+    <#
+    .SYNOPSIS
+        Configures all required settings for a test project (database and Azure OpenAI).
+
+    .DESCRIPTION
+        Sets up the settings.json for a test project, including database connection string,
+        Azure OpenAI endpoint, API key, and required deployment IDs for all AI operations.
+
+    .PARAMETER ProjectPath
+        The path to the project containing settings.json.
+
+    .PARAMETER ConnectionString
+        The database connection string to configure.
+
+    .PARAMETER AzureOpenAIEndpoint
+        The Azure OpenAI endpoint URL.
+
+    .PARAMETER AzureOpenAIApiKey
+        The Azure OpenAI API key (optional).
+
+    .EXAMPLE
+        Set-TestProjectConfiguration -ProjectPath "C:\temp\project" -ConnectionString "..." -AzureOpenAIEndpoint "..." -AzureOpenAIApiKey "..."
+
+    .NOTES
+        This function is intended for use in integration test setup blocks.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ProjectPath,
+
+        [Parameter()]
+        [string]$ConnectionString,
+
+        [Parameter()]
+        [string]$AzureOpenAIEndpoint,
+
+        [Parameter()]
+        [string]$AzureOpenAIApiKey
+    )
+
+    $configParams = @{ ProjectPath = $ProjectPath }
+
+    if ($ConnectionString) {
+        $configParams.ConnectionString = $ConnectionString
+    }
+
+    if ($AzureOpenAIEndpoint) {
+        $configParams.AzureOpenAIEndpoint = $AzureOpenAIEndpoint
+    } else {
+        $configParams.AzureOpenAIEndpoint = 'https://test-openai-resource.cognitiveservices.azure.com/'
+    }
+
+    # Always set API key (dummy if not present)
+    if ($AzureOpenAIApiKey) {
+        $configParams.AzureOpenAIApiKey = $AzureOpenAIApiKey
+    } else {
+        $configParams.AzureOpenAIApiKey = 'dummy-key-for-ci-or-local'
+    }
+
+    # Set required deployment IDs
+    $configParams.ChatCompletionDeploymentId = 'gpt-4-1'
+    $configParams.ChatCompletionStructuredDeploymentId = 'gpt-4-1-mini'
+    $configParams.EmbeddingDeploymentId = 'text-embedding-ada-002'
+
+    Set-ProjectSettings @configParams
+}
+
 # Export all functions
-Export-ModuleMember -Function Initialize-TestProject, Set-ProjectSettings, Invoke-ConsoleCommand, New-TestDataDictionary
+Export-ModuleMember -Function Initialize-TestProject, Set-ProjectSettings, Invoke-ConsoleCommand, New-TestDataDictionary, Set-TestProjectConfiguration

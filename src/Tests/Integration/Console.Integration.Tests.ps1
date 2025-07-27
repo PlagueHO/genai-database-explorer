@@ -240,9 +240,17 @@ Describe 'GenAI Database Explorer Console Application' {
                 $configParams.AzureOpenAIEndpoint = 'https://test-openai-resource.cognitiveservices.azure.com/'
             }
 
+            # Always set API key (dummy if not present)
             if ($openAiApiKey -and -not [string]::IsNullOrEmpty($openAiApiKey.Value)) {
                 $configParams.AzureOpenAIApiKey = $openAiApiKey.Value
+            } else {
+                $configParams.AzureOpenAIApiKey = 'dummy-key-for-ci-or-local'
             }
+
+            # Set required deployment IDs
+            $configParams.ChatCompletionDeploymentId = 'gpt-4-1'
+            $configParams.ChatCompletionStructuredDeploymentId = 'gpt-4-1-mini'
+            $configParams.EmbeddingDeploymentId = 'text-embedding-ada-002'
 
             Set-ProjectSettings @configParams
         }
@@ -355,9 +363,17 @@ Describe 'GenAI Database Explorer Console Application' {
                 $configParams.AzureOpenAIEndpoint = 'https://test-openai-resource.cognitiveservices.azure.com/'
             }
 
+            # Always set API key (dummy if not present)
             if ($openAiApiKey -and -not [string]::IsNullOrEmpty($openAiApiKey.Value)) {
                 $configParams.AzureOpenAIApiKey = $openAiApiKey.Value
+            } else {
+                $configParams.AzureOpenAIApiKey = 'dummy-key-for-ci-or-local'
             }
+
+            # Set required deployment IDs
+            $configParams.ChatCompletionDeploymentId = 'gpt-4-1'
+            $configParams.ChatCompletionStructuredDeploymentId = 'gpt-4-1-mini'
+            $configParams.EmbeddingDeploymentId = 'text-embedding-ada-002'
 
             Set-ProjectSettings @configParams
 
@@ -420,9 +436,17 @@ Describe 'GenAI Database Explorer Console Application' {
                 $configParams.AzureOpenAIEndpoint = 'https://test-openai-resource.cognitiveservices.azure.com/'
             }
 
+            # Always set API key (dummy if not present)
             if ($openAiApiKey -and -not [string]::IsNullOrEmpty($openAiApiKey.Value)) {
                 $configParams.AzureOpenAIApiKey = $openAiApiKey.Value
+            } else {
+                $configParams.AzureOpenAIApiKey = 'dummy-key-for-ci-or-local'
             }
+
+            # Set required deployment IDs
+            $configParams.ChatCompletionDeploymentId = 'gpt-4-1'
+            $configParams.ChatCompletionStructuredDeploymentId = 'gpt-4-1-mini'
+            $configParams.EmbeddingDeploymentId = 'text-embedding-ada-002'
 
             Set-ProjectSettings @configParams
 
