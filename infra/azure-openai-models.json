@@ -26,18 +26,6 @@
   {
     "model": {
       "format": "OpenAI",
-      "name": "gpt-4.1-nano",
-      "version": "2025-04-14"
-    },
-    "name": "gpt-4-1-nano",
-    "sku": {
-      "name": "GlobalStandard",
-      "capacity": 100
-    }
-  },
-  {
-    "model": {
-      "format": "OpenAI",
       "name": "text-embedding-ada-002",
       "version": "2"
     },

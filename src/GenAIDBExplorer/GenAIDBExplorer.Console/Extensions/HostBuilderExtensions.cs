@@ -32,28 +32,25 @@ public static class HostBuilderExtensions
     /// <returns>The configured <see cref="HostApplicationBuilder"/> instance.</returns>
     public static HostApplicationBuilder ConfigureHost(this HostApplicationBuilder builder, string[] args)
     {
-        // Configure additional JSON files and environment variables
+        // Note: Host.CreateApplicationBuilder() already loads appsettings.json automatically
+        // We just need to add environment-specific files and environment variables
         builder.Configuration
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
             .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
             .AddEnvironmentVariables();
 
         // Clear existing logging providers and configure new ones
         builder.Logging.ClearProviders();
+        
+        // Apply all logging configuration from appsettings.json FIRST
         builder.Logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
+        
+        // Configure SimpleConsole provider
         builder.Logging.AddSimpleConsole(options =>
         {
             options.IncludeScopes = true;
             options.SingleLine = true;
             options.TimestampFormat = "HH:mm:ss ";
         });
-
-        // Explicitly set minimum level from configuration to ensure it takes effect
-        var defaultLogLevel = builder.Configuration["Logging:LogLevel:Default"];
-        if (!string.IsNullOrEmpty(defaultLogLevel) && Enum.TryParse<LogLevel>(defaultLogLevel, true, out var logLevel))
-        {
-            builder.Logging.SetMinimumLevel(logLevel);
-        }
 
         // Configure services
         ConfigureServices(builder.Services, builder.Configuration);
@@ -198,6 +195,19 @@ public static class HostBuilderExtensions
             })
             .ConfigureLogging((context, config) =>
             {
+                // First, set the minimum level from configuration
+                var defaultLogLevel = context.Configuration["Logging:LogLevel:Default"];
+                var configuredLogLevel = LogLevel.Information; // Default fallback
+                
+                if (!string.IsNullOrEmpty(defaultLogLevel) && Enum.TryParse<LogLevel>(defaultLogLevel, true, out configuredLogLevel))
+                {
+                    config.SetMinimumLevel(configuredLogLevel);
+                }
+                else
+                {
+                    config.SetMinimumLevel(LogLevel.Information);
+                }
+
                 config
                     .ClearProviders()
                     .AddConfiguration(context.Configuration.GetSection("Logging"))
@@ -208,11 +218,11 @@ public static class HostBuilderExtensions
                         options.TimestampFormat = "HH:mm:ss ";
                     });
 
-                // Ensure Debug level is explicitly set if configured
-                var defaultLogLevel = context.Configuration["Logging:LogLevel:Default"];
-                if (!string.IsNullOrEmpty(defaultLogLevel) && Enum.TryParse<LogLevel>(defaultLogLevel, true, out var logLevel))
+                // Only add explicit filters if the configuration specifies Debug level
+                if (configuredLogLevel == LogLevel.Debug)
                 {
-                    config.SetMinimumLevel(logLevel);
+                    config.AddFilter("GenAIDBExplorer", LogLevel.Debug);
+                    config.AddFilter("GenAIDBExplorer.Core.SemanticKernel", LogLevel.Debug);
                 }
             })
             .ConfigureServices((context, services) =>

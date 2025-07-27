@@ -377,12 +377,26 @@ function Set-TestProjectConfiguration {
 
     $configParams = @{ ProjectPath = $ProjectPath }
 
+    # Read environment variables for configuration
+    $envConnectionString = Get-Item -Path 'Env:SQL_CONNECTION_STRING' -ErrorAction SilentlyContinue
+    $envOpenAiEndpoint = Get-Item -Path 'Env:AZURE_OPENAI_ENDPOINT' -ErrorAction SilentlyContinue
+    $envOpenAiApiKey = Get-Item -Path 'Env:AZURE_OPENAI_API_KEY' -ErrorAction SilentlyContinue
+
+    # Use provided parameters or environment variables
     if ($ConnectionString) {
         $configParams.ConnectionString = $ConnectionString
+    } elseif ($envConnectionString -and -not [string]::IsNullOrEmpty($envConnectionString.Value)) {
+        $configParams.ConnectionString = $envConnectionString.Value
+    } else {
+        # Use Azure SQL Database with Active Directory Default authentication for testing
+        $configParams.ConnectionString = 'Server=tcp:criticalthinking.database.windows.net,1433;Initial Catalog=AdventureWorksLT;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;Authentication="Active Directory Default";'
+        Write-Verbose "No SQL connection string provided - using default Azure SQL Database for testing" -Verbose
     }
 
     if ($AzureOpenAIEndpoint) {
         $configParams.AzureOpenAIEndpoint = $AzureOpenAIEndpoint
+    } elseif ($envOpenAiEndpoint -and -not [string]::IsNullOrEmpty($envOpenAiEndpoint.Value)) {
+        $configParams.AzureOpenAIEndpoint = $envOpenAiEndpoint.Value
     } else {
         $configParams.AzureOpenAIEndpoint = 'https://test-openai-resource.cognitiveservices.azure.com/'
     }
@@ -390,6 +404,8 @@ function Set-TestProjectConfiguration {
     # Always set API key (dummy if not present)
     if ($AzureOpenAIApiKey) {
         $configParams.AzureOpenAIApiKey = $AzureOpenAIApiKey
+    } elseif ($envOpenAiApiKey -and -not [string]::IsNullOrEmpty($envOpenAiApiKey.Value)) {
+        $configParams.AzureOpenAIApiKey = $envOpenAiApiKey.Value
     } else {
         $configParams.AzureOpenAIApiKey = 'dummy-key-for-ci-or-local'
     }
