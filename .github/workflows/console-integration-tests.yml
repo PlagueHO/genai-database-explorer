@@ -99,11 +99,45 @@ jobs:
 
           echo "Firewall rule created successfully"
 
+      - name: Get Azure OpenAI API Key
+        shell: bash
+        run: |
+          # Extract environment suffix from SQL server name for AI Foundry service name
+          SQL_SERVER_NAME="${{ inputs.SQL_SERVER_NAME }}"
+          RESOURCE_GROUP="${{ inputs.RESOURCE_GROUP_NAME }}"
+          
+          # Try to construct AI Foundry service name from SQL server pattern
+          if [[ "$SQL_SERVER_NAME" =~ ^sql-(.+)$ ]]; then
+            ENV_SUFFIX="${BASH_REMATCH[1]}"
+            AI_FOUNDRY_NAME="aif-${ENV_SUFFIX}"
+            echo "Constructed AI Foundry service name: $AI_FOUNDRY_NAME"
+            
+            # Get Azure OpenAI API key from Cognitive Services
+            echo "Retrieving Azure OpenAI API key from AI Foundry service..."
+            API_KEY=$(az cognitiveservices account keys list \
+              --name "$AI_FOUNDRY_NAME" \
+              --resource-group "$RESOURCE_GROUP" \
+              --query "key1" \
+              --output tsv 2>/dev/null || echo "")
+            
+            if [ -n "$API_KEY" ] && [ "$API_KEY" != "" ]; then
+              echo "Azure OpenAI API key retrieved successfully"
+              echo "AZURE_OPENAI_API_KEY=$API_KEY" >> $GITHUB_ENV
+            else
+              echo "Warning: Could not retrieve Azure OpenAI API key from service: $AI_FOUNDRY_NAME"
+              echo "AI-related integration tests may fail or be skipped"
+            fi
+          else
+            echo "Warning: Could not parse SQL server name pattern to construct AI Foundry service name"
+            echo "Expected format: sql-<environment-suffix>, got: $SQL_SERVER_NAME"
+          fi
+
       - name: Setup PowerShell and Run Console Integration Tests
         shell: pwsh
         env:
           SQL_CONNECTION_STRING: "Server=${{ inputs.SQL_SERVER_NAME }}.database.windows.net;Database=AdventureWorksLT;User Id=${{ secrets.SQL_SERVER_USERNAME }};Password=${{ secrets.SQL_SERVER_PASSWORD }};Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
           AZURE_OPENAI_ENDPOINT: ${{ inputs.AZURE_AI_FOUNDRY_ENDPOINT }}
+          AZURE_OPENAI_API_KEY: ${{ env.AZURE_OPENAI_API_KEY }}
           CONSOLE_APP_PATH: ./publish/GenAIDBExplorer.Console
         run: |
           # Install and import Pester in the same session
@@ -119,6 +153,7 @@ jobs:
           Write-Host "=== Environment Variables Debug ===" -ForegroundColor Magenta
           Write-Host "SQL_CONNECTION_STRING: $($env:SQL_CONNECTION_STRING.Length) characters" -ForegroundColor Yellow
           Write-Host "AZURE_OPENAI_ENDPOINT: '$env:AZURE_OPENAI_ENDPOINT'" -ForegroundColor Yellow
+          Write-Host "AZURE_OPENAI_API_KEY: $($env:AZURE_OPENAI_API_KEY.Length) characters (masked)" -ForegroundColor Yellow
           Write-Host "Input AZURE_AI_FOUNDRY_ENDPOINT: '${{ inputs.AZURE_AI_FOUNDRY_ENDPOINT }}'" -ForegroundColor Yellow
           Write-Host "Input AZURE_AI_FOUNDRY_NAME: '${{ inputs.AZURE_AI_FOUNDRY_NAME }}'" -ForegroundColor Yellow
 
@@ -141,14 +176,17 @@ jobs:
             }
           }
 
-          # Check if endpoint is available for AI tests
-          if ([string]::IsNullOrEmpty($env:AZURE_OPENAI_ENDPOINT)) {
-            Write-Warning "Azure AI Foundry endpoint not provided. AI-related integration tests will be skipped or may fail gracefully."
+          # Check if endpoint and API key are available for AI tests
+          if ([string]::IsNullOrEmpty($env:AZURE_OPENAI_ENDPOINT) -or [string]::IsNullOrEmpty($env:AZURE_OPENAI_API_KEY)) {
+            Write-Warning "Azure AI Foundry endpoint or API key not available. AI-related integration tests will be skipped or may fail gracefully."
             Write-Host "This is expected behavior when AI services are not deployed or configured." -ForegroundColor Yellow
             Write-Host "To enable AI tests, ensure AZURE_AI_FOUNDRY_ENDPOINT is passed correctly from infrastructure provisioning." -ForegroundColor Yellow
             Write-Host "Check the 'Get Output Endpoints' step in provision-infrastructure workflow for Azure CLI endpoint retrieval." -ForegroundColor Yellow
+            if ([string]::IsNullOrEmpty($env:AZURE_OPENAI_API_KEY)) {
+              Write-Host "API key was not retrieved - check that the AI Foundry service exists and has the expected naming pattern." -ForegroundColor Yellow
+            }
           } else {
-            Write-Host "Azure AI services configured. AI integration tests will run." -ForegroundColor Green
+            Write-Host "Azure AI services configured with endpoint and API key. AI integration tests will run." -ForegroundColor Green
             Write-Host "Endpoint format: $($env:AZURE_OPENAI_ENDPOINT)" -ForegroundColor Cyan
 
             # Validate endpoint format
