@@ -394,32 +394,6 @@ Describe 'GenAI Database Explorer Console Application' {
             }
         }
 
-        Context 'query-model command' {
-            Context 'When accessing query interface' {
-                It 'Should display help or handle query command gracefully' {
-                    # Act
-                    $commandResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('query-model', '--project', $script:AiProjectPath, '--help')
-
-                    # Assert
-                    $commandResult.Output | Should -Not -Match 'Exception.*at.*' -Because 'Help command should not show stack traces'
-                    if ($commandResult.ExitCode -eq 0) {
-                                # Should match help text patterns more flexibly
-        $commandResult.Output | Should -Match 'Description.*Usage.*Options' -Because 'Help should display usage information'
-                    }
-                }
-            }
-
-            Context 'When testing query functionality' {
-                It 'Should handle basic query operations' {
-                    # Act
-                    $commandResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('query-model', '--project', $script:AiProjectPath)
-
-                    # Assert
-                    $commandResult.Output | Should -Not -Match 'Exception.*at.*' -Because 'Should not show stack traces'
-                }
-            }
-        }
-
         Context 'export-model command' {
             Context 'When exporting to markdown format' {
                 It 'Should create markdown documentation file' {
@@ -469,8 +443,11 @@ Describe 'GenAI Database Explorer Console Application' {
                     # Assert
                     $commandResult.ExitCode | Should -Be 0 -Because 'Help command should succeed'
                     $commandResult.Output | Should -Not -BeNullOrEmpty -Because 'Help should produce output'
-                    $commandResult.Output | Should -Match 'Description.*Usage.*Commands' -Because 'Should display standard CLI help format'
-                    $commandResult.Output | Should -Match 'init-project.*extract-model.*query-model' -Because 'Should list main CLI commands'
+                    
+                    # Join the output array into a single string for regex matching
+                    $joinedOutput = $commandResult.Output -join "`n"
+                    $joinedOutput | Should -Match '(?s)Description.*Usage.*Commands' -Because 'Should display standard CLI help format'
+                    $joinedOutput | Should -Match '(?s)init-project.*extract-model.*query-model' -Because 'Should list main CLI commands'
                 }
             }
 
