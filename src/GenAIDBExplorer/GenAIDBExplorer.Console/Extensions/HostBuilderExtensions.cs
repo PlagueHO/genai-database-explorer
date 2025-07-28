@@ -36,7 +36,7 @@ public static class HostBuilderExtensions
         var consoleProjectPath = Path.Combine("src", "GenAIDBExplorer", "GenAIDBExplorer.Console");
         var appSettingsPath = Path.Combine(consoleProjectPath, "appsettings.json");
         var envAppSettingsPath = Path.Combine(consoleProjectPath, $"appsettings.{builder.Environment.EnvironmentName}.json");
-        
+
         // Note: We need to explicitly add the appsettings.json from the console project directory
         // because the content root is set to the repository root when running from the repository root
         builder.Configuration
@@ -46,10 +46,10 @@ public static class HostBuilderExtensions
 
         // Clear existing logging providers and configure new ones
         builder.Logging.ClearProviders();
-        
+
         // Apply all logging configuration from appsettings.json FIRST
         builder.Logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
-        
+
         // Configure SimpleConsole provider
         builder.Logging.AddSimpleConsole(options =>
         {
