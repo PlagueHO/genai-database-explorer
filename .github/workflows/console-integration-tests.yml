@@ -99,7 +99,7 @@ jobs:
 
           echo "Firewall rule created successfully"
 
-      - name: Get Azure OpenAI API Key
+      - name: Enable Azure AI Foundry Public Access for Integration Tests
         shell: bash
         run: |
           # Extract environment suffix from SQL server name for AI Foundry service name
@@ -112,8 +112,31 @@ jobs:
             AI_FOUNDRY_NAME="aif-${ENV_SUFFIX}"
             echo "Constructed AI Foundry service name: $AI_FOUNDRY_NAME"
             
+            # Enable public network access for AI Foundry service during tests
+            echo "Enabling public network access for AI Foundry service: $AI_FOUNDRY_NAME"
+            az cognitiveservices account update \
+              --name "$AI_FOUNDRY_NAME" \
+              --resource-group "$RESOURCE_GROUP" \
+              --public-network-access "Enabled" \
+              --output none
+            
+            echo "Public network access enabled for AI Foundry service"
+            echo "AI_FOUNDRY_NAME=$AI_FOUNDRY_NAME" >> $GITHUB_ENV
+          else
+            echo "Warning: Could not parse SQL server name pattern to construct AI Foundry service name"
+            echo "Expected format: sql-<environment-suffix>, got: $SQL_SERVER_NAME"
+            echo "AI Foundry public access will not be modified"
+          fi
+
+      - name: Get Azure OpenAI API Key
+        shell: bash
+        run: |
+          # Use the AI Foundry service name from the previous step
+          if [ -n "$AI_FOUNDRY_NAME" ] && [ "$AI_FOUNDRY_NAME" != "" ]; then
+            RESOURCE_GROUP="${{ inputs.RESOURCE_GROUP_NAME }}"
+            
             # Get Azure OpenAI API key from Cognitive Services
-            echo "Retrieving Azure OpenAI API key from AI Foundry service..."
+            echo "Retrieving Azure OpenAI API key from AI Foundry service: $AI_FOUNDRY_NAME"
             API_KEY=$(az cognitiveservices account keys list \
               --name "$AI_FOUNDRY_NAME" \
               --resource-group "$RESOURCE_GROUP" \
@@ -128,8 +151,8 @@ jobs:
               echo "AI-related integration tests may fail or be skipped"
             fi
           else
-            echo "Warning: Could not parse SQL server name pattern to construct AI Foundry service name"
-            echo "Expected format: sql-<environment-suffix>, got: $SQL_SERVER_NAME"
+            echo "Warning: No AI Foundry service name available from previous step"
+            echo "AI-related integration tests may fail or be skipped"
           fi
 
       - name: Setup PowerShell and Run Console Integration Tests
@@ -243,6 +266,26 @@ jobs:
             ./test-results/
             ./temp-workspaces/
           retention-days: 7
+
+      - name: Disable Azure AI Foundry Public Access After Tests
+        if: always()
+        shell: bash
+        run: |
+          # Disable public network access for AI Foundry service after tests
+          if [ -n "$AI_FOUNDRY_NAME" ] && [ "$AI_FOUNDRY_NAME" != "" ]; then
+            RESOURCE_GROUP="${{ inputs.RESOURCE_GROUP_NAME }}"
+            
+            echo "Disabling public network access for AI Foundry service: $AI_FOUNDRY_NAME"
+            az cognitiveservices account update \
+              --name "$AI_FOUNDRY_NAME" \
+              --resource-group "$RESOURCE_GROUP" \
+              --public-network-access "Disabled" \
+              --output none || echo "Warning: Failed to disable public access for AI Foundry service"
+            
+            echo "Public network access disabled for AI Foundry service"
+          else
+            echo "No AI Foundry service name available - skipping public access cleanup"
+          fi
 
       - name: Remove SQL Server Firewall Rule
         if: always()
