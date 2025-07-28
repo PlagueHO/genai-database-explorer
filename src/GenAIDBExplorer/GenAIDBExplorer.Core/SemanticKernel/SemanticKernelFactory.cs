@@ -61,7 +61,6 @@ public class SemanticKernelFactory(
     /// <param name="serviceId">The unique service identifier.</param>
     /// <exception cref="InvalidOperationException">Thrown when required configuration is missing.</exception>
     private void AddChatCompletionService(
-    private void AddChatCompletionService(
         IKernelBuilder kernelBuilder,
         OpenAIServiceDefaultSettings defaultSettings,
         IOpenAIServiceChatCompletionSettings chatCompletionSettings,
