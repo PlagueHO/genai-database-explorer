@@ -32,10 +32,16 @@ public static class HostBuilderExtensions
     /// <returns>The configured <see cref="HostApplicationBuilder"/> instance.</returns>
     public static HostApplicationBuilder ConfigureHost(this HostApplicationBuilder builder, string[] args)
     {
-        // Note: Host.CreateApplicationBuilder() already loads appsettings.json automatically
-        // We just need to add environment-specific files and environment variables
+        // Determine the correct path for appsettings.json relative to the console project
+        var consoleProjectPath = Path.Combine("src", "GenAIDBExplorer", "GenAIDBExplorer.Console");
+        var appSettingsPath = Path.Combine(consoleProjectPath, "appsettings.json");
+        var envAppSettingsPath = Path.Combine(consoleProjectPath, $"appsettings.{builder.Environment.EnvironmentName}.json");
+        
+        // Note: We need to explicitly add the appsettings.json from the console project directory
+        // because the content root is set to the repository root when running from the repository root
         builder.Configuration
-            .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+            .AddJsonFile(appSettingsPath, optional: false, reloadOnChange: true)
+            .AddJsonFile(envAppSettingsPath, optional: true, reloadOnChange: true)
             .AddEnvironmentVariables();
 
         // Clear existing logging providers and configure new ones
@@ -175,60 +181,5 @@ public static class HostBuilderExtensions
             SemanticModelRepositoryOptionsBuilder.Create());
         services.AddTransient<IPerformanceMonitoringOptionsBuilder>(provider =>
             PerformanceMonitoringOptionsBuilder.Create());
-    }
-
-    /// <summary>
-    /// Configures the host builder with the necessary services and configurations.
-    /// </summary>
-    /// <param name="builder">The <see cref="IHostBuilder"/> instance.</param>
-    /// <param name="args">The command-line arguments.</param>
-    /// <returns>The configured <see cref="IHostBuilder"/> instance.</returns>
-    public static IHostBuilder ConfigureHost(this IHostBuilder builder, string[] args)
-    {
-        return builder
-            .ConfigureAppConfiguration((context, config) =>
-            {
-                config
-                    .AddJsonFile("appsettings.json", optional: true)
-                    .AddJsonFile($"appsettings.{context.HostingEnvironment.EnvironmentName}.json", optional: true)
-                    .AddEnvironmentVariables();
-            })
-            .ConfigureLogging((context, config) =>
-            {
-                // First, set the minimum level from configuration
-                var defaultLogLevel = context.Configuration["Logging:LogLevel:Default"];
-                var configuredLogLevel = LogLevel.Information; // Default fallback
-                
-                if (!string.IsNullOrEmpty(defaultLogLevel) && Enum.TryParse<LogLevel>(defaultLogLevel, true, out configuredLogLevel))
-                {
-                    config.SetMinimumLevel(configuredLogLevel);
-                }
-                else
-                {
-                    config.SetMinimumLevel(LogLevel.Information);
-                }
-
-                config
-                    .ClearProviders()
-                    .AddConfiguration(context.Configuration.GetSection("Logging"))
-                    .AddSimpleConsole(options =>
-                    {
-                        options.IncludeScopes = true;
-                        options.SingleLine = true;
-                        options.TimestampFormat = "HH:mm:ss ";
-                    });
-
-                // Only add explicit filters if the configuration specifies Debug level
-                if (configuredLogLevel == LogLevel.Debug)
-                {
-                    config.AddFilter("GenAIDBExplorer", LogLevel.Debug);
-                    config.AddFilter("GenAIDBExplorer.Core.SemanticKernel", LogLevel.Debug);
-                }
-            })
-            .ConfigureServices((context, services) =>
-            {
-                ConfigureServices(services, context.Configuration);
-            })
-            .UseConsoleLifetime();
     }
 }
