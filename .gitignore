@@ -44,6 +44,9 @@ Generated\ Files/
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
 
+# Pester test Results
+test-results/
+
 # NUnit
 *.VisualState.xml
 TestResult.xml

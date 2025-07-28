@@ -459,7 +459,10 @@ Describe 'GenAI Database Explorer Console Application' {
                     # Assert
                     # Note: Some CLI frameworks return 0 even for invalid commands, so we accept both behaviors
                     $commandResult.ExitCode | Should -BeIn @(0, 1) -Because 'Should handle invalid commands gracefully'
-                    $commandResult.Output | Should -Match 'Unrecognized command.*invalid-command-test|Required command.*not.*provided' -Because 'Should provide error message for invalid commands'
+                    
+                    # Join the output array into a single string for regex matching
+                    $joinedOutput = $commandResult.Output -join "`n"
+                    $joinedOutput | Should -Match 'Unrecognized command.*invalid-command-test|Required command.*not.*provided' -Because 'Should provide error message for invalid commands'
                 }
             }
         }
