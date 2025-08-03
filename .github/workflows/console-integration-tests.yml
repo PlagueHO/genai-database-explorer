@@ -112,16 +112,28 @@ jobs:
             AI_FOUNDRY_NAME="aif-${ENV_SUFFIX}"
             echo "Constructed AI Foundry service name: $AI_FOUNDRY_NAME"
             
-            # Enable public network access for AI Foundry service during tests
-            echo "Enabling public network access for AI Foundry service: $AI_FOUNDRY_NAME"
-            az cognitiveservices account update \
+            # Get the resource ID for the AI Foundry service
+            echo "Getting resource ID for AI Foundry service: $AI_FOUNDRY_NAME"
+            RESOURCE_ID=$(az cognitiveservices account show \
               --name "$AI_FOUNDRY_NAME" \
               --resource-group "$RESOURCE_GROUP" \
-              --public-network-access "Enabled" \
-              --output none
+              --query id \
+              --output tsv 2>/dev/null || echo "")
             
-            echo "Public network access enabled for AI Foundry service"
-            echo "AI_FOUNDRY_NAME=$AI_FOUNDRY_NAME" >> $GITHUB_ENV
+            if [ -n "$RESOURCE_ID" ] && [ "$RESOURCE_ID" != "" ]; then
+              # Enable public network access for AI Foundry service during tests
+              echo "Enabling public network access for AI Foundry service: $AI_FOUNDRY_NAME"
+              az resource update \
+                --ids "$RESOURCE_ID" \
+                --set properties.networkAcls='{"defaultAction":"Allow"}' \
+                --output none
+              
+              echo "Public network access enabled for AI Foundry service"
+              echo "AI_FOUNDRY_NAME=$AI_FOUNDRY_NAME" >> $GITHUB_ENV
+            else
+              echo "Warning: Could not find AI Foundry service: $AI_FOUNDRY_NAME"
+              echo "AI Foundry public access will not be modified"
+            fi
           else
             echo "Warning: Could not parse SQL server name pattern to construct AI Foundry service name"
             echo "Expected format: sql-<environment-suffix>, got: $SQL_SERVER_NAME"
@@ -275,14 +287,25 @@ jobs:
           if [ -n "$AI_FOUNDRY_NAME" ] && [ "$AI_FOUNDRY_NAME" != "" ]; then
             RESOURCE_GROUP="${{ inputs.RESOURCE_GROUP_NAME }}"
             
-            echo "Disabling public network access for AI Foundry service: $AI_FOUNDRY_NAME"
-            az cognitiveservices account update \
+            # Get the resource ID for the AI Foundry service
+            echo "Getting resource ID for AI Foundry service: $AI_FOUNDRY_NAME"
+            RESOURCE_ID=$(az cognitiveservices account show \
               --name "$AI_FOUNDRY_NAME" \
               --resource-group "$RESOURCE_GROUP" \
-              --public-network-access "Disabled" \
-              --output none || echo "Warning: Failed to disable public access for AI Foundry service"
+              --query id \
+              --output tsv 2>/dev/null || echo "")
             
-            echo "Public network access disabled for AI Foundry service"
+            if [ -n "$RESOURCE_ID" ] && [ "$RESOURCE_ID" != "" ]; then
+              echo "Disabling public network access for AI Foundry service: $AI_FOUNDRY_NAME"
+              az resource update \
+                --ids "$RESOURCE_ID" \
+                --set properties.networkAcls='{"defaultAction":"Deny"}' \
+                --output none || echo "Warning: Failed to disable public access for AI Foundry service"
+              
+              echo "Public network access disabled for AI Foundry service"
+            else
+              echo "Warning: Could not find AI Foundry service: $AI_FOUNDRY_NAME"
+            fi
           else
             echo "No AI Foundry service name available - skipping public access cleanup"
           fi
