@@ -123,24 +123,53 @@ jobs:
             if [ -n "$RESOURCE_ID" ] && [ "$RESOURCE_ID" != "" ]; then
               # Check current network configuration
               echo "Checking current network configuration for AI Foundry service: $AI_FOUNDRY_NAME"
-              CURRENT_DEFAULT_ACTION=$(az cognitiveservices account show \
+              
+              # Get current network ACLs configuration
+              CURRENT_CONFIG=$(az cognitiveservices account show \
+                --name "$AI_FOUNDRY_NAME" \
+                --resource-group "$RESOURCE_GROUP" \
+                --query "properties.networkAcls" \
+                --output json 2>/dev/null || echo "{}")
+              
+              echo "Current network ACLs configuration: $CURRENT_CONFIG"
+              
+              CURRENT_DEFAULT_ACTION=$(echo "$CURRENT_CONFIG" | jq -r '.defaultAction // "Allow"')
+              echo "Current network default action: $CURRENT_DEFAULT_ACTION"
+              
+              # Always update to ensure Allow is set, regardless of current state
+              echo "Setting public network access to Allow for AI Foundry service: $AI_FOUNDRY_NAME"
+              az resource update \
+                --ids "$RESOURCE_ID" \
+                --set properties.networkAcls="{'defaultAction':'Allow'}" \
+                --set properties.publicNetworkAccess="Enabled" \
+                --output none
+              
+              # Wait a moment for the change to propagate
+              echo "Waiting 10 seconds for network configuration to propagate..."
+              sleep 10
+              
+              # Verify the changes took effect
+              UPDATED_DEFAULT_ACTION=$(az cognitiveservices account show \
                 --name "$AI_FOUNDRY_NAME" \
                 --resource-group "$RESOURCE_GROUP" \
                 --query "properties.networkAcls.defaultAction" \
-                --output tsv 2>/dev/null || echo "Allow")
+                --output tsv 2>/dev/null || echo "Unknown")
               
-              echo "Current network default action: $CURRENT_DEFAULT_ACTION"
+              UPDATED_PUBLIC_ACCESS=$(az cognitiveservices account show \
+                --name "$AI_FOUNDRY_NAME" \
+                --resource-group "$RESOURCE_GROUP" \
+                --query "properties.publicNetworkAccess" \
+                --output tsv 2>/dev/null || echo "Unknown")
               
-              # Only update if currently set to Deny
-              if [ "$CURRENT_DEFAULT_ACTION" = "Deny" ]; then
-                echo "Enabling public network access for AI Foundry service: $AI_FOUNDRY_NAME"
-                az resource update \
-                  --ids "$RESOURCE_ID" \
-                  --set properties.networkAcls.defaultAction='Allow' \
-                  --output none
-                echo "Public network access enabled for AI Foundry service"
+              echo "Updated network default action: $UPDATED_DEFAULT_ACTION"
+              echo "Updated public network access: $UPDATED_PUBLIC_ACCESS"
+              
+              if [ "$UPDATED_DEFAULT_ACTION" = "Allow" ] && [ "$UPDATED_PUBLIC_ACCESS" = "Enabled" ]; then
+                echo "✅ Public network access successfully enabled for AI Foundry service"
               else
-                echo "Public network access already enabled for AI Foundry service"
+                echo "⚠️  Warning: Network access may not have been properly updated."
+                echo "   Expected: defaultAction=Allow, publicNetworkAccess=Enabled"
+                echo "   Actual: defaultAction=$UPDATED_DEFAULT_ACTION, publicNetworkAccess=$UPDATED_PUBLIC_ACCESS"
               fi
               
               echo "AI_FOUNDRY_NAME=$AI_FOUNDRY_NAME" >> $GITHUB_ENV
@@ -320,16 +349,36 @@ jobs:
               
               echo "Current network default action: $CURRENT_DEFAULT_ACTION"
               
-              # Only update if currently set to Allow
-              if [ "$CURRENT_DEFAULT_ACTION" = "Allow" ]; then
-                echo "Disabling public network access for AI Foundry service: $AI_FOUNDRY_NAME"
-                az resource update \
-                  --ids "$RESOURCE_ID" \
-                  --set properties.networkAcls.defaultAction='Deny' \
-                  --output none || echo "Warning: Failed to disable public access for AI Foundry service"
-                echo "Public network access disabled for AI Foundry service"
+              # Always disable after tests to restore security
+              echo "Disabling public network access for AI Foundry service: $AI_FOUNDRY_NAME"
+              az resource update \
+                --ids "$RESOURCE_ID" \
+                --set properties.networkAcls="{'defaultAction':'Deny'}" \
+                --set properties.publicNetworkAccess="Disabled" \
+                --output none || echo "Warning: Failed to disable public access for AI Foundry service"
+              
+              # Verify the changes took effect
+              UPDATED_DEFAULT_ACTION=$(az cognitiveservices account show \
+                --name "$AI_FOUNDRY_NAME" \
+                --resource-group "$RESOURCE_GROUP" \
+                --query "properties.networkAcls.defaultAction" \
+                --output tsv 2>/dev/null || echo "Unknown")
+              
+              UPDATED_PUBLIC_ACCESS=$(az cognitiveservices account show \
+                --name "$AI_FOUNDRY_NAME" \
+                --resource-group "$RESOURCE_GROUP" \
+                --query "properties.publicNetworkAccess" \
+                --output tsv 2>/dev/null || echo "Unknown")
+              
+              echo "Updated network default action: $UPDATED_DEFAULT_ACTION"
+              echo "Updated public network access: $UPDATED_PUBLIC_ACCESS"
+              
+              if [ "$UPDATED_DEFAULT_ACTION" = "Deny" ] && [ "$UPDATED_PUBLIC_ACCESS" = "Disabled" ]; then
+                echo "✅ Public network access successfully disabled for AI Foundry service"
               else
-                echo "Public network access already disabled for AI Foundry service"
+                echo "⚠️  Warning: Network access may not have been properly updated."
+                echo "   Expected: defaultAction=Deny, publicNetworkAccess=Disabled"
+                echo "   Actual: defaultAction=$UPDATED_DEFAULT_ACTION, publicNetworkAccess=$UPDATED_PUBLIC_ACCESS"
               fi
             else
               echo "Warning: Could not find AI Foundry service: $AI_FOUNDRY_NAME"
