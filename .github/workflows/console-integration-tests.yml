@@ -49,6 +49,8 @@ jobs:
     permissions:
       id-token: write
       contents: read
+      checks: write
+      pull-requests: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -365,12 +367,12 @@ jobs:
           }
 
       - name: Publish Integration Test Results
-        uses: dorny/test-reporter@v2
+        uses: EnricoMi/publish-unit-test-result-action@v2
         if: always() && steps.check-test-results.outputs.test-results-valid == 'true'
         with:
-          name: Console Integration Test Results
-          path: './test-results/integration-tests.xml'
-          reporter: java-junit
+          check_name: Console Integration Test Results
+          files: './test-results/integration-tests.xml'
+          comment_title: Console Integration Test Results
 
       - name: Upload Integration Test Artifacts
         if: always()
