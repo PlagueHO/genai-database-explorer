@@ -121,14 +121,28 @@ jobs:
               --output tsv 2>/dev/null || echo "")
             
             if [ -n "$RESOURCE_ID" ] && [ "$RESOURCE_ID" != "" ]; then
-              # Enable public network access for AI Foundry service during tests
-              echo "Enabling public network access for AI Foundry service: $AI_FOUNDRY_NAME"
-              az resource update \
-                --ids "$RESOURCE_ID" \
-                --set properties.networkAcls='{"defaultAction":"Allow"}' \
-                --output none
+              # Check current network configuration
+              echo "Checking current network configuration for AI Foundry service: $AI_FOUNDRY_NAME"
+              CURRENT_DEFAULT_ACTION=$(az cognitiveservices account show \
+                --name "$AI_FOUNDRY_NAME" \
+                --resource-group "$RESOURCE_GROUP" \
+                --query "properties.networkAcls.defaultAction" \
+                --output tsv 2>/dev/null || echo "Allow")
               
-              echo "Public network access enabled for AI Foundry service"
+              echo "Current network default action: $CURRENT_DEFAULT_ACTION"
+              
+              # Only update if currently set to Deny
+              if [ "$CURRENT_DEFAULT_ACTION" = "Deny" ]; then
+                echo "Enabling public network access for AI Foundry service: $AI_FOUNDRY_NAME"
+                az resource update \
+                  --ids "$RESOURCE_ID" \
+                  --set properties.networkAcls.defaultAction='Allow' \
+                  --output none
+                echo "Public network access enabled for AI Foundry service"
+              else
+                echo "Public network access already enabled for AI Foundry service"
+              fi
+              
               echo "AI_FOUNDRY_NAME=$AI_FOUNDRY_NAME" >> $GITHUB_ENV
             else
               echo "Warning: Could not find AI Foundry service: $AI_FOUNDRY_NAME"
@@ -296,13 +310,27 @@ jobs:
               --output tsv 2>/dev/null || echo "")
             
             if [ -n "$RESOURCE_ID" ] && [ "$RESOURCE_ID" != "" ]; then
-              echo "Disabling public network access for AI Foundry service: $AI_FOUNDRY_NAME"
-              az resource update \
-                --ids "$RESOURCE_ID" \
-                --set properties.networkAcls='{"defaultAction":"Deny"}' \
-                --output none || echo "Warning: Failed to disable public access for AI Foundry service"
+              # Check current network configuration before disabling
+              echo "Checking current network configuration for AI Foundry service: $AI_FOUNDRY_NAME"
+              CURRENT_DEFAULT_ACTION=$(az cognitiveservices account show \
+                --name "$AI_FOUNDRY_NAME" \
+                --resource-group "$RESOURCE_GROUP" \
+                --query "properties.networkAcls.defaultAction" \
+                --output tsv 2>/dev/null || echo "Allow")
               
-              echo "Public network access disabled for AI Foundry service"
+              echo "Current network default action: $CURRENT_DEFAULT_ACTION"
+              
+              # Only update if currently set to Allow
+              if [ "$CURRENT_DEFAULT_ACTION" = "Allow" ]; then
+                echo "Disabling public network access for AI Foundry service: $AI_FOUNDRY_NAME"
+                az resource update \
+                  --ids "$RESOURCE_ID" \
+                  --set properties.networkAcls.defaultAction='Deny' \
+                  --output none || echo "Warning: Failed to disable public access for AI Foundry service"
+                echo "Public network access disabled for AI Foundry service"
+              else
+                echo "Public network access already disabled for AI Foundry service"
+              fi
             else
               echo "Warning: Could not find AI Foundry service: $AI_FOUNDRY_NAME"
             fi
