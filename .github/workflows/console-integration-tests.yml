@@ -138,10 +138,17 @@ jobs:
               
               # Always update to ensure Allow is set, regardless of current state
               echo "Setting public network access to Allow for AI Foundry service: $AI_FOUNDRY_NAME"
+              
+              # First, try to set just the publicNetworkAccess property
               az resource update \
                 --ids "$RESOURCE_ID" \
-                --set properties.networkAcls="{'defaultAction':'Allow'}" \
                 --set properties.publicNetworkAccess="Enabled" \
+                --output none
+              
+              # Then, try to set just the defaultAction within networkAcls without overwriting the entire object
+              az resource update \
+                --ids "$RESOURCE_ID" \
+                --set properties.networkAcls.defaultAction="Allow" \
                 --output none
               
               # Wait a moment for the change to propagate
@@ -351,11 +358,18 @@ jobs:
               
               # Always disable after tests to restore security
               echo "Disabling public network access for AI Foundry service: $AI_FOUNDRY_NAME"
+              
+              # First, try to set just the publicNetworkAccess property
               az resource update \
                 --ids "$RESOURCE_ID" \
-                --set properties.networkAcls="{'defaultAction':'Deny'}" \
                 --set properties.publicNetworkAccess="Disabled" \
-                --output none || echo "Warning: Failed to disable public access for AI Foundry service"
+                --output none || echo "Warning: Failed to disable publicNetworkAccess for AI Foundry service"
+              
+              # Then, try to set just the defaultAction within networkAcls without overwriting the entire object
+              az resource update \
+                --ids "$RESOURCE_ID" \
+                --set properties.networkAcls.defaultAction="Deny" \
+                --output none || echo "Warning: Failed to disable networkAcls.defaultAction for AI Foundry service"
               
               # Verify the changes took effect
               UPDATED_DEFAULT_ACTION=$(az cognitiveservices account show \
