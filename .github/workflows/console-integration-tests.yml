@@ -305,14 +305,68 @@ jobs:
             Write-Host "Azure AI Foundry Endpoint: ${{ inputs.AZURE_AI_FOUNDRY_ENDPOINT }}" -ForegroundColor Yellow
             Invoke-Pester -Configuration $config
             Write-Host "Integration tests completed" -ForegroundColor Green
+            
+            # Verify test results file was created
+            if (Test-Path './test-results/integration-tests.xml') {
+              $testResultsSize = (Get-Item './test-results/integration-tests.xml').Length
+              Write-Host "✅ Test results file created successfully (Size: $testResultsSize bytes)" -ForegroundColor Green
+              
+              # Show first few lines of the XML file for debugging
+              Write-Host "=== Test Results XML Preview ===" -ForegroundColor Cyan
+              Get-Content './test-results/integration-tests.xml' -Head 10 | ForEach-Object { Write-Host "  $_" -ForegroundColor Gray }
+              Write-Host "=================================" -ForegroundColor Cyan
+            } else {
+              Write-Warning "⚠️  Test results file not found at './test-results/integration-tests.xml'"
+              Write-Host "Available files in test-results directory:" -ForegroundColor Yellow
+              if (Test-Path './test-results') {
+                Get-ChildItem './test-results' | ForEach-Object { Write-Host "  - $($_.Name)" -ForegroundColor Gray }
+              } else {
+                Write-Host "  test-results directory does not exist" -ForegroundColor Red
+              }
+            }
           } catch {
             Write-Error "Integration tests failed: $($_.Exception.Message)"
+            
+            # Still try to create a minimal test results file if it doesn't exist
+            if (-not (Test-Path './test-results/integration-tests.xml')) {
+              Write-Host "Creating minimal test results file for error reporting..." -ForegroundColor Yellow
+              $xmlContent = '<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="Console Integration Tests" tests="1" failures="1" errors="0" time="0"><testcase name="Integration Test Execution" classname="Console.Integration.Tests"><failure message="Test execution failed">' + $_.Exception.Message + '</failure></testcase></testsuite></testsuites>'
+              $xmlContent | Out-File -FilePath './test-results/integration-tests.xml' -Encoding UTF8
+            }
             throw
+          }
+
+      - name: Check Test Results File
+        id: check-test-results
+        if: always()
+        shell: pwsh
+        run: |
+          if (Test-Path './test-results/integration-tests.xml') {
+            $content = Get-Content './test-results/integration-tests.xml' -Raw
+            $fileSize = (Get-Item './test-results/integration-tests.xml').Length
+            Write-Host "✅ Test results file exists (Size: $fileSize bytes)" -ForegroundColor Green
+            
+            # Validate XML structure
+            try {
+              [xml]$xmlContent = $content
+              Write-Host "✅ Test results XML is valid" -ForegroundColor Green
+              Write-Host "Found $($xmlContent.testsuites.testsuite.Count) test suite(s)" -ForegroundColor Green
+              "test-results-valid=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            }
+            catch {
+              Write-Warning "⚠️  Test results XML appears to be malformed: $($_.Exception.Message)"
+              Write-Host "First 500 characters of file:" -ForegroundColor Yellow
+              Write-Host $content.Substring(0, [Math]::Min(500, $content.Length)) -ForegroundColor Gray
+              "test-results-valid=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            }
+          } else {
+            Write-Warning "❌ Test results file does not exist at './test-results/integration-tests.xml'"
+            "test-results-valid=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           }
 
       - name: Publish Integration Test Results
         uses: dorny/test-reporter@v2
-        if: always()
+        if: always() && steps.check-test-results.outputs.test-results-valid == 'true'
         with:
           name: Console Integration Test Results
           path: './test-results/integration-tests.xml'
