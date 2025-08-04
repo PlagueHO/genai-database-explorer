@@ -73,149 +73,148 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          enable-AzPSSession: true
 
       - name: Configure SQL Server Firewall for GitHub Runner
-        shell: bash
-        run: |
-          # Get the current runner's public IP address
-          RUNNER_IP=$(curl -s https://ipinfo.io/ip)
-          echo "GitHub Runner IP: $RUNNER_IP"
-
-          # Use the provided resource group and SQL server names
-          SQL_SERVER_NAME="${{ inputs.SQL_SERVER_NAME }}"
-          RESOURCE_GROUP="${{ inputs.RESOURCE_GROUP_NAME }}"
-
-          echo "Adding firewall rule for SQL Server: $SQL_SERVER_NAME"
-          echo "Resource Group: $RESOURCE_GROUP"
-          echo "Runner IP: $RUNNER_IP"
-
-          # Add firewall rule for the GitHub runner IP
-          az sql server firewall-rule create \
-            --resource-group "$RESOURCE_GROUP" \
-            --server "$SQL_SERVER_NAME" \
-            --name "GitHubRunner-${{ github.run_id }}" \
-            --start-ip-address "$RUNNER_IP" \
-            --end-ip-address "$RUNNER_IP"
-
-          echo "Firewall rule created successfully"
+        uses: azure/powershell@v2
+        with:
+          azPSVersion: "latest"
+          inlineScript: |
+            # Get the current runner's public IP address
+            $RunnerIP = (Invoke-RestMethod -Uri "https://ipinfo.io/ip" -Method Get).Trim()
+            Write-Host "GitHub Runner IP: $RunnerIP"
+            
+            # Use the provided resource group and SQL server names
+            $SqlServerName = "${{ inputs.SQL_SERVER_NAME }}"
+            $ResourceGroup = "${{ inputs.RESOURCE_GROUP_NAME }}"
+            $FirewallRuleName = "GitHubRunner-${{ github.run_id }}"
+            
+            Write-Host "Adding firewall rule for SQL Server: $SqlServerName"
+            Write-Host "Resource Group: $ResourceGroup"
+            Write-Host "Runner IP: $RunnerIP"
+            Write-Host "Firewall Rule Name: $FirewallRuleName"
+            
+            try {
+              # Add firewall rule for the GitHub runner IP
+              New-AzSqlServerFirewallRule `
+                -ResourceGroupName $ResourceGroup `
+                -ServerName $SqlServerName `
+                -FirewallRuleName $FirewallRuleName `
+                -StartIpAddress $RunnerIP `
+                -EndIpAddress $RunnerIP
+              
+              Write-Host "✅ Firewall rule created successfully" -ForegroundColor Green
+            }
+            catch {
+              Write-Error "Failed to create firewall rule: $($_.Exception.Message)"
+              throw
+            }
 
       - name: Enable Azure AI Foundry Public Access for Integration Tests
-        shell: bash
-        run: |
-          # Extract environment suffix from SQL server name for AI Foundry service name
-          SQL_SERVER_NAME="${{ inputs.SQL_SERVER_NAME }}"
-          RESOURCE_GROUP="${{ inputs.RESOURCE_GROUP_NAME }}"
-          
-          # Try to construct AI Foundry service name from SQL server pattern
-          if [[ "$SQL_SERVER_NAME" =~ ^sql-(.+)$ ]]; then
-            ENV_SUFFIX="${BASH_REMATCH[1]}"
-            AI_FOUNDRY_NAME="aif-${ENV_SUFFIX}"
-            echo "Constructed AI Foundry service name: $AI_FOUNDRY_NAME"
+        uses: azure/powershell@v2
+        with:
+          azPSVersion: "latest"
+          inlineScript: |
+            # Extract environment suffix from SQL server name for AI Foundry service name
+            $SqlServerName = "${{ inputs.SQL_SERVER_NAME }}"
+            $ResourceGroup = "${{ inputs.RESOURCE_GROUP_NAME }}"
             
-            # Get the resource ID for the AI Foundry service
-            echo "Getting resource ID for AI Foundry service: $AI_FOUNDRY_NAME"
-            RESOURCE_ID=$(az cognitiveservices account show \
-              --name "$AI_FOUNDRY_NAME" \
-              --resource-group "$RESOURCE_GROUP" \
-              --query id \
-              --output tsv 2>/dev/null || echo "")
-            
-            if [ -n "$RESOURCE_ID" ] && [ "$RESOURCE_ID" != "" ]; then
-              # Check current network configuration
-              echo "Checking current network configuration for AI Foundry service: $AI_FOUNDRY_NAME"
+            # Try to construct AI Foundry service name from SQL server pattern
+            if ($SqlServerName -match '^sql-(.+)$') {
+              $EnvSuffix = $matches[1]
+              $AIFoundryName = "aif-$EnvSuffix"
+              Write-Host "Constructed AI Foundry service name: $AIFoundryName"
               
-              # Get current network ACLs configuration
-              CURRENT_CONFIG=$(az cognitiveservices account show \
-                --name "$AI_FOUNDRY_NAME" \
-                --resource-group "$RESOURCE_GROUP" \
-                --query "properties.networkAcls" \
-                --output json 2>/dev/null || echo "{}")
-              
-              echo "Current network ACLs configuration: $CURRENT_CONFIG"
-              
-              CURRENT_DEFAULT_ACTION=$(echo "$CURRENT_CONFIG" | jq -r '.defaultAction // "Allow"')
-              echo "Current network default action: $CURRENT_DEFAULT_ACTION"
-              
-              # Always update to ensure Allow is set, regardless of current state
-              echo "Setting public network access to Allow for AI Foundry service: $AI_FOUNDRY_NAME"
-              
-              # First, try to set just the publicNetworkAccess property
-              az resource update \
-                --ids "$RESOURCE_ID" \
-                --set properties.publicNetworkAccess="Enabled" \
-                --output none
-              
-              # Then, try to set just the defaultAction within networkAcls without overwriting the entire object
-              az resource update \
-                --ids "$RESOURCE_ID" \
-                --set properties.networkAcls.defaultAction="Allow" \
-                --output none
-              
-              # Wait a moment for the change to propagate
-              echo "Waiting 10 seconds for network configuration to propagate..."
-              sleep 10
-              
-              # Verify the changes took effect
-              UPDATED_DEFAULT_ACTION=$(az cognitiveservices account show \
-                --name "$AI_FOUNDRY_NAME" \
-                --resource-group "$RESOURCE_GROUP" \
-                --query "properties.networkAcls.defaultAction" \
-                --output tsv 2>/dev/null || echo "Unknown")
-              
-              UPDATED_PUBLIC_ACCESS=$(az cognitiveservices account show \
-                --name "$AI_FOUNDRY_NAME" \
-                --resource-group "$RESOURCE_GROUP" \
-                --query "properties.publicNetworkAccess" \
-                --output tsv 2>/dev/null || echo "Unknown")
-              
-              echo "Updated network default action: $UPDATED_DEFAULT_ACTION"
-              echo "Updated public network access: $UPDATED_PUBLIC_ACCESS"
-              
-              if [ "$UPDATED_DEFAULT_ACTION" = "Allow" ] && [ "$UPDATED_PUBLIC_ACCESS" = "Enabled" ]; then
-                echo "✅ Public network access successfully enabled for AI Foundry service"
-              else
-                echo "⚠️  Warning: Network access may not have been properly updated."
-                echo "   Expected: defaultAction=Allow, publicNetworkAccess=Enabled"
-                echo "   Actual: defaultAction=$UPDATED_DEFAULT_ACTION, publicNetworkAccess=$UPDATED_PUBLIC_ACCESS"
-              fi
-              
-              echo "AI_FOUNDRY_NAME=$AI_FOUNDRY_NAME" >> $GITHUB_ENV
-            else
-              echo "Warning: Could not find AI Foundry service: $AI_FOUNDRY_NAME"
-              echo "AI Foundry public access will not be modified"
-            fi
-          else
-            echo "Warning: Could not parse SQL server name pattern to construct AI Foundry service name"
-            echo "Expected format: sql-<environment-suffix>, got: $SQL_SERVER_NAME"
-            echo "AI Foundry public access will not be modified"
-          fi
+              # Check if the AI Foundry service exists
+              Write-Host "Checking if AI Foundry service exists: $AIFoundryName"
+              try {
+                $account = Get-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroup -Name $AIFoundryName -ErrorAction Stop
+                Write-Host "Found AI Foundry service: $AIFoundryName"
+                
+                # Check current network configuration
+                Write-Host "Checking current network configuration for AI Foundry service: $AIFoundryName"
+                Write-Host "Current public network access: $($account.Properties.PublicNetworkAccess)"
+                Write-Host "Current network ACLs default action: $($account.Properties.NetworkAcls.DefaultAction)"
+                
+                # Always update to ensure public access is enabled
+                Write-Host "Setting public network access to Enabled for AI Foundry service: $AIFoundryName"
+                
+                # Create a network rule set that allows all access
+                $networkRuleSet = New-Object Microsoft.Azure.Commands.Management.CognitiveServices.Models.PSNetworkRuleSet
+                $networkRuleSet.DefaultAction = "Allow"
+                
+                Set-AzCognitiveServicesAccount `
+                  -ResourceGroupName $ResourceGroup `
+                  -Name $AIFoundryName `
+                  -PublicNetworkAccess "Enabled" `
+                  -NetworkRuleSet $networkRuleSet `
+                  -Force
+                
+                # Wait a moment for the change to propagate
+                Write-Host "Waiting 10 seconds for network configuration to propagate..."
+                Start-Sleep -Seconds 10
+                
+                # Verify the changes took effect
+                $updatedAccount = Get-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroup -Name $AIFoundryName
+                Write-Host "Updated public network access: $($updatedAccount.Properties.PublicNetworkAccess)"
+                Write-Host "Updated network ACLs default action: $($updatedAccount.Properties.NetworkAcls.DefaultAction)"
+                
+                if ($updatedAccount.Properties.PublicNetworkAccess -eq "Enabled" -and $updatedAccount.Properties.NetworkAcls.DefaultAction -eq "Allow") {
+                  Write-Host "✅ Public network access successfully enabled for AI Foundry service" -ForegroundColor Green
+                } else {
+                  Write-Warning "⚠️  Network access may not have been properly updated."
+                  Write-Host "   Expected: PublicNetworkAccess=Enabled, DefaultAction=Allow" -ForegroundColor Yellow
+                  Write-Host "   Actual: PublicNetworkAccess=$($updatedAccount.Properties.PublicNetworkAccess), DefaultAction=$($updatedAccount.Properties.NetworkAcls.DefaultAction)" -ForegroundColor Yellow
+                }
+                
+                # Set environment variable for cleanup step
+                "AI_FOUNDRY_NAME=$AIFoundryName" | Out-File -FilePath $env:GITHUB_ENV -Append
+              }
+              catch {
+                Write-Warning "Could not find AI Foundry service: $AIFoundryName"
+                Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
+                Write-Host "AI Foundry public access will not be modified"
+              }
+            }
+            else {
+              Write-Warning "Could not parse SQL server name pattern to construct AI Foundry service name"
+              Write-Host "Expected format: sql-<environment-suffix>, got: $SqlServerName" -ForegroundColor Yellow
+              Write-Host "AI Foundry public access will not be modified"
+            }
 
       - name: Get Azure OpenAI API Key
-        shell: bash
-        run: |
-          # Use the AI Foundry service name from the previous step
-          if [ -n "$AI_FOUNDRY_NAME" ] && [ "$AI_FOUNDRY_NAME" != "" ]; then
-            RESOURCE_GROUP="${{ inputs.RESOURCE_GROUP_NAME }}"
-            
-            # Get Azure OpenAI API key from Cognitive Services
-            echo "Retrieving Azure OpenAI API key from AI Foundry service: $AI_FOUNDRY_NAME"
-            API_KEY=$(az cognitiveservices account keys list \
-              --name "$AI_FOUNDRY_NAME" \
-              --resource-group "$RESOURCE_GROUP" \
-              --query "key1" \
-              --output tsv 2>/dev/null || echo "")
-            
-            if [ -n "$API_KEY" ] && [ "$API_KEY" != "" ]; then
-              echo "Azure OpenAI API key retrieved successfully"
-              echo "AZURE_OPENAI_API_KEY=$API_KEY" >> $GITHUB_ENV
-            else
-              echo "Warning: Could not retrieve Azure OpenAI API key from service: $AI_FOUNDRY_NAME"
-              echo "AI-related integration tests may fail or be skipped"
-            fi
-          else
-            echo "Warning: No AI Foundry service name available from previous step"
-            echo "AI-related integration tests may fail or be skipped"
-          fi
+        uses: azure/powershell@v2
+        with:
+          azPSVersion: "latest"
+          inlineScript: |
+            # Use the AI Foundry service name from the previous step
+            $AIFoundryName = $env:AI_FOUNDRY_NAME
+            if ($AIFoundryName) {
+              $ResourceGroup = "${{ inputs.RESOURCE_GROUP_NAME }}"
+              
+              try {
+                # Get Azure OpenAI API key from Cognitive Services
+                Write-Host "Retrieving Azure OpenAI API key from AI Foundry service: $AIFoundryName"
+                $keys = Get-AzCognitiveServicesAccountKey -ResourceGroupName $ResourceGroup -Name $AIFoundryName
+                
+                if ($keys.Key1) {
+                  Write-Host "Azure OpenAI API key retrieved successfully"
+                  "AZURE_OPENAI_API_KEY=$($keys.Key1)" | Out-File -FilePath $env:GITHUB_ENV -Append
+                } else {
+                  Write-Warning "Could not retrieve Azure OpenAI API key from service: $AIFoundryName"
+                  Write-Host "AI-related integration tests may fail or be skipped"
+                }
+              }
+              catch {
+                Write-Warning "Could not retrieve Azure OpenAI API key from service: $AIFoundryName"
+                Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
+                Write-Host "AI-related integration tests may fail or be skipped"
+              }
+            }
+            else {
+              Write-Warning "No AI Foundry service name available from previous step"
+              Write-Host "AI-related integration tests may fail or be skipped"
+            }
 
       - name: Setup PowerShell and Run Console Integration Tests
         shell: pwsh
@@ -331,92 +330,87 @@ jobs:
 
       - name: Disable Azure AI Foundry Public Access After Tests
         if: always()
-        shell: bash
-        run: |
-          # Disable public network access for AI Foundry service after tests
-          if [ -n "$AI_FOUNDRY_NAME" ] && [ "$AI_FOUNDRY_NAME" != "" ]; then
-            RESOURCE_GROUP="${{ inputs.RESOURCE_GROUP_NAME }}"
-            
-            # Get the resource ID for the AI Foundry service
-            echo "Getting resource ID for AI Foundry service: $AI_FOUNDRY_NAME"
-            RESOURCE_ID=$(az cognitiveservices account show \
-              --name "$AI_FOUNDRY_NAME" \
-              --resource-group "$RESOURCE_GROUP" \
-              --query id \
-              --output tsv 2>/dev/null || echo "")
-            
-            if [ -n "$RESOURCE_ID" ] && [ "$RESOURCE_ID" != "" ]; then
-              # Check current network configuration before disabling
-              echo "Checking current network configuration for AI Foundry service: $AI_FOUNDRY_NAME"
-              CURRENT_DEFAULT_ACTION=$(az cognitiveservices account show \
-                --name "$AI_FOUNDRY_NAME" \
-                --resource-group "$RESOURCE_GROUP" \
-                --query "properties.networkAcls.defaultAction" \
-                --output tsv 2>/dev/null || echo "Allow")
+        uses: azure/powershell@v2
+        with:
+          azPSVersion: "latest"
+          inlineScript: |
+            # Disable public network access for AI Foundry service after tests
+            $AIFoundryName = $env:AI_FOUNDRY_NAME
+            if ($AIFoundryName) {
+              $ResourceGroup = "${{ inputs.RESOURCE_GROUP_NAME }}"
               
-              echo "Current network default action: $CURRENT_DEFAULT_ACTION"
-              
-              # Always disable after tests to restore security
-              echo "Disabling public network access for AI Foundry service: $AI_FOUNDRY_NAME"
-              
-              # First, try to set just the publicNetworkAccess property
-              az resource update \
-                --ids "$RESOURCE_ID" \
-                --set properties.publicNetworkAccess="Disabled" \
-                --output none || echo "Warning: Failed to disable publicNetworkAccess for AI Foundry service"
-              
-              # Then, try to set just the defaultAction within networkAcls without overwriting the entire object
-              az resource update \
-                --ids "$RESOURCE_ID" \
-                --set properties.networkAcls.defaultAction="Deny" \
-                --output none || echo "Warning: Failed to disable networkAcls.defaultAction for AI Foundry service"
-              
-              # Verify the changes took effect
-              UPDATED_DEFAULT_ACTION=$(az cognitiveservices account show \
-                --name "$AI_FOUNDRY_NAME" \
-                --resource-group "$RESOURCE_GROUP" \
-                --query "properties.networkAcls.defaultAction" \
-                --output tsv 2>/dev/null || echo "Unknown")
-              
-              UPDATED_PUBLIC_ACCESS=$(az cognitiveservices account show \
-                --name "$AI_FOUNDRY_NAME" \
-                --resource-group "$RESOURCE_GROUP" \
-                --query "properties.publicNetworkAccess" \
-                --output tsv 2>/dev/null || echo "Unknown")
-              
-              echo "Updated network default action: $UPDATED_DEFAULT_ACTION"
-              echo "Updated public network access: $UPDATED_PUBLIC_ACCESS"
-              
-              if [ "$UPDATED_DEFAULT_ACTION" = "Deny" ] && [ "$UPDATED_PUBLIC_ACCESS" = "Disabled" ]; then
-                echo "✅ Public network access successfully disabled for AI Foundry service"
-              else
-                echo "⚠️  Warning: Network access may not have been properly updated."
-                echo "   Expected: defaultAction=Deny, publicNetworkAccess=Disabled"
-                echo "   Actual: defaultAction=$UPDATED_DEFAULT_ACTION, publicNetworkAccess=$UPDATED_PUBLIC_ACCESS"
-              fi
-            else
-              echo "Warning: Could not find AI Foundry service: $AI_FOUNDRY_NAME"
-            fi
-          else
-            echo "No AI Foundry service name available - skipping public access cleanup"
-          fi
+              try {
+                # Get current configuration
+                Write-Host "Checking current network configuration for AI Foundry service: $AIFoundryName"
+                $account = Get-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroup -Name $AIFoundryName -ErrorAction Stop
+                Write-Host "Current public network access: $($account.Properties.PublicNetworkAccess)"
+                Write-Host "Current network ACLs default action: $($account.Properties.NetworkAcls.DefaultAction)"
+                
+                # Always disable after tests to restore security
+                Write-Host "Disabling public network access for AI Foundry service: $AIFoundryName"
+                
+                # Create a network rule set that denies all access
+                $networkRuleSet = New-Object Microsoft.Azure.Commands.Management.CognitiveServices.Models.PSNetworkRuleSet
+                $networkRuleSet.DefaultAction = "Deny"
+                
+                Set-AzCognitiveServicesAccount `
+                  -ResourceGroupName $ResourceGroup `
+                  -Name $AIFoundryName `
+                  -PublicNetworkAccess "Disabled" `
+                  -NetworkRuleSet $networkRuleSet `
+                  -Force
+                
+                # Verify the changes took effect
+                $updatedAccount = Get-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroup -Name $AIFoundryName
+                Write-Host "Updated public network access: $($updatedAccount.Properties.PublicNetworkAccess)"
+                Write-Host "Updated network ACLs default action: $($updatedAccount.Properties.NetworkAcls.DefaultAction)"
+                
+                if ($updatedAccount.Properties.PublicNetworkAccess -eq "Disabled" -and $updatedAccount.Properties.NetworkAcls.DefaultAction -eq "Deny") {
+                  Write-Host "✅ Public network access successfully disabled for AI Foundry service" -ForegroundColor Green
+                } else {
+                  Write-Warning "⚠️  Network access may not have been properly updated."
+                  Write-Host "   Expected: PublicNetworkAccess=Disabled, DefaultAction=Deny" -ForegroundColor Yellow
+                  Write-Host "   Actual: PublicNetworkAccess=$($updatedAccount.Properties.PublicNetworkAccess), DefaultAction=$($updatedAccount.Properties.NetworkAcls.DefaultAction)" -ForegroundColor Yellow
+                }
+              }
+              catch {
+                Write-Warning "Could not find AI Foundry service: $AIFoundryName"
+                Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
+              }
+            }
+            else {
+              Write-Host "No AI Foundry service name available - skipping public access cleanup"
+            }
 
       - name: Remove SQL Server Firewall Rule
         if: always()
-        shell: bash
-        run: |
-          # Use the provided resource group and SQL server names
-          RESOURCE_GROUP="${{ inputs.RESOURCE_GROUP_NAME }}"
-          SQL_SERVER_NAME="${{ inputs.SQL_SERVER_NAME }}"
-
-          echo "Removing firewall rule for SQL Server: $SQL_SERVER_NAME"
-          echo "Resource Group: $RESOURCE_GROUP"
-
-          # Remove the firewall rule (ignore errors if rule doesn't exist)
-          az sql server firewall-rule delete \
-            --resource-group "$RESOURCE_GROUP" \
-            --server "$SQL_SERVER_NAME" \
-            --name "GitHubRunner-${{ github.run_id }}" \
-            --yes || echo "Firewall rule not found or already removed"
-
-          echo "Firewall rule cleanup completed"
+        uses: azure/powershell@v2
+        with:
+          azPSVersion: "latest"
+          inlineScript: |
+            # Use the provided resource group and SQL server names
+            $ResourceGroup = "${{ inputs.RESOURCE_GROUP_NAME }}"
+            $SqlServerName = "${{ inputs.SQL_SERVER_NAME }}"
+            $FirewallRuleName = "GitHubRunner-${{ github.run_id }}"
+            
+            Write-Host "Removing firewall rule for SQL Server: $SqlServerName"
+            Write-Host "Resource Group: $ResourceGroup"
+            Write-Host "Firewall Rule Name: $FirewallRuleName"
+            
+            try {
+              # Remove the firewall rule
+              Remove-AzSqlServerFirewallRule `
+                -ResourceGroupName $ResourceGroup `
+                -ServerName $SqlServerName `
+                -FirewallRuleName $FirewallRuleName `
+                -Force
+              
+              Write-Host "✅ Firewall rule removed successfully" -ForegroundColor Green
+            }
+            catch {
+              # Ignore errors if rule doesn't exist or already removed
+              Write-Warning "Firewall rule not found or already removed: $($_.Exception.Message)"
+              Write-Host "This is expected if the rule was already cleaned up or never created"
+            }
+            
+            Write-Host "Firewall rule cleanup completed"
