@@ -243,7 +243,7 @@ public class SchemaRepositoryTests
             .ThrowsAsync(new InvalidOperationException("SQL connection failed"));
 
         // Act & Assert
-        await Assert.ThrowsExceptionAsync<InvalidOperationException>(
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(
             () => _schemaRepository.GetTablesAsync());
     }
 

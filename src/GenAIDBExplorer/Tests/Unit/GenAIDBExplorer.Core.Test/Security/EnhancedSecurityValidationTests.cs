@@ -206,7 +206,7 @@ namespace GenAIDBExplorer.Core.Test.Security
                 .Should().NotThrow();
         }
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow("ValidName123")]
         [DataRow("_ValidName")]
         [DataRow("ValidName_123")]
@@ -219,7 +219,7 @@ namespace GenAIDBExplorer.Core.Test.Security
             result.Should().Be(validName);
         }
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow("CON")]
         [DataRow("PRN")]
         [DataRow("AUX")]
@@ -237,7 +237,7 @@ namespace GenAIDBExplorer.Core.Test.Security
                 .WithMessage("*reserved device name*");
         }
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow("<")]
         [DataRow(">")]
         [DataRow("\"")]

@@ -97,7 +97,7 @@ public class SemanticKernelFactoryTests
         _mockProject.Setup(p => p.Settings).Returns(settings);
 
         // Act & Assert
-        var exception = Assert.ThrowsException<InvalidOperationException>(() => _factory.CreateSemanticKernel());
+        var exception = Assert.ThrowsExactly<InvalidOperationException>(() => _factory.CreateSemanticKernel());
         exception.Message.Should().Contain("AzureOpenAI deployment ID is required");
     }
 
@@ -110,7 +110,7 @@ public class SemanticKernelFactoryTests
         _mockProject.Setup(p => p.Settings).Returns(settings);
 
         // Act & Assert
-        var exception = Assert.ThrowsException<InvalidOperationException>(() => _factory.CreateSemanticKernel());
+        var exception = Assert.ThrowsExactly<InvalidOperationException>(() => _factory.CreateSemanticKernel());
         exception.Message.Should().Contain("AzureOpenAI endpoint is required");
     }
 
@@ -123,7 +123,7 @@ public class SemanticKernelFactoryTests
         _mockProject.Setup(p => p.Settings).Returns(settings);
 
         // Act & Assert
-        var exception = Assert.ThrowsException<InvalidOperationException>(() => _factory.CreateSemanticKernel());
+        var exception = Assert.ThrowsExactly<InvalidOperationException>(() => _factory.CreateSemanticKernel());
         exception.Message.Should().Contain("AzureOpenAI API key is required");
     }
 
@@ -136,7 +136,7 @@ public class SemanticKernelFactoryTests
         _mockProject.Setup(p => p.Settings).Returns(settings);
 
         // Act & Assert
-        var exception = Assert.ThrowsException<InvalidOperationException>(() => _factory.CreateSemanticKernel());
+        var exception = Assert.ThrowsExactly<InvalidOperationException>(() => _factory.CreateSemanticKernel());
         exception.Message.Should().Contain("OpenAI model ID is required");
     }
 
@@ -149,7 +149,7 @@ public class SemanticKernelFactoryTests
         _mockProject.Setup(p => p.Settings).Returns(settings);
 
         // Act & Assert
-        var exception = Assert.ThrowsException<InvalidOperationException>(() => _factory.CreateSemanticKernel());
+        var exception = Assert.ThrowsExactly<InvalidOperationException>(() => _factory.CreateSemanticKernel());
         exception.Message.Should().Contain("OpenAI API key is required");
     }
 

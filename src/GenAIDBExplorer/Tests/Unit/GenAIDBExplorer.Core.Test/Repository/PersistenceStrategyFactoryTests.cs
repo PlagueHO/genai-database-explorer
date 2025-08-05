@@ -164,7 +164,7 @@ public class PersistenceStrategyFactoryTests
     public void GetStrategy_ShouldThrowException_WhenUnsupportedStrategySpecified()
     {
         // Act & Assert
-        Assert.ThrowsException<ArgumentException>(() => _factory.GetStrategy("UnsupportedStrategy"));
+        Assert.ThrowsExactly<ArgumentException>(() => _factory.GetStrategy("UnsupportedStrategy"));
     }
 
     [TestMethod]

@@ -306,6 +306,6 @@ public class LocalDiskPersistenceStrategyTests
     public void Constructor_NullLogger_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.ThrowsException<ArgumentNullException>(() => new LocalDiskPersistenceStrategy(null!));
+        Assert.ThrowsExactly<ArgumentNullException>(() => new LocalDiskPersistenceStrategy(null!));
     }
 }

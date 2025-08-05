@@ -259,7 +259,7 @@ public class SemanticModelProviderTests
             .ThrowsAsync(new FileNotFoundException("Directory not found"));
 
         // Act & Assert
-        await Assert.ThrowsExceptionAsync<FileNotFoundException>(
+        await Assert.ThrowsExactlyAsync<FileNotFoundException>(
             () => _semanticModelProvider.LoadSemanticModelAsync(nonExistentPath));
     }
 
@@ -355,7 +355,7 @@ public class SemanticModelProviderTests
             .ThrowsAsync(new InvalidOperationException("Database connection failed"));
 
         // Act & Assert
-        await Assert.ThrowsExceptionAsync<InvalidOperationException>(
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(
             () => _semanticModelProvider.ExtractSemanticModelAsync());
     }
 
@@ -363,7 +363,7 @@ public class SemanticModelProviderTests
     public void Constructor_ShouldThrowArgumentNullException_WhenProjectIsNull()
     {
         // Act & Assert
-        Assert.ThrowsException<ArgumentNullException>(
+        Assert.ThrowsExactly<ArgumentNullException>(
             () => new SemanticModelProvider(null!, _mockSchemaRepository.Object, _mockLogger.Object, _mockSemanticModelRepository.Object));
     }
 
@@ -371,7 +371,7 @@ public class SemanticModelProviderTests
     public void Constructor_ShouldThrowArgumentNullException_WhenSchemaRepositoryIsNull()
     {
         // Act & Assert
-        Assert.ThrowsException<ArgumentNullException>(
+        Assert.ThrowsExactly<ArgumentNullException>(
             () => new SemanticModelProvider(_mockProject.Object, null!, _mockLogger.Object, _mockSemanticModelRepository.Object));
     }
 
@@ -379,7 +379,7 @@ public class SemanticModelProviderTests
     public void Constructor_ShouldThrowArgumentNullException_WhenLoggerIsNull()
     {
         // Act & Assert
-        Assert.ThrowsException<ArgumentNullException>(
+        Assert.ThrowsExactly<ArgumentNullException>(
             () => new SemanticModelProvider(_mockProject.Object, _mockSchemaRepository.Object, null!, _mockSemanticModelRepository.Object));
     }
 
@@ -387,7 +387,7 @@ public class SemanticModelProviderTests
     public void Constructor_ShouldThrowArgumentNullException_WhenSemanticModelRepositoryIsNull()
     {
         // Act & Assert
-        Assert.ThrowsException<ArgumentNullException>(
+        Assert.ThrowsExactly<ArgumentNullException>(
             () => new SemanticModelProvider(_mockProject.Object, _mockSchemaRepository.Object, _mockLogger.Object, null!));
     }
 
@@ -448,7 +448,7 @@ public class SemanticModelProviderTests
         projectSettings.SemanticModel.PersistenceStrategy = "AzureBlob";
 
         // Act & Assert
-        var exception = await Assert.ThrowsExceptionAsync<NotSupportedException>(
+        var exception = await Assert.ThrowsExactlyAsync<NotSupportedException>(
             () => _semanticModelProvider.LoadSemanticModelAsync());
 
         exception.Message.Should().Contain("AzureBlob");
@@ -463,7 +463,7 @@ public class SemanticModelProviderTests
         projectSettings.SemanticModel.PersistenceStrategy = "Cosmos";
 
         // Act & Assert
-        var exception = await Assert.ThrowsExceptionAsync<NotSupportedException>(
+        var exception = await Assert.ThrowsExactlyAsync<NotSupportedException>(
             () => _semanticModelProvider.LoadSemanticModelAsync());
 
         exception.Message.Should().Contain("Cosmos");
@@ -478,7 +478,7 @@ public class SemanticModelProviderTests
         projectSettings.SemanticModel.PersistenceStrategy = "UnknownStrategy";
 
         // Act & Assert
-        var exception = await Assert.ThrowsExceptionAsync<ArgumentException>(
+        var exception = await Assert.ThrowsExactlyAsync<ArgumentException>(
             () => _semanticModelProvider.LoadSemanticModelAsync());
 
         exception.Message.Should().Contain("Unknown persistence strategy");
@@ -499,7 +499,7 @@ public class SemanticModelProviderTests
         };
 
         // Act & Assert
-        var exception = await Assert.ThrowsExceptionAsync<InvalidOperationException>(
+        var exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
             () => _semanticModelProvider.LoadSemanticModelAsync());
 
         exception.Message.Should().Contain("LocalDisk persistence strategy is configured");
