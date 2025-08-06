@@ -33,10 +33,15 @@ This specification defines the extension of the existing SemanticModelRepository
 
 ### Vector Embedding Requirements
 
-- **REQ-VE-001**: The system shall generate 1536-dimensional vector embeddings for tables, views, and stored procedures
-- **REQ-VE-002**: Vector embeddings shall be generated from entity metadata (name, description, semantic description, column information)
-- **REQ-VE-003**: Vector embeddings shall be persistable using the same strategy pattern as semantic models (LocalDisk, AzureBlob, CosmosDB)
-- **REQ-VE-004**: The system shall support incremental vector embedding updates without regenerating all embeddings
+- **REQ-VE-001**: The system shall generate vector embeddings with configurable dimensions (default: 1536) for tables, views, and stored procedures
+- **REQ-VE-002**: The system shall support multiple embedding models:
+  - `text-embedding-ada-002` (1536 dimensions) - default
+  - `text-embedding-3-small` (1536 dimensions)
+  - `text-embedding-3-large` (3072 dimensions)
+- **REQ-VE-003**: Vector embeddings shall be generated from entity metadata (name, description, semantic description, column information)
+- **REQ-VE-004**: Vector embeddings shall be persistable using the same strategy pattern as semantic models (LocalDisk, AzureBlob, CosmosDB)
+- **REQ-VE-005**: The system shall support incremental vector embedding updates without regenerating all embeddings
+- **REQ-VE-006**: Vector dimension and embedding model information shall be stored with each embedding for validation during search operations
 
 ### Search & Retrieval Requirements
 
@@ -123,6 +128,53 @@ public interface IVectorSemanticModelRepository : ISemanticModelRepository
         
     Task<bool> HasVectorEmbeddingsAsync(DirectoryInfo modelPath, string? strategyName = null);
     
+    Task DeleteVectorEmbeddingsAsync(DirectoryInfo modelPath, string? strategyName = null);
+}
+
+/// <summary>Configuration options for vector repository operations.</summary>
+public class VectorRepositoryOptions
+{
+    /// <summary>The embedding model to use for generating vectors.</summary>
+    /// <remarks>
+    /// Supported models:
+    /// - text-embedding-ada-002: 1536 dimensions (default)
+    /// - text-embedding-3-small: 1536 dimensions
+    /// - text-embedding-3-large: 3072 dimensions
+    /// </remarks>
+    public string EmbeddingModel { get; set; } = "text-embedding-ada-002";
+    
+    /// <summary>Vector dimensions for the embedding model. Defaults to 1536 for ada-002 compatibility.</summary>
+    public int Dimensions { get; set; } = 1536;
+    
+    /// <summary>Batch size for processing embeddings to manage API rate limits.</summary>
+    public int BatchSize { get; set; } = 100;
+    
+    /// <summary>Whether to overwrite existing embeddings.</summary>
+    public bool OverwriteExisting { get; set; } = false;
+    
+    /// <summary>Types of entities to process (Tables, Views, StoredProcedures, etc.).</summary>
+    public EntityTypes EntityTypes { get; set; } = EntityTypes.All;
+}
+
+/// <summary>Search options for vector similarity operations.</summary>
+public class VectorSearchOptions
+{
+    /// <summary>Maximum number of results to return.</summary>
+    public int MaxResults { get; set; } = 10;
+    
+    /// <summary>Minimum similarity threshold (0.0 to 1.0).</summary>
+    public double MinimumSimilarity { get; set; } = 0.7;
+    
+    /// <summary>The embedding model used for the search query. Must match stored embeddings.</summary>
+    public string EmbeddingModel { get; set; } = "text-embedding-ada-002";
+    
+    /// <summary>Vector dimensions for the embedding model. Must match stored embeddings.</summary>
+    public int Dimensions { get; set; } = 1536;
+    
+    /// <summary>Entity types to search within.</summary>
+    public EntityTypes EntityTypes { get; set; } = EntityTypes.All;
+}
+    
     Task<VectorEmbeddingResult> UpdateVectorEmbeddingsAsync(
         SemanticModel semanticModel,
         VectorRepositoryOptions options,
@@ -186,6 +238,10 @@ public interface IVectorPersistenceStrategy
 /// <remarks>
 /// Uses Semantic Kernel Vector Store annotations as defined in:
 /// https://learn.microsoft.com/en-us/semantic-kernel/concepts/vector-store-connectors/defining-your-data-model
+/// Supports configurable vector dimensions for different embedding models:
+/// - text-embedding-ada-002: 1536 dimensions (default)
+/// - text-embedding-3-small: 1536 dimensions  
+/// - text-embedding-3-large: 3072 dimensions
 /// </remarks>
 [VectorStoreRecord]
 public class VectorRecord<TEntity> where TEntity : SemanticModelEntity
@@ -211,11 +267,18 @@ public class VectorRecord<TEntity> where TEntity : SemanticModelEntity
     [VectorStoreData]
     public DateTime LastUpdated { get; init; }
     
+    [VectorStoreData]
+    public int EmbeddingDimensions { get; init; } = 1536;
+    
+    [VectorStoreData]
+    public string EmbeddingModel { get; init; } = "text-embedding-ada-002";
+    
     /// <summary>
-    /// Vector embedding using OpenAI text-embedding-ada-002 dimensions (1536) with cosine similarity.
+    /// Vector embedding with configurable dimensions based on embedding model.
+    /// Dimensions determined by EmbeddingDimensions property, defaults to 1536.
     /// See: https://learn.microsoft.com/en-us/semantic-kernel/concepts/vector-store-connectors/embedding-generation#embedding-dimensions
     /// </summary>
-    [VectorStoreVector(1536, DistanceFunction.CosineSimilarity, IndexKind.Hnsw)]
+    [VectorStoreVector(DistanceFunction.CosineSimilarity, IndexKind.Hnsw)]
     public ReadOnlyMemory<float> Embedding { get; init; }
     
     public TEntity Entity { get; init; } = default!;
@@ -358,12 +421,41 @@ The integration with Semantic Kernel's Vector Store abstractions provides:
 - **Performance**: Optimized implementations for different storage backends including [Azure AI Search](https://learn.microsoft.com/en-us/semantic-kernel/concepts/vector-store-connectors/out-of-the-box-connectors/azure-ai-search-connector?pivots=programming-language-csharp), [Azure Cosmos DB NoSQL](https://learn.microsoft.com/en-us/semantic-kernel/concepts/vector-store-connectors/out-of-the-box-connectors/azure-cosmosdb-nosql-connector?pivots=programming-language-csharp), and [In-Memory](https://learn.microsoft.com/en-us/semantic-kernel/concepts/vector-store-connectors/out-of-the-box-connectors/inmemory-connector?pivots=programming-language-csharp) connectors
 - **Future-Proofing**: Aligned with Microsoft's AI development roadmap and the official .NET AI ecosystem
 - **Embedding Integration**: Built-in support for [embedding generation](https://learn.microsoft.com/en-us/semantic-kernel/concepts/vector-store-connectors/embedding-generation?pivots=programming-language-csharp) with automatic vectorization capabilities
+- **Flexible Dimensionality**: Support for multiple embedding models with different vector dimensions
+
+### Supported Embedding Models
+
+The vector repository supports configurable embedding models with different dimensions:
+
+| Embedding Model | Dimensions | Use Case | Default |
+|---|---|---|---|
+| `text-embedding-ada-002` | 1536 | General purpose, cost-effective | ✅ |
+| `text-embedding-3-small` | 1536 | Improved performance over ada-002 | |
+| `text-embedding-3-large` | 3072 | Highest quality, larger vectors | |
+
+**Configuration Examples:**
+
+```csharp
+// Default configuration (ada-002, 1536 dimensions)
+var defaultOptions = new VectorRepositoryOptions();
+
+// High-performance configuration (3-large, 3072 dimensions)  
+var highPerformanceOptions = new VectorRepositoryOptions
+{
+    EmbeddingModel = "text-embedding-3-large",
+    Dimensions = 3072
+};
+```
 
 ## 8. Dependencies & External Integrations
 
 ### External Systems
 
-- **EXT-VE-001**: OpenAI/Azure OpenAI - Text embedding model (text-embedding-ada-002 or text-embedding-3-small) with 1536 dimensions as specified in the [Semantic Kernel embedding documentation](https://learn.microsoft.com/en-us/semantic-kernel/concepts/vector-store-connectors/embedding-generation?pivots=programming-language-csharp#embedding-dimensions)
+- **EXT-VE-001**: OpenAI/Azure OpenAI - Text embedding models with configurable dimensions:
+  - `text-embedding-ada-002`: 1536 dimensions (default)
+  - `text-embedding-3-small`: 1536 dimensions  
+  - `text-embedding-3-large`: 3072 dimensions
+  - As specified in the [Semantic Kernel embedding documentation](https://learn.microsoft.com/en-us/semantic-kernel/concepts/vector-store-connectors/embedding-generation?pivots=programming-language-csharp#embedding-dimensions)
 - **EXT-VE-002**: [Azure Blob Storage](https://learn.microsoft.com/en-us/semantic-kernel/concepts/vector-store-connectors/out-of-the-box-connectors/azure-ai-search-connector?pivots=programming-language-csharp) - Cloud-based vector storage (for AzureBlob strategy) - Note: While the documentation shows Azure AI Search, the pattern applies to blob storage implementations
 - **EXT-VE-003**: [Azure Cosmos DB NoSQL](https://learn.microsoft.com/en-us/semantic-kernel/concepts/vector-store-connectors/out-of-the-box-connectors/azure-cosmosdb-nosql-connector?pivots=programming-language-csharp) - Document and vector storage with native vector search capabilities supporting Flat, QuantizedFlat, and DiskAnn index types
 
@@ -450,18 +542,22 @@ foreach (var result in customerTables)
 ### Strategy-Specific Configuration
 
 ```csharp
-// LocalDisk strategy for development
+// LocalDisk strategy for development with default embedding model
 var localOptions = new VectorRepositoryOptions
 {
     StrategyName = "LocalDisk",
+    EmbeddingModel = "text-embedding-ada-002",
+    Dimensions = 1536,
     MaxDegreeOfParallelism = 2,
     Timeout = TimeSpan.FromMinutes(10)
 };
 
-// Azure Blob strategy for production
+// Azure Blob strategy for production with higher-dimension embeddings
 var azureOptions = new VectorRepositoryOptions
 {
     StrategyName = "AzureBlob",
+    EmbeddingModel = "text-embedding-3-large",
+    Dimensions = 3072,
     MaxDegreeOfParallelism = 8,
     Timeout = TimeSpan.FromMinutes(30)
 };
@@ -470,6 +566,15 @@ var azureOptions = new VectorRepositoryOptions
 var result = await vectorRepository.GenerateAndStoreVectorEmbeddingsAsync(
     semanticModel, 
     Environment.IsDevelopment() ? localOptions : azureOptions);
+
+// Search configuration with matching embedding model
+var searchOptions = new VectorSearchOptions
+{
+    EmbeddingModel = azureOptions.EmbeddingModel,
+    Dimensions = azureOptions.Dimensions,
+    MaxResults = 5,
+    MinimumSimilarity = 0.8
+};
 ```
 
 ### Edge Cases and Error Handling
