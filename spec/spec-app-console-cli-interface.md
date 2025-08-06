@@ -71,6 +71,7 @@ This specification defines the functional requirements, command structure, param
 ### Command Structure
 
 All commands follow the pattern:
+
 ```bash
 gaidbexp <command> [options]
 ```
@@ -96,11 +97,13 @@ public interface ICommandHandlerOptions
 **Purpose**: Initialize a new GenAI Database Explorer project
 
 **Syntax**:
+
 ```bash
 gaidbexp init-project --project <path>
 ```
 
 **Parameters**:
+
 - `--project`, `-p` (required): Project directory path
   - Type: string
   - Validation: Must be a valid directory path
@@ -108,6 +111,7 @@ gaidbexp init-project --project <path>
   - Behavior: Creates the directory if it does not exist; throws exception if directory exists and is not empty
 
 **Exit Codes**:
+
 - 0: Success
 - 1: Error (invalid parameters, file system errors, directory exists and is not empty)
 
@@ -116,11 +120,13 @@ gaidbexp init-project --project <path>
 **Purpose**: Extract semantic model from database schema
 
 **Syntax**:
+
 ```bash
 gaidbexp extract-model --project <path> [--skipTables] [--skipViews] [--skipStoredProcedures]
 ```
 
 **Parameters**:
+
 - `--project`, `-p` (required): Project directory path
 - `--skipTables` (optional): Skip table extraction
 - `--skipViews` (optional): Skip view extraction
@@ -131,11 +137,13 @@ gaidbexp extract-model --project <path> [--skipTables] [--skipViews] [--skipStor
 **Purpose**: Apply data dictionary files to semantic model
 
 **Syntax**:
+
 ```bash
 gaidbexp data-dictionary --project <path> --sourcePathPattern <pattern> [options]
 ```
 
 **Parameters**:
+
 - `--project`, `-p` (required): Project directory path
 - `--sourcePathPattern`, `-s` (required): Glob pattern for data dictionary files
 - `--objectType` (optional): Filter by object type (table, view, storedprocedure)
@@ -148,11 +156,13 @@ gaidbexp data-dictionary --project <path> --sourcePathPattern <pattern> [options
 **Purpose**: Enrich semantic model using Generative AI
 
 **Syntax**:
+
 ```bash
 gaidbexp enrich-model --project <path> [options]
 ```
 
 **Parameters**:
+
 - `--project`, `-p` (required): Project directory path
 - `--skipTables` (optional): Skip table enrichment
 - `--skipViews` (optional): Skip view enrichment
@@ -167,11 +177,13 @@ gaidbexp enrich-model --project <path> [options]
 **Purpose**: Display database object details from semantic model
 
 **Syntax**:
+
 ```bash
 gaidbexp show-object <objectType> --project <path> --schemaName <name> --name <name>
 ```
 
 **Parameters**:
+
 - `objectType` (required): Object type (table, view, storedprocedure)
 - `--project`, `-p` (required): Project directory path
 - `--schemaName`, `-s` (required): Schema name
@@ -179,28 +191,34 @@ gaidbexp show-object <objectType> --project <path> --schemaName <name> --name <n
 
 #### 4.6 query-model Command
 
-**Purpose**: Interactive natural language querying of semantic model
+**Purpose**: Natural language querying of semantic model
 
 **Syntax**:
+
 ```bash
-gaidbexp query-model --project <path>
+gaidbexp query-model --project <path> [--question <question>]
 ```
 
 **Parameters**:
-- `--project`, `-p` (required): Project directory path
 
-**Behavior**: Enters interactive mode for natural language queries
+- `--project`, `-p` (required): Project directory path
+- `--question`, `-q` (optional): Natural language question to ask about the semantic model
+  - Type: string
+  - Description: The question to query against the semantic model
+  - Behavior: If provided, executes the single query and exits; if not provided, enters interactive mode for multiple queries
 
 #### 4.7 export-model Command
 
 **Purpose**: Export semantic model to external formats
 
 **Syntax**:
+
 ```bash
 gaidbexp export-model --project <path> [options]
 ```
 
 **Parameters**:
+
 - `--project`, `-p` (required): Project directory path
 - `--outputPath`, `-o` (optional): Output file path (default: exported_model.md)
 - `--fileType`, `-f` (optional): Output format (default: markdown)
@@ -241,27 +259,32 @@ gaidbexp export-model --project <path> [options]
 ## 6. Test Automation Strategy
 
 ### Test Levels
+
 - **Unit Tests**: Command handler logic, parameter validation, option binding
 - **Integration Tests**: End-to-end command execution with test databases
 - **System Tests**: Full CLI workflow testing with real project scenarios
 
 ### Test Frameworks
+
 - **MSTest**: Primary test framework for .NET unit tests
 - **FluentAssertions**: Assertion library for readable test expectations
 - **Moq**: Mocking framework for isolating dependencies
 - **PowerShell Pester**: Integration testing for CLI commands
 
 ### Test Data Management
+
 - **Test Databases**: Lightweight SQLite databases for integration tests
 - **Mock Data**: Sample semantic models and data dictionaries
 - **Test Projects**: Temporary project directories with known configurations
 
 ### CI/CD Integration
+
 - **GitHub Actions**: Automated test execution on pull requests
 - **Test Coverage**: Minimum 80% code coverage for command handlers
 - **Cross-Platform**: Test execution on Windows, Linux, and macOS
 
 ### Performance Testing
+
 - **Load Testing**: Large database schema processing
 - **Memory Profiling**: Resource usage monitoring during execution
 - **Timeout Testing**: Ensure commands complete within expected timeframes
@@ -287,30 +310,36 @@ The application follows fail-fast principles with meaningful error messages. All
 ## 8. Dependencies & External Integrations
 
 ### External Systems
+
 - **EXT-001**: SQL Server Database - Primary target for semantic model extraction
 - **EXT-002**: Azure OpenAI Service - Generative AI model enrichment capabilities
 - **EXT-003**: OpenAI API - Alternative AI service provider
 
 ### Third-Party Services
+
 - **SVC-001**: AI Language Models - Natural language processing and SQL generation
 - **SVC-002**: Azure AI Services - Optional cloud-based AI processing
 
 ### Infrastructure Dependencies
+
 - **INF-001**: .NET 9 Runtime - Target framework for application execution
 - **INF-002**: File System Access - Project file management and configuration storage
 - **INF-003**: Network Connectivity - Database and AI service communication
 
 ### Data Dependencies
+
 - **DAT-001**: Database Schema Access - Read permissions for metadata extraction
 - **DAT-002**: Project Configuration Files - settings.json and related metadata
 - **DAT-003**: Data Dictionary Files - JSON/YAML files with object descriptions
 
 ### Technology Platform Dependencies
+
 - **PLT-001**: System.CommandLine Library - CLI framework and command parsing
 - **PLT-002**: Microsoft.Extensions.Hosting - Application lifecycle and dependency injection
 - **PLT-003**: Microsoft.Extensions.Logging - Structured logging infrastructure
 
 ### Compliance Dependencies
+
 - **COM-001**: Data Privacy Regulations - Ensure no sensitive data in logs or exports
 - **COM-002**: Security Standards - Secure credential handling and API access
 
@@ -334,6 +363,10 @@ gaidbexp enrich-model --project /home/user/myproject
 
 # Interactive querying
 gaidbexp query-model --project /home/user/myproject
+
+# Single question query
+gaidbexp query-model --project /home/user/myproject \
+  --question "Show me all customers from California"
 
 # Export results
 gaidbexp export-model --project /home/user/myproject \
@@ -372,6 +405,19 @@ gaidbexp show-object invalidtype --project /valid/path \
 # Large database timeout handling
 gaidbexp extract-model --project /project/large-db
 # Expected: Progress indicators, timeout protection
+
+# Query with question parameter (single execution)
+gaidbexp query-model --project /valid/path \
+  --question "What are the top 10 selling products?"
+# Expected: Execute query and exit with results
+
+# Query without question parameter (interactive mode)
+gaidbexp query-model --project /valid/path
+# Expected: Enter interactive mode for multiple queries
+
+# Empty question parameter
+gaidbexp query-model --project /valid/path --question ""
+# Expected: Parameter validation error or enter interactive mode
 ```
 
 ### Configuration Examples
@@ -392,24 +438,28 @@ gaidbexp extract-model --project /project/large-db
 ## 10. Validation Criteria
 
 ### Functional Validation
+
 - All seven commands execute successfully with valid parameters
 - Parameter validation prevents invalid inputs from causing runtime errors
 - Help text is accurate and provides sufficient usage guidance
 - Error messages are clear and actionable
 
 ### Performance Validation
+
 - Command startup time is under 2 seconds
 - Database schema extraction completes within 5 minutes for typical databases
 - Memory usage remains stable during long-running operations
 - AI enrichment operations provide progress feedback
 
 ### Security Validation
+
 - No credentials or sensitive data appear in logs
 - File path validation prevents directory traversal attacks
 - Configuration loading follows secure practices
 - AI service communication uses encrypted channels
 
 ### Usability Validation
+
 - Commands follow consistent naming and parameter conventions
 - Interactive mode provides intuitive user experience
 - Output formatting is readable and useful
