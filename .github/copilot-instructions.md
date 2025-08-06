@@ -1,47 +1,99 @@
 # Instructions for AI Agents in this Repository
-This is a .NET 9 solution that uses Generative AI to help users explore and query relational databases. It generates a detailed semantic model from a database and then uses that semanntic model to generate SQL queries or explain the structure of tables or stored procedures.
 
-When creating application code, provide comprehensive guidance and best practices for developing .NET 9 applications that are designed to run in Azure. Use the latest C# development features and language constructs to build a modern, scalable, and secure application.
+This is a .NET 9 solution that uses Generative AI to help users explore and query relational databases. It creates a **semantic model** from database schemas, enriches it with AI-generated descriptions, and enables natural language querying.
 
-## Key Principles
-- Use the latest C# language features and constructs to build modern, scalable, and secure applications.
-- Use SOLID principles (Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, and Dependency Inversion) to design and implement your application.
-- Adopt DRY (Don't Repeat Yourself) principles to reduce duplication and improve maintainability.
-- Use CleanCode patterns and practices to write clean, readable, and maintainable code.
-- Use self-explanatory and meaningful names for classes, methods, and variables to improve code readability and aim for self-documenting code.
-- Use Dependency Injection to manage dependencies and improve testability.
-- Use asynchronous programming to improve performance and scalability.
-- Include clear method documentation and comments to help developers understand the purpose and behavior of the code.
-- Prioritize secure coding practices, such as input validation, output encoding, and parameterized queries, to prevent common security vulnerabilities.
-- Use Semantic Kernel and Prompty SDKs to interact with the Generative AI models.
-- Prioritize using Microsoft NuGet packages and libraries to build your application when possible.
-- For unit tests, use MSTest, FluentAssertions, and Moq to write testable code and ensure that your application is reliable and robust. As well as using AAA pattern for test structure.
-- Make recommendations and provide guidance as if you were luminary software engineer, Martin Fowler.
+## Core Architecture & Data Flow
 
-## CLI Commands
-- **build**: `dotnet build src/GenAIDBExplorer/GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj` or VS Code task `build`
-- **watch**: `dotnet watch run --project src/GenAIDBExplorer/GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj` or VS Code task `watch`
-- **publish**: `dotnet publish src/GenAIDBExplorer/GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj` or VS Code task `publish`
-- **test**: `dotnet test` in solution root
-- **test single**: `dotnet test --filter "FullyQualifiedName=Namespace.Class.Method"`
-- **format**: `dotnet format`
-- **docs**: view `docs/QUICKSTART.md`, `docs/INSTALLATION.md`
+The application follows a **project-based workflow** where each database analysis is contained in a project folder with `settings.json`:
 
-## Semantic Model CLI Commands
-- `init-project` – initialize project folder and settings.json
-- `extract-model` – produce semanticmodel.json from database
-- `data-dictionary` – apply data dictionary files to model
-- `enrich-model` – enrich semantic model via Generative AI
-- `show-object` – display table/column/proc details
-- `query-model` – generate SQL or answer questions against model
+1. **Extract Phase**: `ISemanticModelProvider` + `SchemaRepository` extract raw schema → `semanticmodel.json`
+2. **Enrich Phase**: `SemanticDescriptionProvider` uses Prompty files + `SemanticKernelFactory` to generate AI descriptions
+3. **Query Phase**: Natural language questions → SQL generation via Semantic Kernel
+4. **Persistence**: Multiple strategies (LocalDisk/AzureBlob/CosmosDB) via `ISemanticModelRepository`
 
-## High-level Architecture
-- **Console App** (`GenAIDBExplorer.Console`): CLI for project management, model operations, and queries
-- **Core Library** (`GenAIDBExplorer.Core`): domain logic, semantic providers, data dictionary, export, repositories
-- **Tests**: MSTest + FluentAssertions + Moq, following AAA pattern in `src/GenAIDBExplorer/Tests/Unit`
-- **Infrastructure**: Bicep templates under `infra/`, deployable via GitHub Actions workflows
-- **Documentation**: usage guides in `docs/`
-- **Samples**: `samples/AdventureWorksLT` for data dictionary preprocessing
+### Key Components
+
+- **Semantic Model**: Core domain object (`SemanticModel.cs`) with lazy loading, change tracking, and caching
+- **Command Handlers**: System.CommandLine-based CLI in `GenAIDBExplorer.Console/CommandHandlers/`
+- **Semantic Providers**: AI-powered enrichment services using Prompty templates in `Core/Prompty/`
+- **Repository Pattern**: Abstract persistence with multiple backends (disk, blob, cosmos)
+- **Project Settings**: JSON-based configuration driving all operations (`samples/AdventureWorksLT/settings.json`)
+
+## Critical Patterns
+
+### AI Integration (Semantic Kernel + Prompty)
+```csharp
+// ALL AI operations use SemanticKernelFactory.CreateSemanticKernel()
+public class SemanticDescriptionProvider(
+    ISemanticKernelFactory semanticKernelFactory, // <- Always inject this
+    ILogger<SemanticDescriptionProvider> logger)
+{
+    private async Task<string> ProcessWithPromptyAsync(string promptyFile)
+    {
+        var kernel = _semanticKernelFactory.CreateSemanticKernel(); // <- Standard pattern
+        var function = kernel.CreateFunctionFromPromptyFile(promptyFilename);
+        var result = await kernel.InvokeAsync(function, arguments);
+        // Track tokens: result.Metadata?["Usage"] as ChatTokenUsage
+    }
+}
+```
+
+### Dependency Injection Setup
+All services registered in `HostBuilderExtensions.ConfigureHost()`:
+- Singletons for core services (`ISemanticKernelFactory`, `IProject`)
+- Decorated providers with caching/performance monitoring
+- Configuration loaded from console project's `appsettings.json`
+
+### Command Handler Pattern
+```csharp
+public class ExtractModelCommandHandler : CommandHandler<ExtractModelCommandHandlerOptions>
+{
+    public static Command SetupCommand(IHost host) // <- Static factory pattern
+    {
+        var command = new Command("extract-model");
+        command.SetHandler(async (options) => {
+            var handler = host.Services.GetRequiredService<ExtractModelCommandHandler>();
+            await handler.HandleAsync(options);
+        });
+    }
+}
+```
+
+## Essential Development Commands
+
+```bash
+# VS Code tasks (preferred)
+Ctrl+Shift+P → "Tasks: Run Task" → build/watch/test/publish
+
+# Direct commands
+dotnet build src/GenAIDBExplorer/GenAIDBExplorer.Console/
+dotnet watch run --project src/GenAIDBExplorer/GenAIDBExplorer.Console/
+dotnet test  # From solution root
+
+# CLI operations (require project folder)
+dotnet run --project GenAIDBExplorer.Console/ -- init-project -p d:/temp
+dotnet run --project GenAIDBExplorer.Console/ -- extract-model -p d:/temp
+dotnet run --project GenAIDBExplorer.Console/ -- enrich-model -p d:/temp
+```
+
+## Project Structure Conventions
+
+```
+src/GenAIDBExplorer/
+├── GenAIDBExplorer.Console/        # CLI app, command handlers, DI setup
+├── GenAIDBExplorer.Core/           # Domain logic, providers, models
+│   ├── Models/SemanticModel/       # Core domain objects  
+│   ├── Prompty/                    # AI prompt templates (.prompty files)
+│   ├── SemanticProviders/          # AI enrichment services
+│   └── Repository/                 # Persistence abstractions
+└── Tests/Unit/                     # MSTest + FluentAssertions + Moq
+
+# Working directories (project folders)
+samples/AdventureWorksLT/
+├── settings.json                   # Project configuration
+├── SemanticModel/                  # Generated semantic models
+└── DataDictionary/                 # Optional enrichment data
+```
 
 ## Style & Conventions
 - Target .NET 9 with C# 11 features (async/await, records, pattern matching)
@@ -65,3 +117,27 @@ When creating application code, provide comprehensive guidance and best practice
 - Use AAA pattern for test structure: Arrange, Act, Assert
 - Use `Should().BeTrue()` for boolean assertions
 - Use `Should().BeEquivalentTo()` for object comparisons
+
+## Configuration & Settings Management
+
+The `settings.json` file drives all operations:
+- **Database**: Connection string, schema, parallelism settings
+- **OpenAIService**: Azure OpenAI endpoints, model deployments, API keys
+- **SemanticModelRepository**: Persistence strategy (LocalDisk/AzureBlob/CosmosDB)
+- **DataDictionary**: Column type mappings, enrichment rules
+
+Key pattern: `IProject.Settings` provides strongly-typed access to all configuration.
+
+## AI/LLM Integration Requirements
+
+- **ALWAYS** use `ISemanticKernelFactory.CreateSemanticKernel()` for AI operations
+- Store AI prompts in `.prompty` files under `Core/Prompty/`
+- Track token usage: `result.Metadata?["Usage"] as ChatTokenUsage`
+- Use structured logging with scopes for AI operations
+- Follow SemanticDescriptionProvider pattern for prompt execution
+
+## Infrastructure & Deployment
+
+- **Bicep templates**: `infra/main.bicep` deploys Azure OpenAI, optional AI Search, CosmosDB, Storage
+- **GitHub Actions**: CI/CD in `.github/workflows/`
+- **Azure resources**: Managed identity authentication preferred over API keys
