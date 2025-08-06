@@ -28,7 +28,7 @@ This specification establishes the standard project structure, configuration man
 - **Project Directory**: Root folder containing settings.json and associated project artifacts
 - **Semantic Model**: AI-generated representation of database schema, relationships, and business context
 - **Settings Schema**: Strongly-typed configuration classes with validation attributes
-- **Persistence Strategy**: Pattern for storing semantic models (File, Azure Blob, Kernel Memory)
+- **Persistence Strategy**: Pattern for storing semantic models (File, Azure Blob, CosmosDB)
 - **DI Container**: Dependency Injection container managing service lifetimes and dependencies
 - **Command Handler**: Service responsible for executing specific CLI commands with proper dependency resolution
 

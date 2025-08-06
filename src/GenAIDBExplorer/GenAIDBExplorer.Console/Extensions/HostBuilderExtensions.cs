@@ -3,7 +3,6 @@ using GenAIDBExplorer.Console.CommandHandlers;
 using GenAIDBExplorer.Core.Data.ConnectionManager;
 using GenAIDBExplorer.Core.Data.DatabaseProviders;
 using GenAIDBExplorer.Core.DataDictionary;
-using GenAIDBExplorer.Core.KernelMemory;
 using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.SemanticKernel;
 using GenAIDBExplorer.Core.SemanticModelProviders;
@@ -135,13 +134,6 @@ public static class HostBuilderExtensions
 
         // Register the Semantic Kernel factory
         services.AddSingleton<ISemanticKernelFactory, SemanticKernelFactory>();
-
-        // Register the Kernel Memory factory
-        services.AddSingleton(provider =>
-        {
-            var project = provider.GetRequiredService<IProject>();
-            return new KernelMemoryFactory().CreateKernelMemory(project)(provider);
-        });
 
         // Register caching services for Phase 5a: Basic Caching Foundation
         services.AddMemoryCache();
