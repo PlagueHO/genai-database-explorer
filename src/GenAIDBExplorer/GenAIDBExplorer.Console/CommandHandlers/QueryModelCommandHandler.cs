@@ -47,13 +47,21 @@ public class QueryModelCommandHandler(
             Required = true
         };
 
+        var questionOption = new Option<string>("--question", "-q")
+        {
+            Description = "The question to ask the model.",
+            Required = true
+        };
+
         var queryCommand = new Command("query-model", "Answer questions based on the semantic model by using Generative AI.");
         queryCommand.Options.Add(projectPathOption);
+        queryCommand.Options.Add(questionOption);
         queryCommand.SetAction(async (parseResult) =>
         {
             var projectPath = parseResult.GetValue(projectPathOption)!;
+            var question = parseResult.GetValue(questionOption)!;
             var handler = host.Services.GetRequiredService<QueryModelCommandHandler>();
-            var options = new QueryModelCommandHandlerOptions(projectPath);
+            var options = new QueryModelCommandHandlerOptions(projectPath, question);
             await handler.HandleAsync(options);
         });
 
