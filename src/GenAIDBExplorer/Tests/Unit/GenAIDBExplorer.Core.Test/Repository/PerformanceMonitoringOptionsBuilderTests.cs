@@ -159,7 +159,7 @@ public class PerformanceMonitoringOptionsBuilderTests
 
         // Assert
         results.Should().HaveCount(10);
-        
+
         // Verify that each thread produced independent results
         for (int i = 0; i < 10; i++)
         {

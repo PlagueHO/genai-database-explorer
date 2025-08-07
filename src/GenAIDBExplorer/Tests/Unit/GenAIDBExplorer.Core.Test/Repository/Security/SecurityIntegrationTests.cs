@@ -46,12 +46,12 @@ public class SecurityIntegrationTests
                 {
                     var keyVaultOptions = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<KeyVaultOptions>>();
                     var logger = serviceProvider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<KeyVaultConfigurationProvider>>();
-                    
+
                     if (!string.IsNullOrEmpty(keyVaultOptions.Value.KeyVaultUri))
                     {
                         return new KeyVaultConfigurationProvider("https://test-vault.vault.azure.net/", logger);
                     }
-                    
+
                     return null!; // Will be null if not configured
                 });
             })
@@ -111,10 +111,10 @@ public class SecurityIntegrationTests
 
         // Act - Serialize
         var json = await secureJsonSerializer.SerializeAsync(testObject);
-        
+
         // Act - Validate security
         var isSecure = await secureJsonSerializer.ValidateJsonSecurityAsync(json);
-        
+
         // Act - Deserialize
         var deserializedObject = await secureJsonSerializer.DeserializeAsync<SecurityTestObject>(json);
 

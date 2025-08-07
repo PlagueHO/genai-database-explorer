@@ -204,10 +204,10 @@ public class MemorySemanticModelCacheTests
         // Arrange
         var model = CreateTestSemanticModel();
         await _cache.SetAsync("key1", model);
-        
+
         // Trigger cache hit
         await _cache.GetAsync("key1");
-        
+
         // Trigger cache miss
         await _cache.GetAsync("non-existent-key");
 
@@ -336,7 +336,7 @@ public class MemorySemanticModelCacheTests
         options.Setup(x => x.Value).Returns(_cacheOptions);
 
         // Act & Assert
-        Assert.ThrowsExactly<ArgumentNullException>(() => 
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
             new MemorySemanticModelCache(memoryCache, options.Object, _mockLogger.Object));
     }
 
@@ -347,7 +347,7 @@ public class MemorySemanticModelCacheTests
         IOptions<CacheOptions> options = null!;
 
         // Act & Assert
-        Assert.ThrowsExactly<ArgumentNullException>(() => 
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
             new MemorySemanticModelCache(_memoryCache, options, _mockLogger.Object));
     }
 
@@ -360,7 +360,7 @@ public class MemorySemanticModelCacheTests
         ILogger<MemorySemanticModelCache> logger = null!;
 
         // Act & Assert
-        Assert.ThrowsExactly<ArgumentNullException>(() => 
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
             new MemorySemanticModelCache(_memoryCache, options.Object, logger));
     }
 
@@ -371,7 +371,7 @@ public class MemorySemanticModelCacheTests
         _cacheOptions.EnableStatistics = false;
         var options = new Mock<IOptions<CacheOptions>>();
         options.Setup(x => x.Value).Returns(_cacheOptions);
-        
+
         using var cache = new MemorySemanticModelCache(_memoryCache, options.Object, _mockLogger.Object);
         var model = CreateTestSemanticModel();
         await cache.SetAsync("key1", model);

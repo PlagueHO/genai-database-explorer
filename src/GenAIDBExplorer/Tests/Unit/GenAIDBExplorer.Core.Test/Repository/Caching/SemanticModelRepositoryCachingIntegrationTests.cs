@@ -54,7 +54,7 @@ public class SemanticModelRepositoryCachingIntegrationTests
     public void TestCleanup()
     {
         _repository?.Dispose();
-        
+
         if (_testDirectory?.Exists == true)
         {
             _testDirectory.Delete(recursive: true);
@@ -83,7 +83,7 @@ public class SemanticModelRepositoryCachingIntegrationTests
 
         // Verify cache was checked
         _mockCache.Verify(x => x.GetAsync(It.IsAny<string>()), Times.Once);
-        
+
         // Verify persistence strategy was NOT called since model was found in cache
         _mockStrategy.Verify(x => x.LoadModelAsync(It.IsAny<DirectoryInfo>()), Times.Never);
     }
@@ -113,10 +113,10 @@ public class SemanticModelRepositoryCachingIntegrationTests
 
         // Verify cache was checked
         _mockCache.Verify(x => x.GetAsync(It.IsAny<string>()), Times.Once);
-        
+
         // Verify persistence strategy was called due to cache miss
         _mockStrategy.Verify(x => x.LoadModelAsync(It.IsAny<DirectoryInfo>()), Times.Once);
-        
+
         // Verify model was stored in cache after loading
         _mockCache.Verify(x => x.SetAsync(It.IsAny<string>(), model, null), Times.Once);
     }
@@ -143,7 +143,7 @@ public class SemanticModelRepositoryCachingIntegrationTests
         // Verify cache was never accessed
         _mockCache.Verify(x => x.GetAsync(It.IsAny<string>()), Times.Never);
         _mockCache.Verify(x => x.SetAsync(It.IsAny<string>(), It.IsAny<SemanticModel>(), It.IsAny<TimeSpan?>()), Times.Never);
-        
+
         // Verify persistence strategy was called directly
         _mockStrategy.Verify(x => x.LoadModelAsync(It.IsAny<DirectoryInfo>()), Times.Once);
     }
@@ -153,7 +153,7 @@ public class SemanticModelRepositoryCachingIntegrationTests
     {
         // Arrange
         var model = CreateTestSemanticModel();
-        
+
         _mockCache.Setup(x => x.GetAsync(It.IsAny<string>()))
             .ReturnsAsync(model);
 
@@ -167,10 +167,10 @@ public class SemanticModelRepositoryCachingIntegrationTests
 
         // Assert
         result.Should().NotBeNull();
-        
+
         // Verify cache was checked
         _mockCache.Verify(x => x.GetAsync(It.IsAny<string>()), Times.Once);
-        
+
         // Verify persistence strategy was NOT called since model was found in cache
         _mockStrategy.Verify(x => x.LoadModelAsync(It.IsAny<DirectoryInfo>()), Times.Never);
     }
@@ -180,7 +180,7 @@ public class SemanticModelRepositoryCachingIntegrationTests
     {
         // Arrange
         var model = CreateTestSemanticModel();
-        
+
         _mockCache.Setup(x => x.GetAsync(It.IsAny<string>()))
             .ReturnsAsync(model);
 
@@ -194,10 +194,10 @@ public class SemanticModelRepositoryCachingIntegrationTests
 
         // Assert
         result.Should().NotBeNull();
-        
+
         // Verify cache was checked
         _mockCache.Verify(x => x.GetAsync(It.IsAny<string>()), Times.Once);
-        
+
         // Verify persistence strategy was NOT called since model was found in cache
         _mockStrategy.Verify(x => x.LoadModelAsync(It.IsAny<DirectoryInfo>()), Times.Never);
     }
@@ -227,7 +227,7 @@ public class SemanticModelRepositoryCachingIntegrationTests
 
         // Verify cache was attempted
         _mockCache.Verify(x => x.GetAsync(It.IsAny<string>()), Times.Once);
-        
+
         // Verify persistence strategy was called due to cache error
         _mockStrategy.Verify(x => x.LoadModelAsync(It.IsAny<DirectoryInfo>()), Times.Once);
     }
@@ -261,7 +261,7 @@ public class SemanticModelRepositoryCachingIntegrationTests
         // Verify cache operations were attempted
         _mockCache.Verify(x => x.GetAsync(It.IsAny<string>()), Times.Once);
         _mockCache.Verify(x => x.SetAsync(It.IsAny<string>(), model, null), Times.Once);
-        
+
         // Verify persistence strategy was called
         _mockStrategy.Verify(x => x.LoadModelAsync(It.IsAny<DirectoryInfo>()), Times.Once);
     }
@@ -271,7 +271,7 @@ public class SemanticModelRepositoryCachingIntegrationTests
     {
         // Arrange
         var model = CreateTestSemanticModel();
-        
+
         var repositoryWithoutCache = new SemanticModelRepository(
             _mockStrategyFactory.Object,
             _mockLogger.Object,

@@ -17,7 +17,7 @@ public class ProjectTests
     private Mock<ILogger<GenAIDBExplorer.Core.Models.Project.Project>> _loggerMock = null!;
     private string _testRoot = null!;
     private string _defaultProjectPath = null!;
-    
+
     // Static lock to prevent tests from interfering with each other
     private static readonly object _defaultProjectLock = new object();
 
@@ -46,22 +46,22 @@ public class ProjectTests
             // Arrange
             var projectDir = new DirectoryInfo(Path.Combine(_testRoot, "NewProject"));
             var project = new GenAIDBExplorer.Core.Models.Project.Project(_loggerMock.Object);
-            
+
             // This test uses the existing DefaultProject in the app directory
             // We just need to ensure it exists for the test to pass
             var appBaseDir = AppContext.BaseDirectory;
             var defaultProjectPath = Path.Combine(appBaseDir, "DefaultProject");
-            
+
             // Create a minimal DefaultProject if it doesn't exist
             var needsCleanup = false;
             if (!Directory.Exists(defaultProjectPath))
             {
                 needsCleanup = true;
                 Directory.CreateDirectory(defaultProjectPath);
-                
+
                 var genaiDbExplorerDir = Path.Combine(defaultProjectPath, ".genaidbexplorer");
                 Directory.CreateDirectory(genaiDbExplorerDir);
-                
+
                 // Create minimal settings.json
                 var settingsContent = """
                 {
@@ -73,7 +73,7 @@ public class ProjectTests
                 }
                 """;
                 File.WriteAllText(Path.Combine(defaultProjectPath, "settings.json"), settingsContent);
-                
+
                 // Create version.json
                 var versionContent = """
                 {
@@ -121,7 +121,7 @@ public class ProjectTests
         projectDir.Create();
         File.WriteAllText(Path.Combine(projectDir.FullName, "file.txt"), "data");
         var project = new GenAIDBExplorer.Core.Models.Project.Project(_loggerMock.Object);
-        
+
         // This test doesn't need DefaultProject to exist to test the directory not empty condition
         // The method should check if the directory is empty before trying to access DefaultProject
 
@@ -140,15 +140,15 @@ public class ProjectTests
             // Arrange
             var projectDir = new DirectoryInfo(Path.Combine(_testRoot, "MissingDefaultProject"));
             var project = new GenAIDBExplorer.Core.Models.Project.Project(_loggerMock.Object);
-            
+
             // This test verifies that the method properly handles the case where DefaultProject is missing
             var originalBaseDirectory = AppContext.BaseDirectory;
             var defaultProjectPath = Path.Combine(originalBaseDirectory, "DefaultProject");
             var defaultProjectBackupPath = defaultProjectPath + "_test_backup_" + Guid.NewGuid().ToString("N")[..8];
-            
+
             // Check if DefaultProject exists and back it up temporarily
             bool defaultProjectExisted = Directory.Exists(defaultProjectPath);
-            
+
             try
             {
                 if (defaultProjectExisted)
@@ -156,7 +156,7 @@ public class ProjectTests
                     // Move the DefaultProject temporarily to simulate it being missing
                     Directory.Move(defaultProjectPath, defaultProjectBackupPath);
                 }
-                
+
                 // Verify DefaultProject doesn't exist
                 Directory.Exists(defaultProjectPath).Should().BeFalse("DefaultProject should not exist for this test");
 

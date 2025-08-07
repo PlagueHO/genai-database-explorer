@@ -146,7 +146,7 @@ public sealed class VectorRecord<TEntity> where TEntity : SemanticModelEntity
     public static string GenerateId(TEntity entity)
     {
         ArgumentNullException.ThrowIfNull(entity);
-        
+
         var entityType = entity.GetType().Name;
         return $"{entityType}_{entity.Schema}_{entity.Name}";
     }
@@ -166,8 +166,8 @@ public sealed class VectorRecord<TEntity> where TEntity : SemanticModelEntity
     public bool NeedsRegeneration()
     {
         // Regenerate if entity has newer semantic description than vector
-        return Entity.SemanticDescriptionLastUpdate.HasValue && 
-               (!SemanticDescriptionVersion.HasValue || 
+        return Entity.SemanticDescriptionLastUpdate.HasValue &&
+               (!SemanticDescriptionVersion.HasValue ||
                 Entity.SemanticDescriptionLastUpdate > SemanticDescriptionVersion);
     }
 }

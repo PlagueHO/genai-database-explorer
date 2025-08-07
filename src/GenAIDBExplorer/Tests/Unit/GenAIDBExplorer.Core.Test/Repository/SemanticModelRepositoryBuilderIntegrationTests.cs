@@ -117,7 +117,7 @@ public class SemanticModelRepositoryBuilderIntegrationTests
 
         // Assert
         result.Should().NotBeNull();
-        
+
         // Should use default strategy (null strategy name)
         _mockStrategyFactory.Verify(f => f.GetStrategy(null), Times.Once);
     }
@@ -142,7 +142,7 @@ public class SemanticModelRepositoryBuilderIntegrationTests
 
         // Assert
         result.Should().NotBeNull();
-        
+
         // Verify options were correctly configured
         options.EnableLazyLoading.Should().BeTrue();
         options.EnableChangeTracking.Should().BeFalse();
@@ -153,7 +153,7 @@ public class SemanticModelRepositoryBuilderIntegrationTests
         options.PerformanceMonitoring.Should().NotBeNull();
         options.PerformanceMonitoring!.EnableLocalMonitoring.Should().BeTrue();
         options.PerformanceMonitoring.MetricsRetentionPeriod.Should().Be(TimeSpan.FromHours(12));
-        
+
         _mockStrategyFactory.Verify(f => f.GetStrategy("Cosmos"), Times.Once);
     }
 
@@ -184,7 +184,7 @@ public class SemanticModelRepositoryBuilderIntegrationTests
         // Assert
         results.Should().HaveCount(10);
         results.Should().AllSatisfy(result => result.Should().NotBeNull());
-        
+
         // Verify that each thread called with its own strategy
         for (int i = 0; i < 10; i++)
         {
@@ -206,7 +206,7 @@ public class SemanticModelRepositoryBuilderIntegrationTests
         // should result in compilation errors. This test documents the immutable nature.
         options.EnableLazyLoading.Should().BeTrue();
         options.EnableChangeTracking.Should().BeTrue();
-        
+
         // The following would not compile, demonstrating immutability:
         // options.EnableLazyLoading = false; // Compilation error
         // options.EnableChangeTracking = false; // Compilation error

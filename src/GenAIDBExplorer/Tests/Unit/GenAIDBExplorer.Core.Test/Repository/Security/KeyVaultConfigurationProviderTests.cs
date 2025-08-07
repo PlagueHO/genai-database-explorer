@@ -26,7 +26,7 @@ public class KeyVaultConfigurationProviderTests
     {
         _mockSecretClient = new Mock<SecretClient>();
         _mockLogger = new Mock<ILogger<KeyVaultConfigurationProvider>>();
-        
+
         var keyVaultOptions = new KeyVaultOptions
         {
             KeyVaultUri = "https://test-vault.vault.azure.net/",
@@ -40,7 +40,7 @@ public class KeyVaultConfigurationProviderTests
                 EnableJitter = true
             }
         };
-        
+
         _options = Options.Create(keyVaultOptions);
         _keyVaultProvider = new KeyVaultConfigurationProvider(_mockSecretClient.Object, _mockLogger.Object);
     }
@@ -62,7 +62,7 @@ public class KeyVaultConfigurationProviderTests
 
         // Assert
         result.Should().Be(secretValue);
-        
+
         // Verify the mock was called
         _mockSecretClient.Verify(x => x.GetSecretAsync(secretName, null, It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -186,7 +186,7 @@ public class KeyVaultConfigurationProviderTests
         // Arrange
         var mockPageable = new Mock<AsyncPageable<SecretProperties>>();
         var mockPage = new Mock<Page<SecretProperties>>();
-        
+
         mockPageable.Setup(x => x.AsPages(null, null))
             .Returns(AsyncEnumerable.Repeat(mockPage.Object, 1));
 
@@ -205,7 +205,7 @@ public class KeyVaultConfigurationProviderTests
     {
         // Arrange
         var mockPageable = new Mock<AsyncPageable<SecretProperties>>();
-        
+
         mockPageable.Setup(x => x.AsPages(null, null))
             .Throws(new RequestFailedException(401, "Unauthorized"));
 
@@ -225,7 +225,7 @@ public class KeyVaultConfigurationProviderTests
         // Arrange
         const string secretName = "regular-secret";
         const string secretValue = "regular-value";
-        
+
         // Since the KeyVaultConfigurationProvider has fallback behavior, when the real SecretClient fails,
         // it will check environment variables. Let's test this fallback behavior instead.
         const string envVarName = "REGULAR_SECRET";
