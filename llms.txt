@@ -21,7 +21,6 @@ This project generates semantic models from database schemas, enriches them with
 - [Console CLI Interface Specification](spec/spec-app-console-cli-interface.md): Complete specification for CLI commands, parameters, validation, and expected behavior
 - [Natural Language Query Provider Specification](spec/spec-data-natural-language-query-provider.md): Specification for AI-powered natural language to SQL query generation using Semantic Kernel and ReAct patterns
 - [Semantic Model Repository Specification](spec/spec-data-semantic-model-repository.md): Technical specification for the repository pattern implementation supporting Local Disk, Azure Blob, and Cosmos DB persistence
-- [Vector Embedding Repository Specification](spec/spec-data-vector-embedding-repository.md): Specification for extending the repository pattern with vector embedding capabilities for semantic search
 - [Infrastructure Deployment Specification](spec/spec-infrastructure-deployment-bicep-avm.md): Azure infrastructure deployment specifications using Bicep and Azure Verified Modules
 - [.NET Aspire Integration Specification](spec/spec-infrastructure-dotnet-aspire-integration.md): Specification for integrating .NET Aspire for enhanced observability and telemetry
 - [Project Structure Specification](spec/spec-project-structure-genai-database-explorer.md): Comprehensive specification defining the project structure, organization patterns, and conventions
@@ -32,7 +31,6 @@ This project generates semantic models from database schemas, enriches them with
 
 - [Semantic Model Repository Updates Plan](plan/plan-data-semantic-model-repository-updates.md): Comprehensive implementation plan for repository pattern with lazy loading, change tracking, and multi-storage support
 - [System.CommandLine Beta5 Upgrade Plan](plan/plan-upgrade-system-commandline-beta5.md): Plan for upgrading the CLI framework to System.CommandLine Beta5
-- [Vector Embedding Repository Feature Plan](plan/feature-vector-embedding-repository-1.md): Implementation plan for adding vector embedding capabilities to enable semantic search
 - [.NET Aspire Integration Plan](plan/plan-infrastructure-aspire-integration-1.md): Plan for integrating .NET Aspire support to provide enhanced observability and telemetry
 
 ## Configuration
