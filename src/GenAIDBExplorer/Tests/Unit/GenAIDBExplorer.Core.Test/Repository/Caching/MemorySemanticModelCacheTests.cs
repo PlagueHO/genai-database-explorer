@@ -72,7 +72,7 @@ public class MemorySemanticModelCacheTests
         string cacheKey = null!;
 
         // Act & Assert
-        await Assert.ThrowsExceptionAsync<ArgumentNullException>(() => _cache.GetAsync(cacheKey));
+        await Assert.ThrowsExactlyAsync<ArgumentNullException>(() => _cache.GetAsync(cacheKey));
     }
 
     [TestMethod]
@@ -82,7 +82,7 @@ public class MemorySemanticModelCacheTests
         var cacheKey = string.Empty;
 
         // Act & Assert
-        await Assert.ThrowsExceptionAsync<ArgumentException>(() => _cache.GetAsync(cacheKey));
+        await Assert.ThrowsExactlyAsync<ArgumentException>(() => _cache.GetAsync(cacheKey));
     }
 
     [TestMethod]
@@ -109,7 +109,7 @@ public class MemorySemanticModelCacheTests
         var model = CreateTestSemanticModel();
 
         // Act & Assert
-        await Assert.ThrowsExceptionAsync<ArgumentNullException>(() => _cache.SetAsync(cacheKey, model));
+        await Assert.ThrowsExactlyAsync<ArgumentNullException>(() => _cache.SetAsync(cacheKey, model));
     }
 
     [TestMethod]
@@ -120,7 +120,7 @@ public class MemorySemanticModelCacheTests
         SemanticModel model = null!;
 
         // Act & Assert
-        await Assert.ThrowsExceptionAsync<ArgumentNullException>(() => _cache.SetAsync(cacheKey, model));
+        await Assert.ThrowsExactlyAsync<ArgumentNullException>(() => _cache.SetAsync(cacheKey, model));
     }
 
     [TestMethod]
@@ -176,7 +176,7 @@ public class MemorySemanticModelCacheTests
         string cacheKey = null!;
 
         // Act & Assert
-        await Assert.ThrowsExceptionAsync<ArgumentNullException>(() => _cache.RemoveAsync(cacheKey));
+        await Assert.ThrowsExactlyAsync<ArgumentNullException>(() => _cache.RemoveAsync(cacheKey));
     }
 
     [TestMethod]
@@ -259,7 +259,7 @@ public class MemorySemanticModelCacheTests
         string cacheKey = null!;
 
         // Act & Assert
-        await Assert.ThrowsExceptionAsync<ArgumentNullException>(() => _cache.ExistsAsync(cacheKey));
+        await Assert.ThrowsExactlyAsync<ArgumentNullException>(() => _cache.ExistsAsync(cacheKey));
     }
 
     [TestMethod]
@@ -270,7 +270,7 @@ public class MemorySemanticModelCacheTests
         _cache.Dispose();
 
         // Act & Assert
-        await Assert.ThrowsExceptionAsync<ObjectDisposedException>(() => _cache.GetAsync(cacheKey));
+        await Assert.ThrowsExactlyAsync<ObjectDisposedException>(() => _cache.GetAsync(cacheKey));
     }
 
     [TestMethod]
@@ -282,7 +282,7 @@ public class MemorySemanticModelCacheTests
         _cache.Dispose();
 
         // Act & Assert
-        await Assert.ThrowsExceptionAsync<ObjectDisposedException>(() => _cache.SetAsync(cacheKey, model));
+        await Assert.ThrowsExactlyAsync<ObjectDisposedException>(() => _cache.SetAsync(cacheKey, model));
     }
 
     [TestMethod]
@@ -293,7 +293,7 @@ public class MemorySemanticModelCacheTests
         _cache.Dispose();
 
         // Act & Assert
-        await Assert.ThrowsExceptionAsync<ObjectDisposedException>(() => _cache.RemoveAsync(cacheKey));
+        await Assert.ThrowsExactlyAsync<ObjectDisposedException>(() => _cache.RemoveAsync(cacheKey));
     }
 
     [TestMethod]
@@ -303,7 +303,7 @@ public class MemorySemanticModelCacheTests
         _cache.Dispose();
 
         // Act & Assert
-        await Assert.ThrowsExceptionAsync<ObjectDisposedException>(() => _cache.ClearAsync());
+        await Assert.ThrowsExactlyAsync<ObjectDisposedException>(() => _cache.ClearAsync());
     }
 
     [TestMethod]
@@ -313,7 +313,7 @@ public class MemorySemanticModelCacheTests
         _cache.Dispose();
 
         // Act & Assert
-        await Assert.ThrowsExceptionAsync<ObjectDisposedException>(() => _cache.GetStatisticsAsync());
+        await Assert.ThrowsExactlyAsync<ObjectDisposedException>(() => _cache.GetStatisticsAsync());
     }
 
     [TestMethod]
@@ -324,7 +324,7 @@ public class MemorySemanticModelCacheTests
         _cache.Dispose();
 
         // Act & Assert
-        await Assert.ThrowsExceptionAsync<ObjectDisposedException>(() => _cache.ExistsAsync(cacheKey));
+        await Assert.ThrowsExactlyAsync<ObjectDisposedException>(() => _cache.ExistsAsync(cacheKey));
     }
 
     [TestMethod]
@@ -336,7 +336,7 @@ public class MemorySemanticModelCacheTests
         options.Setup(x => x.Value).Returns(_cacheOptions);
 
         // Act & Assert
-        Assert.ThrowsException<ArgumentNullException>(() => 
+        Assert.ThrowsExactly<ArgumentNullException>(() => 
             new MemorySemanticModelCache(memoryCache, options.Object, _mockLogger.Object));
     }
 
@@ -347,7 +347,7 @@ public class MemorySemanticModelCacheTests
         IOptions<CacheOptions> options = null!;
 
         // Act & Assert
-        Assert.ThrowsException<ArgumentNullException>(() => 
+        Assert.ThrowsExactly<ArgumentNullException>(() => 
             new MemorySemanticModelCache(_memoryCache, options, _mockLogger.Object));
     }
 
@@ -360,7 +360,7 @@ public class MemorySemanticModelCacheTests
         ILogger<MemorySemanticModelCache> logger = null!;
 
         // Act & Assert
-        Assert.ThrowsException<ArgumentNullException>(() => 
+        Assert.ThrowsExactly<ArgumentNullException>(() => 
             new MemorySemanticModelCache(_memoryCache, options.Object, logger));
     }
 
