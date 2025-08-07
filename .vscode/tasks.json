@@ -1,8 +1,13 @@
 {
 	"version": "2.0.0",
 	"tasks": [
+		// Build and Development Tasks
 		{
-			"label": "build",
+			"label": "dotnet-build-solution",
+			"icon": {
+				"light": "images/light/dotnet.svg",
+				"dark": "images/dark/dotnet.svg"
+			},
 			"command": "dotnet",
 			"type": "process",
 			"args": [
@@ -14,25 +19,17 @@
 			"options": {
 				"cwd": "${workspaceFolder}/src/GenAIDBExplorer"
 			},
-			"problemMatcher": "$msCompile"
-		},
-		{
-			"label": "publish",
-			"command": "dotnet",
-			"type": "process",
-			"args": [
-				"publish",
-				"GenAIDBExplorer.sln",
-				"/property:GenerateFullPaths=true",
-				"/consoleloggerparameters:NoSummary"
-			],
-			"options": {
-				"cwd": "${workspaceFolder}/src/GenAIDBExplorer"
+			"group": {
+				"kind": "build",
+				"isDefault": true
 			},
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "watch",
+			"label": "dotnet-watch-console",
+			"icon": {
+				"id": "eye"
+			},
 			"command": "dotnet",
 			"type": "process",
 			"args": [
@@ -47,7 +44,59 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "test",
+			"label": "dotnet-publish-solution",
+			"icon": {
+				"id": "package"
+			},
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"publish",
+				"GenAIDBExplorer.sln",
+				"/property:GenerateFullPaths=true",
+				"/consoleloggerparameters:NoSummary"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/src/GenAIDBExplorer"
+			},
+			"group": "build",
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "dotnet-clean-solution",
+			"icon": {
+				"id": "trash"
+			},
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"clean",
+				"src/GenAIDBExplorer/GenAIDBExplorer.sln"
+			],
+			"group": "build"
+		},
+		{
+			"label": "dotnet-clear-nuget-cache",
+			"icon": {
+				"id": "clear-all"
+			},
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"nuget",
+				"locals",
+				"all",
+				"--clear"
+			],
+			"group": "build"
+		},
+
+		// Testing Tasks
+		{
+			"label": "test-dotnet-unit",
+			"icon": {
+				"id": "beaker"
+			},
 			"command": "dotnet",
 			"type": "process",
 			"args": [
@@ -65,27 +114,10 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "format-verify",
-			"command": "dotnet",
-			"type": "process",
-			"args": [
-				"format",
-				"GenAIDBExplorer.sln",
-				"--verify-no-changes",
-				"--severity",
-				"error"
-			],
-			"options": {
-				"cwd": "${workspaceFolder}/src/GenAIDBExplorer"
+			"label": "test-console-integration",
+			"icon": {
+				"id": "terminal"
 			},
-			"group": {
-				"kind": "build",
-				"isDefault": false
-			},
-			"problemMatcher": "$msCompile"
-		},
-		{
-			"label": "console-integration-tests",
 			"type": "shell",
 			"command": "pwsh",
 			"args": [
@@ -109,8 +141,73 @@
 				"clear": false
 			}
 		},
+
+		// Code Quality Tasks
 		{
-			"label": "cli-init-project",
+			"label": "format-verify-no-changes",
+			"icon": {
+				"id": "check"
+			},
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"format",
+				"GenAIDBExplorer.sln",
+				"--verify-no-changes",
+				"--severity",
+				"error"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/src/GenAIDBExplorer"
+			},
+			"group": {
+				"kind": "test",
+				"isDefault": false
+			},
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "format-fix-all-issues",
+			"icon": {
+				"id": "wrench"
+			},
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"format",
+				"GenAIDBExplorer.sln"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/src/GenAIDBExplorer"
+			},
+			"group": "build",
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "format-fix-whitespace-only",
+			"icon": {
+				"id": "whitespace"
+			},
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"format",
+				"GenAIDBExplorer.sln",
+				"whitespace"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/src/GenAIDBExplorer"
+			},
+			"group": "build",
+			"problemMatcher": "$msCompile"
+		},
+
+		// CLI Application Tasks
+		{
+			"label": "cli-init-project-temp",
+			"icon": {
+				"id": "folder-opened"
+			},
 			"type": "process",
 			"command": "dotnet",
 			"args": [
@@ -128,7 +225,10 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "cli-extract-model",
+			"label": "cli-extract-model-temp",
+			"icon": {
+				"id": "database"
+			},
 			"type": "process",
 			"command": "dotnet",
 			"args": [
@@ -149,7 +249,10 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "cli-data-dictionary",
+			"label": "cli-apply-data-dictionary-temp",
+			"icon": {
+				"id": "book"
+			},
 			"type": "process",
 			"command": "dotnet",
 			"args": [
@@ -176,7 +279,10 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "cli-enrich-model",
+			"label": "cli-enrich-model-temp",
+			"icon": {
+				"id": "sparkle"
+			},
 			"type": "process",
 			"command": "dotnet",
 			"args": [
@@ -204,7 +310,10 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "cli-show-object",
+			"label": "cli-show-object-temp",
+			"icon": {
+				"id": "eye"
+			},
 			"type": "process",
 			"command": "dotnet",
 			"args": [
@@ -227,7 +336,10 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "cli-query-model",
+			"label": "cli-query-model-temp",
+			"icon": {
+				"id": "search"
+			},
 			"type": "process",
 			"command": "dotnet",
 			"args": [
@@ -245,7 +357,10 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "cli-export-model",
+			"label": "cli-export-model-temp",
+			"icon": {
+				"id": "export"
+			},
 			"type": "process",
 			"command": "dotnet",
 			"args": [
@@ -266,54 +381,6 @@
 				"cwd": "${workspaceFolder}/src/GenAIDBExplorer"
 			},
 			"problemMatcher": "$msCompile"
-		},
-		{
-			"label": "clean-solution",
-			"type": "shell",
-			"command": "dotnet",
-			"args": [
-				"clean",
-				"src/GenAIDBExplorer/GenAIDBExplorer.sln"
-			]
-		},
-		{
-			"label": "clear-nuget-cache",
-			"type": "shell",
-			"command": "cmd",
-			"args": [
-				"dotnet",
-				"nuget",
-				"locals",
-				"all",
-				"--clear"
-			]
-		},
-		{
-			"label": "format-fix",
-			"type": "shell",
-			"command": "dotnet",
-			"args": [
-				"format",
-				"src/GenAIDBExplorer/GenAIDBExplorer.sln"
-			]
-		},
-		{
-			"label": "format-apply",
-			"type": "shell",
-			"command": "dotnet",
-			"args": [
-				"format",
-				"src/GenAIDBExplorer/GenAIDBExplorer.sln"
-			]
-		},
-		{
-			"label": "dotnet-format",
-			"type": "shell",
-			"command": "dotnet",
-			"args": [
-				"format",
-				"GenAIDBExplorer.sln"
-			]
 		}
 	]
 }
