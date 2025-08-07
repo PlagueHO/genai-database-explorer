@@ -37,17 +37,56 @@ namespace GenAIDBExplorer.Core.Repository.Security;
 /// - https://learn.microsoft.com/en-us/azure/key-vault/secrets/quick-create-net
 /// - https://learn.microsoft.com/en-us/azure/key-vault/general/authentication
 /// </remarks>
-public class KeyVaultConfigurationProvider(
-    string keyVaultUri,
-    ILogger<KeyVaultConfigurationProvider> logger,
-    DefaultAzureCredential? credential = null) : IDisposable
+public class KeyVaultConfigurationProvider : IDisposable
 {
-    private readonly SecretClient _secretClient = new(new Uri(keyVaultUri), credential ?? new DefaultAzureCredential());
+    private readonly SecretClient _secretClient;
+    private readonly ILogger<KeyVaultConfigurationProvider> _logger;
     private readonly ConcurrentDictionary<string, CachedSecret> _cache = new();
     private readonly SemaphoreSlim _retrievalSemaphore = new(10, 10); // Limit concurrent requests
-    private readonly TimeSpan _cacheExpiration = TimeSpan.FromMinutes(30);
-    private readonly TimeSpan _keyVaultTimeout = TimeSpan.FromSeconds(10);
+    private readonly TimeSpan _cacheExpiration;
+    private readonly TimeSpan _keyVaultTimeout;
+    private readonly bool _enableCaching;
     private bool _disposed;
+
+    /// <summary>
+    /// Initializes a new instance of the KeyVaultConfigurationProvider class.
+    /// </summary>
+    /// <param name="keyVaultUri">The URI of the Azure Key Vault.</param>
+    /// <param name="logger">The logger instance.</param>
+    /// <param name="credential">Optional Azure credential to use for authentication.</param>
+    /// <param name="options">Optional Key Vault configuration options.</param>
+    public KeyVaultConfigurationProvider(
+        string keyVaultUri,
+        ILogger<KeyVaultConfigurationProvider> logger,
+        DefaultAzureCredential? credential = null,
+        KeyVaultOptions? options = null)
+    {
+        _secretClient = new SecretClient(new Uri(keyVaultUri), credential ?? new DefaultAzureCredential());
+        _logger = logger;
+        var opts = options ?? new KeyVaultOptions();
+        _cacheExpiration = opts.CacheExpiration;
+        _keyVaultTimeout = opts.KeyVaultTimeout;
+        _enableCaching = opts.EnableCaching;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the KeyVaultConfigurationProvider class for testing.
+    /// </summary>
+    /// <param name="secretClient">The SecretClient instance to use.</param>
+    /// <param name="logger">The logger instance.</param>
+    /// <param name="options">Optional Key Vault configuration options.</param>
+    internal KeyVaultConfigurationProvider(
+        SecretClient secretClient,
+        ILogger<KeyVaultConfigurationProvider> logger,
+        KeyVaultOptions? options = null)
+    {
+        _secretClient = secretClient;
+        _logger = logger;
+        var opts = options ?? new KeyVaultOptions();
+        _cacheExpiration = opts.CacheExpiration;
+        _keyVaultTimeout = opts.KeyVaultTimeout;
+        _enableCaching = opts.EnableCaching;
+    }
 
     /// <summary>
     /// Represents a cached secret with expiration tracking.
@@ -75,13 +114,13 @@ public class KeyVaultConfigurationProvider(
 
         try
         {
-            logger.LogDebug("Retrieving configuration value for key: {KeyName}", normalizedKeyName);
+            _logger.LogDebug("Retrieving configuration value for key: {KeyName}", normalizedKeyName);
 
-            // Check cache first
-            if (_cache.TryGetValue(normalizedKeyName, out var cachedSecret) &&
+            // Check cache first (only if caching is enabled)
+            if (_enableCaching && _cache.TryGetValue(normalizedKeyName, out var cachedSecret) &&
                 cachedSecret.ExpiresAt > DateTime.UtcNow)
             {
-                logger.LogTrace("Configuration value retrieved from cache for key: {KeyName}", normalizedKeyName);
+                _logger.LogTrace("Configuration value retrieved from cache for key: {KeyName}", normalizedKeyName);
                 return cachedSecret.Value;
             }
 
@@ -92,10 +131,13 @@ public class KeyVaultConfigurationProvider(
                 var secretValue = await RetrieveFromKeyVaultAsync(normalizedKeyName);
                 if (secretValue != null)
                 {
-                    // Cache the retrieved value
-                    _cache[normalizedKeyName] = new CachedSecret(secretValue, DateTime.UtcNow.Add(_cacheExpiration));
+                    // Cache the retrieved value (only if caching is enabled)
+                    if (_enableCaching)
+                    {
+                        _cache[normalizedKeyName] = new CachedSecret(secretValue, DateTime.UtcNow.Add(_cacheExpiration));
+                    }
 
-                    logger.LogDebug("Configuration value successfully retrieved from Key Vault for key: {KeyName}",
+                    _logger.LogDebug("Configuration value successfully retrieved from Key Vault for key: {KeyName}",
                         normalizedKeyName);
                     return secretValue;
                 }
@@ -111,7 +153,7 @@ public class KeyVaultConfigurationProvider(
                 var envValue = Environment.GetEnvironmentVariable(fallbackEnvironmentVariable);
                 if (!string.IsNullOrWhiteSpace(envValue))
                 {
-                    logger.LogInformation("Configuration value retrieved from environment variable {EnvVar} for key: {KeyName}",
+                    _logger.LogInformation("Configuration value retrieved from environment variable {EnvVar} for key: {KeyName}",
                         fallbackEnvironmentVariable, normalizedKeyName);
                     return envValue;
                 }
@@ -120,16 +162,16 @@ public class KeyVaultConfigurationProvider(
             // Fall back to default value
             if (defaultValue != null)
             {
-                logger.LogInformation("Using default value for configuration key: {KeyName}", normalizedKeyName);
+                _logger.LogInformation("Using default value for configuration key: {KeyName}", normalizedKeyName);
                 return defaultValue;
             }
 
-            logger.LogWarning("No configuration value found for key: {KeyName}", normalizedKeyName);
+            _logger.LogWarning("No configuration value found for key: {KeyName}", normalizedKeyName);
             return null;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to retrieve configuration value for key: {KeyName}", normalizedKeyName);
+            _logger.LogError(ex, "Failed to retrieve configuration value for key: {KeyName}", normalizedKeyName);
 
             // In case of errors, try fallback mechanisms
             if (!string.IsNullOrWhiteSpace(fallbackEnvironmentVariable))
@@ -137,7 +179,7 @@ public class KeyVaultConfigurationProvider(
                 var envValue = Environment.GetEnvironmentVariable(fallbackEnvironmentVariable);
                 if (!string.IsNullOrWhiteSpace(envValue))
                 {
-                    logger.LogWarning("Using environment variable fallback due to Key Vault error for key: {KeyName}",
+                    _logger.LogWarning("Using environment variable fallback due to Key Vault error for key: {KeyName}",
                         normalizedKeyName);
                     return envValue;
                 }
@@ -180,7 +222,7 @@ public class KeyVaultConfigurationProvider(
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
-        logger.LogInformation("Refreshing Key Vault configuration cache");
+        _logger.LogInformation("Refreshing Key Vault configuration cache");
         _cache.Clear();
     }
 
@@ -209,7 +251,7 @@ public class KeyVaultConfigurationProvider(
 
         try
         {
-            logger.LogTrace("Testing Azure Key Vault connectivity");
+            _logger.LogTrace("Testing Azure Key Vault connectivity");
 
             // Try to get Key Vault properties as a connectivity test
             using var cts = new CancellationTokenSource(_keyVaultTimeout);
@@ -217,12 +259,12 @@ public class KeyVaultConfigurationProvider(
                 .AsPages()
                 .FirstAsync(cts.Token);
 
-            logger.LogTrace("Azure Key Vault connectivity test successful");
+            _logger.LogTrace("Azure Key Vault connectivity test successful");
             return true;
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Azure Key Vault connectivity test failed");
+            _logger.LogWarning(ex, "Azure Key Vault connectivity test failed");
             return false;
         }
     }
@@ -243,12 +285,12 @@ public class KeyVaultConfigurationProvider(
         }
         catch (RequestFailedException ex) when (ex.Status == 404)
         {
-            logger.LogDebug("Secret not found in Key Vault: {SecretName}", secretName);
+            _logger.LogDebug("Secret not found in Key Vault: {SecretName}", secretName);
             return null;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to retrieve secret from Key Vault: {SecretName}", secretName);
+            _logger.LogError(ex, "Failed to retrieve secret from Key Vault: {SecretName}", secretName);
             throw;
         }
     }
@@ -294,7 +336,7 @@ public class KeyVaultConfigurationProvider(
             _cache.Clear();
             _disposed = true;
 
-            logger.LogDebug("KeyVaultConfigurationProvider disposed");
+            _logger.LogDebug("KeyVaultConfigurationProvider disposed");
         }
     }
 }

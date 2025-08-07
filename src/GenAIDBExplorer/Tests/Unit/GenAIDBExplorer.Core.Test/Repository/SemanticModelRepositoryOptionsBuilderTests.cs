@@ -211,7 +211,7 @@ public class SemanticModelRepositoryOptionsBuilderTests
     }
 
     [TestMethod]
-    public void WithPerformanceMonitoring_WithNullAction_ShouldThrowArgumentNullException()
+    public void WithPerformanceMonitoring_WithNullFunction_ShouldThrowArgumentNullException()
     {
         // Arrange
         var builder = SemanticModelRepositoryOptionsBuilder.Create();
@@ -319,8 +319,7 @@ public class SemanticModelRepositoryOptionsBuilderTests
             var options = results[i];
             // We can't guarantee order, but we can verify that all combinations are valid
             options.MaxConcurrentOperations.Should().BeInRange(1, 10);
-            options.EnableLazyLoading.Should().BeOneOf(true, false);
-            options.EnableChangeTracking.Should().BeOneOf(true, false);
+            // Boolean properties are always valid (true or false)
         }
     }
 

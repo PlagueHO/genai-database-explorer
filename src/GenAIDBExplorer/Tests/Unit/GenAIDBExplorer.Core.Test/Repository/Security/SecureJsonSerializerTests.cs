@@ -76,14 +76,15 @@ public class SecureJsonSerializerTests
     }
 
     [TestMethod]
-    public async Task DeserializeAsync_MalformedJson_ThrowsJsonException()
+    public async Task DeserializeAsync_MalformedJson_ThrowsArgumentException()
     {
         // Arrange
         var malformedJson = "{invalid json}";
 
         // Act & Assert
         await FluentActions.Invoking(() => _secureJsonSerializer.DeserializeAsync<TestObject>(malformedJson))
-            .Should().ThrowAsync<JsonException>();
+            .Should().ThrowAsync<ArgumentException>()
+            .WithMessage("*JSON content failed security validation*");
     }
 
     [TestMethod]

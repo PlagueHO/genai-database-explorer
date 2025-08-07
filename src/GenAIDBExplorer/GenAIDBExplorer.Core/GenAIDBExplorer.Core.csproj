@@ -7,6 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>GenAIDBExplorer.Core.Test</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="DefaultProject\.genaidbexplorer\version.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -30,16 +36,16 @@
     <PackageReference Include="Microsoft.SemanticKernel.PromptTemplates.Liquid" Version="1.61.0" />
     <PackageReference Include="Microsoft.SemanticKernel.Prompty" Version="1.55.0-beta" />
     <PackageReference Include="Microsoft.SemanticKernel.Yaml" Version="1.61.0" />
+    <PackageReference Include="Microsoft.Extensions.VectorData.Abstractions" Version="9.7.0" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.0" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
-    <!-- Azure SDK packages for cloud persistence strategies -->
     <PackageReference Include="Azure.Storage.Blobs" Version="12.25.0" />
     <PackageReference Include="Azure.Identity" Version="1.14.2" />
     <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.52.1" />
-    <!-- Azure Key Vault package for Phase 5b: Enhanced Security Features -->
     <PackageReference Include="Azure.Security.KeyVault.Secrets" Version="4.8.0" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.7" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="System.Linq.Async" Version="6.0.1" />
   </ItemGroup>
 
   <ItemGroup>

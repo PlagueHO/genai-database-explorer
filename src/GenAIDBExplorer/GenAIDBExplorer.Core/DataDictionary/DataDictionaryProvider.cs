@@ -7,8 +7,6 @@ using Microsoft.SemanticKernel.Connectors.OpenAI;
 using System.Text;
 using System.Text.Json;
 using System.Resources;
-using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
-using DocumentFormat.OpenXml.Vml.Office;
 
 namespace GenAIDBExplorer.Core.DataDictionary;
 

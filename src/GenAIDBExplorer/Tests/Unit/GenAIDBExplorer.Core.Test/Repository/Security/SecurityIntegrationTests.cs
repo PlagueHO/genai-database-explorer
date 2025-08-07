@@ -25,16 +25,16 @@ public class SecurityIntegrationTests
                 // Add the security services using the same configuration as the main application
                 services.Configure<SecureJsonSerializerOptions>(options =>
                 {
-                    options.MaxDepth = 64;
+                    options.MaxJsonDepth = 64;
                     options.MaxStringLength = 50 * 1024 * 1024; // 50MB
                     options.EnableAuditLogging = true;
                 });
 
                 services.Configure<KeyVaultOptions>(options =>
                 {
-                    options.VaultUri = "https://test-vault.vault.azure.net/";
-                    options.EnableCaching = true;
-                    options.CacheExpirationMinutes = 30;
+                    options.KeyVaultUri = "https://test-vault.vault.azure.net/";
+                    options.EnableKeyVault = true;
+                    options.CacheExpiration = TimeSpan.FromMinutes(30);
                     options.EnableEnvironmentVariableFallback = true;
                 });
 
@@ -47,9 +47,9 @@ public class SecurityIntegrationTests
                     var keyVaultOptions = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<KeyVaultOptions>>();
                     var logger = serviceProvider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<KeyVaultConfigurationProvider>>();
                     
-                    if (!string.IsNullOrEmpty(keyVaultOptions.Value.VaultUri))
+                    if (!string.IsNullOrEmpty(keyVaultOptions.Value.KeyVaultUri))
                     {
-                        return new KeyVaultConfigurationProvider(keyVaultOptions, logger);
+                        return new KeyVaultConfigurationProvider("https://test-vault.vault.azure.net/", logger);
                     }
                     
                     return null!; // Will be null if not configured
@@ -183,14 +183,14 @@ public class SecurityIntegrationTests
 
         // Assert
         secureJsonOptions.Should().NotBeNull();
-        secureJsonOptions.Value.MaxDepth.Should().Be(64);
+        secureJsonOptions.Value.MaxJsonDepth.Should().Be(64);
         secureJsonOptions.Value.MaxStringLength.Should().Be(50 * 1024 * 1024);
         secureJsonOptions.Value.EnableAuditLogging.Should().BeTrue();
 
         keyVaultOptions.Should().NotBeNull();
-        keyVaultOptions.Value.VaultUri.Should().Be("https://test-vault.vault.azure.net/");
-        keyVaultOptions.Value.EnableCaching.Should().BeTrue();
-        keyVaultOptions.Value.CacheExpirationMinutes.Should().Be(30);
+        keyVaultOptions.Value.KeyVaultUri.Should().Be("https://test-vault.vault.azure.net/");
+        keyVaultOptions.Value.EnableKeyVault.Should().BeTrue();
+        keyVaultOptions.Value.CacheExpiration.Should().Be(TimeSpan.FromMinutes(30));
         keyVaultOptions.Value.EnableEnvironmentVariableFallback.Should().BeTrue();
     }
 }

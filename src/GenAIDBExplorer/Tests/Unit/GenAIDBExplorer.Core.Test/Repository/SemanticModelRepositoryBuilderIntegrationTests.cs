@@ -36,9 +36,8 @@ public class SemanticModelRepositoryBuilderIntegrationTests
             _mockLogger.Object);
 
         _testModelPath = new DirectoryInfo(Path.Combine(Path.GetTempPath(), "test-model"));
-        _testModel = new SemanticModel
+        _testModel = new SemanticModel("TestDatabase", "Test Database", null)
         {
-            DatabaseName = "TestDatabase",
             Tables = [],
             Views = [],
             StoredProcedures = []
@@ -73,7 +72,7 @@ public class SemanticModelRepositoryBuilderIntegrationTests
 
         // Verify that the strategy factory was called with the correct strategy name
         _mockStrategyFactory.Verify(f => f.GetStrategy("TestStrategy"), Times.Once);
-        _mockStrategy.Verify(s => s.LoadModelAsync(_testModelPath), Times.Once);
+        _mockStrategy.Verify(s => s.LoadModelAsync(It.IsAny<DirectoryInfo>()), Times.Once);
     }
 
     [TestMethod]

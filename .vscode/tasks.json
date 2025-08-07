@@ -1,271 +1,319 @@
 {
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "build",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "GenAIDBExplorer.sln",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}/src/GenAIDBExplorer"
-            },
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "publish",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "publish",
-                "GenAIDBExplorer.sln",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}/src/GenAIDBExplorer"
-            },
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "watch",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "watch",
-                "run",
-                "--project",
-                "GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}/src/GenAIDBExplorer"
-            },
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "test",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "test",
-                "GenAIDBExplorer.sln",
-                "--no-build"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}/src/GenAIDBExplorer"
-            },
-            "group": {
-                "kind": "test",
-                "isDefault": true
-            },
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "format-verify",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "format",
-                "GenAIDBExplorer.sln",
-                "--verify-no-changes",
-                "--severity",
-                "error"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}/src/GenAIDBExplorer"
-            },
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            },
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "console-integration-tests",
-            "type": "shell",
-            "command": "pwsh",
-            "args": [
-                "-Command",
-                "New-Item -ItemType Directory -Path './test-results' -Force | Out-Null; $config = New-PesterConfiguration; $config.Run.Path = './src/Tests/Integration/Console.Integration.Tests.ps1'; $config.Output.Verbosity = 'Detailed'; $config.TestResult.Enabled = $true; $config.TestResult.OutputFormat = 'NUnitXml'; $config.TestResult.OutputPath = './test-results/integration-tests.xml'; $config.CodeCoverage.Enabled = $false; $config.Should.ErrorAction = 'Continue'; Invoke-Pester -Configuration $config"
-            ],
-            "group": {
-                "kind": "test",
-                "isDefault": false
-            },
-            "options": {
-                "cwd": "${workspaceFolder}"
-            },
-            "problemMatcher": [],
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "new",
-                "showReuseMessage": true,
-                "clear": false
-            }
-        },
-        {
-            "label": "cli-init-project",
-            "type": "process",
-            "command": "dotnet",
-            "args": [
-                "run",
-                "--project",
-                "GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
-                "--",
-                "init-project",
-                "--project",
-                "d:/temp"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}/src/GenAIDBExplorer"
-            },
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "cli-extract-model",
-            "type": "process",
-            "command": "dotnet",
-            "args": [
-                "run",
-                "--project",
-                "GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
-                "--",
-                "extract-model",
-                "--project",
-                "d:/temp",
-                "--skipTables",
-                "--skipViews",
-                "--skipStoredProcedures"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}/src/GenAIDBExplorer"
-            },
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "cli-data-dictionary",
-            "type": "process",
-            "command": "dotnet",
-            "args": [
-                "run",
-                "--project",
-                "GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
-                "--",
-                "data-dictionary",
-                "--project",
-                "d:/temp",
-                "--sourcePathPattern",
-                "d:/temp/dict/*.json",
-                "--objectType",
-                "table",
-                "--schemaName",
-                "dbo",
-                "--objectName",
-                "tblItemSellingLimit",
-                "--show"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}/src/GenAIDBExplorer"
-            },
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "cli-enrich-model",
-            "type": "process",
-            "command": "dotnet",
-            "args": [
-                "run",
-                "--project",
-                "GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
-                "--",
-                "enrich-model",
-                "--project",
-                "d:/temp",
-                "--skipTables",
-                "--skipViews",
-                "--skipStoredProcedures",
-                "--objectType",
-                "table",
-                "--schemaName",
-                "dbo",
-                "--objectName",
-                "tblItemSellingLimit",
-                "--show"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}/src/GenAIDBExplorer"
-            },
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "cli-show-object",
-            "type": "process",
-            "command": "dotnet",
-            "args": [
-                "run",
-                "--project",
-                "GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
-                "--",
-                "show-object",
-                "table",
-                "--project",
-                "d:/temp",
-                "--schemaName",
-                "dbo",
-                "--name",
-                "tblItemSellingLimit"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}/src/GenAIDBExplorer"
-            },
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "cli-query-model",
-            "type": "process",
-            "command": "dotnet",
-            "args": [
-                "run",
-                "--project",
-                "GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
-                "--",
-                "query-model",
-                "--project",
-                "d:/temp"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}/src/GenAIDBExplorer"
-            },
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "cli-export-model",
-            "type": "process",
-            "command": "dotnet",
-            "args": [
-                "run",
-                "--project",
-                "GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
-                "--",
-                "export-model",
-                "--project",
-                "d:/temp",
-                "--outputPath",
-                "d:/temp/exported_model.md",
-                "--fileType",
-                "markdown",
-                "--splitFiles"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}/src/GenAIDBExplorer"
-            },
-            "problemMatcher": "$msCompile"
-        }
-    ]
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "build",
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"build",
+				"GenAIDBExplorer.sln",
+				"/property:GenerateFullPaths=true",
+				"/consoleloggerparameters:NoSummary"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/src/GenAIDBExplorer"
+			},
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "publish",
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"publish",
+				"GenAIDBExplorer.sln",
+				"/property:GenerateFullPaths=true",
+				"/consoleloggerparameters:NoSummary"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/src/GenAIDBExplorer"
+			},
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "watch",
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"watch",
+				"run",
+				"--project",
+				"GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/src/GenAIDBExplorer"
+			},
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "test",
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"test",
+				"GenAIDBExplorer.sln",
+				"--no-build"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/src/GenAIDBExplorer"
+			},
+			"group": {
+				"kind": "test",
+				"isDefault": true
+			},
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "format-verify",
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"format",
+				"GenAIDBExplorer.sln",
+				"--verify-no-changes",
+				"--severity",
+				"error"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/src/GenAIDBExplorer"
+			},
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "console-integration-tests",
+			"type": "shell",
+			"command": "pwsh",
+			"args": [
+				"-Command",
+				"New-Item -ItemType Directory -Path './test-results' -Force | Out-Null; $config = New-PesterConfiguration; $config.Run.Path = './src/Tests/Integration/Console.Integration.Tests.ps1'; $config.Output.Verbosity = 'Detailed'; $config.TestResult.Enabled = $true; $config.TestResult.OutputFormat = 'NUnitXml'; $config.TestResult.OutputPath = './test-results/integration-tests.xml'; $config.CodeCoverage.Enabled = $false; $config.Should.ErrorAction = 'Continue'; Invoke-Pester -Configuration $config"
+			],
+			"group": {
+				"kind": "test",
+				"isDefault": false
+			},
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [],
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "new",
+				"showReuseMessage": true,
+				"clear": false
+			}
+		},
+		{
+			"label": "cli-init-project",
+			"type": "process",
+			"command": "dotnet",
+			"args": [
+				"run",
+				"--project",
+				"GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
+				"--",
+				"init-project",
+				"--project",
+				"d:/temp"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/src/GenAIDBExplorer"
+			},
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "cli-extract-model",
+			"type": "process",
+			"command": "dotnet",
+			"args": [
+				"run",
+				"--project",
+				"GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
+				"--",
+				"extract-model",
+				"--project",
+				"d:/temp",
+				"--skipTables",
+				"--skipViews",
+				"--skipStoredProcedures"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/src/GenAIDBExplorer"
+			},
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "cli-data-dictionary",
+			"type": "process",
+			"command": "dotnet",
+			"args": [
+				"run",
+				"--project",
+				"GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
+				"--",
+				"data-dictionary",
+				"--project",
+				"d:/temp",
+				"--sourcePathPattern",
+				"d:/temp/dict/*.json",
+				"--objectType",
+				"table",
+				"--schemaName",
+				"dbo",
+				"--objectName",
+				"tblItemSellingLimit",
+				"--show"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/src/GenAIDBExplorer"
+			},
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "cli-enrich-model",
+			"type": "process",
+			"command": "dotnet",
+			"args": [
+				"run",
+				"--project",
+				"GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
+				"--",
+				"enrich-model",
+				"--project",
+				"d:/temp",
+				"--skipTables",
+				"--skipViews",
+				"--skipStoredProcedures",
+				"--objectType",
+				"table",
+				"--schemaName",
+				"dbo",
+				"--objectName",
+				"tblItemSellingLimit",
+				"--show"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/src/GenAIDBExplorer"
+			},
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "cli-show-object",
+			"type": "process",
+			"command": "dotnet",
+			"args": [
+				"run",
+				"--project",
+				"GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
+				"--",
+				"show-object",
+				"table",
+				"--project",
+				"d:/temp",
+				"--schemaName",
+				"dbo",
+				"--name",
+				"tblItemSellingLimit"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/src/GenAIDBExplorer"
+			},
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "cli-query-model",
+			"type": "process",
+			"command": "dotnet",
+			"args": [
+				"run",
+				"--project",
+				"GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
+				"--",
+				"query-model",
+				"--project",
+				"d:/temp"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/src/GenAIDBExplorer"
+			},
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "cli-export-model",
+			"type": "process",
+			"command": "dotnet",
+			"args": [
+				"run",
+				"--project",
+				"GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
+				"--",
+				"export-model",
+				"--project",
+				"d:/temp",
+				"--outputPath",
+				"d:/temp/exported_model.md",
+				"--fileType",
+				"markdown",
+				"--splitFiles"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/src/GenAIDBExplorer"
+			},
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "clean-solution",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"clean",
+				"src/GenAIDBExplorer/GenAIDBExplorer.sln"
+			]
+		},
+		{
+			"label": "clear-nuget-cache",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"dotnet",
+				"nuget",
+				"locals",
+				"all",
+				"--clear"
+			]
+		},
+		{
+			"label": "format-fix",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"format",
+				"src/GenAIDBExplorer/GenAIDBExplorer.sln"
+			]
+		},
+		{
+			"label": "format-apply",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"format",
+				"src/GenAIDBExplorer/GenAIDBExplorer.sln"
+			]
+		},
+		{
+			"label": "dotnet-format",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"format",
+				"GenAIDBExplorer.sln"
+			]
+		}
+	]
 }

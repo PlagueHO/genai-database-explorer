@@ -50,11 +50,11 @@ public interface ISemanticModelRepositoryOptionsBuilder
     ISemanticModelRepositoryOptionsBuilder WithMaxConcurrentOperations(int maxOperations);
 
     /// <summary>
-    /// Configures performance monitoring options using a nested builder.
+    /// Configures performance monitoring options using a builder pattern.
     /// </summary>
-    /// <param name="configure">Action to configure the performance monitoring options.</param>
+    /// <param name="configure">Function to configure the performance monitoring options.</param>
     /// <returns>A new builder instance with performance monitoring configuration applied.</returns>
-    ISemanticModelRepositoryOptionsBuilder WithPerformanceMonitoring(Action<IPerformanceMonitoringOptionsBuilder> configure);
+    ISemanticModelRepositoryOptionsBuilder WithPerformanceMonitoring(Func<IPerformanceMonitoringOptionsBuilder, IPerformanceMonitoringOptionsBuilder> configure);
 
     /// <summary>
     /// Creates an immutable SemanticModelRepositoryOptions instance with all configured values.

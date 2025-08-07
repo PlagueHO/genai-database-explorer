@@ -133,12 +133,23 @@ public sealed class KeyVaultOptions
     public bool EnableKeyVault { get; set; } = false;
 
     /// <summary>
+    /// Gets or sets whether to enable caching of retrieved secrets. Default is true.
+    /// </summary>
+    /// <remarks>
+    /// When disabled, each request will always go to Key Vault. This provides the most
+    /// up-to-date values but impacts performance. Useful for testing or scenarios
+    /// where secrets change frequently.
+    /// </remarks>
+    public bool EnableCaching { get; set; } = true;
+
+    /// <summary>
     /// Gets or sets the cache expiration time for retrieved secrets. Default is 30 minutes.
     /// </summary>
     /// <remarks>
     /// Shorter expiration times provide better security by refreshing secrets more
     /// frequently, but may impact performance. Longer times improve performance
     /// but may expose applications to longer periods with potentially stale secrets.
+    /// This setting is ignored if EnableCaching is false.
     /// </remarks>
     public TimeSpan CacheExpiration { get; set; } = TimeSpan.FromMinutes(30);
 

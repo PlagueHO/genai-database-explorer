@@ -61,7 +61,9 @@ public class SecureJsonSerializer(ILogger<SecureJsonSerializer> logger) : ISecur
         @"location\.", // Location object access
         @"alert\s*\(", // Alert dialogs
         @"confirm\s*\(", // Confirm dialogs
-        @"prompt\s*\(" // Prompt dialogs
+        @"prompt\s*\(", // Prompt dialogs
+        @"\\u0000", // Null bytes (Unicode escape)
+        @"\x00" // Null bytes (hex escape)
     ];
 
     private static readonly Regex DangerousPatternsRegex = new(

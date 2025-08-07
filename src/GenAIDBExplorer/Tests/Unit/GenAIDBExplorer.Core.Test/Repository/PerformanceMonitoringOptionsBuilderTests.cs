@@ -166,7 +166,7 @@ public class PerformanceMonitoringOptionsBuilderTests
             var options = results[i];
             options.MetricsRetentionPeriod.Should().NotBeNull();
             options.MetricsRetentionPeriod!.Value.TotalHours.Should().BeInRange(1, 10);
-            options.EnableLocalMonitoring.Should().BeOneOf(true, false);
+            // Boolean properties are always valid (true or false)
         }
     }
 }

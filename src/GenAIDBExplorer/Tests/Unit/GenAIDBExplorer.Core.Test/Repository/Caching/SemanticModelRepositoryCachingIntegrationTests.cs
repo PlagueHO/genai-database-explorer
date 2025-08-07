@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -65,7 +66,6 @@ public class SemanticModelRepositoryCachingIntegrationTests
     {
         // Arrange
         var model = CreateTestSemanticModel();
-        var cacheKey = "semantic_model_test_f9a7c2d1e4b6a8c9";
 
         _mockCache.Setup(x => x.GetAsync(It.IsAny<string>()))
             .ReturnsAsync(model);
@@ -100,8 +100,12 @@ public class SemanticModelRepositoryCachingIntegrationTests
         _mockStrategy.Setup(x => x.LoadModelAsync(It.IsAny<DirectoryInfo>()))
             .ReturnsAsync(model);
 
+        var options = SemanticModelRepositoryOptionsBuilder.Create()
+            .WithCaching()
+            .Build();
+
         // Act
-        var result = await _repository.LoadModelAsync(_testDirectory, false, false, true);
+        var result = await _repository.LoadModelAsync(_testDirectory, options);
 
         // Assert
         result.Should().NotBeNull();
@@ -126,8 +130,11 @@ public class SemanticModelRepositoryCachingIntegrationTests
         _mockStrategy.Setup(x => x.LoadModelAsync(It.IsAny<DirectoryInfo>()))
             .ReturnsAsync(model);
 
+        var options = SemanticModelRepositoryOptionsBuilder.Create()
+            .Build(); // No caching enabled
+
         // Act
-        var result = await _repository.LoadModelAsync(_testDirectory, false, false, false);
+        var result = await _repository.LoadModelAsync(_testDirectory, options);
 
         // Assert
         result.Should().NotBeNull();
@@ -150,8 +157,13 @@ public class SemanticModelRepositoryCachingIntegrationTests
         _mockCache.Setup(x => x.GetAsync(It.IsAny<string>()))
             .ReturnsAsync(model);
 
+        var options = SemanticModelRepositoryOptionsBuilder.Create()
+            .WithLazyLoading()
+            .WithCaching()
+            .Build();
+
         // Act
-        var result = await _repository.LoadModelAsync(_testDirectory, true, false, true);
+        var result = await _repository.LoadModelAsync(_testDirectory, options);
 
         // Assert
         result.Should().NotBeNull();
@@ -172,8 +184,13 @@ public class SemanticModelRepositoryCachingIntegrationTests
         _mockCache.Setup(x => x.GetAsync(It.IsAny<string>()))
             .ReturnsAsync(model);
 
+        var options = SemanticModelRepositoryOptionsBuilder.Create()
+            .WithChangeTracking()
+            .WithCaching()
+            .Build();
+
         // Act
-        var result = await _repository.LoadModelAsync(_testDirectory, false, true, true);
+        var result = await _repository.LoadModelAsync(_testDirectory, options);
 
         // Assert
         result.Should().NotBeNull();
@@ -197,8 +214,12 @@ public class SemanticModelRepositoryCachingIntegrationTests
         _mockStrategy.Setup(x => x.LoadModelAsync(It.IsAny<DirectoryInfo>()))
             .ReturnsAsync(model);
 
+        var options = SemanticModelRepositoryOptionsBuilder.Create()
+            .WithCaching()
+            .Build();
+
         // Act
-        var result = await _repository.LoadModelAsync(_testDirectory, false, false, true);
+        var result = await _repository.LoadModelAsync(_testDirectory, options);
 
         // Assert
         result.Should().NotBeNull();
@@ -226,8 +247,12 @@ public class SemanticModelRepositoryCachingIntegrationTests
         _mockStrategy.Setup(x => x.LoadModelAsync(It.IsAny<DirectoryInfo>()))
             .ReturnsAsync(model);
 
+        var options = SemanticModelRepositoryOptionsBuilder.Create()
+            .WithCaching()
+            .Build();
+
         // Act
-        var result = await _repository.LoadModelAsync(_testDirectory, false, false, true);
+        var result = await _repository.LoadModelAsync(_testDirectory, options);
 
         // Assert
         result.Should().NotBeNull();
@@ -256,10 +281,14 @@ public class SemanticModelRepositoryCachingIntegrationTests
         _mockStrategy.Setup(x => x.LoadModelAsync(It.IsAny<DirectoryInfo>()))
             .ReturnsAsync(model);
 
+        var options = SemanticModelRepositoryOptionsBuilder.Create()
+            .WithCaching()
+            .Build();
+
         try
         {
             // Act
-            var result = await repositoryWithoutCache.LoadModelAsync(_testDirectory, false, false, true);
+            var result = await repositoryWithoutCache.LoadModelAsync(_testDirectory, options);
 
             // Assert
             result.Should().NotBeNull();
@@ -288,9 +317,13 @@ public class SemanticModelRepositoryCachingIntegrationTests
         _mockStrategy.Setup(x => x.LoadModelAsync(It.IsAny<DirectoryInfo>()))
             .ReturnsAsync(model);
 
+        var options = SemanticModelRepositoryOptionsBuilder.Create()
+            .WithCaching()
+            .Build();
+
         // Act - Load same model twice
-        await _repository.LoadModelAsync(_testDirectory, false, false, true);
-        await _repository.LoadModelAsync(_testDirectory, false, false, true);
+        await _repository.LoadModelAsync(_testDirectory, options);
+        await _repository.LoadModelAsync(_testDirectory, options);
 
         // Assert
         capturedCacheKeys.Should().HaveCount(2);
@@ -312,9 +345,19 @@ public class SemanticModelRepositoryCachingIntegrationTests
         _mockStrategy.Setup(x => x.LoadModelAsync(It.IsAny<DirectoryInfo>()))
             .ReturnsAsync(model);
 
+        var options1 = SemanticModelRepositoryOptionsBuilder.Create()
+            .WithCaching()
+            .WithStrategyName("strategy1")
+            .Build();
+
+        var options2 = SemanticModelRepositoryOptionsBuilder.Create()
+            .WithCaching()
+            .WithStrategyName("strategy2")
+            .Build();
+
         // Act - Load with different strategies
-        await _repository.LoadModelAsync(_testDirectory, false, false, true, "strategy1");
-        await _repository.LoadModelAsync(_testDirectory, false, false, true, "strategy2");
+        await _repository.LoadModelAsync(_testDirectory, options1);
+        await _repository.LoadModelAsync(_testDirectory, options2);
 
         // Assert
         capturedCacheKeys.Should().HaveCount(2);
@@ -329,10 +372,8 @@ public class SemanticModelRepositoryCachingIntegrationTests
     /// <returns>A test semantic model instance.</returns>
     private static SemanticModel CreateTestSemanticModel()
     {
-        return new SemanticModel
+        return new SemanticModel("TestModel", "Test source", "Test model for unit testing")
         {
-            Name = "TestModel",
-            Description = "Test model for unit testing",
             Tables = [],
             Views = [],
             StoredProcedures = []

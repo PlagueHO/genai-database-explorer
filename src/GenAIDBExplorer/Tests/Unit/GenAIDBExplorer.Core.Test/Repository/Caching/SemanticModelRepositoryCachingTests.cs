@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
-namespace GenAIDBExplorer.Core.Test.Repository;
+namespace GenAIDBExplorer.Core.Test.Repository.Caching;
 
 /// <summary>
 /// Unit tests for SemanticModelRepository caching functionality.

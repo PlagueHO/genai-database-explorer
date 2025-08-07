@@ -127,16 +127,16 @@ public class SemanticModelRepositoryOptionsBuilder : ISemanticModelRepositoryOpt
     /// Configures performance monitoring options using a nested builder.
     /// Creates a new builder instance with the performance monitoring configuration applied.
     /// </summary>
-    /// <param name="configure">Action to configure the performance monitoring options.</param>
+    /// <param name="configure">Function to configure the performance monitoring options.</param>
     /// <returns>A new builder instance with performance monitoring configuration applied.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when configure action is null.</exception>
-    public ISemanticModelRepositoryOptionsBuilder WithPerformanceMonitoring(Action<IPerformanceMonitoringOptionsBuilder> configure)
+    /// <exception cref="ArgumentNullException">Thrown when configure function is null.</exception>
+    public ISemanticModelRepositoryOptionsBuilder WithPerformanceMonitoring(Func<IPerformanceMonitoringOptionsBuilder, IPerformanceMonitoringOptionsBuilder> configure)
     {
         ArgumentNullException.ThrowIfNull(configure);
 
         var builder = PerformanceMonitoringOptionsBuilder.Create();
-        configure(builder);
-        var performanceOptions = builder.Build();
+        var configuredBuilder = configure(builder);
+        var performanceOptions = configuredBuilder.Build();
 
         // Create new instance instead of mutating current state (immutable pattern)
         return new SemanticModelRepositoryOptionsBuilder(_current with { PerformanceMonitoring = performanceOptions });

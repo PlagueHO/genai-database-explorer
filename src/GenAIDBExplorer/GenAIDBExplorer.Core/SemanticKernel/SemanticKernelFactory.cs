@@ -27,14 +27,6 @@ public class SemanticKernelFactory(
         var kernelBuilder = Kernel.CreateBuilder();
 
         kernelBuilder.Services.AddSingleton(_logger);
-        kernelBuilder.Services.AddLogging(
-            c => c.AddSimpleConsole(
-                options =>
-                {
-                    options.IncludeScopes = true;
-                    options.SingleLine = true;
-                    options.TimestampFormat = "HH:mm:ss ";
-                }));
 
         _logger.LogDebug("Adding ChatCompletion service with endpoint: {Endpoint}, service type: {ServiceType}",
             _project.Settings.OpenAIService.Default.AzureOpenAIEndpoint,
