@@ -547,3 +547,146 @@ flowchart LR
   C --> G
   D --> G
 ```
+
+## 14. Repository compatibility and conflict resolutions (finalized)
+
+This section codifies the concrete resolutions identified during review to ensure the spec is fully actionable against the current repository implementation.
+
+### 14.1 Strategy-aware persistence via DTO mapping ✅
+
+Keep `SemanticModelRepository` unchanged. Persistence strategies will map domain entities to storage-specific DTOs to satisfy vector persistence rules per strategy.
+
+| Strategy | Entity payload in storage | Embedding floats in JSON | Serializer | Notes |
+|---|---|---:|---|---|
+| Local Disk | PersistedEntityDto | ✅ Included | ISecureJsonSerializer | Human-readable JSON, safe serialization (SEC-003) |
+| Azure Blob | PersistedEntityDto | ✅ Included | ISecureJsonSerializer | Per-entity blobs; index.json maintained |
+| Cosmos NoSQL | CosmosEntityDto | ❌ Excluded | ISecureJsonSerializer | Keep metadata only in doc; vectors go to Cosmos vector index via SK connector |
+
+Small flow diagram of write operations by strategy:
+
+```mermaid
+flowchart TB
+  subgraph Local/Blob
+    D1[Domain Entity] --> M1[Persistence Mapper]
+    M1 --> P1[PersistedEntityDto (with floats)] --> S1[(JSON on disk/blob)]
+  end
+  subgraph Cosmos
+    D2[Domain Entity] --> M2[Cosmos Mapper]
+    M2 --> P2[CosmosEntityDto (no floats, metadata only)] --> S2[(Cosmos doc)]
+    D2 --> G[Vector Generation] --> W[Vector Index Writer] --> I[(Cosmos Vector Index)]
+  end
+```
+
+### 14.2 PersistedEntityDto (Local/Blob) — includes embeddings 📦➡️🧠
+
+For Local Disk and Azure Blob, persist the embedding floats and metadata inside the entity JSON via a storage DTO. Absent fields remain valid for backward compatibility.
+
+```csharp
+public sealed class PersistedEntityDto
+{
+  public required string Schema { get; init; }
+  public required string Name { get; init; }
+  public string? Description { get; init; }
+  public string? SemanticDescription { get; init; }
+  public bool NotUsed { get; init; }
+  public string? NotUsedReason { get; init; }
+
+  // Domain-specific payload (e.g., columns/indexes for tables)
+  public object? DomainSpecific { get; init; }
+
+  public EmbeddingContainer? Embedding { get; init; }
+
+  public sealed class EmbeddingContainer
+  {
+    public required float[] Vector { get; init; }
+    public required EmbeddingMetadata Metadata { get; init; }
+  }
+}
+```
+
+Mapping rules:
+
+- Domain → PersistedEntityDto: copy basic fields; project domain-specific shape into `DomainSpecific` (or structured sub-DTOs), attach `Embedding` when available.
+- PersistedEntityDto → Domain: ignore `Embedding` fields when loading (vector orchestration governs embeddings), but preserve non-vector fields.
+- JSON remains indented and human-readable (PER-003).
+
+### 14.3 CosmosEntityDto (Cosmos NoSQL) — no floats, metadata only ☁️🧩
+
+For Cosmos, do not duplicate floats in entity documents (REQ-006). Store only embedding metadata alongside a float-free entity payload. Vector floats are stored exclusively via the Cosmos NoSQL vector connector.
+
+```csharp
+public sealed class CosmosEntityDto<T>
+{
+  public required string id { get; init; }                 // e.g., "{model}:{type}:{schema}.{name}"
+  public required string modelName { get; init; }          // partition key per 12.11
+  public required string entityType { get; init; }         // table|view|storedprocedure
+  public required string entityName { get; init; }
+  public required T data { get; init; }                    // domain entity clone WITHOUT embeddings
+  public EmbeddingMetadata? embeddingMetadata { get; init; }
+  public DateTimeOffset createdAt { get; init; } = DateTimeOffset.UtcNow;
+}
+```
+
+Mapping rules:
+
+- Domain → `T` (float-free clone): strip any embedding vector fields from the domain representation before assignment to `data`.
+- Metadata: include `EmbeddingMetadata` for drift detection and reconciliation.
+- Floats: never present in `CosmosEntityDto`; upsert vectors via the SK Cosmos connector (`IVectorIndexWriter`).
+
+### 14.4 LocalDisk secure serialization 🔒
+
+Use the same `ISecureJsonSerializer` used by `AzureBlobPersistenceStrategy` for the `LocalDiskPersistenceStrategy` to meet SEC-003. This ensures safe serialization and optional audit tagging.
+
+Illustrative constructor (strategy wiring may vary in DI):
+
+```csharp
+public class LocalDiskPersistenceStrategy : ILocalDiskPersistenceStrategy
+{
+  private readonly ISecureJsonSerializer _secureJsonSerializer;
+  private readonly ILogger<LocalDiskPersistenceStrategy> _logger;
+
+  public LocalDiskPersistenceStrategy(
+    ILogger<LocalDiskPersistenceStrategy> logger,
+    ISecureJsonSerializer secureJsonSerializer)
+  {
+    _logger = logger;
+    _secureJsonSerializer = secureJsonSerializer;
+  }
+
+  // Use _secureJsonSerializer for all JSON writes/reads
+}
+```
+
+### 14.5 Save semantics and repository impact 🧩
+
+- `SemanticModelRepository` remains unchanged; it orchestrates strategy calls, caching, and concurrency but is agnostic of vector shapes.
+- Full-save semantics in strategies are acceptable. Vector flows update:
+  - Local/Blob: entity JSON (via `PersistedEntityDto`) includes floats + metadata after generation.
+  - Cosmos: entity docs (via `CosmosEntityDto`) include metadata only; floats live in the vector index managed by SK connector.
+
+### 14.6 Optional supporting components (recommended)
+
+- Centralized key builder (sanitization, max-length, deterministic IDs; see 12.16):
+
+```csharp
+public interface IEntityKeyBuilder
+{
+  string BuildRecordId(string model, string entityType, string schema, string name); // "{model}:{type}:{schema}.{name}"
+}
+```
+
+- Options validator for fail-fast dimension/model checks (REQ-009, 12.17):
+
+```csharp
+public sealed class VectorOptionsValidator : IValidateOptions<VectorIndexOptions>
+{
+  public ValidateOptionsResult Validate(string? name, VectorIndexOptions options)
+  {
+    if (options.ExpectedDimensions <= 0)
+      return ValidateOptionsResult.Fail("VectorIndex.ExpectedDimensions must be > 0.");
+    // Add provider/repo compatibility checks here…
+    return ValidateOptionsResult.Success;
+  }
+}
+```
+
