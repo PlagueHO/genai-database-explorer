@@ -94,5 +94,13 @@
       // "ModelId": "gpt-4o-mini-2024-07-18", // Only required when using OpenAI. Recommend gpt-4o-2024-08-06 or gpt-4o-mini-2024-07-18
       "AzureOpenAIDeploymentId": "text-embedding-3-large" // Only required when using Azure OpenAI. Recommend text-embedding-3-large, text-embedding-3-small or text-embedding-ada-002
     }
+  },
+  "VectorIndex": {
+    "Provider": "Auto",
+    "CollectionName": "genaide-entities",
+    "EmbeddingServiceId": "Embeddings",
+    "ExpectedDimensions": 3072,
+    "AllowedForRepository": ["LocalDisk", "AzureBlob", "Cosmos"],
+    "Hybrid": { "Enabled": false }
   }
 }

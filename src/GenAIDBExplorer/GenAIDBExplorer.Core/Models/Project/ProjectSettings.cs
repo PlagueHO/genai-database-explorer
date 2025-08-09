@@ -37,4 +37,9 @@ public class ProjectSettings
     /// Gets or sets the semantic model repository settings.
     /// </summary>
     public required SemanticModelRepositorySettings SemanticModelRepository { get; set; }
+
+    /// <summary>
+    /// Gets or sets the vector index settings.
+    /// </summary>
+    public VectorIndexSettings VectorIndex { get; set; } = new();
 }

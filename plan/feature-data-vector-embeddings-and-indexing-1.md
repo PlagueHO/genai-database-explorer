@@ -4,13 +4,13 @@ version: 1.0
 date_created: 2025-08-09
 last_updated: 2025-08-09
 owner: GenAI Database Explorer Team
-status: 'Planned'
+status: 'In Progress'
 tags: [feature, data, vectors, embeddings, search, semantic-kernel, azure, cosmos, ai-search]
 ---
 
 # Introduction
 
-![Status: Planned](https://img.shields.io/badge/status-Planned-blue)
+![Status: In%20Progress](https://img.shields.io/badge/status-In%20Progress-yellow)
 
 This plan implements the Data Vector Embeddings and Indexing Specification, adding embedding generation, provider-aware persistence, vector index upsert/search, and CLI commands (generate-vectors, reconcile-index) while keeping the repository facade unchanged.
 
@@ -46,20 +46,21 @@ This plan implements the Data Vector Embeddings and Indexing Specification, addi
 
 | Task | Description | Completed | Date |
 |------|-------------|-----------|------|
-| TASK-001 | Add NuGet to Core: Microsoft.Extensions.VectorData.Abstractions v9.7.0 in src/GenAIDBExplorer/GenAIDBExplorer.Core/GenAIDBExplorer.Core.csproj |  |  |
-| TASK-002 | Add NuGet to Core: Microsoft.SemanticKernel.Connectors.AzureAISearch v1.61.0 |  |  |
-| TASK-003 | Add NuGet to Core: Microsoft.SemanticKernel.Connectors.CosmosNoSql v1.61.0 |  |  |
-| TASK-004 | Create VectorIndexOptions in src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticVectors/Options/VectorIndexOptions.cs (Provider, CollectionName, PushOnGenerate, ProvisionIfMissing, AllowedForRepository, AzureAISearch, CosmosNoSql, EmbeddingServiceId, ExpectedDimensions, Hybrid) |  |  |
-| TASK-005 | Create VectorOptionsValidator in src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticVectors/Options/VectorOptionsValidator.cs implementing IValidateOptions<`VectorIndexOptions`> (REQ-009, 12.17) |  |  |
-| TASK-006 | Wire options & services in src/GenAIDBExplorer/GenAIDBExplorer.Console/Extensions/HostBuilderExtensions.cs: Configure<`VectorIndexOptions`>(), AddSingleton<IValidateOptions<`VectorIndexOptions`>, VectorOptionsValidator>() |  |  |
-| TASK-007 | Register services in HostBuilderExtensions: IVectorIndexPolicy, IVectorInfrastructureFactory, IVectorRecordMapper, IEmbeddingGenerator, IVectorIndexWriter (provider-specific), IVectorSearchService, IVectorGenerationService, IVectorOrchestrator, IEntityKeyBuilder |  |  |
-| TASK-008 | Extend src/GenAIDBExplorer/GenAIDBExplorer.Console/appsettings.json: add VectorIndex section per spec (with placeholders keyed to env vars) |  |  |
-| TASK-009 | Update samples/AdventureWorksLT/settings.json with VectorIndex defaults (Provider=Auto; ExpectedDimensions; EmbeddingServiceId="Embeddings") |  |  |
+| TASK-001 | Add NuGet to Core: Microsoft.Extensions.VectorData.Abstractions v9.7.0 in src/GenAIDBExplorer/GenAIDBExplorer.Core/GenAIDBExplorer.Core.csproj | ✅ | 2025-08-09 |
+| TASK-002 | Add NuGet to Core: Microsoft.SemanticKernel.Connectors.AzureAISearch v1.61.0 (using 1.61.0-preview) | ✅ | 2025-08-09 |
+| TASK-003 | Add NuGet to Core: Microsoft.SemanticKernel.Connectors.CosmosNoSql v1.61.0 (using 1.61.0-preview) | ✅ | 2025-08-09 |
+| TASK-004 | Define project-scoped VectorIndex settings model at src/GenAIDBExplorer/GenAIDBExplorer.Core/Models/Project/VectorIndexSettings.cs | ✅ | 2025-08-09 |
+| TASK-005 | Bind and validate VectorIndex in Project (Project.cs/ProjectSettings.cs) | ✅ | 2025-08-09 |
+| TASK-006 | Keep DI clean: no appsettings binding for VectorIndex in HostBuilderExtensions (project-driven) | ✅ | 2025-08-09 |
+| TASK-007 | Register services in HostBuilderExtensions: IVectorIndexPolicy, IVectorInfrastructureFactory, IVectorRecordMapper, IEmbeddingGenerator, IVectorIndexWriter (provider-specific), IVectorSearchService, IVectorGenerationService, IVectorOrchestrator, IEntityKeyBuilder | ➖ Deferred to Phase 3 |  |
+| TASK-010a | Cleanup: remove obsolete Console-bound VectorIndexOptions and VectorOptionsValidator | ✅ | 2025-08-09 |
+| TASK-008 | Add VectorIndex section to DefaultProject/settings.json with env-var placeholders | ✅ | 2025-08-09 |
+| TASK-009 | Update samples/AdventureWorksLT/settings.json with VectorIndex defaults (Provider=Auto; ExpectedDimensions; EmbeddingServiceId="Embeddings") | ✅ | 2025-08-09 |
 
 Completion criteria:
 
-- Core compiles with new package references and options types.
-- DI validates at startup; misconfiguration produces clear failures.
+- Core compiles with new package references and project settings types.
+- Project settings validation covers VectorIndex; misconfiguration produces clear failures on Project load.
 
 ### Implementation Phase 2
 
@@ -156,8 +157,8 @@ Completion criteria:
 ## 4. Dependencies
 
 - DEP-001: NuGet Microsoft.SemanticKernel (already in Core) — ensure connectors version matches (1.61.0)
-- DEP-002: NuGet Microsoft.SemanticKernel.Connectors.AzureAISearch (1.61.0)
-- DEP-003: NuGet Microsoft.SemanticKernel.Connectors.CosmosNoSql (1.61.0)
+- DEP-002: NuGet Microsoft.SemanticKernel.Connectors.AzureAISearch (1.61.0; using 1.61.0-preview if needed)
+- DEP-003: NuGet Microsoft.SemanticKernel.Connectors.CosmosNoSql (1.61.0; using 1.61.0-preview if needed)
 - DEP-004: NuGet Microsoft.Extensions.VectorData.Abstractions (9.7.0)
 - DEP-005: Azure credentials via env/managed identity (when using cloud providers)
 
@@ -173,8 +174,8 @@ Completion criteria:
 - FILE-008: src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository/LocalDiskPersistenceStrategy.cs — refactor to secure serializer + DTO
 - FILE-009: src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository/AzureBlobPersistenceStrategy.cs — refactor to DTO
 - FILE-010: src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository/CosmosPersistenceStrategy.cs — refactor to metadata-only DTO
-- FILE-011: src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticVectors/Options/VectorIndexOptions.cs — vector options
-- FILE-012: src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticVectors/Options/VectorOptionsValidator.cs — fail-fast validator
+- FILE-011: src/GenAIDBExplorer/GenAIDBExplorer.Core/Models/Project/VectorIndexSettings.cs — project vector settings
+- FILE-012: (removed) appsettings-based vector options; moved to project settings
 - FILE-013: src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticVectors/Keys/IEntityKeyBuilder.cs, EntityKeyBuilder.cs — key builder
 - FILE-014: src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticVectors/Policy/IVectorIndexPolicy.cs, VectorIndexPolicy.cs — policy
 - FILE-015: src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticVectors/Infrastructure/IVectorInfrastructureFactory.cs, VectorInfrastructureFactory.cs — factory
