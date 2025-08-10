@@ -1,0 +1,4 @@
+Time taken to produce component OO documentation
+GPT 4.1: 1:45
+Sonnet 4: 6:03
+GPT 5: 4:36

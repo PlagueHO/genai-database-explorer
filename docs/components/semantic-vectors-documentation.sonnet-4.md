@@ -3,324 +3,296 @@ title: SemanticVectors - Technical Documentation
 component_path: `src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticVectors`
 version: 1.0
 date_created: 2025-08-10
-owner: AI Agent (Sonnet 4) using developer-flow-sonnet-4 chat mode
-tags: [component, semantic-vectors, embeddings, vector-search, ai, indexing, documentation, architecture]
+last_updated: 2025-08-10
+owner: GenAI Database Explorer Team
+tags: [component, service, infrastructure, documentation, architecture, semantic-search, vector-embeddings, ai]
 ---
 
-# SemanticVectors Documentation
-
-The SemanticVectors component provides a comprehensive vector embedding and search infrastructure for the GenAI Database Explorer. It transforms semantic model entities into vector embeddings using AI models and enables similarity-based search across database schemas through multiple storage providers.
+The SemanticVectors component is a sophisticated vector processing system that enables semantic search capabilities over database schema elements (tables, views, stored procedures). It transforms semantic model entities into high-dimensional vectors using AI embedding models and provides fast similarity search capabilities through various vector storage providers.
 
 ## 1. Component Overview
 
 ### Purpose/Responsibility
 
-- **OVR-001**: Generate vector embeddings from semantic model entities (tables, views, stored procedures) using AI embedding models
-- **OVR-002**: Index and store vector embeddings across multiple providers (InMemory, Azure AI Search, Cosmos NoSQL)
-- **OVR-003**: Provide vector-based similarity search capabilities for natural language querying
-
-### Scope (included/excluded functionality)
-
-- **Included**: Embedding generation, vector indexing, similarity search, provider abstraction, content hashing, key generation
-- **Excluded**: Natural language query interpretation, SQL generation, embedding model training, provider-specific infrastructure provisioning
-
-### System Context and Relationships
-
-- **Integrates with**: SemanticKernel for AI embeddings, project settings for configuration, semantic model for entity data
-- **Depends on**: Microsoft.Extensions.AI, Microsoft.SemanticKernel, Microsoft.Extensions.VectorData
-- **Used by**: Query processing components, semantic model enrichment workflows, natural language interfaces
+- OVR-001: **Primary Responsibility**: Generate, store, and search vector embeddings for semantic model entities to enable natural language queries over database schemas
+- OVR-002: **Scope**: Includes vector generation orchestration, embedding generation, indexing strategies, search capabilities, and policy-driven provider selection. Excludes semantic model extraction and natural language query processing
+- OVR-003: **System Context**: Operates as a bridge between the semantic model repository and natural language processing capabilities, integrating with Semantic Kernel for AI operations and supporting multiple vector storage backends
 
 ## 2. Architecture Section
 
-### Design Patterns Used
-
-- **ARC-001**: **Abstract Factory Pattern** - `IVectorInfrastructureFactory` creates provider-specific infrastructure objects
-- **ARC-002**: **Strategy Pattern** - Multiple implementations for vector storage (`InMemoryVectorIndexWriter`, Azure AI Search, Cosmos) and search providers
-- **ARC-003**: **Orchestrator Pattern** - `VectorOrchestrator` coordinates the complete vector generation workflow
-- **ARC-004**: **Repository Pattern** - Abstract vector storage through `IVectorIndexWriter` and `IVectorSearchService` interfaces
-- **ARC-005**: **Builder Pattern** - `EntityKeyBuilder` constructs normalized, collision-resistant entity keys
-- **ARC-006**: **Mapper Pattern** - `VectorRecordMapper` transforms semantic entities into vector records
-- **ARC-007**: **Options Pattern** - `VectorIndexOptions` provides type-safe configuration with validation
-- **ARC-008**: **Policy Pattern** - `IVectorIndexPolicy` determines appropriate providers based on repository strategy
-
-### Dependencies and Relationships
-
-- **Internal Dependencies**: Project settings, semantic model entities, secure JSON serialization, logging infrastructure
-- **External Dependencies**: Microsoft Semantic Kernel, Microsoft Extensions AI, Vector Data extensions, .NET logging
-- **Component Interactions**: Receives semantic model entities, generates embeddings via AI services, persists to configurable storage
+- ARC-001: **Design Patterns**: Strategy (multiple vector providers), Factory (infrastructure creation), Repository (vector storage abstraction), Builder (key generation), Policy (provider selection), Orchestrator (workflow coordination)
+- ARC-002: **Dependencies**: Internal dependencies on SemanticModel entities, ProjectSettings, and SemanticKernel infrastructure. External dependencies on Microsoft.Extensions.AI, Microsoft.SemanticKernel, Microsoft.Extensions.VectorData, and System.Numerics.Tensors
+- ARC-003: **Component Interactions**: Receives semantic models from repository layer, generates embeddings through Semantic Kernel, persists vectors via storage providers, and serves search requests to query processing components
+- ARC-004: **Visual Architecture**: Multi-layered architecture with clear separation between orchestration, infrastructure, services, policy, and data layers
+- ARC-005: **Mermaid Diagram**: Comprehensive component structure showing relationships, dependencies, and data flow
 
 ### Component Structure and Dependencies Diagram
 
 ```mermaid
-graph TD
-    subgraph "SemanticVectors Component"
+graph TB
+    subgraph "Orchestration Layer"
         VO[VectorOrchestrator] --> VGS[VectorGenerationService]
-        VGS --> EG[IEmbeddingGenerator]
-        VGS --> VIW[IVectorIndexWriter]
-        VGS --> VRM[IVectorRecordMapper]
-        VGS --> EKB[IEntityKeyBuilder]
-        VGS --> VIF[IVectorInfrastructureFactory]
-        
-        VIF --> VIP[IVectorIndexPolicy]
+        VO -.-> IVO[IVectorOrchestrator]
+        VGS -.-> IVGS[IVectorGenerationService]
+    end
+
+    subgraph "Infrastructure Layer"
+        VIF[VectorInfrastructureFactory] -.-> IVIF[IVectorInfrastructureFactory]
+        VIF --> VIP[VectorIndexPolicy]
+        VIP -.-> IVIP[IVectorIndexPolicy]
         VIF --> VI[VectorInfrastructure]
-        
-        EG --> SKEG[SemanticKernelEmbeddingGenerator]
-        VIW --> IMVIW[InMemoryVectorIndexWriter]
-        VIW --> AIVIW[AzureAISearchIndexWriter]
-        VIW --> CVIW[CosmosVectorIndexWriter]
-        
-        VSS[IVectorSearchService] --> IMVSS[InMemoryVectorSearchService]
-        VSS --> AIVSS[AzureAISearchService]
-        VSS --> CVSS[CosmosVectorSearchService]
-        
-        EVR[EntityVectorRecord] --> VIW
-        EVR --> VSS
-        
-        VIO[VectorIndexOptions] --> VIF
-        VGO[VectorGenerationOptions] --> VGS
+    end
+
+    subgraph "Service Layer - Embeddings"
+        SKEG[SemanticKernelEmbeddingGenerator] -.-> IEG[IEmbeddingGenerator]
+    end
+
+    subgraph "Service Layer - Indexing"
+        IMVIW[InMemoryVectorIndexWriter] -.-> IVIW[IVectorIndexWriter]
+        SKIMVIW[SkInMemoryVectorIndexWriter] -.-> IVIW
+    end
+
+    subgraph "Service Layer - Search"
+        IMVSS[InMemoryVectorSearchService] -.-> IVSS[IVectorSearchService]
+        SKIMVSS[SkInMemoryVectorSearchService] -.-> IVSS
+    end
+
+    subgraph "Service Layer - Mapping & Keys"
+        VRM[VectorRecordMapper] -.-> IVRM[IVectorRecordMapper]
+        EKB[EntityKeyBuilder] -.-> IEKB[IEntityKeyBuilder]
+    end
+
+    subgraph "Policy Layer"
+        VIP -.-> IVIP
+    end
+
+    subgraph "Data Layer"
+        EVR[EntityVectorRecord]
+        VGO[VectorGenerationOptions]
+        VIO[VectorIndexOptions]
     end
 
     subgraph "External Dependencies"
         SK[Semantic Kernel]
-        AI[Microsoft.Extensions.AI]
-        VD[Microsoft.Extensions.VectorData]
-        LOG[Microsoft.Extensions.Logging]
+        MEAI[Microsoft.Extensions.AI]
+        MEVD[Microsoft.Extensions.VectorData]
+        SNT[System.Numerics.Tensors]
+        SM[SemanticModel Entities]
         PS[ProjectSettings]
-        SM[SemanticModel]
-        SJS[SecureJsonSerializer]
     end
 
-    subgraph "Storage Providers"
-        MEM[In-Memory Store]
-        AIS[Azure AI Search]
-        CDB[Cosmos DB]
-        BLOB[Azure Blob Storage]
-        DISK[Local File System]
-    end
-
-    SKEG --> SK
-    SKEG --> AI
-    EVR --> VD
-    VGS --> LOG
+    %% Main Dependencies
+    VGS --> VIF
+    VGS --> VRM
+    VGS --> SKEG
+    VGS --> EKB
+    VGS --> IVIW
     VGS --> PS
+
+    %% External Dependencies
+    SKEG --> SK
+    SKEG --> MEAI
+    SKIMVIW --> MEVD
+    SKIMVSS --> MEVD
+    IMVSS --> SNT
     VGS --> SM
-    VGS --> SJS
 
-    IMVIW --> MEM
-    AIVIW --> AIS
-    CVIW --> CDB
-    VGS --> BLOB
-    VGS --> DISK
+    %% Data Flow
+    VRM --> EVR
+    VGS --> VGO
+    VIF --> VIO
 
-    classDef component fill:#e1f5fe
+    classDef interface fill:#e1f5fe
+    classDef implementation fill:#f3e5f5
     classDef external fill:#fff3e0
-    classDef storage fill:#f3e5f5
-    
-    class VO,VGS,EG,VIW,VRM,EKB,VIF,VIP,VSS,EVR component
-    class SK,AI,VD,LOG,PS,SM,SJS external
-    class MEM,AIS,CDB,BLOB,DISK storage
+    classDef data fill:#e8f5e8
+
+    class IVO,IVGS,IVIF,IEG,IVIW,IVSS,IVRM,IEKB,IVIP interface
+    class VO,VGS,VIF,SKEG,IMVIW,SKIMVIW,IMVSS,SKIMVSS,VRM,EKB,VIP implementation
+    class SK,MEAI,MEVD,SNT,SM,PS external
+    class EVR,VGO,VIO data
 ```
 
 ## 3. Interface Documentation
 
-| Method/Property | Purpose | Parameters | Return Type | Usage Notes |
-|-----------------|---------|------------|-------------|-------------|
-| **IEmbeddingGenerator.GenerateAsync** | Generate vector embedding from text | `text: string`, `infrastructure: VectorInfrastructure`, `cancellationToken: CancellationToken` | `Task<ReadOnlyMemory<float>>` | Uses Semantic Kernel AI services; returns empty if generation fails |
-| **IVectorIndexWriter.UpsertAsync** | Insert or update vector record | `record: EntityVectorRecord`, `infrastructure: VectorInfrastructure`, `cancellationToken: CancellationToken` | `Task` | Provider-specific implementation; InMemory uses concurrent dictionary |
-| **IVectorSearchService.SearchAsync** | Search for similar vectors | `vector: ReadOnlyMemory<float>`, `topK: int`, `infrastructure: VectorInfrastructure`, `cancellationToken: CancellationToken` | `Task<IEnumerable<(EntityVectorRecord, double)>>` | Returns records with cosine similarity scores; sorted by relevance |
-| **IVectorOrchestrator.GenerateAsync** | Orchestrate complete vector generation | `model: SemanticModel`, `projectPath: DirectoryInfo`, `options: VectorGenerationOptions`, `cancellationToken: CancellationToken` | `Task<int>` | Returns count of processed entities; supports filtering and dry-run mode |
-| **IVectorInfrastructureFactory.Create** | Create provider infrastructure | `settings: VectorIndexSettings`, `repositoryStrategy: string` | `VectorInfrastructure` | Resolves provider based on auto-selection rules and validates compatibility |
-| **IEntityKeyBuilder.BuildKey** | Generate normalized entity key | `modelName: string`, `entityType: string`, `schema: string`, `name: string` | `string` | Creates collision-resistant keys; normalizes whitespace and special characters |
-| **IEntityKeyBuilder.BuildContentHash** | Generate content hash | `content: string` | `string` | SHA256 hash for change detection; lowercase hex format |
-| **IVectorRecordMapper.BuildEntityText** | Transform entity to searchable text | `entity: SemanticModelEntity` | `string` | Includes schema, name, description, and column details for tables |
-| **IVectorRecordMapper.ToRecord** | Convert to vector record | `entity: SemanticModelEntity`, `id: string`, `content: string`, `vector: ReadOnlyMemory<float>`, `contentHash: string` | `EntityVectorRecord` | Creates structured record with metadata for vector storage |
+- INT-001: **Public Interfaces**: Comprehensive interface-based design enabling dependency injection and testability
+- INT-002: **Method/Property Reference**: All public interfaces with detailed method signatures and purposes
+- INT-003: **Events/Callbacks**: Async operation patterns with CancellationToken support for long-running operations
+
+| Interface/Method | Purpose | Parameters | Return Type | Usage Notes |
+|------------------|---------|------------|-------------|-------------|
+| `IVectorOrchestrator.GenerateAsync` | Orchestrate vector generation for semantic model | `SemanticModel model`, `DirectoryInfo projectPath`, `VectorGenerationOptions options`, `CancellationToken cancellationToken` | `Task<int>` | Returns count of processed entities |
+| `IVectorGenerationService.GenerateAsync` | Execute detailed vector generation workflow | `SemanticModel model`, `DirectoryInfo projectPath`, `VectorGenerationOptions options`, `CancellationToken cancellationToken` | `Task<int>` | Core processing logic with entity filtering |
+| `IEmbeddingGenerator.GenerateAsync` | Generate vector embeddings for text content | `string text`, `VectorInfrastructure infrastructure`, `CancellationToken cancellationToken` | `Task<ReadOnlyMemory<float>>` | Uses configured AI embedding model |
+| `IVectorIndexWriter.UpsertAsync` | Store/update vector records in index | `EntityVectorRecord record`, `VectorInfrastructure infrastructure`, `CancellationToken cancellationToken` | `Task` | Provider-specific implementation |
+| `IVectorSearchService.SearchAsync` | Perform similarity search over vectors | `ReadOnlyMemory<float> vector`, `int topK`, `VectorInfrastructure infrastructure`, `CancellationToken cancellationToken` | `Task<IEnumerable<(EntityVectorRecord Record, double Score)>>` | Returns ranked results by similarity |
+| `IVectorRecordMapper.BuildEntityText` | Convert semantic model entity to searchable text | `SemanticModelEntity entity` | `string` | Includes schema, name, description, columns |
+| `IVectorRecordMapper.ToRecord` | Create vector record from entity and embedding | `SemanticModelEntity entity`, `string id`, `string content`, `ReadOnlyMemory<float> vector`, `string contentHash` | `EntityVectorRecord` | Maps to storage format |
+| `IEntityKeyBuilder.BuildKey` | Generate unique identifier for entity | `string modelName`, `string entityType`, `string schema`, `string name` | `string` | Normalized composite key |
+| `IEntityKeyBuilder.BuildContentHash` | Generate content hash for change detection | `string content` | `string` | SHA256 lowercase hex |
+| `IVectorInfrastructureFactory.Create` | Create provider-specific infrastructure config | `VectorIndexSettings settings`, `string repositoryStrategy` | `VectorInfrastructure` | Applies policy-driven selection |
+| `IVectorIndexPolicy.ResolveProvider` | Determine effective vector provider | `VectorIndexSettings settings`, `string repositoryStrategy` | `string` | Auto-selection logic |
+| `IVectorIndexPolicy.Validate` | Validate provider/strategy compatibility | `VectorIndexSettings settings`, `string repositoryStrategy` | `void` | Throws on incompatibility |
 
 ## 4. Implementation Details
 
-### Main Implementation Classes and Responsibilities
-- **IMP-001**: `VectorOrchestrator` - Entry point for vector generation workflows; delegates to `VectorGenerationService`
-- **IMP-002**: `VectorGenerationService` - Core orchestration logic; handles entity filtering, content generation, embedding creation, and persistence
-- **IMP-003**: `SemanticKernelEmbeddingGenerator` - Integrates with Semantic Kernel AI services; gracefully handles service resolution failures
-- **IMP-004**: `InMemoryVectorIndexWriter/SearchService` - Default implementations using concurrent collections and tensor operations
+- IMP-001: **Main Implementation Classes**:
+  - `VectorOrchestrator` - Entry point for vector operations with logging
+  - `VectorGenerationService` - Core business logic handling entity processing, embedding generation, persistence, and indexing
+  - `SemanticKernelEmbeddingGenerator` - AI embedding generation using Microsoft.Extensions.AI
+  - Multiple storage providers: `InMemoryVectorIndexWriter`, `SkInMemoryVectorIndexWriter`
+  - Multiple search implementations: `InMemoryVectorSearchService`, `SkInMemoryVectorSearchService`
 
-### Configuration Requirements and Initialization
-- **IMP-005**: `VectorIndexOptions` configuration section with provider selection, collection naming, and provider-specific settings
-- **IMP-006**: Dependency injection setup requires `ISemanticKernelFactory`, project settings, and provider-specific services
-- **IMP-007**: Validation through `VectorOptionsValidator` ensures configuration correctness at startup
+- IMP-002: **Configuration Requirements**:
+  - `VectorIndexOptions` with provider selection, collection naming, embedding service configuration
+  - `ProjectSettings` integration for repository strategy determination
+  - Semantic Kernel factory for AI service access
+  - JSON serialization for local/blob persistence
 
-### Key Algorithms and Business Logic
-- **IMP-008**: **Auto Provider Selection**: Cosmos repository strategy automatically selects CosmosNoSql provider; others default to InMemory
-- **IMP-009**: **Content Change Detection**: SHA256 hashing prevents unnecessary re-embedding of unchanged entities
-- **IMP-010**: **Entity Text Generation**: Combines schema, name, description, and column information into searchable text representation
-- **IMP-011**: **Similarity Search**: Uses cosine similarity with TensorPrimitives for efficient vector comparison
+- IMP-003: **Key Algorithms**:
+  - Content hash-based change detection to avoid unnecessary reprocessing
+  - Cosine similarity search using `System.Numerics.Tensors`
+  - Entity filtering by type (tables, views, stored procedures) and specific object selection
+  - Batch processing with async/await patterns
 
-### Performance Characteristics and Bottlenecks
-- **IMP-012**: **Embedding Generation**: Primary bottleneck due to AI service round-trips; supports cancellation and error handling
-- **IMP-013**: **In-Memory Storage**: Fast for development but limited by available RAM; uses concurrent collections for thread safety
-- **IMP-014**: **Content Hashing**: Optimizes performance by skipping unchanged entities during incremental updates
+- IMP-004: **Performance Characteristics**:
+  - Memory-efficient using `ReadOnlyMemory<float>` for vectors
+  - Supports dry-run mode for planning
+  - Skip unchanged entities via content hash comparison
+  - Configurable vector dimensions with validation
+  - Concurrent processing potential through async patterns
 
 ## 5. Usage Examples
 
 ### Basic Usage
 
 ```csharp
-// Configure vector services in DI
-services.Configure<VectorIndexOptions>(options =>
+// Basic vector generation
+var options = new VectorGenerationOptions
 {
-    options.Provider = "InMemory";
-    options.CollectionName = "semantic-entities";
-    options.EmbeddingServiceId = "Embeddings";
-});
+    Overwrite = false,
+    DryRun = false,
+    SkipTables = false,
+    SkipViews = true,
+    SkipStoredProcedures = true
+};
 
-// Generate vectors for entire semantic model
 var orchestrator = serviceProvider.GetRequiredService<IVectorOrchestrator>();
-var options = new VectorGenerationOptions { DryRun = false };
 var processedCount = await orchestrator.GenerateAsync(semanticModel, projectPath, options);
+Console.WriteLine($"Processed {processedCount} entities");
 ```
 
 ### Advanced Usage
 
 ```csharp
-// Advanced configuration with Azure AI Search
-services.Configure<VectorIndexOptions>(options =>
+// Advanced configuration with specific entity targeting
+var options = new VectorGenerationOptions
 {
-    options.Provider = "AzureAISearch";
-    options.CollectionName = "genaide-production";
-    options.EmbeddingServiceId = "AzureOpenAI-Embeddings";
-    options.PushOnGenerate = true;
-    options.ProvisionIfMissing = true;
-    options.ExpectedDimensions = 1536;
-    options.AzureAISearch.Endpoint = "https://search.azure.com";
-    options.AzureAISearch.IndexName = "semantic-vectors";
-    options.Hybrid.Enabled = true;
-    options.Hybrid.TextWeight = 0.7;
-    options.Hybrid.VectorWeight = 0.3;
-});
-
-// Selective generation with filtering
-var selectiveOptions = new VectorGenerationOptions
-{
+    Overwrite = true,
+    DryRun = false,
     ObjectType = "table",
     SchemaName = "dbo",
-    ObjectName = "Users",
-    Overwrite = true,
+    ObjectName = "Customers",
+    SkipTables = false,
     SkipViews = true,
     SkipStoredProcedures = true
 };
 
-// Perform vector search
-var searchService = serviceProvider.GetRequiredService<IVectorSearchService>();
-var embeddingGenerator = serviceProvider.GetRequiredService<IEmbeddingGenerator>();
-var infrastructure = infrastructureFactory.Create(vectorSettings, "AzureBlob");
-
-var queryVector = await embeddingGenerator.GenerateAsync("user management table", infrastructure);
-var results = await searchService.SearchAsync(queryVector, topK: 10, infrastructure);
-
-foreach (var (record, score) in results)
+// Configure vector index options
+var vectorOptions = new VectorIndexOptions
 {
-    Console.WriteLine($"Entity: {record.Schema}.{record.Name} (Score: {score:F3})");
-}
+    Provider = "Auto", // Will auto-select based on repository strategy
+    CollectionName = "custom-entities",
+    EmbeddingServiceId = "AzureOpenAI-Embeddings",
+    ExpectedDimensions = 1536,
+    PushOnGenerate = true,
+    ProvisionIfMissing = true
+};
+
+// Dependency injection setup
+services.Configure<VectorIndexOptions>(vectorOptions);
+services.AddSingleton<IVectorOrchestrator, VectorOrchestrator>();
+services.AddSingleton<IVectorGenerationService, VectorGenerationService>();
+services.AddSingleton<IEmbeddingGenerator, SemanticKernelEmbeddingGenerator>();
+services.AddSingleton<IVectorIndexWriter, SkInMemoryVectorIndexWriter>();
+services.AddSingleton<IVectorSearchService, SkInMemoryVectorSearchService>();
+
+var orchestrator = serviceProvider.GetRequiredService<IVectorOrchestrator>();
+await orchestrator.GenerateAsync(semanticModel, projectPath, options);
 ```
 
-### USE-001: Provider-agnostic vector operations with automatic fallback strategies
-### USE-002: Incremental updates using content hashing for change detection
-### USE-003: Multi-provider support allows seamless migration between storage backends
+- USE-001: **Basic Usage**: Simple vector generation with minimal configuration
+- USE-002: **Advanced Configuration**: Provider selection, specific entity targeting, custom collection names
+- USE-003: **Best Practices**: Use dependency injection, configure options through IOptions pattern, leverage async/await with CancellationToken
 
 ## 6. Quality Attributes
 
-### Security
-- **QUA-001**: **Input Validation** - All public methods validate arguments with `ArgumentNullException` and `ArgumentException`
-- **QUA-002**: **Content Hashing** - SHA256 provides cryptographically secure content fingerprinting
-- **QUA-003**: **Secure Serialization** - Uses `ISecureJsonSerializer` for safe persistence of sensitive vector data
-
-### Performance
-- **QUA-004**: **Concurrent Operations** - In-memory implementations use `ConcurrentDictionary` for thread-safe access
-- **QUA-005**: **Change Detection** - Content hashing prevents redundant embedding generation and storage operations
-- **QUA-006**: **Vector Similarity** - Leverages `TensorPrimitives.CosineSimilarity` for optimized mathematical operations
-- **QUA-007**: **Batch Processing** - Supports selective entity processing to minimize resource usage
-
-### Reliability
-- **QUA-008**: **Graceful Degradation** - Embedding failures return empty vectors rather than throwing exceptions
-- **QUA-009**: **Cancellation Support** - All async operations respect `CancellationToken` for clean shutdown
-- **QUA-010**: **Provider Validation** - Configuration validation prevents runtime failures due to misconfiguration
-- **QUA-011**: **Error Isolation** - Per-entity processing prevents single failures from affecting entire batch
-
-### Maintainability
-- **QUA-012**: **Interface Segregation** - Clear separation of concerns through focused interfaces
-- **QUA-013**: **Configuration-Driven** - Provider selection and behavior controlled through strongly-typed options
-- **QUA-014**: **Comprehensive Logging** - Structured logging with scopes for debugging and monitoring
-- **QUA-015**: **Consistent Patterns** - Factory, strategy, and repository patterns provide familiar abstractions
-
-### Extensibility
-- **QUA-016**: **Provider Pluggability** - New vector storage providers can be added through interface implementation
-- **QUA-017**: **Policy Customization** - `IVectorIndexPolicy` allows custom provider selection logic
-- **QUA-018**: **Content Transformation** - `IVectorRecordMapper` enables customization of entity-to-text conversion
-- **QUA-019**: **Validation Hooks** - `IValidateOptions<VectorIndexOptions>` supports custom validation rules
+- QUA-001: **Security**: Content hash validation prevents tampering, secure JSON serialization for sensitive data, input validation on all public methods, no direct file system access outside configured paths
+- QUA-002: **Performance**: Memory-efficient vector handling with `ReadOnlyMemory<float>`, cosine similarity using optimized tensor operations, change detection avoids unnecessary reprocessing, concurrent processing support through async patterns
+- QUA-003: **Reliability**: Comprehensive error handling with specific exceptions, graceful degradation when embedding services unavailable, atomic operations for vector storage, retry patterns through Semantic Kernel
+- QUA-004: **Maintainability**: Interface-based design enables easy testing and mocking, SOLID principles applied throughout, clear separation of concerns, comprehensive logging with structured scopes
+- QUA-005: **Extensibility**: Strategy pattern allows new vector providers without code changes, policy-driven provider selection, pluggable embedding generators, configurable dimensions and collection names
 
 ## 7. Reference Information
 
-### Dependencies
-- **REF-001**: `Microsoft.SemanticKernel` (^1.0.0) - AI embedding generation and orchestration
-- **REF-002**: `Microsoft.Extensions.AI` (^9.0.0) - Modern AI service abstractions and embeddings
-- **REF-003**: `Microsoft.Extensions.VectorData` (^9.0.0) - Vector storage attributes and operations
-- **REF-004**: `Microsoft.Extensions.Logging` (^9.0.0) - Structured logging and diagnostics
-- **REF-005**: `Microsoft.Extensions.Options` (^9.0.0) - Configuration binding and validation
-- **REF-006**: `System.Numerics.Tensors` (^9.0.0) - High-performance tensor operations
+- REF-001: **Dependencies with Versions and Purposes**:
+  - `Microsoft.Extensions.AI` - Modern AI abstractions for embedding generation
+  - `Microsoft.SemanticKernel` - AI orchestration and service management
+  - `Microsoft.Extensions.VectorData` - Vector storage abstractions and implementations
+  - `System.Numerics.Tensors` - High-performance tensor operations for similarity calculations
+  - `Microsoft.Extensions.Logging` - Structured logging throughout component
+  - `System.Text.Json` - JSON serialization for persistence
+  - `System.ComponentModel.DataAnnotations` - Configuration validation
 
-### Configuration Options Reference
+- REF-002: **Complete Configuration Options Reference**:
 
-```json
+```csharp
+public sealed class VectorIndexOptions
 {
-  "VectorIndex": {
-    "Provider": "Auto|InMemory|AzureAISearch|CosmosNoSql",
-    "CollectionName": "genaide-entities",
-    "EmbeddingServiceId": "Embeddings",
-    "PushOnGenerate": true,
-    "ProvisionIfMissing": false,
-    "ExpectedDimensions": 3072,
-    "AllowedForRepository": ["LocalDisk", "AzureBlob", "Cosmos"],
-    "AzureAISearch": {
-      "Endpoint": "https://search.azure.com",
-      "IndexName": "semantic-vectors",
-      "ApiKey": "optional-if-managed-identity"
-    },
-    "CosmosNoSql": {
-      "AccountEndpoint": "https://cosmos.azure.com",
-      "Database": "genaide",
-      "Container": "vectors"
-    },
-    "Hybrid": {
-      "Enabled": true,
-      "TextWeight": 0.7,
-      "VectorWeight": 0.3
-    }
-  }
+    public string Provider { get; init; } = "Auto"; // Auto, InMemory, AzureAISearch, CosmosNoSql
+    public string CollectionName { get; init; } = "genaide-entities";
+    public bool PushOnGenerate { get; init; } = true;
+    public bool ProvisionIfMissing { get; init; } = false;
+    public string[] AllowedForRepository { get; init; } = [];
+    public string EmbeddingServiceId { get; init; } = "Embeddings";
+    public int? ExpectedDimensions { get; init; }
+    public AzureAISearchOptions AzureAISearch { get; init; } = new();
+    public CosmosNoSqlOptions CosmosNoSql { get; init; } = new();
+    public HybridSearchOptions Hybrid { get; init; } = new();
 }
 ```
 
-### Testing Guidelines and Mock Setup
-- **REF-007**: Mock `IEmbeddingGenerator` to return consistent test vectors for predictable unit tests
-- **REF-008**: Use `InMemoryVectorIndexWriter` for integration tests to avoid external dependencies
-- **REF-009**: Test provider selection logic through `IVectorIndexPolicy` with various repository strategies
-- **REF-010**: Validate configuration scenarios using `VectorOptionsValidator` in isolation
+- REF-003: **Testing Guidelines and Mock Setup**:
 
-### Troubleshooting
+```csharp
+// Mock setup for unit testing
+var mockEmbeddingGenerator = new Mock<IEmbeddingGenerator>();
+mockEmbeddingGenerator.Setup(x => x.GenerateAsync(It.IsAny<string>(), It.IsAny<VectorInfrastructure>(), It.IsAny<CancellationToken>()))
+    .ReturnsAsync(new ReadOnlyMemory<float>(new float[1536]));
 
-| Issue | Error Message | Solution |
-|-------|---------------|----------|
-| **Missing Embedding Service** | "No embedding generator service was found" | Verify Semantic Kernel configuration includes embedding service registration |
-| **Provider Validation** | "Cosmos persistence requires CosmosNoSql vector provider" | Use compatible provider combinations per policy constraints |
-| **Configuration Error** | "VectorIndex options are required" | Ensure `VectorIndexOptions` section exists in application configuration |
-| **Empty Vectors** | "Embedding generation returned empty vector" | Check AI service connectivity and API key configuration |
-| **Dimension Mismatch** | Vector dimension validation failures | Verify `ExpectedDimensions` matches actual embedding model output |
+var mockIndexWriter = new Mock<IVectorIndexWriter>();
+mockIndexWriter.Setup(x => x.UpsertAsync(It.IsAny<EntityVectorRecord>(), It.IsAny<VectorInfrastructure>(), It.IsAny<CancellationToken>()))
+    .Returns(Task.CompletedTask);
+```
 
-### Related Documentation Links
-- **REF-011**: [Semantic Model Documentation](semantic-model-documentation.md) - Entity structure and relationships
-- **REF-012**: [Project Model Documentation](project-model-documentation.md) - Configuration and settings management
-- **REF-013**: Microsoft Semantic Kernel Documentation - AI service integration patterns
-- **REF-014**: Microsoft Extensions VectorData Documentation - Vector storage abstractions
+- REF-004: **Troubleshooting Common Issues**:
+  - **Empty vectors returned**: Check embedding service configuration and API connectivity
+  - **Provider selection errors**: Verify repository strategy compatibility with vector provider
+  - **Dimension mismatch**: Ensure `ExpectedDimensions` matches actual embedding model output
+  - **Permission errors**: Verify write access to project directory for local persistence
+  - **Memory usage**: Monitor vector storage size, consider external providers for large datasets
 
-### Change History and Migration Notes
-- **REF-015**: **Version 1.0** (2025-08-10) - Initial implementation with multi-provider support
-- **REF-016**: **Migration Path** - Future versions will support additional providers (Pinecone, Weaviate) through interface extensions
-- **REF-017**: **Breaking Changes** - Provider interface changes will require dependency injection reconfiguration
+- REF-005: **Related Documentation Links**:
+  - [Semantic Model Documentation](semantic-model-documentation.md)
+  - [Project Model Documentation](project-model-documentation.md)
+  - [Microsoft.Extensions.AI Documentation](https://docs.microsoft.com/en-us/dotnet/api/microsoft.extensions.ai)
+  - [Semantic Kernel Documentation](https://docs.microsoft.com/en-us/semantic-kernel/)
+
+- REF-006: **Change History and Migration Notes**:
+  - **Version 1.0**: Initial implementation with InMemory and Semantic Kernel providers
+  - **Future Enhancements**: Azure AI Search integration, Cosmos NoSQL vector support, hybrid search capabilities
+  - **Migration Considerations**: Vector format is forward-compatible, provider changes may require index rebuilding
+
+---
+
+Documentation created by Sonnet 4 using developer-flow-sonnet-4 chat mode on 2025-08-10
