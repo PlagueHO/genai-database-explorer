@@ -62,80 +62,79 @@ flowchart LR
 ```mermaid
 classDiagram
   class IProject {
-    +ProjectDirectory: DirectoryInfo
-    +Settings: ProjectSettings
-  +InitializeProjectDirectory(dir): void
-  +LoadProjectConfiguration(dir): void
+    +ProjectDirectory
+    +Settings
+    +InitializeProjectDirectory()
+    +LoadProjectConfiguration()
   }
 
   class Project {
-    -_configuration: IConfiguration
-    +ProjectDirectory: DirectoryInfo
-    +Settings: ProjectSettings
-  +InitializeProjectDirectory(dir): void
-  +LoadProjectConfiguration(dir): void
-  -InitializeSettings(): void
-  -ValidateSettings(): void
-  -ValidatePersistenceStrategyConfiguration(): void
-  -ValidateOpenAIConfiguration(): void
+    +ProjectDirectory
+    +Settings
+    +InitializeProjectDirectory()
+    +LoadProjectConfiguration()
+    -InitializeSettings()
+    -ValidateSettings()
+    -ValidatePersistenceStrategyConfiguration()
+    -ValidateOpenAIConfiguration()
   }
 
   class ProjectSettings {
-    +SettingsVersion: Version
-    +Database: DatabaseSettings
-    +DataDictionary: DataDictionarySettings
-    +OpenAIService: OpenAIServiceSettings
-    +SemanticModel: SemanticModelSettings
-    +SemanticModelRepository: SemanticModelRepositorySettings
-    +VectorIndex: VectorIndexSettings
+    +SettingsVersion
+    +Database
+    +DataDictionary
+    +OpenAIService
+    +SemanticModel
+    +SemanticModelRepository
+    +VectorIndex
   }
 
   class DatabaseSettings {
-    +Name: string
-    +Description: string
-    +ConnectionString: string
-    +Schema: string
-    +MaxDegreeOfParallelism: int
-    +NotUsedTables: List~string~
-    +NotUsedColumns: List~string~
-    +NotUsedViews: List~string~
-    +NotUsedStoredProcedures: List~string~
+    +Name
+    +Description
+    +ConnectionString
+    +Schema
+    +MaxDegreeOfParallelism
+    +NotUsedTables
+    +NotUsedColumns
+    +NotUsedViews
+    +NotUsedStoredProcedures
   }
 
   class SemanticModelSettings {
-    +PersistenceStrategy: string
-    +MaxDegreeOfParallelism: int
+    +PersistenceStrategy
+    +MaxDegreeOfParallelism
   }
 
   class SemanticModelRepositorySettings {
-    +LocalDisk: LocalDiskConfiguration
-    +AzureBlobStorage: AzureBlobStorageConfiguration
-    +CosmosDb: CosmosDbConfiguration
-    +LazyLoading: LazyLoadingConfiguration
-    +Caching: CachingConfiguration
-    +ChangeTracking: ChangeTrackingConfiguration
-    +PerformanceMonitoring: PerformanceMonitoringConfiguration
-    +MaxConcurrentOperations: int
+    +LocalDisk
+    +AzureBlobStorage
+    +CosmosDb
+    +LazyLoading
+    +Caching
+    +ChangeTracking
+    +PerformanceMonitoring
+    +MaxConcurrentOperations
   }
 
   class OpenAIServiceSettings {
-    +Default: OpenAIServiceDefaultSettings
-    +ChatCompletion: OpenAIServiceChatCompletionSettings
-    +ChatCompletionStructured: OpenAIServiceChatCompletionStructuredSettings
-    +Embedding: OpenAIServiceEmbeddingSettings
+    +Default
+    +ChatCompletion
+    +ChatCompletionStructured
+    +Embedding
   }
 
   class VectorIndexSettings {
-    +Provider: string
-    +CollectionName: string
-    +PushOnGenerate: bool
-    +ProvisionIfMissing: bool
-    +EmbeddingServiceId: string
-  +ExpectedDimensions: int
-  +AllowedForRepository: List~string~
-    +AzureAISearch: AzureAISearchSettings
-    +CosmosNoSql: CosmosNoSqlSettings
-    +Hybrid: HybridSearchSettings
+    +Provider
+    +CollectionName
+    +PushOnGenerate
+    +ProvisionIfMissing
+    +EmbeddingServiceId
+    +ExpectedDimensions
+    +AllowedForRepository
+    +AzureAISearch
+    +CosmosNoSql
+    +Hybrid
   }
 
   IProject <|-- Project
