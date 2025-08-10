@@ -12,6 +12,8 @@ using Azure.Storage.Blobs.Models;
 using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.Models.SemanticModel;
 using GenAIDBExplorer.Core.Repository.Security;
+using GenAIDBExplorer.Core.Repository.DTO;
+using GenAIDBExplorer.Core.Repository.Mappers;
 using GenAIDBExplorer.Core.Security;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -230,7 +232,7 @@ namespace GenAIDBExplorer.Core.Repository
                 var blobPrefix = GetBlobPrefix(modelName);
                 var concurrentTasks = new List<Task>();
 
-                // Save main semantic model document
+                // Save main semantic model document (no embedding)
                 var mainModelTask = SaveBlobAsync($"{blobPrefix}/semanticmodel.json", semanticModel, useEntityConverters: true);
                 concurrentTasks.Add(mainModelTask);
 
@@ -238,7 +240,9 @@ namespace GenAIDBExplorer.Core.Repository
                 foreach (var table in semanticModel.Tables)
                 {
                     var tableName = EntityNameSanitizer.SanitizeEntityName(table.Name);
-                    var tableTask = SaveBlobAsync($"{blobPrefix}/tables/{tableName}.json", table, useEntityConverters: false);
+                    // Wrap with envelope only if embedding exists (Phase 2: none by default)
+                    object tablePersisted = new LocalBlobEntityMapper().ToPersistedEntity(table, null);
+                    var tableTask = SaveBlobAsync($"{blobPrefix}/tables/{tableName}.json", tablePersisted, useEntityConverters: false);
                     concurrentTasks.Add(tableTask);
                 }
 
@@ -246,7 +250,8 @@ namespace GenAIDBExplorer.Core.Repository
                 foreach (var view in semanticModel.Views)
                 {
                     var viewName = EntityNameSanitizer.SanitizeEntityName(view.Name);
-                    var viewTask = SaveBlobAsync($"{blobPrefix}/views/{viewName}.json", view, useEntityConverters: false);
+                    object viewPersisted = new LocalBlobEntityMapper().ToPersistedEntity(view, null);
+                    var viewTask = SaveBlobAsync($"{blobPrefix}/views/{viewName}.json", viewPersisted, useEntityConverters: false);
                     concurrentTasks.Add(viewTask);
                 }
 
@@ -254,7 +259,8 @@ namespace GenAIDBExplorer.Core.Repository
                 foreach (var storedProcedure in semanticModel.StoredProcedures)
                 {
                     var procedureName = EntityNameSanitizer.SanitizeEntityName(storedProcedure.Name);
-                    var procedureTask = SaveBlobAsync($"{blobPrefix}/storedprocedures/{procedureName}.json", storedProcedure, useEntityConverters: false);
+                    object spPersisted = new LocalBlobEntityMapper().ToPersistedEntity(storedProcedure, null);
+                    var procedureTask = SaveBlobAsync($"{blobPrefix}/storedprocedures/{procedureName}.json", spPersisted, useEntityConverters: false);
                     concurrentTasks.Add(procedureTask);
                 }
 
@@ -348,7 +354,32 @@ namespace GenAIDBExplorer.Core.Repository
                         try
                         {
                             var filePath = Path.Combine(tempDir, $"{tableName}.json");
-                            await File.WriteAllTextAsync(filePath, jsonContent);
+
+                            // Support envelope { data, embedding } by detecting a top-level "data" property
+                            if (jsonContent.TrimStart().StartsWith("{", StringComparison.Ordinal))
+                            {
+                                try
+                                {
+                                    using var doc = System.Text.Json.JsonDocument.Parse(jsonContent);
+                                    if (doc.RootElement.TryGetProperty("data", out var dataProp))
+                                    {
+                                        var raw = dataProp.GetRawText();
+                                        await File.WriteAllTextAsync(filePath, raw);
+                                    }
+                                    else
+                                    {
+                                        await File.WriteAllTextAsync(filePath, jsonContent);
+                                    }
+                                }
+                                catch
+                                {
+                                    await File.WriteAllTextAsync(filePath, jsonContent);
+                                }
+                            }
+                            else
+                            {
+                                await File.WriteAllTextAsync(filePath, jsonContent);
+                            }
                             await table.LoadModelAsync(new DirectoryInfo(tempDir));
                         }
                         finally
@@ -371,7 +402,30 @@ namespace GenAIDBExplorer.Core.Repository
                         try
                         {
                             var filePath = Path.Combine(tempDir, $"{viewName}.json");
-                            await File.WriteAllTextAsync(filePath, jsonContent);
+                            if (jsonContent.TrimStart().StartsWith("{", StringComparison.Ordinal))
+                            {
+                                try
+                                {
+                                    using var doc = System.Text.Json.JsonDocument.Parse(jsonContent);
+                                    if (doc.RootElement.TryGetProperty("data", out var dataProp))
+                                    {
+                                        var raw = dataProp.GetRawText();
+                                        await File.WriteAllTextAsync(filePath, raw);
+                                    }
+                                    else
+                                    {
+                                        await File.WriteAllTextAsync(filePath, jsonContent);
+                                    }
+                                }
+                                catch
+                                {
+                                    await File.WriteAllTextAsync(filePath, jsonContent);
+                                }
+                            }
+                            else
+                            {
+                                await File.WriteAllTextAsync(filePath, jsonContent);
+                            }
                             await view.LoadModelAsync(new DirectoryInfo(tempDir));
                         }
                         finally
@@ -394,7 +448,30 @@ namespace GenAIDBExplorer.Core.Repository
                         try
                         {
                             var filePath = Path.Combine(tempDir, $"{procedureName}.json");
-                            await File.WriteAllTextAsync(filePath, jsonContent);
+                            if (jsonContent.TrimStart().StartsWith("{", StringComparison.Ordinal))
+                            {
+                                try
+                                {
+                                    using var doc = System.Text.Json.JsonDocument.Parse(jsonContent);
+                                    if (doc.RootElement.TryGetProperty("data", out var dataProp))
+                                    {
+                                        var raw = dataProp.GetRawText();
+                                        await File.WriteAllTextAsync(filePath, raw);
+                                    }
+                                    else
+                                    {
+                                        await File.WriteAllTextAsync(filePath, jsonContent);
+                                    }
+                                }
+                                catch
+                                {
+                                    await File.WriteAllTextAsync(filePath, jsonContent);
+                                }
+                            }
+                            else
+                            {
+                                await File.WriteAllTextAsync(filePath, jsonContent);
+                            }
                             await storedProcedure.LoadModelAsync(new DirectoryInfo(tempDir));
                         }
                         finally

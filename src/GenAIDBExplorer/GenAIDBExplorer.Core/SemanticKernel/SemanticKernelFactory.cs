@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.Embeddings;
 
 namespace GenAIDBExplorer.Core.SemanticKernel;
 
@@ -37,6 +38,9 @@ public class SemanticKernelFactory(
             _project.Settings.OpenAIService.Default.AzureOpenAIEndpoint,
             _project.Settings.OpenAIService.Default.ServiceType);
         AddChatCompletionService(kernelBuilder, _project.Settings.OpenAIService.Default, _project.Settings.OpenAIService.ChatCompletionStructured, "ChatCompletionStructured");
+
+        // Add Embedding service (obsolete SK API fallback). ServiceId should match VectorIndexOptions default "Embeddings".
+        AddEmbeddingService(kernelBuilder, _project.Settings.OpenAIService.Default, _project.Settings.OpenAIService.Embedding, serviceId: "Embeddings");
 
         var kernel = kernelBuilder.Build();
         _logger.LogDebug("Semantic Kernel instance created successfully");
@@ -93,4 +97,55 @@ public class SemanticKernelFactory(
             _logger.LogDebug("Successfully added OpenAI chat completion service: {ServiceId}", serviceId);
         }
     }
+
+    /// <summary>
+    /// Adds a text embedding generation service using SK's embedding generation registration (obsolete path) so that
+    /// it can be adapted to Microsoft.Extensions.AI IEmbeddingGenerator at runtime.
+    /// </summary>
+    // Suppress SK experimental diagnostics for embedding generator registration
+    #pragma warning disable SKEXP0010 // Evaluation-only APIs subject to change
+    private void AddEmbeddingService(
+        IKernelBuilder kernelBuilder,
+        OpenAIServiceDefaultSettings defaultSettings,
+        IOpenAIServiceEmbeddingSettings embeddingSettings,
+        string serviceId)
+    {
+        if (defaultSettings.ServiceType == "AzureOpenAI")
+        {
+            var deploymentId = embeddingSettings.AzureOpenAIDeploymentId;
+            var endpoint = defaultSettings.AzureOpenAIEndpoint;
+            var apiKey = defaultSettings.AzureOpenAIKey;
+
+            if (string.IsNullOrWhiteSpace(deploymentId) || string.IsNullOrWhiteSpace(endpoint) || string.IsNullOrWhiteSpace(apiKey))
+            {
+                _logger.LogWarning("Skipping Azure OpenAI embedding registration due to missing configuration. DeploymentId present: {HasDeployment}, Endpoint present: {HasEndpoint}",
+                    !string.IsNullOrWhiteSpace(deploymentId), !string.IsNullOrWhiteSpace(endpoint));
+                return; // Do not throw during tests or when embeddings are not configured
+            }
+
+            kernelBuilder.AddAzureOpenAIEmbeddingGenerator(
+                deploymentName: deploymentId,
+                endpoint: endpoint,
+                apiKey: apiKey,
+                serviceId: serviceId);
+        }
+        else
+        {
+            var modelId = embeddingSettings.ModelId;
+            var apiKey = defaultSettings.OpenAIKey;
+
+            if (string.IsNullOrWhiteSpace(modelId) || string.IsNullOrWhiteSpace(apiKey))
+            {
+                _logger.LogWarning("Skipping OpenAI embedding registration due to missing configuration. ModelId present: {HasModelId}",
+                    !string.IsNullOrWhiteSpace(modelId));
+                return; // Do not throw during tests or when embeddings are not configured
+            }
+
+            kernelBuilder.AddOpenAIEmbeddingGenerator(
+                modelId: modelId,
+                apiKey: apiKey,
+                serviceId: serviceId);
+        }
+    }
+    #pragma warning restore SKEXP0010
 }

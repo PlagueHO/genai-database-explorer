@@ -41,7 +41,7 @@ Assumptions: .NET 9, C# 11+, DI, async/await, existing project settings and DI p
 - Vector Store Connector: SK connector implementing VectorData abstractions.
 - Local/Blob Strategy: Semantic model persisted as JSON files on disk or in Azure Blob.
 - Cosmos Strategy: Semantic model persisted in Azure Cosmos DB for NoSQL.
-- In-Memory Store: Volatile vector store for testing/dev.
+- InMemory Store: Semantic Kernel InMemory vector store connector used for testing/dev (Volatile is legacy/obsolete).
 - Entity: SemanticModelEntity (Table, View, StoredProcedure) within the semantic model.
 
 ## 3. Requirements, Constraints & Guidelines
@@ -50,7 +50,7 @@ Assumptions: .NET 9, C# 11+, DI, async/await, existing project settings and DI p
 
 - REQ-001: Generate embeddings for entities based on enriched descriptions and structural context.
 - REQ-002: Use Microsoft.Extensions.VectorData.Abstractions for record/collection modeling.
-- REQ-003: Use Semantic Kernel vector-store connectors for Cosmos DB NoSQL, Azure AI Search, and an in-memory connector for tests.
+- REQ-003: Use Semantic Kernel vector-store connectors for Cosmos DB NoSQL, Azure AI Search, and the SK InMemory connector for tests/dev. Do not implement a custom in-memory indexer. Do not use Microsoft.Extensions.AI for vector storage.
 - REQ-004: Provide a new CLI command generate-vectors to compute/update embeddings post enrich-model and data-dictionary.
 - REQ-005: For Local/Blob strategies, persist embedding floats and metadata with the entity JSON; optionally push to external index (AI Search or In-Memory).
 - REQ-006: For Cosmos strategy, store vectors through the Cosmos NoSQL connector; do not duplicate floats in entity JSON; keep embedding metadata only.
@@ -77,6 +77,7 @@ Assumptions: .NET 9, C# 11+, DI, async/await, existing project settings and DI p
 - CON-002: Cosmos strategy must use Cosmos NoSQL vector index; do not support external vector indices concurrently.
 - CON-003: Local/Blob may use external index (AI Search) or in-memory; floats must still be persisted locally.
 - CON-004: Embedding dimension must match the configured embedding model.
+- CON-005: For in-memory vectors, use the SK InMemory connector via DI (services.AddInMemoryVectorStore()) or direct types (InMemoryVectorStore/InMemoryCollection). The Volatile connector is obsolete and must not be used.
 
 ### Guidelines
 
@@ -310,6 +311,7 @@ public enum VectorIndexProvider
 ### Technology Platform Dependencies
 
 - PLT-001: .NET 9; Microsoft.SemanticKernel; Microsoft.Extensions.VectorData.Abstractions.
+- PLT-002: Microsoft.SemanticKernel.Connectors.InMemory for in-memory vector store support (prefer DI: services.AddInMemoryVectorStore()).
 
 ### Compliance Dependencies
 
@@ -490,7 +492,7 @@ dotnet run --project GenAIDBExplorer.Console/ -- generate-vectors --project d:/t
 
 ### 12.18 InMemory vs Volatile
 
-- Prefer InMemory connector for tests/dev. Volatile is legacy; referenced only for historical docs.
+- Prefer the SK InMemory connector for tests/dev. Volatile is legacy/obsolete; referenced only for historical docs. Wire via services.AddInMemoryVectorStore() in DI, or use InMemoryVectorStore/InMemoryCollection directly when DI is not available.
 
 ### 12.19 Reconcile-index CLI (Issue 5)
 
@@ -689,4 +691,3 @@ public sealed class VectorOptionsValidator : IValidateOptions<VectorIndexOptions
   }
 }
 ```
-

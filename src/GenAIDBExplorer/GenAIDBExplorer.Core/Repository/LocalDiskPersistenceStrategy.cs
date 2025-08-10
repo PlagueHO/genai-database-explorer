@@ -3,8 +3,12 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using GenAIDBExplorer.Core.Models.SemanticModel;
+using GenAIDBExplorer.Core.Repository.Security;
+using GenAIDBExplorer.Core.Repository.DTO;
+using GenAIDBExplorer.Core.Repository.Mappers;
 using GenAIDBExplorer.Core.Security;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace GenAIDBExplorer.Core.Repository
 {
@@ -14,11 +18,25 @@ namespace GenAIDBExplorer.Core.Repository
     public class LocalDiskPersistenceStrategy : ILocalDiskPersistenceStrategy
     {
         private readonly ILogger<LocalDiskPersistenceStrategy> _logger;
+        private readonly ISecureJsonSerializer _secureJsonSerializer;
         private static readonly SemaphoreSlim _concurrencyLock = new(1, 1);
 
         public LocalDiskPersistenceStrategy(ILogger<LocalDiskPersistenceStrategy> logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            // Back-compat ctor: instantiate a default secure serializer
+            _secureJsonSerializer = new SecureJsonSerializer(new NullLogger<SecureJsonSerializer>());
+        }
+
+        /// <summary>
+        /// Preferred constructor with secure JSON serializer injection.
+        /// </summary>
+        public LocalDiskPersistenceStrategy(
+            ILogger<LocalDiskPersistenceStrategy> logger,
+            ISecureJsonSerializer secureJsonSerializer)
+        {
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _secureJsonSerializer = secureJsonSerializer ?? throw new ArgumentNullException(nameof(secureJsonSerializer));
         }
 
         /// <summary>
@@ -46,8 +64,13 @@ namespace GenAIDBExplorer.Core.Repository
 
                 try
                 {
-                    // Save to temporary location first
+                    // Save to temporary location first using domain serializer for main model and entities
                     await semanticModel.SaveModelAsync(tempPath);
+
+                    // Phase 2/3 security: re-write all JSON (semanticmodel + entities) via secure serializer.
+                    // - Preserves existing structure when no embeddings are present.
+                    // - Prepares for envelope format { data, embedding } when embeddings are available.
+                    await RewriteFilesWithSecureSerializerAsync(semanticModel, tempPath);
 
                     // Generate index file
                     await GenerateIndexFileAsync(semanticModel, tempPath);
@@ -89,6 +112,75 @@ namespace GenAIDBExplorer.Core.Repository
         }
 
         /// <summary>
+        /// Re-writes the semantic model and entity files in the given folder using the secure JSON serializer,
+        /// preserving current format (no envelope) when no embeddings are provided.
+        /// </summary>
+        private async Task RewriteFilesWithSecureSerializerAsync(SemanticModel semanticModel, DirectoryInfo tempPath)
+        {
+            // Re-write semanticmodel.json using secure serializer and domain converters
+            var semanticModelJsonPath = Path.Combine(tempPath.FullName, "semanticmodel.json");
+            var modelJsonOptions = new JsonSerializerOptions { WriteIndented = true };
+            modelJsonOptions.Converters.Add(new Models.SemanticModel.JsonConverters.SemanticModelTableJsonConverter());
+            modelJsonOptions.Converters.Add(new Models.SemanticModel.JsonConverters.SemanticModelViewJsonConverter());
+            modelJsonOptions.Converters.Add(new Models.SemanticModel.JsonConverters.SemanticModelStoredProcedureJsonConverter());
+
+            var secureModelJson = await _secureJsonSerializer.SerializeAsync(semanticModel, modelJsonOptions);
+            await File.WriteAllTextAsync(semanticModelJsonPath, secureModelJson, Encoding.UTF8);
+
+            var mapper = new LocalBlobEntityMapper();
+            var entityJsonOptions = new JsonSerializerOptions { WriteIndented = true };
+
+            // Tables
+            var tablesFolderPath = new DirectoryInfo(Path.Combine(tempPath.FullName, "tables"));
+            if (Directory.Exists(tablesFolderPath.FullName))
+            {
+                foreach (var table in semanticModel.Tables)
+                {
+                    var filePath = Path.Combine(tablesFolderPath.FullName, $"{table.Schema}.{table.Name}.json");
+                    if (File.Exists(filePath))
+                    {
+                        // No embeddings at this layer yet; pass null so mapper returns raw entity.
+                        var persisted = mapper.ToPersistedEntity(table, null);
+                        var json = await _secureJsonSerializer.SerializeAsync(persisted, entityJsonOptions);
+                        await File.WriteAllTextAsync(filePath, json, Encoding.UTF8);
+                    }
+                }
+            }
+
+            // Views
+            var viewsFolderPath = new DirectoryInfo(Path.Combine(tempPath.FullName, "views"));
+            if (Directory.Exists(viewsFolderPath.FullName))
+            {
+                foreach (var view in semanticModel.Views)
+                {
+                    var filePath = Path.Combine(viewsFolderPath.FullName, $"{view.Schema}.{view.Name}.json");
+                    if (File.Exists(filePath))
+                    {
+                        var persisted = mapper.ToPersistedEntity(view, null);
+                        var json = await _secureJsonSerializer.SerializeAsync(persisted, entityJsonOptions);
+                        await File.WriteAllTextAsync(filePath, json, Encoding.UTF8);
+                    }
+                }
+            }
+
+            // Stored Procedures
+            var proceduresFolderPath = new DirectoryInfo(Path.Combine(tempPath.FullName, "storedprocedures"));
+            if (Directory.Exists(proceduresFolderPath.FullName))
+            {
+                foreach (var sp in semanticModel.StoredProcedures)
+                {
+                    var filePath = Path.Combine(proceduresFolderPath.FullName, $"{sp.Schema}.{sp.Name}.json");
+                    if (File.Exists(filePath))
+                    {
+                        var persisted = mapper.ToPersistedEntity(sp, null);
+                        var json = await _secureJsonSerializer.SerializeAsync(persisted, entityJsonOptions);
+                        await File.WriteAllTextAsync(filePath, json, Encoding.UTF8);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Loads the semantic model from the specified path with security validation.
         /// </summary>
         public async Task<SemanticModel> LoadModelAsync(DirectoryInfo modelPath)
@@ -105,12 +197,106 @@ namespace GenAIDBExplorer.Core.Repository
 
             try
             {
-                // Use existing SemanticModel load functionality
-                var placeholder = new SemanticModel(string.Empty, string.Empty);
-                var loadedModel = await placeholder.LoadModelAsync(validatedPath);
+                // Load main semantic model (use System.Text.Json to preserve backward compatibility)
+                var semanticModelFile = Path.Combine(validatedPath.FullName, "semanticmodel.json");
+                if (!File.Exists(semanticModelFile))
+                {
+                    throw new FileNotFoundException("The semantic model file was not found.", semanticModelFile);
+                }
 
-                _logger.LogInformation("Successfully loaded semantic model '{ModelName}'", loadedModel.Name);
-                return loadedModel;
+                var json = await File.ReadAllTextAsync(semanticModelFile, Encoding.UTF8);
+                // Parse and deserialize without applying input sanitizer to the entire JSON payload
+                // to avoid false positives on legitimate model content.
+                using (var _ = JsonDocument.Parse(json)) { }
+                var jsonOptions = new JsonSerializerOptions { WriteIndented = true };
+                var semanticModel = JsonSerializer.Deserialize<SemanticModel>(json, jsonOptions)
+                    ?? throw new InvalidOperationException("Failed to deserialize the semantic model.");
+
+                // Load entities (tables, views, stored procedures) supporting envelope { data, embedding }
+                var loadTasks = new List<Task>();
+
+                // Tables
+                var tablesFolderPath = new DirectoryInfo(Path.Combine(validatedPath.FullName, "tables"));
+                if (Directory.Exists(tablesFolderPath.FullName))
+                {
+                    foreach (var table in semanticModel.Tables)
+                    {
+                        var tableFile = Path.Combine(tablesFolderPath.FullName, $"{table.Schema}.{table.Name}.json");
+                        loadTasks.Add(LoadEntityFileAsync(tableFile, async rawJson =>
+                        {
+                            var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+                            Directory.CreateDirectory(tempDir);
+                            try
+                            {
+                                var tempFile = Path.Combine(tempDir, $"{table.Schema}.{table.Name}.json");
+                                var contentJson = ExtractEnvelopeDataOrPassThrough(rawJson);
+                                await File.WriteAllTextAsync(tempFile, contentJson, Encoding.UTF8);
+                                await table.LoadModelAsync(new DirectoryInfo(tempDir));
+                            }
+                            finally
+                            {
+                                if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true);
+                            }
+                        }));
+                    }
+                }
+
+                // Views
+                var viewsFolderPath = new DirectoryInfo(Path.Combine(validatedPath.FullName, "views"));
+                if (Directory.Exists(viewsFolderPath.FullName))
+                {
+                    foreach (var view in semanticModel.Views)
+                    {
+                        var viewFile = Path.Combine(viewsFolderPath.FullName, $"{view.Schema}.{view.Name}.json");
+                        loadTasks.Add(LoadEntityFileAsync(viewFile, async rawJson =>
+                        {
+                            var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+                            Directory.CreateDirectory(tempDir);
+                            try
+                            {
+                                var tempFile = Path.Combine(tempDir, $"{view.Schema}.{view.Name}.json");
+                                var contentJson = ExtractEnvelopeDataOrPassThrough(rawJson);
+                                await File.WriteAllTextAsync(tempFile, contentJson, Encoding.UTF8);
+                                await view.LoadModelAsync(new DirectoryInfo(tempDir));
+                            }
+                            finally
+                            {
+                                if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true);
+                            }
+                        }));
+                    }
+                }
+
+                // Stored Procedures
+                var proceduresFolderPath = new DirectoryInfo(Path.Combine(validatedPath.FullName, "storedprocedures"));
+                if (Directory.Exists(proceduresFolderPath.FullName))
+                {
+                    foreach (var sp in semanticModel.StoredProcedures)
+                    {
+                        var spFile = Path.Combine(proceduresFolderPath.FullName, $"{sp.Schema}.{sp.Name}.json");
+                        loadTasks.Add(LoadEntityFileAsync(spFile, async rawJson =>
+                        {
+                            var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+                            Directory.CreateDirectory(tempDir);
+                            try
+                            {
+                                var tempFile = Path.Combine(tempDir, $"{sp.Schema}.{sp.Name}.json");
+                                var contentJson = ExtractEnvelopeDataOrPassThrough(rawJson);
+                                await File.WriteAllTextAsync(tempFile, contentJson, Encoding.UTF8);
+                                await sp.LoadModelAsync(new DirectoryInfo(tempDir));
+                            }
+                            finally
+                            {
+                                if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true);
+                            }
+                        }));
+                    }
+                }
+
+                await Task.WhenAll(loadTasks);
+
+                _logger.LogInformation("Successfully loaded semantic model '{ModelName}'", semanticModel.Name);
+                return semanticModel;
             }
             catch (Exception ex) when (ex is FileNotFoundException || ex is DirectoryNotFoundException)
             {
@@ -122,6 +308,34 @@ namespace GenAIDBExplorer.Core.Repository
                 _logger.LogError(ex, "Failed to load semantic model from path '{Path}'", validatedPath.FullName);
                 throw new InvalidOperationException($"Failed to load semantic model: {ex.Message}", ex);
             }
+        }
+
+        private static async Task LoadEntityFileAsync(string filePath, Func<string, Task> processJson)
+        {
+            if (!File.Exists(filePath))
+            {
+                // Missing entity file is non-fatal; skip
+                return;
+            }
+            var json = await File.ReadAllTextAsync(filePath, Encoding.UTF8);
+            await processJson(json);
+        }
+
+        private static string ExtractEnvelopeDataOrPassThrough(string jsonContent)
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(jsonContent);
+                if (doc.RootElement.ValueKind == JsonValueKind.Object && doc.RootElement.TryGetProperty("data", out var dataProp))
+                {
+                    return dataProp.GetRawText();
+                }
+            }
+            catch
+            {
+                // Fallback to pass-through on any parse error
+            }
+            return jsonContent;
         }
 
         /// <summary>
@@ -269,9 +483,6 @@ namespace GenAIDBExplorer.Core.Repository
             }
         }
 
-        /// <summary>
-        /// Generates an index.json file containing metadata about the semantic model structure.
-        /// </summary>
         private async Task GenerateIndexFileAsync(SemanticModel semanticModel, DirectoryInfo modelPath)
         {
             var index = new
@@ -309,7 +520,7 @@ namespace GenAIDBExplorer.Core.Repository
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             };
 
-            var indexJson = JsonSerializer.Serialize(index, jsonOptions);
+            var indexJson = await _secureJsonSerializer.SerializeAsync(index, jsonOptions);
             var indexPath = Path.Combine(modelPath.FullName, "index.json");
 
             await File.WriteAllTextAsync(indexPath, indexJson, Encoding.UTF8);
