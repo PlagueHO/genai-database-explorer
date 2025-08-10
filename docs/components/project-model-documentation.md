@@ -96,10 +96,10 @@ classDiagram
     +ConnectionString: string
     +Schema: string
     +MaxDegreeOfParallelism: int
-    +NotUsedTables: List<string>
-    +NotUsedColumns: List<string>
-    +NotUsedViews: List<string>
-    +NotUsedStoredProcedures: List<string>
+    +NotUsedTables: List~string~
+    +NotUsedColumns: List~string~
+    +NotUsedViews: List~string~
+    +NotUsedStoredProcedures: List~string~
   }
 
   class SemanticModelSettings {
