@@ -64,20 +64,20 @@ classDiagram
   class IProject {
     +ProjectDirectory: DirectoryInfo
     +Settings: ProjectSettings
-    +InitializeProjectDirectory(dir)
-    +LoadProjectConfiguration(dir)
+  +InitializeProjectDirectory(dir): void
+  +LoadProjectConfiguration(dir): void
   }
 
   class Project {
     -_configuration: IConfiguration
     +ProjectDirectory: DirectoryInfo
     +Settings: ProjectSettings
-    +InitializeProjectDirectory(dir)
-    +LoadProjectConfiguration(dir)
-    -InitializeSettings()
-    -ValidateSettings()
-    -ValidatePersistenceStrategyConfiguration()
-    -ValidateOpenAIConfiguration()
+  +InitializeProjectDirectory(dir): void
+  +LoadProjectConfiguration(dir): void
+  -InitializeSettings(): void
+  -ValidateSettings(): void
+  -ValidatePersistenceStrategyConfiguration(): void
+  -ValidateOpenAIConfiguration(): void
   }
 
   class ProjectSettings {
@@ -131,14 +131,14 @@ classDiagram
     +PushOnGenerate: bool
     +ProvisionIfMissing: bool
     +EmbeddingServiceId: string
-    +ExpectedDimensions: int?
-    +AllowedForRepository: string[]
+  +ExpectedDimensions: int
+  +AllowedForRepository: List~string~
     +AzureAISearch: AzureAISearchSettings
     +CosmosNoSql: CosmosNoSqlSettings
     +Hybrid: HybridSearchSettings
   }
 
-  IProject <|.. Project
+  IProject <|-- Project
   Project --> ProjectSettings
   ProjectSettings --> DatabaseSettings
   ProjectSettings --> SemanticModelSettings
