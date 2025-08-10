@@ -2,313 +2,317 @@
 title: Project Model - Technical Documentation
 component_path: src/GenAIDBExplorer/GenAIDBExplorer.Core/Models/Project/
 version: 1.0
-date_created: 2025-01-13
-last_updated: 2025-01-13
-owner: GenAI Database Explorer Core Team
-tags: [component, model, configuration, validation, project-management, settings]
+date_created: 2025-01-10
+owner: Core Platform
+tags: [component, model, configuration, .NET, C#]
 ---
 
-The Project Model component provides a comprehensive configuration and project management system for the GenAI Database Explorer. It handles project initialization, configuration loading, validation, and settings management across multiple persistence strategies and AI service configurations.
+The Project Model encapsulates project-scoped configuration and utilities for GenAIDBExplorer. It loads, validates, and exposes the project's settings from settings.json and provides helpers for initializing a project directory.
 
 ## 1. Component Overview
 
 ### Purpose/Responsibility
 
-- OVR-001: Manages project lifecycle including initialization, configuration loading, and validation
-- OVR-002: Provides a unified interface for accessing all project settings including database, AI services, and persistence configurations
-- OVR-003: Ensures data integrity through comprehensive validation of configuration settings and cross-component dependencies
+- OVR-001: Centralize access to project configuration via strongly-typed settings
+- OVR-002: Initialize a new project folder structure from the built-in DefaultProject template
+- OVR-003: Provide validated configuration for downstream services (database, OpenAI, repositories, vector index)
 
-## 2. Architecture Section
+### Scope
 
-- ARC-001: **Configuration Pattern** - Uses Microsoft.Extensions.Configuration for JSON-based settings management
-- ARC-002: **Strategy Pattern** - Implements configurable persistence strategies (LocalDisk, AzureBlob, CosmosDB)
-- ARC-003: **Validation Pattern** - Leverages Data Annotations with custom validation attributes for comprehensive settings validation
-- ARC-004: **Dependency Injection** - Designed for DI container integration with ILogger and IProject interface
-- ARC-005: **Resource Management** - Uses ResourceManager for localized error and log messages
+- **Included**: Reading/binding settings.json, validation, DI-friendly access (IProject), directory initialization utilities
+- **Excluded**: Actual AI operations, repository implementations, database connectivity
+
+### System Context and Relationships
+
+- Used by CLI command handlers and providers to access configuration (e.g., SemanticKernelFactory, repositories)
+
+## 2. Architecture
+
+### Design Patterns
+
+- **ARC-001**: Interface + implementation (IProject + Project) using Dependency Injection and Single Responsibility Principle
+- **ARC-002**: Validation attributes + ValidationContext for robust config validation
+- **ARC-003**: Options-like binding pattern via Microsoft.Extensions.Configuration
+- **ARC-004**: Factory method pattern in ProjectUtils for directory operations
+
+### Dependencies
+
+- **Internal**: ProjectSettings and nested settings types; ProjectUtils helpers; resource-based logging strings
+- **External**: Microsoft.Extensions.Configuration, Microsoft.Extensions.Logging, System.ComponentModel.DataAnnotations
+
+### Component Interactions
+
+- LoadProjectConfiguration builds IConfiguration from project directory and binds sections to ProjectSettings
+- ValidateSettings enforces constraints including strategy-specific checks for persistence and OpenAI
+- InitializeProjectDirectory copies DefaultProject into an empty target folder
 
 ### Component Structure and Dependencies Diagram
 
 ```mermaid
-graph TD
+flowchart TD
     subgraph "Project Model Component"
-        A[Project] --> B[ProjectSettings]
-        A --> C[IProject Interface]
-        B --> D[DatabaseSettings]
-        B --> E[DataDictionarySettings]
-        B --> F[SemanticModelSettings]
-        B --> G[OpenAIServiceSettings]
-        B --> H[SemanticModelRepositorySettings]
+        IProject[IProject Interface]
+        Project[Project Class]
+        ProjectSettings[ProjectSettings]
+        ProjectUtils[ProjectUtils]
         
-        H --> I[LocalDiskConfiguration]
-        H --> J[AzureBlobStorageConfiguration]
-        H --> K[CosmosDbConfiguration]
+        IProject --> Project
+        Project --> ProjectSettings
+        Project --> ProjectUtils
+    end
+
+    subgraph "Settings Configuration"
+        DatabaseSettings[DatabaseSettings]
+        OpenAISettings[OpenAIServiceSettings]
+        SemanticModelSettings[SemanticModelSettings]
+        VectorIndexSettings[VectorIndexSettings]
+        RepositorySettings[SemanticModelRepositorySettings]
+        DataDictionarySettings[DataDictionarySettings]
         
-        G --> L[OpenAIServiceDefaultSettings]
-        G --> M[OpenAIServiceChatCompletionSettings]
-        G --> N[OpenAIServiceEmbeddingSettings]
-        
-        A --> O[ProjectUtils]
-        A --> P[NotEmptyOrWhitespaceAttribute]
-        A --> Q[RequiredOnPropertyValueAttribute]
+        ProjectSettings --> DatabaseSettings
+        ProjectSettings --> OpenAISettings
+        ProjectSettings --> SemanticModelSettings
+        ProjectSettings --> VectorIndexSettings
+        ProjectSettings --> RepositorySettings
+        ProjectSettings --> DataDictionarySettings
     end
 
     subgraph "External Dependencies"
-        R[Microsoft.Extensions.Configuration]
-        S[Microsoft.Extensions.Logging]
-        T[System.ComponentModel.DataAnnotations]
-        U[System.Resources.ResourceManager]
-        V[DirectoryInfo/FileSystem]
+        IConfiguration[Microsoft.Extensions.Configuration]
+        ILogger[Microsoft.Extensions.Logging]
+        Validation[System.ComponentModel.DataAnnotations]
+        FileSystem[File System - settings.json]
+        DefaultProject[DefaultProject Template]
     end
 
-    subgraph "Validation System"
-        W[ValidationContext]
-        X[Validator.ValidateObject]
-        Y[Custom Validation Attributes]
-    end
+    Project --> IConfiguration
+    Project --> ILogger
+    Project --> Validation
+    Project --> FileSystem
+    Project --> DefaultProject
 
-    A --> R
-    A --> S
-    A --> T
-    A --> U
-    A --> V
-    P --> T
-    Q --> T
-    A --> W
-    A --> X
-    A --> Y
-
-    classDiagram
-        class Project {
-            +ProjectSettings Settings
-            +DirectoryInfo ProjectDirectory
-            +InitializeProjectDirectory(DirectoryInfo): void
-            +LoadProjectConfiguration(DirectoryInfo): void
-            -InitializeSettings(): void
-            -ValidateSettings(): void
-            -ValidatePersistenceStrategyConfiguration(): void
-        }
+    subgraph "Repository Strategies"
+        LocalDisk[LocalDiskConfiguration]
+    AzureBlob[AzureBlobStorageConfiguration]
+        CosmosDb[CosmosDbConfiguration]
         
+        RepositorySettings --> LocalDisk
+        RepositorySettings --> AzureBlob
+        RepositorySettings --> CosmosDb
+    end
+```
+
+```mermaid
+classDiagram
         class IProject {
-            <<interface>>
-            +ProjectSettings Settings
-            +DirectoryInfo ProjectDirectory
-            +InitializeProjectDirectory(DirectoryInfo): void
-            +LoadProjectConfiguration(DirectoryInfo): void
+            +ProjectDirectory
+            +Settings
+            +InitializeProjectDirectory()
+            +LoadProjectConfiguration()
         }
-        
+
+        class Project {
+            +ProjectDirectory
+            +Settings
+            +InitializeProjectDirectory()
+            +LoadProjectConfiguration()
+            -InitializeSettings()
+            -ValidateSettings()
+            -ValidatePersistenceStrategyConfiguration()
+            -ValidateOpenAIConfiguration()
+        }
+
         class ProjectSettings {
-            +Version SettingsVersion
-            +DatabaseSettings Database
-            +DataDictionarySettings DataDictionary
-            +OpenAIServiceSettings OpenAIService
-            +SemanticModelSettings SemanticModel
-            +SemanticModelRepositorySettings SemanticModelRepository
+            +SettingsVersion
+            +Database
+            +DataDictionary
+            +OpenAIService
+            +SemanticModel
+            +SemanticModelRepository
+            +VectorIndex
         }
-        
-        class SemanticModelSettings {
-            +string PersistenceStrategy
-            +int MaxDegreeOfParallelism
+
+        class DatabaseSettings {
+            +Name
+            +Description
+            +ConnectionString
+            +Schema
+            +MaxDegreeOfParallelism
+            +NotUsedTables
+            +NotUsedColumns
+            +NotUsedViews
+            +NotUsedStoredProcedures
         }
-        
-        Project ..|> IProject
-        Project --> ProjectSettings
-        ProjectSettings --> SemanticModelSettings
+
+        class SemanticModelRepositorySettings {
+            +LocalDisk
+            +AzureBlobStorage
+            +CosmosDb
+            +LazyLoading
+            +Caching
+            +ChangeTracking
+            +PerformanceMonitoring
+            +MaxConcurrentOperations
+        }
+
+    IProject <|-- Project
+    Project --> ProjectSettings
+    ProjectSettings --> DatabaseSettings
+    ProjectSettings --> SemanticModelRepositorySettings
 ```
 
 ## 3. Interface Documentation
 
-- INT-001: **IProject** interface provides the primary contract for project management operations
-- INT-002: Configuration binding automatically maps JSON settings to strongly-typed objects
-- INT-003: Validation events are logged through ILogger with localized messages
+### Public Interfaces
+
+- **INT-001**: IProject - Primary interface for project management and configuration access
+
+### Interface Members
 
 | Method/Property | Purpose | Parameters | Return Type | Usage Notes |
-|-----------------|---------|------------|-------------|-------------|
-| Settings | Access to all project configuration settings | None | ProjectSettings | Populated after LoadProjectConfiguration |
-| ProjectDirectory | Current project working directory | None | DirectoryInfo | Set during initialization or configuration loading |
-| InitializeProjectDirectory | Creates new project with default structure | DirectoryInfo projectDirectory | void | Throws if directory not empty |
-| LoadProjectConfiguration | Loads and validates existing project settings | DirectoryInfo projectDirectory | void | Validates all settings and persistence strategy |
+|---|---|---|---|---|
+| ProjectDirectory | Root folder of the project | — | DirectoryInfo | Set after initialize/load |
+| Settings | Strongly-typed access to settings | — | ProjectSettings | Populated on load |
+| InitializeProjectDirectory | Scaffold new project folder | dir: DirectoryInfo | void | Target must be empty |
+| LoadProjectConfiguration | Bind settings.json into Settings | dir: DirectoryInfo | void | Validates on load |
+
+### Events/Callbacks
+
+- **INT-003**: None - This component follows a synchronous, method-call-based interaction pattern
 
 ## 4. Implementation Details
 
-- IMP-001: **Configuration Loading**: Uses ConfigurationBuilder to load settings.json with automatic binding to strongly-typed classes
-- IMP-002: **Validation Strategy**: Multi-level validation including Data Annotations, custom attributes, and cross-component validation
-- IMP-003: **Persistence Strategy Validation**: Dynamic validation based on selected persistence strategy (LocalDisk/AzureBlob/Cosmos)
-- IMP-004: **Resource Management**: Localized error and log messages using embedded ResourceManager for internationalization support
+### Main Classes
 
-### Key Algorithms
+- **IMP-001**:
+  - **Project**: Orchestration of load/init/validate operations
+  - **ProjectSettings**: Root configuration object with nested settings types
+  - **ProjectUtils**: Static utilities for directory operations
 
-#### Settings Validation Process
+### Configuration Structure
 
-1. Load configuration from settings.json
-2. Bind configuration sections to settings objects
-3. Validate each settings section using Data Annotations
-4. Perform cross-component validation (persistence strategy consistency)
-5. Log validation results and throw exceptions for failures
+- **IMP-002**: settings.json loaded from project root using ConfigurationBuilder
+- **Sections**: Database, DataDictionary, SemanticModel, OpenAIService, SemanticModelRepository, VectorIndex
 
-#### Project Initialization Process
+### Key Implementation Logic
 
-1. Verify target directory is empty
-2. Copy default project template from embedded resources
-3. Set project directory reference
+- **IMP-003**:
+  - **ValidatePersistenceStrategyConfiguration**: Enforces presence of specific sub-config based on SemanticModel.PersistenceStrategy (LocalDisk, AzureBlob, Cosmos)
+  - **ValidateOpenAIConfiguration**: Checks endpoint URL, HTTPS, Azure domain, and required deployment/model IDs depending on ServiceType (AzureOpenAI vs OpenAI)
+  - **Configuration Binding**: Uses Microsoft.Extensions.Configuration for strongly-typed binding
+
+### Performance Characteristics
+
+- **IMP-004**: Validation is lightweight; no I/O except initial file reads and optional directory copy during initialization
 
 ## 5. Usage Examples
 
 ### Basic Usage
 
 ```csharp
-// Initialize project with dependency injection
-var logger = serviceProvider.GetRequiredService<ILogger<Project>>();
-var project = new Project(logger);
+var logger = loggerFactory.CreateLogger<Project>();
+IProject project = new Project(logger);
+project.LoadProjectConfiguration(new DirectoryInfo(@"d:/temp"));
+var settings = project.Settings;
 
-// Load existing project configuration
-var projectDir = new DirectoryInfo(@"C:\MyProjects\DatabaseExplorer");
-project.LoadProjectConfiguration(projectDir);
-
-// Access configuration settings
-var connectionString = project.Settings.Database.ConnectionString;
-var persistenceStrategy = project.Settings.SemanticModel.PersistenceStrategy;
+// Access database configuration
+var connectionString = settings.Database.ConnectionString;
+var maxParallelism = settings.Database.MaxDegreeOfParallelism;
 ```
 
-### Advanced Usage
+### Initialize New Project
 
 ```csharp
-// Initialize new project from scratch
-var project = new Project(logger);
-var newProjectDir = new DirectoryInfo(@"C:\NewProject");
+var logger = loggerFactory.CreateLogger<Project>();
+IProject project = new Project(logger);
+project.InitializeProjectDirectory(new DirectoryInfo(@"d:/temp"));
+```
 
-try
+### Advanced Configuration Access
+
+```csharp
+// Access OpenAI service configuration
+var openAIConfig = project.Settings.OpenAIService;
+var chatCompletionSettings = openAIConfig.ChatCompletion;
+var embeddingSettings = openAIConfig.Embedding;
+
+// Access persistence strategy
+var persistenceStrategy = project.Settings.SemanticModel.PersistenceStrategy;
+switch (persistenceStrategy?.ToLowerInvariant())
 {
-    project.InitializeProjectDirectory(newProjectDir);
-    project.LoadProjectConfiguration(newProjectDir);
-    
-    // Modify settings programmatically if needed
-    project.Settings.Database.MaxDegreeOfParallelism = 4;
-    project.Settings.SemanticModel.PersistenceStrategy = "AzureBlob";
-}
-catch (InvalidOperationException ex)
-{
-    // Handle directory not empty error
-    Console.WriteLine($"Directory initialization failed: {ex.Message}");
-}
-catch (ValidationException ex)
-{
-    // Handle configuration validation errors
-    Console.WriteLine($"Configuration validation failed: {ex.Message}");
+    case "localdisk":
+        var localConfig = project.Settings.SemanticModelRepository.LocalDisk;
+        break;
+    case "azureblob":
+        var blobConfig = project.Settings.SemanticModelRepository.AzureBlobStorage;
+        break;
+    case "cosmos":
+        var cosmosConfig = project.Settings.SemanticModelRepository.CosmosDb;
+        break;
 }
 ```
 
-- USE-001: Always handle validation exceptions when loading project configurations
-- USE-002: Use dependency injection to provide ILogger&lt;Project&gt; for proper logging
-- USE-003: Check DirectoryInfo.Exists before calling InitializeProjectDirectory
+### Best Practices
+
+- **USE-001**: Keep settings.json checked in per sample but secure secrets externally
+- **USE-002**: Prefer Managed Identity for Azure resources; avoid embedding keys
+- **USE-003**: Validate early during app start; fail fast on invalid configuration
 
 ## 6. Quality Attributes
 
-### Security (QUA-001)
+### Security
 
-- **Input Validation**: All configuration properties use Data Annotations validation
-- **File System Security**: Validates directory permissions and prevents path traversal
-- **Configuration Security**: Sensitive settings (API keys) should use secure configuration providers
+- **QUA-001**: Validates URLs and requires HTTPS for Azure OpenAI; encourages key-less auth patterns. Does not handle secrets directly
 
-### Performance (QUA-002)
+### Performance
 
-- **Configuration Caching**: Settings loaded once and cached in memory
-- **Lazy Validation**: Validation only performed during configuration loading
-- **Resource Efficiency**: Uses lightweight DirectoryInfo operations for file system access
+- **QUA-002**: Minimal overhead; bind/validate only at startup or when loading
 
-### Reliability (QUA-003)
+### Reliability
 
-- **Exception Handling**: Comprehensive validation with specific exception types
-- **Resource Cleanup**: Proper disposal of configuration builders and file handles
-- **Fault Tolerance**: Graceful handling of missing or malformed configuration files
+- **QUA-003**: Strong validation prevents misconfiguration; clear exceptions with specific error messages
 
-### Maintainability (QUA-004)
+### Maintainability
 
-- **Separation of Concerns**: Clear separation between configuration, validation, and project management
-- **Extensibility**: Easy to add new settings sections and validation rules
-- **Testability**: Full unit test coverage with mock-friendly design using IProject interface
+- **QUA-004**: Clear separation of settings types; uses data annotations and DI-friendly interfaces
 
-### Extensibility (QUA-005)
+### Extensibility
 
-- **Settings Extension**: New settings classes can be added by extending ProjectSettings
-- **Validation Extension**: Custom validation attributes can be created by inheriting ValidationAttribute
-- **Persistence Strategy Extension**: New persistence strategies supported through configuration pattern
+- **QUA-005**: New persistence strategies or vector providers can be added via new sub-settings and switch branches
 
 ## 7. Reference Information
 
-### Dependencies (REF-001)
+### Project Dependencies
 
-- **Microsoft.Extensions.Configuration** (^8.0.0) - Configuration management and JSON binding
-- **Microsoft.Extensions.Logging** (^8.0.0) - Structured logging with dependency injection
-- **System.ComponentModel.DataAnnotations** (Built-in) - Validation attributes and validation context
-- **System.Resources** (Built-in) - Localized resource management for messages
+- **REF-001**:
+  - **Microsoft.Extensions.Configuration**: JSON binding and configuration management
+  - **Microsoft.Extensions.Logging**: Structured logging with resource-based messages
+  - **System.ComponentModel.DataAnnotations**: Validation attributes and ValidationContext
 
-### Configuration Options Reference (REF-002)
+### Configuration Sections
 
-#### Required Settings Structure
+- **REF-002**: Database, DataDictionary, SemanticModel, OpenAIService, SemanticModelRepository, VectorIndex
 
-```json
-{
-  "SettingsVersion": "1.0.0",
-  "Database": {
-    "Name": "string (required)",
-    "ConnectionString": "string (required)",
-    "Description": "string (optional)",
-    "Schema": "string (optional)",
-    "MaxDegreeOfParallelism": 1,
-    "NotUsedTables": ["regex_pattern"],
-    "NotUsedColumns": ["regex_pattern"],
-    "NotUsedViews": ["regex_pattern"],
-    "NotUsedStoredProcedures": ["regex_pattern"]
-  },
-  "SemanticModel": {
-    "PersistenceStrategy": "LocalDisk|AzureBlob|Cosmos (required)",
-    "MaxDegreeOfParallelism": 1
-  },
-  "SemanticModelRepository": {
-    "LocalDisk": { "Directory": "string" },
-    "AzureBlobStorage": { 
-      "AccountEndpoint": "string",
-      "ContainerName": "string",
-      "BlobPrefix": "string",
-      "OperationTimeoutSeconds": 600,
-      "MaxConcurrentOperations": 8
-    },
-    "CosmosDb": {
-      "AccountEndpoint": "string",
-      "DatabaseName": "string",
-      "ModelsContainerName": "string",
-      "EntitiesContainerName": "string",
-      "ConsistencyLevel": "Strong|Session|Consistent|BoundedStaleness|Eventual"
-    }
-  }
-}
-```
+### Testing
 
-### Testing Guidelines (REF-003)
+- **REF-003**: Unit tests under Tests/Unit/GenAIDBExplorer.Core.Test/Models/Project validate binding and constraints
 
-- **Unit Testing**: Use MSTest with FluentAssertions and Moq for mock dependencies
-- **Integration Testing**: Test complete configuration loading and validation scenarios
-- **Test Structure**: Follow AAA pattern (Arrange, Act, Assert)
-- **Mock Setup**: Mock ILogger&lt;Project&gt; for testing without side effects
+### Troubleshooting
 
-### Troubleshooting (REF-004)
+- **REF-004**:
+  - **Invalid PersistenceStrategy** → ValidationException with allowed values
+  - **AzureOpenAIEndpoint invalid/HTTP** → ValidationException  
+  - **Missing deployment/model IDs** for chosen ServiceType → ValidationException
+  - **Empty/non-existent project directory** → DirectoryNotFoundException or InvalidOperationException
 
-#### Common Issues and Solutions
+### Related Documentation
 
-| Error Message | Cause | Resolution |
-|--------------|-------|------------|
-| "ErrorProjectFolderNotEmpty" | Directory contains files during initialization | Clear directory or choose empty location |
-| "AzureBlobStorage configuration is required..." | Missing persistence strategy config | Add required configuration section |
-| "Invalid PersistenceStrategy" | Unsupported strategy value | Use LocalDisk, AzureBlob, or Cosmos |
-| ValidationException on property | Missing required configuration | Check Data Annotations requirements |
+- **REF-005**: docs/technical/SEMANTIC_MODEL_PROJECT_STRUCTURE.md
 
-### Related Documentation (REF-005)
+### Change History
 
-- [Semantic Model Repository Documentation](semantic-model-repository-documentation.md)
-- [Database Configuration Guide](../INSTALLATION.md)
-- [Project Quick Start](../QUICKSTART.md)
-
-### Change History (REF-006)
-
-- **v1.0** (2025-01-13): Initial documentation covering all Project Model components
-- **Future**: Consider adding support for additional persistence strategies and enhanced validation
+- **REF-006**:
+  - Initial implementation with core settings structure
+  - Added VectorIndex settings for embeddings and hybrid search
+  - Enhanced validation for OpenAI service configurations
+  - Added support for multiple persistence strategies (LocalDisk, AzureBlob, Cosmos)
