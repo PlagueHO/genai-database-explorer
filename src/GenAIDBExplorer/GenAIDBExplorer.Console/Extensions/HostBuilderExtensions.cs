@@ -14,6 +14,7 @@ using GenAIDBExplorer.Core.SemanticVectors.Embeddings;
 using GenAIDBExplorer.Core.SemanticVectors.Indexing;
 using GenAIDBExplorer.Core.SemanticVectors.Search;
 using GenAIDBExplorer.Core.SemanticVectors.Keys;
+using GenAIDBExplorer.Core.SemanticVectors.Orchestration;
 using GenAIDBExplorer.Core.Repository;
 using GenAIDBExplorer.Core.Repository.Caching;
 using GenAIDBExplorer.Core.Repository.Performance;
@@ -110,6 +111,8 @@ public static class HostBuilderExtensions
         services.AddSingleton<ExtractModelCommandHandler>();
         services.AddSingleton<QueryModelCommandHandler>();
         services.AddSingleton<ShowObjectCommandHandler>();
+        services.AddSingleton<GenerateVectorsCommandHandler>();
+        services.AddSingleton<ReconcileIndexCommandHandler>();
 
         // Register the Output service
         services.AddSingleton<IOutputService, OutputService>();
@@ -157,6 +160,22 @@ public static class HostBuilderExtensions
         services.AddSingleton<IEntityKeyBuilder, EntityKeyBuilder>();
         services.AddSingleton<IVectorIndexWriter, SkInMemoryVectorIndexWriter>();
         services.AddSingleton<IVectorSearchService, SkInMemoryVectorSearchService>();
+        services.AddSingleton<IVectorGenerationService, VectorGenerationService>(sp =>
+        {
+            // Inject current project settings instance into service
+            var proj = sp.GetRequiredService<IProject>();
+            return new VectorGenerationService(
+                proj.Settings,
+                sp.GetRequiredService<IVectorInfrastructureFactory>(),
+                sp.GetRequiredService<IVectorRecordMapper>(),
+                sp.GetRequiredService<IEmbeddingGenerator>(),
+                sp.GetRequiredService<IEntityKeyBuilder>(),
+                sp.GetRequiredService<IVectorIndexWriter>(),
+                sp.GetRequiredService<ISecureJsonSerializer>(),
+                sp.GetRequiredService<ILogger<VectorGenerationService>>()
+            );
+        });
+        services.AddSingleton<IVectorOrchestrator, VectorOrchestrator>();
 
         // SK InMemory vector store for local/dev and tests
         services.AddSingleton<Microsoft.SemanticKernel.Connectors.InMemory.InMemoryVectorStore>();

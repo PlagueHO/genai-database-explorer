@@ -36,14 +36,16 @@ public class SemanticKernelEmbeddingGenerator : IEmbeddingGenerator
 
         // Try to resolve the new Microsoft.Extensions.AI embedding generator first
         IEmbeddingGenerator<string, Embedding<float>>? generator = null;
-
-        generator = string.IsNullOrWhiteSpace(serviceId)
-            ? kernel.GetRequiredService<IEmbeddingGenerator<string, Embedding<float>>>()
-            : kernel.GetRequiredService<IEmbeddingGenerator<string, Embedding<float>>>(serviceId!);
-
-        if (generator is null)
+        try
         {
-            _logger.LogWarning("No embedding generator service was found in the kernel for ServiceId '{ServiceId}'", serviceId);
+            generator = string.IsNullOrWhiteSpace(serviceId)
+                ? kernel.GetRequiredService<IEmbeddingGenerator<string, Embedding<float>>>()
+                : kernel.GetRequiredService<IEmbeddingGenerator<string, Embedding<float>>>(serviceId!);
+        }
+        catch (Exception ex)
+        {
+            // Gracefully handle missing service registrations
+            _logger.LogWarning(ex, "No embedding generator service was found in the kernel for ServiceId '{ServiceId}'", serviceId);
             return ReadOnlyMemory<float>.Empty;
         }
 

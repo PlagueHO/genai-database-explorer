@@ -82,16 +82,16 @@
       // "AzureOpenAIAppId": "" // Azure OpenAI App Id
     },
     "ChatCompletion": {
-      // "ModelId": "gpt-4o-mini-2024-07-18", // Only required when using OpenAI. Recommend gpt-4o-2024-08-06 or gpt-4o-mini-2024-07-18
-      "AzureOpenAIDeploymentId": "gpt-4.1" // Only required when using Azure OpenAI. Recommend gpt-4o or gpt-4o-mini
+      // "ModelId": "gpt-4o-mini-2024-07-18", // Only required when using OpenAI.
+      "AzureOpenAIDeploymentId": "gpt-4.1" // Only required when using Azure OpenAI. Recommend gpt-4.1 or newer
     },
     // Required for structured chat completion to reliably extract entity lists. Must be a model that supports structured output.
     "ChatCompletionStructured": {
-      // "ModelId": "gpt-4o-mini-2024-07-18", // Only required when using OpenAI. Recommend gpt-4o-2024-08-06 or gpt-4o-mini-2024-07-18
-      "AzureOpenAIDeploymentId": "gpt-4.1" // Only required when using Azure OpenAI. Recommend gpt-4o (2024-08-06 or later)
+      // "ModelId": "gpt-4o-mini-2024-07-18", // Only required when using OpenAI.
+      "AzureOpenAIDeploymentId": "gpt-4.1" // Only required when using Azure OpenAI. Recommend gpt-4.1 or newer
     },
     "Embedding": {
-      // "ModelId": "gpt-4o-mini-2024-07-18", // Only required when using OpenAI. Recommend gpt-4o-2024-08-06 or gpt-4o-mini-2024-07-18
+      // "ModelId": "gpt-4o-mini-2024-07-18", // Only required when using OpenAI.
       "AzureOpenAIDeploymentId": "text-embedding-3-large" // Only required when using Azure OpenAI. Recommend text-embedding-3-large, text-embedding-3-small or text-embedding-ada-002
     }
   },

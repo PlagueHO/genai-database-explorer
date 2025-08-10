@@ -30,9 +30,9 @@ public class EntityKeyBuilder : IEntityKeyBuilder
     {
         value = value.Trim().ToLowerInvariant();
         // collapse whitespace
-            value = Regex.Replace(value, @"\s+", " ");
+        value = Regex.Replace(value, @"\s+", " ");
         // remove disallowed chars, keep [a-z0-9-_:. ] then replace spaces with '-'
-            value = Regex.Replace(value, @"[^a-z0-9_:\.\-]+", "");
+        value = Regex.Replace(value, @"[^a-z0-9_:\.\-]+", "");
         value = value.Replace(' ', '-');
         return value;
     }

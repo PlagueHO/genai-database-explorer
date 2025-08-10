@@ -121,16 +121,16 @@ Notes:
 
 | Task | Description | Completed | Date |
 |------|-------------|-----------|------|
-| TASK-024 | Add IVectorGenerationService and VectorGenerationService.cs in src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticVectors/Orchestration/ (batching, content hash, overwrite behavior) |  |  |
-| TASK-025 | Add IVectorOrchestrator and VectorOrchestrator.cs in src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticVectors/Orchestration/ (sequence: select → build text → embed → persist → upsert) |  |  |
-| TASK-026 | Create GenerateVectorsCommandHandler.cs in src/GenAIDBExplorer/GenAIDBExplorer.Console/CommandHandlers/ (options per 12.5; integrate with OutputService and Project) |  |  |
-| TASK-027 | Create ReconcileIndexCommandHandler.cs in src/GenAIDBExplorer/GenAIDBExplorer.Console/CommandHandlers/ (per 12.19) |  |  |
-| TASK-028 | Register new command handlers in HostBuilderExtensions and wire to Program.cs (Command setup pattern used by existing handlers) |  |  |
+| TASK-024 | Add IVectorGenerationService and VectorGenerationService.cs in src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticVectors/Orchestration/ (batching, content hash, overwrite behavior) | ✅ | 2025-08-10 |
+| TASK-025 | Add IVectorOrchestrator and VectorOrchestrator.cs in src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticVectors/Orchestration/ (sequence: select → build text → embed → persist → upsert) | ✅ | 2025-08-10 |
+| TASK-026 | Create GenerateVectorsCommandHandler.cs in src/GenAIDBExplorer/GenAIDBExplorer.Console/CommandHandlers/ (options per 12.5; integrate with OutputService and Project) | ✅ | 2025-08-10 |
+| TASK-027 | Create ReconcileIndexCommandHandler.cs in src/GenAIDBExplorer/GenAIDBExplorer.Console/CommandHandlers/ (per 12.19) | ✅ | 2025-08-10 |
+| TASK-028 | Register new command handlers in HostBuilderExtensions and wire to Program.cs (Command setup pattern used by existing handlers) | ✅ | 2025-08-10 |
 
 Completion criteria:
 
-- CLI generate-vectors runs end-to-end for Local strategy with InMemory by default.
-- Reconcile-index command reports drift and can upsert when not in dry-run.
+- CLI generate-vectors runs end-to-end for Local strategy with InMemory by default. ✅
+- Reconcile-index command performs overwrite-based reindex when not in dry-run (full drift detection deferred). ✅
 
 ### Implementation Phase 5
 

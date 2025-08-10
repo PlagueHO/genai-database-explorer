@@ -103,7 +103,7 @@ public class SemanticKernelFactory(
     /// it can be adapted to Microsoft.Extensions.AI IEmbeddingGenerator at runtime.
     /// </summary>
     // Suppress SK experimental diagnostics for embedding generator registration
-    #pragma warning disable SKEXP0010 // Evaluation-only APIs subject to change
+#pragma warning disable SKEXP0010 // Evaluation-only APIs subject to change
     private void AddEmbeddingService(
         IKernelBuilder kernelBuilder,
         OpenAIServiceDefaultSettings defaultSettings,
@@ -147,5 +147,5 @@ public class SemanticKernelFactory(
                 serviceId: serviceId);
         }
     }
-    #pragma warning restore SKEXP0010
+#pragma warning restore SKEXP0010
 }
