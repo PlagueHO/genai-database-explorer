@@ -96,6 +96,8 @@ samples/AdventureWorksLT/
 ```
 
 ## Style & Conventions
+
+- Ensure new/changed code is indented correctly
 - Target .NET 9 with C# 11 features (async/await, records, pattern matching)
 - Follow SOLID, DRY, CleanCode; meaningful, self-documenting names
 - PascalCase for types/methods; camelCase for parameters/locals
@@ -106,11 +108,13 @@ samples/AdventureWorksLT/
 - Tests: Use AAA pattern, clear test names `Method_State_Expected`, mock with Moq, assert with FluentAssertions
 
 ## Agent Rules
+
 - This `.github/copilot-instructions.md` directs AI agents in this repo
 - Preserve existing Azure and infrastructure guidance
 - Merge, don’t overwrite; be concise and factual
 
 ## Test
+
 - Use `dotnet test` to run all tests
 - Test files should be named `*Tests.cs` and located in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.*.Test/`
 - Use MSTest, FluentAssertions, and Moq for unit tests

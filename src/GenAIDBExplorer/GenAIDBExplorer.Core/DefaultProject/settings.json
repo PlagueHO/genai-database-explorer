@@ -94,5 +94,27 @@
             // "ModelId": "gpt-4o-mini-2024-07-18", // Only required when using OpenAI. Recommend gpt-4o-2024-08-06 or gpt-4o-mini-2024-07-18
             "AzureOpenAIDeploymentId": "<Set your Azure OpenAI deployment id>" // Only required when using Azure OpenAI. Recommend text-embedding-3-large, text-embedding-3-small or text-embedding-ada-002
         }
+    },
+    "VectorIndex": {
+        "Provider": "Auto",
+        "CollectionName": "genaide-entities",
+        "PushOnGenerate": true,
+        "ProvisionIfMissing": false,
+        "EmbeddingServiceId": "Embeddings",
+        "ExpectedDimensions": 3072,
+        "AllowedForRepository": ["LocalDisk", "AzureBlob", "Cosmos"],
+        "AzureAISearch": {
+            "Endpoint": "${ENV:AZURE_SEARCH_ENDPOINT}",
+            "IndexName": "${ENV:AZURE_SEARCH_INDEX_NAME}",
+            "ApiKey": "${ENV:AZURE_SEARCH_API_KEY}"
+        },
+        "CosmosNoSql": {
+            "AccountEndpoint": "${ENV:AZURE_COSMOS_ENDPOINT}",
+            "Database": "${ENV:AZURE_COSMOS_DATABASE}",
+            "Container": "${ENV:AZURE_COSMOS_CONTAINER}"
+        },
+        "Hybrid": {
+            "Enabled": false
+        }
     }
 }

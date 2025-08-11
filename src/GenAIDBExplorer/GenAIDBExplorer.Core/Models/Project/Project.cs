@@ -97,7 +97,8 @@ public class Project(
             DataDictionary = new DataDictionarySettings(),
             SemanticModel = new SemanticModelSettings(),
             OpenAIService = new OpenAIServiceSettings(),
-            SemanticModelRepository = new SemanticModelRepositorySettings()
+            SemanticModelRepository = new SemanticModelRepositorySettings(),
+            VectorIndex = new VectorIndexSettings()
         };
 
         // Read the SettingsVersion
@@ -108,6 +109,7 @@ public class Project(
         _configuration?.GetSection(SemanticModelSettings.PropertyName).Bind(Settings.SemanticModel);
         _configuration?.GetSection(OpenAIServiceSettings.PropertyName).Bind(Settings.OpenAIService);
         _configuration?.GetSection(SemanticModelRepositorySettings.PropertyName).Bind(Settings.SemanticModelRepository);
+        _configuration?.GetSection(VectorIndexSettings.PropertyName).Bind(Settings.VectorIndex);
 
         ValidateSettings();
     }
@@ -137,6 +139,11 @@ public class Project(
         validationContext = new ValidationContext(Settings.SemanticModelRepository);
         Validator.ValidateObject(Settings.SemanticModelRepository, validationContext, validateAllProperties: true);
         logger.LogInformation("{Message} '{Section}'", _resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "SemanticModelRepository");
+
+        // Validate VectorIndex settings
+        var vectorIndexContext = new ValidationContext(Settings.VectorIndex);
+        Validator.ValidateObject(Settings.VectorIndex, vectorIndexContext, validateAllProperties: true);
+        logger.LogInformation("{Message} '{Section}'", _resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "VectorIndex");
 
         validationContext = new ValidationContext(Settings.OpenAIService);
         Validator.ValidateObject(Settings.OpenAIService, validationContext, validateAllProperties: true);

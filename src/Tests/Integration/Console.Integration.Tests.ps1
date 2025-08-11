@@ -305,6 +305,24 @@ Describe 'GenAI Database Explorer Console Application' {
                 }
             }
         }
+
+        Context 'generate-vectors command' {
+            It 'Should run dry-run generate-vectors without errors' {
+                # Arrange
+                $expectedSemanticModelPath = Join-Path -Path $script:DbProjectPath -ChildPath 'SemanticModel' -AdditionalChildPath 'semanticmodel.json'
+                if (-not (Test-Path -Path $expectedSemanticModelPath)) {
+                    # Try to ensure a model exists for the test; ignore failure gracefully
+                    Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $script:DbProjectPath) | Out-Null
+                }
+
+                # Act
+                $commandResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('generate-vectors', '--project', $script:DbProjectPath, '--dry-run', '--skipViews', '--skipStoredProcedures')
+
+                # Assert
+                $commandResult.ExitCode | Should -Be 0 -Because 'generate-vectors dry-run should succeed'
+                $commandResult.Output | Should -Match 'Processed' -Because 'Should log processed entities summary'
+            }
+        }
     }
 
     Context 'AI Operations' {

@@ -35,6 +35,8 @@ internal static class Program
         rootCommand.Subcommands.Add(ExtractModelCommandHandler.SetupCommand(host));
         rootCommand.Subcommands.Add(QueryModelCommandHandler.SetupCommand(host));
         rootCommand.Subcommands.Add(ShowObjectCommandHandler.SetupCommand(host));
+        rootCommand.Subcommands.Add(GenerateVectorsCommandHandler.SetupCommand(host));
+        rootCommand.Subcommands.Add(ReconcileIndexCommandHandler.SetupCommand(host));
 
         try
         {

@@ -7,6 +7,14 @@ using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.SemanticKernel;
 using GenAIDBExplorer.Core.SemanticModelProviders;
 using GenAIDBExplorer.Core.SemanticProviders;
+using GenAIDBExplorer.Core.SemanticVectors.Infrastructure;
+using GenAIDBExplorer.Core.SemanticVectors.Policy;
+using GenAIDBExplorer.Core.SemanticVectors.Mapping;
+using GenAIDBExplorer.Core.SemanticVectors.Embeddings;
+using GenAIDBExplorer.Core.SemanticVectors.Indexing;
+using GenAIDBExplorer.Core.SemanticVectors.Search;
+using GenAIDBExplorer.Core.SemanticVectors.Keys;
+using GenAIDBExplorer.Core.SemanticVectors.Orchestration;
 using GenAIDBExplorer.Core.Repository;
 using GenAIDBExplorer.Core.Repository.Caching;
 using GenAIDBExplorer.Core.Repository.Performance;
@@ -32,16 +40,24 @@ public static class HostBuilderExtensions
     public static HostApplicationBuilder ConfigureHost(this HostApplicationBuilder builder, string[] args)
     {
         // Determine the correct path for appsettings.json relative to the console project
-        var consoleProjectPath = Path.Combine("src", "GenAIDBExplorer", "GenAIDBExplorer.Console");
-        var appSettingsPath = Path.Combine(consoleProjectPath, "appsettings.json");
-        var envAppSettingsPath = Path.Combine(consoleProjectPath, $"appsettings.{builder.Environment.EnvironmentName}.json");
-
-        // Note: We need to explicitly add the appsettings.json from the console project directory
-        // because the content root is set to the repository root when running from the repository root
-        builder.Configuration
-            .AddJsonFile(appSettingsPath, optional: false, reloadOnChange: true)
-            .AddJsonFile(envAppSettingsPath, optional: true, reloadOnChange: true)
-            .AddEnvironmentVariables();
+        var candidateRoots = new[]
+        {
+            // When running from repo root
+            Path.Combine("src", "GenAIDBExplorer", "GenAIDBExplorer.Console"),
+            // When working directory already is console project
+            ".",
+            // When tasks set cwd to src/GenAIDBExplorer
+            Path.Combine("GenAIDBExplorer.Console")
+        };
+        foreach (var root in candidateRoots.Distinct())
+        {
+            var appSettingsPath = Path.Combine(root, "appsettings.json");
+            var envAppSettingsPath = Path.Combine(root, $"appsettings.{builder.Environment.EnvironmentName}.json");
+            builder.Configuration
+                .AddJsonFile(appSettingsPath, optional: true, reloadOnChange: true)
+                .AddJsonFile(envAppSettingsPath, optional: true, reloadOnChange: true);
+        }
+        builder.Configuration.AddEnvironmentVariables();
 
         // Clear existing logging providers and configure new ones
         builder.Logging.ClearProviders();
@@ -96,6 +112,8 @@ public static class HostBuilderExtensions
         services.AddSingleton<ExtractModelCommandHandler>();
         services.AddSingleton<QueryModelCommandHandler>();
         services.AddSingleton<ShowObjectCommandHandler>();
+        services.AddSingleton<GenerateVectorsCommandHandler>();
+        services.AddSingleton<ReconcileIndexCommandHandler>();
 
         // Register the Output service
         services.AddSingleton<IOutputService, OutputService>();
@@ -135,11 +153,42 @@ public static class HostBuilderExtensions
         // Register the Semantic Kernel factory
         services.AddSingleton<ISemanticKernelFactory, SemanticKernelFactory>();
 
-        // Register caching services for Phase 5a: Basic Caching Foundation
+        // Vector indexing/search infrastructure
+        services.AddSingleton<IVectorIndexPolicy, VectorIndexPolicy>();
+        services.AddSingleton<IVectorInfrastructureFactory, VectorInfrastructureFactory>();
+        services.AddSingleton<IVectorRecordMapper, VectorRecordMapper>();
+        services.AddSingleton<IEmbeddingGenerator, SemanticKernelEmbeddingGenerator>();
+        services.AddSingleton<IEntityKeyBuilder, EntityKeyBuilder>();
+        services.AddSingleton<IVectorIndexWriter, SkInMemoryVectorIndexWriter>();
+        services.AddSingleton<IVectorSearchService, SkInMemoryVectorSearchService>();
+        services.AddSingleton<IVectorGenerationService, VectorGenerationService>(
+            sp =>
+            {
+                // Inject current project settings instance into service
+                var proj = sp.GetRequiredService<IProject>();
+
+                return new VectorGenerationService(
+                    proj.Settings,
+                    sp.GetRequiredService<IVectorInfrastructureFactory>(),
+                    sp.GetRequiredService<IVectorRecordMapper>(),
+                    sp.GetRequiredService<IEmbeddingGenerator>(),
+                    sp.GetRequiredService<IEntityKeyBuilder>(),
+                    sp.GetRequiredService<IVectorIndexWriter>(),
+                    sp.GetRequiredService<ISecureJsonSerializer>(),
+                    sp.GetRequiredService<ILogger<VectorGenerationService>>(),
+                    sp.GetRequiredService<IPerformanceMonitor>()
+                );
+            }
+        );
+
+        services.AddSingleton<IVectorOrchestrator, VectorOrchestrator>();
+
+        // SK InMemory vector store for local/dev and tests
+        services.AddSingleton<Microsoft.SemanticKernel.Connectors.InMemory.InMemoryVectorStore>();
+
         services.AddMemoryCache();
         services.AddSingleton<ISemanticModelCache, MemorySemanticModelCache>();
 
-        // Register security services for Phase 5b: Enhanced Security Features
         services.AddSingleton<ISecureJsonSerializer, SecureJsonSerializer>();
 
         // Register Key Vault provider if enabled
@@ -166,12 +215,22 @@ public static class HostBuilderExtensions
         // Register performance monitoring services (basic implementation, extensible for OpenTelemetry)
         services.AddSingleton<IPerformanceMonitor, PerformanceMonitor>();
 
-        // SEmantic Repository Repository, Options Builders and persistence strategies
+        // Semantic Repository, Options Builders and persistence strategies
         services.AddSingleton<IPersistenceStrategyFactory, PersistenceStrategyFactory>();
         services.AddSingleton<ISemanticModelRepository, SemanticModelRepository>();
-        services.AddTransient<ISemanticModelRepositoryOptionsBuilder>(provider =>
-            SemanticModelRepositoryOptionsBuilder.Create());
-        services.AddTransient<IPerformanceMonitoringOptionsBuilder>(provider =>
-            PerformanceMonitoringOptionsBuilder.Create());
+
+        services.AddTransient<ISemanticModelRepositoryOptionsBuilder>(
+            provider =>
+            {
+                return SemanticModelRepositoryOptionsBuilder.Create();
+            }
+        );
+
+        services.AddTransient<IPerformanceMonitoringOptionsBuilder>(
+            provider =>
+            {
+                return PerformanceMonitoringOptionsBuilder.Create();
+            }
+        );
     }
 }

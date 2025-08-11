@@ -72,6 +72,16 @@ var storageAccountName = '${abbrs.storageStorageAccounts}${toLower(replace(envir
 // Use the OpenAI models directly from JSON - they're already in the correct format for the AVM module
 var openAiModelDeployments = openAiModels
 
+// NOTE (Vector Index Guidance):
+// - When azureAiSearchDeploy = true, the application can target Azure AI Search as the vector index provider
+//   via project settings (VectorIndex.Provider = "AzureAISearch").
+// - When cosmosDbDeploy = true, Cosmos DB NoSQL native vector indexing can be used
+//   (VectorIndex.Provider = "CosmosNoSql").
+// - For local development, the SK InMemory connector is supported without cloud resources
+//   (VectorIndex.Provider = "InMemory").
+// - Prefer Managed Identity; do not store secrets in settings.json. Map outputs below to environment variables
+//   consumed by the app if needed.
+
 // The application resources that are deployed into the application resource group
 module rg 'br/public:avm/res/resources/resource-group:0.4.1' = {
   name: 'resource-group-deployment-${resourceToken}'
@@ -482,6 +492,7 @@ output APPLICATION_INSIGHTS_INSTRUMENTATION_KEY string = applicationInsights.out
 // Output the AI Search resources
 output AZURE_AI_SEARCH_NAME string = aiSearchServiceName
 output AZURE_AI_SEARCH_ID   string = aiSearchServiceResourceId
+// Map these outputs to app/project configuration for vector index setup when using Azure AI Search.
 
 // Output the AI Foundry resources
 output AZURE_AI_FOUNDRY_NAME string = aiFoundryService.outputs.name
@@ -500,6 +511,7 @@ output SQL_DATABASE_ENDPOINT string = sqlServer.outputs.fullyQualifiedDomainName
 output COSMOS_DB_ACCOUNT_NAME string = cosmosDbAccountNameOut
 output COSMOS_DB_ACCOUNT_RESOURCE_ID string = cosmosDbAccountResourceIdOut
 output COSMOS_DB_ACCOUNT_ENDPOINT string = cosmosDbAccountEndpointOut
+// Use these outputs when configuring Cosmos NoSQL vector store connector in the application.
 
 // Output the Storage Account resources
 output STORAGE_ACCOUNT_NAME string = storageAccountNameOut

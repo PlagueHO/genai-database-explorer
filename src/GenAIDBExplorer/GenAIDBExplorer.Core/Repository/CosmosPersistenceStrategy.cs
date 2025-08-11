@@ -7,6 +7,7 @@ using Azure.Core;
 using Azure.Identity;
 using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.Models.SemanticModel;
+using GenAIDBExplorer.Core.Repository.DTO;
 using GenAIDBExplorer.Core.Repository.Security;
 using GenAIDBExplorer.Core.Security;
 using Microsoft.Azure.Cosmos;
@@ -252,17 +253,19 @@ namespace GenAIDBExplorer.Core.Repository
                 concurrentTasks.Add(mainModelTask);
 
                 // Save table entities to entities container
+                // Note (Phase 2 - REQ-006): For Cosmos strategy, vectors are NOT written to documents. Only metadata may be stored.
                 foreach (var table in semanticModel.Tables)
                 {
                     var tableName = EntityNameSanitizer.SanitizeEntityName(table.Name);
-                    var tableDocument = new
+                    var tableDocument = new CosmosEntityDto<SemanticModelTable>
                     {
-                        id = $"{modelName}_table_{tableName}",
-                        modelName = modelName,
-                        entityType = "table",
-                        entityName = tableName,
-                        data = table,
-                        createdAt = DateTimeOffset.UtcNow
+                        Id = $"{modelName}_table_{tableName}",
+                        ModelName = modelName,
+                        EntityType = "table",
+                        EntityName = tableName,
+                        Data = table,
+                        Embedding = null,
+                        CreatedAt = DateTimeOffset.UtcNow
                     };
                     var tableTask = SaveDocumentAsync(_entitiesContainer, tableDocument, modelName);
                     concurrentTasks.Add(tableTask);
@@ -272,14 +275,15 @@ namespace GenAIDBExplorer.Core.Repository
                 foreach (var view in semanticModel.Views)
                 {
                     var viewName = EntityNameSanitizer.SanitizeEntityName(view.Name);
-                    var viewDocument = new
+                    var viewDocument = new CosmosEntityDto<SemanticModelView>
                     {
-                        id = $"{modelName}_view_{viewName}",
-                        modelName = modelName,
-                        entityType = "view",
-                        entityName = viewName,
-                        data = view,
-                        createdAt = DateTimeOffset.UtcNow
+                        Id = $"{modelName}_view_{viewName}",
+                        ModelName = modelName,
+                        EntityType = "view",
+                        EntityName = viewName,
+                        Data = view,
+                        Embedding = null,
+                        CreatedAt = DateTimeOffset.UtcNow
                     };
                     var viewTask = SaveDocumentAsync(_entitiesContainer, viewDocument, modelName);
                     concurrentTasks.Add(viewTask);
@@ -289,14 +293,15 @@ namespace GenAIDBExplorer.Core.Repository
                 foreach (var storedProcedure in semanticModel.StoredProcedures)
                 {
                     var procedureName = EntityNameSanitizer.SanitizeEntityName(storedProcedure.Name);
-                    var procedureDocument = new
+                    var procedureDocument = new CosmosEntityDto<SemanticModelStoredProcedure>
                     {
-                        id = $"{modelName}_storedprocedure_{procedureName}",
-                        modelName = modelName,
-                        entityType = "storedprocedure",
-                        entityName = procedureName,
-                        data = storedProcedure,
-                        createdAt = DateTimeOffset.UtcNow
+                        Id = $"{modelName}_storedprocedure_{procedureName}",
+                        ModelName = modelName,
+                        EntityType = "storedprocedure",
+                        EntityName = procedureName,
+                        Data = storedProcedure,
+                        Embedding = null,
+                        CreatedAt = DateTimeOffset.UtcNow
                     };
                     var procedureTask = SaveDocumentAsync(_entitiesContainer, procedureDocument, modelName);
                     concurrentTasks.Add(procedureTask);
@@ -365,6 +370,7 @@ namespace GenAIDBExplorer.Core.Repository
                 var loadTasks = new List<Task>();
 
                 // Load tables
+                // Note: Entity 'data' was stored without vector floats per Phase 2/REQ-006.
                 if (modelData.tables != null)
                 {
                     foreach (var tableRef in modelData.tables)

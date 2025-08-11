@@ -138,3 +138,76 @@ gaidbexp export-model --projectPath <path> [--outputPath <file>] [--fileType <ty
 - `--outputPath`: Name of the output file (defaults to `exported_model.md`).
 - `--fileType`: Type of output file (defaults to `markdown`).
 - `--splitFiles`: Split export into individual files per entity.
+
+---
+
+## generate-vectors
+
+Generates embeddings for semantic model entities and upserts them into the configured vector index.
+
+**Usage:**
+
+```bash
+gaidbexp generate-vectors --project <path> [--overwrite] [--dry-run] [--skipTables] [--skipViews] [--skipStoredProcedures]
+```
+
+Subcommands for targeting a single object type:
+
+```bash
+gaidbexp generate-vectors table --project <path> --schema <name> --name <object> [--overwrite] [--dry-run]
+gaidbexp generate-vectors view --project <path> --schema <name> --name <object> [--overwrite] [--dry-run]
+gaidbexp generate-vectors storedprocedure --project <path> --schema <name> --name <object> [--overwrite] [--dry-run]
+```
+
+**Options:**
+
+- `--project`, `-p` (required): Path to the project directory.
+- `--overwrite`: Regenerate embeddings even when content hash is unchanged.
+- `--dry-run`: Execute without writing local files or updating the external index.
+- `--skipTables`: Skip tables.
+- `--skipViews`: Skip views.
+- `--skipStoredProcedures`: Skip stored procedures.
+- For subcommands: `--schema`, `-s` and `--name`, `-n` select a specific object.
+
+### Examples (generate-vectors)
+
+```bash
+# Generate embeddings for all entities using current settings
+gaidbexp generate-vectors --project d:/temp
+
+# Force regeneration and index upsert
+gaidbexp generate-vectors --project d:/temp --overwrite
+
+# Preview actions without writing
+gaidbexp generate-vectors --project d:/temp --dry-run
+
+# Target a single table
+gaidbexp generate-vectors table --project d:/temp --schema dbo --name tblItemSellingLimit
+```
+
+---
+
+## reconcile-index
+
+Reconciles the external vector index with locally persisted embeddings by re-upserting records.
+
+**Usage:**
+
+```bash
+gaidbexp reconcile-index --project <path> [--dry-run]
+```
+
+**Options:**
+
+- `--project`, `-p` (required): Path to the project directory.
+- `--dry-run`: Execute without updating the external index.
+
+### Examples (reconcile-index)
+
+```bash
+# Preview index reconciliation
+gaidbexp reconcile-index --project d:/temp --dry-run
+
+# Perform reconciliation (writes to index)
+gaidbexp reconcile-index --project d:/temp
+```
