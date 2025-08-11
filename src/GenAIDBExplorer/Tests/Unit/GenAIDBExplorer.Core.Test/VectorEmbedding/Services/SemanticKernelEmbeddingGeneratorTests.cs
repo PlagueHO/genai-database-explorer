@@ -33,7 +33,10 @@ public class SemanticKernelEmbeddingGeneratorTests
         factory.Setup(f => f.CreateSemanticKernel()).Returns(kernel);
 
         var logger = new Mock<Microsoft.Extensions.Logging.ILogger<SemanticKernelEmbeddingGenerator>>();
-        var sut = new SemanticKernelEmbeddingGenerator(factory.Object, logger.Object);
+        var perf = new Mock<GenAIDBExplorer.Core.Repository.Performance.IPerformanceMonitor>();
+        perf.Setup(p => p.StartOperation(It.IsAny<string>(), It.IsAny<IDictionary<string, object>?>()))
+            .Returns(new GenAIDBExplorer.Core.Repository.Performance.PerformanceTrackingContext("test", new GenAIDBExplorer.Core.Repository.Performance.PerformanceMonitor(new Mock<Microsoft.Extensions.Logging.ILogger<GenAIDBExplorer.Core.Repository.Performance.PerformanceMonitor>>().Object), new Dictionary<string, object>()));
+        var sut = new SemanticKernelEmbeddingGenerator(factory.Object, logger.Object, perf.Object);
 
         // Act
         var result = await sut.GenerateAsync("hello", new SemanticVectors.Infrastructure.VectorInfrastructure(
@@ -58,7 +61,10 @@ public class SemanticKernelEmbeddingGeneratorTests
         factory.Setup(f => f.CreateSemanticKernel()).Returns(kernel);
 
         var logger = new Mock<Microsoft.Extensions.Logging.ILogger<SemanticKernelEmbeddingGenerator>>();
-        var sut = new SemanticKernelEmbeddingGenerator(factory.Object, logger.Object);
+        var perf = new Mock<GenAIDBExplorer.Core.Repository.Performance.IPerformanceMonitor>();
+        perf.Setup(p => p.StartOperation(It.IsAny<string>(), It.IsAny<IDictionary<string, object>?>()))
+            .Returns(new GenAIDBExplorer.Core.Repository.Performance.PerformanceTrackingContext("test", new GenAIDBExplorer.Core.Repository.Performance.PerformanceMonitor(new Mock<Microsoft.Extensions.Logging.ILogger<GenAIDBExplorer.Core.Repository.Performance.PerformanceMonitor>>().Object), new Dictionary<string, object>()));
+        var sut = new SemanticKernelEmbeddingGenerator(factory.Object, logger.Object, perf.Object);
         var result = await sut.GenerateAsync("hello", new SemanticVectors.Infrastructure.VectorInfrastructure(
             Provider: "InMemory",
             CollectionName: "test-collection",

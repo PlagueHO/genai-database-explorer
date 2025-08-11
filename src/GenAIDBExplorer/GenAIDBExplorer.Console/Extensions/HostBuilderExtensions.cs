@@ -53,8 +53,9 @@ public static class HostBuilderExtensions
         {
             var appSettingsPath = Path.Combine(root, "appsettings.json");
             var envAppSettingsPath = Path.Combine(root, $"appsettings.{builder.Environment.EnvironmentName}.json");
-            builder.Configuration.AddJsonFile(appSettingsPath, optional: true, reloadOnChange: true)
-                                   .AddJsonFile(envAppSettingsPath, optional: true, reloadOnChange: true);
+            builder.Configuration
+                .AddJsonFile(appSettingsPath, optional: true, reloadOnChange: true)
+                .AddJsonFile(envAppSettingsPath, optional: true, reloadOnChange: true);
         }
         builder.Configuration.AddEnvironmentVariables();
 
@@ -160,21 +161,26 @@ public static class HostBuilderExtensions
         services.AddSingleton<IEntityKeyBuilder, EntityKeyBuilder>();
         services.AddSingleton<IVectorIndexWriter, SkInMemoryVectorIndexWriter>();
         services.AddSingleton<IVectorSearchService, SkInMemoryVectorSearchService>();
-        services.AddSingleton<IVectorGenerationService, VectorGenerationService>(sp =>
-        {
-            // Inject current project settings instance into service
-            var proj = sp.GetRequiredService<IProject>();
-            return new VectorGenerationService(
-                proj.Settings,
-                sp.GetRequiredService<IVectorInfrastructureFactory>(),
-                sp.GetRequiredService<IVectorRecordMapper>(),
-                sp.GetRequiredService<IEmbeddingGenerator>(),
-                sp.GetRequiredService<IEntityKeyBuilder>(),
-                sp.GetRequiredService<IVectorIndexWriter>(),
-                sp.GetRequiredService<ISecureJsonSerializer>(),
-                sp.GetRequiredService<ILogger<VectorGenerationService>>()
-            );
-        });
+        services.AddSingleton<IVectorGenerationService, VectorGenerationService>(
+            sp =>
+            {
+                // Inject current project settings instance into service
+                var proj = sp.GetRequiredService<IProject>();
+
+                return new VectorGenerationService(
+                    proj.Settings,
+                    sp.GetRequiredService<IVectorInfrastructureFactory>(),
+                    sp.GetRequiredService<IVectorRecordMapper>(),
+                    sp.GetRequiredService<IEmbeddingGenerator>(),
+                    sp.GetRequiredService<IEntityKeyBuilder>(),
+                    sp.GetRequiredService<IVectorIndexWriter>(),
+                    sp.GetRequiredService<ISecureJsonSerializer>(),
+                    sp.GetRequiredService<ILogger<VectorGenerationService>>(),
+                    sp.GetRequiredService<IPerformanceMonitor>()
+                );
+            }
+        );
+
         services.AddSingleton<IVectorOrchestrator, VectorOrchestrator>();
 
         // SK InMemory vector store for local/dev and tests
@@ -209,12 +215,22 @@ public static class HostBuilderExtensions
         // Register performance monitoring services (basic implementation, extensible for OpenTelemetry)
         services.AddSingleton<IPerformanceMonitor, PerformanceMonitor>();
 
-        // SEmantic Repository Repository, Options Builders and persistence strategies
+        // Semantic Repository, Options Builders and persistence strategies
         services.AddSingleton<IPersistenceStrategyFactory, PersistenceStrategyFactory>();
         services.AddSingleton<ISemanticModelRepository, SemanticModelRepository>();
-        services.AddTransient<ISemanticModelRepositoryOptionsBuilder>(provider =>
-            SemanticModelRepositoryOptionsBuilder.Create());
-        services.AddTransient<IPerformanceMonitoringOptionsBuilder>(provider =>
-            PerformanceMonitoringOptionsBuilder.Create());
+
+        services.AddTransient<ISemanticModelRepositoryOptionsBuilder>(
+            provider =>
+            {
+                return SemanticModelRepositoryOptionsBuilder.Create();
+            }
+        );
+
+        services.AddTransient<IPerformanceMonitoringOptionsBuilder>(
+            provider =>
+            {
+                return PerformanceMonitoringOptionsBuilder.Create();
+            }
+        );
     }
 }

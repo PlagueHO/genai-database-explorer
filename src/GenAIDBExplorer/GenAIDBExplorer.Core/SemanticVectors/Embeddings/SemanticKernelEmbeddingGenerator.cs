@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using GenAIDBExplorer.Core.SemanticKernel;
 using GenAIDBExplorer.Core.SemanticVectors.Infrastructure;
+using GenAIDBExplorer.Core.Repository.Performance;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using Microsoft.Extensions.AI;
@@ -17,11 +18,13 @@ public class SemanticKernelEmbeddingGenerator : IEmbeddingGenerator
 {
     private readonly ISemanticKernelFactory _semanticKernelFactory;
     private readonly ILogger<SemanticKernelEmbeddingGenerator> _logger;
+    private readonly IPerformanceMonitor _performanceMonitor;
 
-    public SemanticKernelEmbeddingGenerator(ISemanticKernelFactory semanticKernelFactory, ILogger<SemanticKernelEmbeddingGenerator> logger)
+    public SemanticKernelEmbeddingGenerator(ISemanticKernelFactory semanticKernelFactory, ILogger<SemanticKernelEmbeddingGenerator> logger, IPerformanceMonitor performanceMonitor)
     {
         _semanticKernelFactory = semanticKernelFactory ?? throw new ArgumentNullException(nameof(semanticKernelFactory));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _performanceMonitor = performanceMonitor ?? throw new ArgumentNullException(nameof(performanceMonitor));
     }
 
     public async Task<ReadOnlyMemory<float>> GenerateAsync(string text, VectorInfrastructure infrastructure, CancellationToken cancellationToken = default)
@@ -33,6 +36,12 @@ public class SemanticKernelEmbeddingGenerator : IEmbeddingGenerator
 
         var kernel = _semanticKernelFactory.CreateSemanticKernel();
         var serviceId = infrastructure.EmbeddingServiceId;
+
+        using var perf = _performanceMonitor.StartOperation("Vector.Embeddings.Generate", new Dictionary<string, object>
+        {
+            ["ServiceId"] = serviceId ?? "default",
+            ["Provider"] = infrastructure.Provider,
+        });
 
         // Try to resolve the new Microsoft.Extensions.AI embedding generator first
         IEmbeddingGenerator<string, Embedding<float>>? generator = null;
@@ -46,6 +55,7 @@ public class SemanticKernelEmbeddingGenerator : IEmbeddingGenerator
         {
             // Gracefully handle missing service registrations
             _logger.LogWarning(ex, "No embedding generator service was found in the kernel for ServiceId '{ServiceId}'", serviceId);
+            perf.MarkAsFailed("Missing embedding generator service");
             return ReadOnlyMemory<float>.Empty;
         }
 
@@ -57,6 +67,7 @@ public class SemanticKernelEmbeddingGenerator : IEmbeddingGenerator
         }
 
         _logger.LogWarning("Embedding generation returned no result");
+        perf.MarkAsFailed("No embedding result returned");
         return ReadOnlyMemory<float>.Empty;
     }
 }

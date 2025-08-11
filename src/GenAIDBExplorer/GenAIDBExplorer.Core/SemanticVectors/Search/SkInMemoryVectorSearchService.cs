@@ -7,15 +7,17 @@ using GenAIDBExplorer.Core.SemanticVectors.Records;
 using Microsoft.SemanticKernel.Connectors.InMemory;
 using Microsoft.Extensions.VectorData;
 using System.Reflection;
+using GenAIDBExplorer.Core.Repository.Performance;
 
 namespace GenAIDBExplorer.Core.SemanticVectors.Search;
 
 /// <summary>
 /// Vector search service powered by SK InMemoryVectorStore collections.
 /// </summary>
-public sealed class SkInMemoryVectorSearchService(InMemoryVectorStore store) : IVectorSearchService
+public sealed class SkInMemoryVectorSearchService(InMemoryVectorStore store, IPerformanceMonitor performanceMonitor) : IVectorSearchService
 {
     private readonly InMemoryVectorStore _store = store;
+    private readonly IPerformanceMonitor _performanceMonitor = performanceMonitor;
     private static async Task EnsureCollectionExistsAsync(object collection, CancellationToken cancellationToken)
     {
         var type = collection.GetType();
@@ -52,6 +54,13 @@ public sealed class SkInMemoryVectorSearchService(InMemoryVectorStore store) : I
         {
             return Enumerable.Empty<(EntityVectorRecord, double)>();
         }
+
+        using var perf = _performanceMonitor.StartOperation("Vector.Search", new Dictionary<string, object>
+        {
+            ["Collection"] = infrastructure.CollectionName,
+            ["Provider"] = infrastructure.Provider,
+            ["TopK"] = topK
+        });
 
         var collection = _store.GetCollection<string, EntityVectorRecord>(infrastructure.CollectionName);
         await EnsureCollectionExistsAsync(collection!, cancellationToken).ConfigureAwait(false);
