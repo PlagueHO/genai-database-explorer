@@ -1,6 +1,6 @@
 ---
-title: SemanticVectors - Technical Documentation
-component_path: `src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticVectors`
+title: Semantic Vectors - Technical Documentation
+component_path: src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticVectors
 version: 1.0
 date_created: 2025-08-11
 last_updated: 2025-08-11
@@ -8,7 +8,7 @@ owner: GenAI Database Explorer Team
 tags: [component, service, infrastructure, vector-embeddings, ai, semantic-search, documentation, architecture]
 ---
 
-The SemanticVectors component provides a comprehensive vector embedding and indexing system for semantic database exploration. It generates, stores, and searches vector embeddings of database schema entities (tables, views, stored procedures) to enable natural language querying capabilities.
+The Semantic Vectors component provides a comprehensive vector embedding and indexing system for semantic database exploration. It generates, stores, and searches vector embeddings of database schema entities (tables, views, stored procedures) to enable natural language querying capabilities.
 
 ## 1. Component Overview
 
@@ -25,7 +25,7 @@ The SemanticVectors component provides a comprehensive vector embedding and inde
 
 ### System Context
 
-The SemanticVectors component operates within the GenAI Database Explorer ecosystem, integrating with:
+The Semantic Vectors component operates within the GenAI Database Explorer ecosystem, integrating with:
 
 - **Semantic Model Providers**: Consumes enriched database schema entities
 - **Semantic Kernel Factory**: Leverages AI embedding services for vector generation
