@@ -17,38 +17,81 @@ public sealed class SkInMemoryVectorIndexWriter(InMemoryVectorStore store, IPerf
 {
     private readonly InMemoryVectorStore _store = store;
     private readonly IPerformanceMonitor _performanceMonitor = performanceMonitor;
-    private static async Task EnsureCollectionExistsAsync(object collection, CancellationToken cancellationToken)
+    private static Task EnsureCollectionExistsAsync(VectorStoreCollection<string, EntityVectorRecord> collection, CancellationToken cancellationToken)
+        => collection.EnsureCollectionExistsAsync(cancellationToken);
+
+    private static async Task EnsureCollectionExistsOnStoreAsync(InMemoryVectorStore store, string collectionName, CancellationToken cancellationToken)
+    {
+        var type = store.GetType();
+        foreach (var methodName in new[] { "CreateCollectionIfNotExistsAsync", "CreateCollectionAsync", "CreateCollection" })
+        {
+            foreach (var m in type.GetMethods(BindingFlags.Instance | BindingFlags.Public).Where(x => x.Name == methodName))
+            {
+                try
+                {
+                    MethodInfo toInvoke = m;
+                    if (m.IsGenericMethodDefinition)
+                    {
+                        // Prefer <TRecord>
+                        try { toInvoke = m.MakeGenericMethod(typeof(EntityVectorRecord)); }
+                        catch { toInvoke = m; }
+                    }
+
+                    var parms = toInvoke.GetParameters();
+                    object? result = null;
+                    if (parms.Length == 2 && parms[0].ParameterType == typeof(string) && parms[1].ParameterType == typeof(CancellationToken))
+                    {
+                        result = toInvoke.Invoke(store, new object[] { collectionName, cancellationToken });
+                    }
+                    else if (parms.Length == 1 && parms[0].ParameterType == typeof(string))
+                    {
+                        result = toInvoke.Invoke(store, new object[] { collectionName });
+                    }
+                    else
+                    {
+                        continue;
+                    }
+
+                    if (result is Task t) { await t.ConfigureAwait(false); }
+                    return;
+                }
+                catch
+                {
+                    // ignore and try next overload
+                }
+            }
+        }
+    }
+
+    private static async Task EnsureCollectionExistsOnCollectionAsync(object collection, CancellationToken cancellationToken)
     {
         var type = collection.GetType();
-        // Try CreateCollectionIfNotExistsAsync()
-        var method = type.GetMethod("CreateCollectionIfNotExistsAsync", BindingFlags.Instance | BindingFlags.Public, new Type[] { });
-        if (method is not null)
+        foreach (var methodName in new[] { "CreateCollectionIfNotExistsAsync", "CreateCollectionAsync", "CreateCollection" })
         {
-            if (method.Invoke(collection, null) is Task t1) { await t1.ConfigureAwait(false); }
-            return;
+            foreach (var m in type.GetMethods(BindingFlags.Instance | BindingFlags.Public).Where(x => x.Name == methodName))
+            {
+                try
+                {
+                    var parms = m.GetParameters();
+                    object? result = null;
+                    if (parms.Length == 1 && parms[0].ParameterType == typeof(CancellationToken))
+                    {
+                        result = m.Invoke(collection, new object[] { cancellationToken });
+                    }
+                    else if (parms.Length == 0)
+                    {
+                        result = m.Invoke(collection, null);
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                    if (result is Task t) { await t.ConfigureAwait(false); }
+                    return;
+                }
+                catch { }
+            }
         }
-        // Try CreateCollectionIfNotExistsAsync(CancellationToken)
-        method = type.GetMethod("CreateCollectionIfNotExistsAsync", BindingFlags.Instance | BindingFlags.Public, new[] { typeof(CancellationToken) });
-        if (method is not null)
-        {
-            if (method.Invoke(collection, new object[] { cancellationToken }) is Task t2) { await t2.ConfigureAwait(false); }
-            return;
-        }
-        // Try CreateCollectionAsync()
-        method = type.GetMethod("CreateCollectionAsync", BindingFlags.Instance | BindingFlags.Public, new Type[] { });
-        if (method is not null)
-        {
-            if (method.Invoke(collection, null) is Task t3) { await t3.ConfigureAwait(false); }
-            return;
-        }
-        // Try CreateCollectionAsync(CancellationToken)
-        method = type.GetMethod("CreateCollectionAsync", BindingFlags.Instance | BindingFlags.Public, new[] { typeof(CancellationToken) });
-        if (method is not null)
-        {
-            if (method.Invoke(collection, new object[] { cancellationToken }) is Task t4) { await t4.ConfigureAwait(false); }
-            return;
-        }
-        // Nothing to do if none found
     }
 
     public async Task UpsertAsync(EntityVectorRecord record, VectorInfrastructure infrastructure, CancellationToken cancellationToken = default)
@@ -62,9 +105,20 @@ public sealed class SkInMemoryVectorIndexWriter(InMemoryVectorStore store, IPerf
             ["Provider"] = infrastructure.Provider
         });
 
-        // Ensure collection exists; schema is provided via attributes on EntityVectorRecord.
+        // Ensure collection exists via collection API (new VectorStore API)
         var collection = _store.GetCollection<string, EntityVectorRecord>(infrastructure.CollectionName);
-        await EnsureCollectionExistsAsync(collection!, cancellationToken).ConfigureAwait(false);
-        await collection.UpsertAsync(record, cancellationToken: cancellationToken).ConfigureAwait(false);
+        await EnsureCollectionExistsAsync((VectorStoreCollection<string, EntityVectorRecord>)collection, cancellationToken).ConfigureAwait(false);
+        await EnsureCollectionExistsOnCollectionAsync(collection!, cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await collection.UpsertAsync(record, cancellationToken: cancellationToken).ConfigureAwait(false);
+        }
+        catch (VectorStoreException ex) when (ex.Message.Contains("does not exist", StringComparison.OrdinalIgnoreCase))
+        {
+            // Race or older SK version – create and retry once
+            await EnsureCollectionExistsAsync((VectorStoreCollection<string, EntityVectorRecord>)collection, cancellationToken).ConfigureAwait(false);
+            await EnsureCollectionExistsOnCollectionAsync(collection!, cancellationToken).ConfigureAwait(false);
+            await collection.UpsertAsync(record, cancellationToken: cancellationToken).ConfigureAwait(false);
+        }
     }
 }

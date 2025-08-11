@@ -1,4 +1,5 @@
 using System.Text;
+using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using GenAIDBExplorer.Core.Security;
@@ -162,14 +163,12 @@ public class SecureJsonSerializer(ILogger<SecureJsonSerializer> logger) : ISecur
                 return false;
             }
 
-            // Additional security validations using existing security utilities
-            try
+            // Additional security validations specific to JSON payloads
+            // NOTE: Do NOT apply EntityNameSanitizer to entire JSON bodies (too strict for embeddings/arrays)
+            // Only block obvious binary/control characters that should not appear in JSON text
+            if (json.Any(c => c == '\0' || (c < 32 && c != '\t' && c != '\n' && c != '\r')))
             {
-                EntityNameSanitizer.ValidateInputSecurity(json, nameof(json));
-            }
-            catch (ArgumentException ex)
-            {
-                logger.LogWarning(ex, "JSON content failed input security validation");
+                logger.LogWarning("JSON content contains binary/control characters");
                 return false;
             }
 

@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.IO;
 using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.Models.SemanticModel;
 using GenAIDBExplorer.Core.Repository;
@@ -19,33 +20,62 @@ using GenAIDBExplorer.Core.Repository.Performance;
 
 namespace GenAIDBExplorer.Core.SemanticVectors.Orchestration;
 
-public sealed class VectorGenerationService(
-    ProjectSettings projectSettings,
-    IVectorInfrastructureFactory infrastructureFactory,
-    IVectorRecordMapper recordMapper,
-    IEmbeddingGenerator embeddingGenerator,
-    IEntityKeyBuilder keyBuilder,
-    IVectorIndexWriter indexWriter,
-    ISecureJsonSerializer secureJsonSerializer,
-    ILogger<VectorGenerationService> logger,
-    IPerformanceMonitor performanceMonitor
-) : IVectorGenerationService
+/// <summary>
+/// Service for generating semantic vector embeddings for a semantic model.
+/// </summary>
+public sealed class VectorGenerationService : IVectorGenerationService
 {
-    private readonly ProjectSettings _projectSettings = projectSettings;
-    private readonly IVectorInfrastructureFactory _infrastructureFactory = infrastructureFactory;
-    private readonly IVectorRecordMapper _recordMapper = recordMapper;
-    private readonly IEmbeddingGenerator _embeddingGenerator = embeddingGenerator;
-    private readonly IEntityKeyBuilder _keyBuilder = keyBuilder;
-    private readonly IVectorIndexWriter _indexWriter = indexWriter;
-    private readonly ISecureJsonSerializer _secureJsonSerializer = secureJsonSerializer;
-    private readonly ILogger<VectorGenerationService> _logger = logger;
-    private readonly IPerformanceMonitor _performanceMonitor = performanceMonitor;
+    private readonly ProjectSettings _projectSettings;
+    private readonly IVectorInfrastructureFactory _infrastructureFactory;
+    private readonly IVectorRecordMapper _recordMapper;
+    private readonly IEmbeddingGenerator _embeddingGenerator;
+    private readonly IEntityKeyBuilder _keyBuilder;
+    private readonly IVectorIndexWriter _indexWriter;
+    private readonly ISecureJsonSerializer _secureJsonSerializer;
+    private readonly ILogger<VectorGenerationService> _logger;
+    private readonly IPerformanceMonitor _performanceMonitor;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="VectorGenerationService"/> class.
+    /// </summary>
+    /// <param name="projectSettings">The project settings.</param>
+    /// <param name="infrastructureFactory">The vector infrastructure factory.</param>
+    /// <param name="recordMapper">The record mapper.</param>
+    /// <param name="embeddingGenerator">The embedding generator.</param>
+    /// <param name="keyBuilder">The entity key builder.</param>
+    /// <param name="indexWriter">The vector index writer.</param>
+    /// <param name="secureJsonSerializer">The secure JSON serializer.</param>
+    /// <param name="logger">The logger instance.</param>
+    /// <param name="performanceMonitor">The performance monitor.</param>
+    public VectorGenerationService(
+        ProjectSettings projectSettings,
+        IVectorInfrastructureFactory infrastructureFactory,
+        IVectorRecordMapper recordMapper,
+        IEmbeddingGenerator embeddingGenerator,
+        IEntityKeyBuilder keyBuilder,
+        IVectorIndexWriter indexWriter,
+        ISecureJsonSerializer secureJsonSerializer,
+        ILogger<VectorGenerationService> logger,
+        IPerformanceMonitor performanceMonitor
+    )
+    {
+        _projectSettings = projectSettings;
+        _infrastructureFactory = infrastructureFactory;
+        _recordMapper = recordMapper;
+        _embeddingGenerator = embeddingGenerator;
+        _keyBuilder = keyBuilder;
+        _indexWriter = indexWriter;
+        _secureJsonSerializer = secureJsonSerializer;
+        _logger = logger;
+        _performanceMonitor = performanceMonitor;
+    }
+
+    /// <inheritdoc/>
     public async Task<int> GenerateAsync(SemanticModel model, DirectoryInfo projectPath, VectorGenerationOptions options, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(model);
         ArgumentNullException.ThrowIfNull(projectPath);
-
+        // ...existing code...
         using var perfAll = _performanceMonitor.StartOperation("Vector.Generate.All", new Dictionary<string, object>
         {
             ["ModelName"] = model.Name
@@ -77,7 +107,7 @@ public sealed class VectorGenerationService(
                 ["Name"] = entity.Name,
                 ["Type"] = entity.GetType().Name
             });
-            // Build content and hash
+            // ...existing code...
             var content = _recordMapper.BuildEntityText(entity);
             var contentHash = _keyBuilder.BuildContentHash(content);
             var id = _keyBuilder.BuildKey(model.Name, entity.GetType().Name, entity.Schema, entity.Name);
@@ -250,38 +280,38 @@ public sealed class VectorGenerationService(
         return processed;
     }
 
+    // ...existing code...
+
     private static async Task<string> ReadAllTextRobustAsync(string path, CancellationToken cancellationToken)
     {
-        const int maxAttempts = 3;
-        const int delayMs = 25;
-        for (int attempt = 1; attempt <= maxAttempts; attempt++)
+        // Try multiple strategies to avoid transient file locks on Windows
+        const int maxAttempts = 5;
+        int attempt = 0;
+        for (;;)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             try
             {
-                using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-                using var reader = new StreamReader(fs);
-                return await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
+                // Shared read stream to reduce sharing violations
+                using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, 4096, useAsync: true);
+                using var sr = new StreamReader(fs);
+                return await sr.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
             }
-            catch when (attempt < maxAttempts)
+            catch (IOException) when (++attempt < maxAttempts)
             {
-                await Task.Delay(delayMs, cancellationToken).ConfigureAwait(false);
+                await Task.Delay(TimeSpan.FromMilliseconds(50 * attempt), cancellationToken).ConfigureAwait(false);
             }
-        }
-        // Final attempt without swallowing exception
-        using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
-        using (var reader = new StreamReader(fs))
-        {
-            return await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
+            catch (UnauthorizedAccessException) when (attempt++ < maxAttempts)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(50 * attempt), cancellationToken).ConfigureAwait(false);
+            }
         }
     }
 
     private static bool TryGetPropertyIgnoreCase(JsonElement element, string name, out JsonElement value)
     {
-        if (element.ValueKind != JsonValueKind.Object)
-        {
-            value = default;
-            return false;
-        }
+        value = default;
+        if (element.ValueKind != JsonValueKind.Object) return false;
         foreach (var prop in element.EnumerateObject())
         {
             if (string.Equals(prop.Name, name, StringComparison.OrdinalIgnoreCase))
@@ -290,40 +320,34 @@ public sealed class VectorGenerationService(
                 return true;
             }
         }
-        value = default;
         return false;
     }
 
     private static bool FindStringPropertyRecursive(JsonElement element, string name, out string? value)
     {
         value = null;
-        if (element.ValueKind == JsonValueKind.Object)
+        switch (element.ValueKind)
         {
-            foreach (var prop in element.EnumerateObject())
-            {
-                if (string.Equals(prop.Name, name, StringComparison.OrdinalIgnoreCase))
+            case JsonValueKind.Object:
+                foreach (var prop in element.EnumerateObject())
                 {
-                    if (prop.Value.ValueKind == JsonValueKind.String)
+                    if (string.Equals(prop.Name, name, StringComparison.OrdinalIgnoreCase))
                     {
-                        value = prop.Value.GetString();
-                        return true;
+                        if (prop.Value.ValueKind == JsonValueKind.String)
+                        {
+                            value = prop.Value.GetString();
+                            return true;
+                        }
                     }
+                    if (FindStringPropertyRecursive(prop.Value, name, out value)) return true;
                 }
-                if (FindStringPropertyRecursive(prop.Value, name, out value))
+                break;
+            case JsonValueKind.Array:
+                foreach (var item in element.EnumerateArray())
                 {
-                    return true;
+                    if (FindStringPropertyRecursive(item, name, out value)) return true;
                 }
-            }
-        }
-        else if (element.ValueKind == JsonValueKind.Array)
-        {
-            foreach (var item in element.EnumerateArray())
-            {
-                if (FindStringPropertyRecursive(item, name, out value))
-                {
-                    return true;
-                }
-            }
+                break;
         }
         return false;
     }
