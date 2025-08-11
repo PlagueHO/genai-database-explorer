@@ -1,5 +1,5 @@
 ---
-title: Semantic Model Embeddings & Storage
+title: Semantic Model Embeddings & Storage - Technical Documentation
 component_path: src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticVectors/
 version: 1.0
 date_created: 2025-08-11
