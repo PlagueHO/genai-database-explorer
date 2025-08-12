@@ -228,7 +228,9 @@ public sealed class SemanticModel(
             throw new ObjectDisposedException(nameof(SemanticModel));
         }
         var tables = await GetTablesAsync();
-        return tables.FirstOrDefault(t => t.Schema == schemaName && t.Name == tableName);
+        return tables.FirstOrDefault(t =>
+            string.Equals(t.Schema, schemaName, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(t.Name, tableName, StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>
@@ -275,22 +277,46 @@ public sealed class SemanticModel(
             {
                 // Load only the table metadata, then lazy load individual table details
                 var tablesFolderPath = new DirectoryInfo(Path.Combine(modelPath.FullName, "tables"));
-                if (!Directory.Exists(tablesFolderPath.FullName))
+                var folderExists = Directory.Exists(tablesFolderPath.FullName);
+                // If the folder doesn't exist, return empty collection per expectations
+                if (!folderExists)
                 {
-                    return Enumerable.Empty<SemanticModelTable>();
+                    return new List<SemanticModelTable>();
                 }
 
                 var tables = new List<SemanticModelTable>();
                 foreach (var table in capturedTables)
                 {
-                    // Check if the table file exists before attempting to load
+                    // If the entity file exists, load details; otherwise include captured metadata
                     var fileName = $"{table.Schema}.{table.Name}.json";
                     var filePath = Path.Combine(tablesFolderPath.FullName, fileName);
                     if (File.Exists(filePath))
                     {
-                        await table.LoadModelAsync(tablesFolderPath);
+                        await LoadEntityWithEnvelopeSupportAsync(table, tablesFolderPath);
                     }
                     tables.Add(table);
+                }
+
+                // Also include any tables that exist on disk but were not listed in semanticmodel.json
+                if (folderExists)
+                {
+                    foreach (var file in Directory.EnumerateFiles(tablesFolderPath.FullName, "*.json", SearchOption.TopDirectoryOnly))
+                    {
+                        var nameNoExt = Path.GetFileNameWithoutExtension(file);
+                        if (string.IsNullOrWhiteSpace(nameNoExt)) continue;
+                        var dotIdx = nameNoExt.IndexOf('.');
+                        if (dotIdx <= 0) continue;
+                        var schema = nameNoExt[..dotIdx];
+                        var name = nameNoExt[(dotIdx + 1)..];
+
+                        if (!tables.Any(t => string.Equals(t.Schema, schema, StringComparison.OrdinalIgnoreCase) &&
+                                              string.Equals(t.Name, name, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            var extra = new SemanticModelTable(schema, name);
+                            await LoadEntityWithEnvelopeSupportAsync(extra, tablesFolderPath);
+                            tables.Add(extra);
+                        }
+                    }
                 }
                 return tables;
             });
@@ -301,22 +327,46 @@ public sealed class SemanticModel(
             {
                 // Load view metadata and details on demand
                 var viewsFolderPath = new DirectoryInfo(Path.Combine(modelPath.FullName, "views"));
-                if (!Directory.Exists(viewsFolderPath.FullName))
+                var folderExists = Directory.Exists(viewsFolderPath.FullName);
+                // If the folder doesn't exist, return empty collection per expectations
+                if (!folderExists)
                 {
-                    return Enumerable.Empty<SemanticModelView>();
+                    return new List<SemanticModelView>();
                 }
 
                 var views = new List<SemanticModelView>();
                 foreach (var view in capturedViews)
                 {
-                    // Check if the view file exists before attempting to load
+                    // If the entity file exists, load details; otherwise include captured metadata
                     var fileName = $"{view.Schema}.{view.Name}.json";
                     var filePath = Path.Combine(viewsFolderPath.FullName, fileName);
                     if (File.Exists(filePath))
                     {
-                        await view.LoadModelAsync(viewsFolderPath);
+                        await LoadEntityWithEnvelopeSupportAsync(view, viewsFolderPath);
                     }
                     views.Add(view);
+                }
+
+                // Also include any views that exist on disk but were not listed in semanticmodel.json
+                if (folderExists)
+                {
+                    foreach (var file in Directory.EnumerateFiles(viewsFolderPath.FullName, "*.json", SearchOption.TopDirectoryOnly))
+                    {
+                        var nameNoExt = Path.GetFileNameWithoutExtension(file);
+                        if (string.IsNullOrWhiteSpace(nameNoExt)) continue;
+                        var dotIdx = nameNoExt.IndexOf('.');
+                        if (dotIdx <= 0) continue;
+                        var schema = nameNoExt[..dotIdx];
+                        var name = nameNoExt[(dotIdx + 1)..];
+
+                        if (!views.Any(v => string.Equals(v.Schema, schema, StringComparison.OrdinalIgnoreCase) &&
+                                            string.Equals(v.Name, name, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            var extra = new SemanticModelView(schema, name);
+                            await LoadEntityWithEnvelopeSupportAsync(extra, viewsFolderPath);
+                            views.Add(extra);
+                        }
+                    }
                 }
                 return views;
             });
@@ -327,22 +377,46 @@ public sealed class SemanticModel(
             {
                 // Load stored procedure metadata and details on demand
                 var storedProceduresFolderPath = new DirectoryInfo(Path.Combine(modelPath.FullName, "storedprocedures"));
-                if (!Directory.Exists(storedProceduresFolderPath.FullName))
+                var folderExists = Directory.Exists(storedProceduresFolderPath.FullName);
+                // If the folder doesn't exist, return empty collection per expectations
+                if (!folderExists)
                 {
-                    return Enumerable.Empty<SemanticModelStoredProcedure>();
+                    return new List<SemanticModelStoredProcedure>();
                 }
 
                 var storedProcedures = new List<SemanticModelStoredProcedure>();
                 foreach (var storedProcedure in capturedStoredProcedures)
                 {
-                    // Check if the stored procedure file exists before attempting to load
+                    // If the entity file exists, load details; otherwise include captured metadata
                     var fileName = $"{storedProcedure.Schema}.{storedProcedure.Name}.json";
                     var filePath = Path.Combine(storedProceduresFolderPath.FullName, fileName);
                     if (File.Exists(filePath))
                     {
-                        await storedProcedure.LoadModelAsync(storedProceduresFolderPath);
+                        await LoadEntityWithEnvelopeSupportAsync(storedProcedure, storedProceduresFolderPath);
                     }
                     storedProcedures.Add(storedProcedure);
+                }
+
+                // Also include any stored procedures that exist on disk but were not listed in semanticmodel.json
+                if (folderExists)
+                {
+                    foreach (var file in Directory.EnumerateFiles(storedProceduresFolderPath.FullName, "*.json", SearchOption.TopDirectoryOnly))
+                    {
+                        var nameNoExt = Path.GetFileNameWithoutExtension(file);
+                        if (string.IsNullOrWhiteSpace(nameNoExt)) continue;
+                        var dotIdx = nameNoExt.IndexOf('.');
+                        if (dotIdx <= 0) continue;
+                        var schema = nameNoExt[..dotIdx];
+                        var name = nameNoExt[(dotIdx + 1)..];
+
+                        if (!storedProcedures.Any(sp => string.Equals(sp.Schema, schema, StringComparison.OrdinalIgnoreCase) &&
+                                                        string.Equals(sp.Name, name, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            var extra = new SemanticModelStoredProcedure(schema, name, string.Empty);
+                            await LoadEntityWithEnvelopeSupportAsync(extra, storedProceduresFolderPath);
+                            storedProcedures.Add(extra);
+                        }
+                    }
                 }
                 return storedProcedures;
             });
@@ -484,7 +558,9 @@ public sealed class SemanticModel(
             throw new ObjectDisposedException(nameof(SemanticModel));
         }
         var views = await GetViewsAsync();
-        return views.FirstOrDefault(v => v.Schema == schemaName && v.Name == viewName);
+        return views.FirstOrDefault(v =>
+            string.Equals(v.Schema, schemaName, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(v.Name, viewName, StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>
@@ -530,7 +606,9 @@ public sealed class SemanticModel(
             throw new ObjectDisposedException(nameof(SemanticModel));
         }
         var storedProcedures = await GetStoredProceduresAsync();
-        return storedProcedures.FirstOrDefault(sp => sp.Schema == schemaName && sp.Name == storedProcedureName);
+        return storedProcedures.FirstOrDefault(sp =>
+            string.Equals(sp.Schema, schemaName, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(sp.Name, storedProcedureName, StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>
@@ -584,4 +662,75 @@ public sealed class SemanticModel(
         _disposed = true;
     }
 
+    /// <summary>
+    /// Loads an entity from disk, supporting files wrapped in an envelope { data, embedding }.
+    /// The entity JSON is unwrapped (case-insensitive "data") before deserialization via the existing LoadModelAsync.
+    /// </summary>
+    private static async Task LoadEntityWithEnvelopeSupportAsync(SemanticModelEntity entity, DirectoryInfo folderPath)
+    {
+        var fileName = $"{entity.Schema}.{entity.Name}.json";
+        var filePath = Path.Combine(folderPath.FullName, fileName);
+        if (!File.Exists(filePath))
+        {
+            throw new FileNotFoundException("The specified entity file does not exist.", filePath);
+        }
+
+        var rawJson = await File.ReadAllTextAsync(filePath, Encoding.UTF8);
+
+        string contentJson = rawJson;
+        try
+        {
+            using var doc = JsonDocument.Parse(rawJson);
+            if (doc.RootElement.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var prop in doc.RootElement.EnumerateObject())
+                {
+                    if (string.Equals(prop.Name, "data", StringComparison.OrdinalIgnoreCase))
+                    {
+                        contentJson = prop.Value.GetRawText();
+                        break;
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // If parsing fails, fall back to raw JSON
+        }
+
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            var tempFile = Path.Combine(tempDir, fileName);
+            await File.WriteAllTextAsync(tempFile, contentJson, Encoding.UTF8);
+            var tempDirInfo = new DirectoryInfo(tempDir);
+            // Dispatch to derived type loader to avoid base abstract deserialization
+            switch (entity)
+            {
+                case SemanticModelTable t:
+                    await t.LoadModelAsync(tempDirInfo);
+                    break;
+                case SemanticModelView v:
+                    await v.LoadModelAsync(tempDirInfo);
+                    break;
+                case SemanticModelStoredProcedure sp:
+                    await sp.LoadModelAsync(tempDirInfo);
+                    break;
+                default:
+                    throw new NotSupportedException($"Unsupported entity type: {entity.GetType().Name}");
+            }
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true);
+            }
+            catch
+            {
+                // best-effort cleanup
+            }
+        }
+    }
 }

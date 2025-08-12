@@ -326,9 +326,16 @@ namespace GenAIDBExplorer.Core.Repository
             try
             {
                 using var doc = JsonDocument.Parse(jsonContent);
-                if (doc.RootElement.ValueKind == JsonValueKind.Object && doc.RootElement.TryGetProperty("data", out var dataProp))
+                if (doc.RootElement.ValueKind == JsonValueKind.Object)
                 {
-                    return dataProp.GetRawText();
+                    // Case-insensitive lookup for "data" property to support varied serializers
+                    foreach (var prop in doc.RootElement.EnumerateObject())
+                    {
+                        if (string.Equals(prop.Name, "data", StringComparison.OrdinalIgnoreCase))
+                        {
+                            return prop.Value.GetRawText();
+                        }
+                    }
                 }
             }
             catch
