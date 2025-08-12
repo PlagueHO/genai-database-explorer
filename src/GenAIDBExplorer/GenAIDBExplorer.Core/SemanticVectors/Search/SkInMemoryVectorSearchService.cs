@@ -106,9 +106,9 @@ public sealed class SkInMemoryVectorSearchService(InMemoryVectorStore store, IPe
             ["TopK"] = topK
         });
 
-    var collection = _store.GetCollection<string, EntityVectorRecord>(infrastructure.CollectionName);
-    await EnsureCollectionExistsOnCollectionAsync(collection!, cancellationToken).ConfigureAwait(false);
-    await EnsureCollectionExistsAsync((VectorStoreCollection<string, EntityVectorRecord>)collection, cancellationToken).ConfigureAwait(false);
+        var collection = _store.GetCollection<string, EntityVectorRecord>(infrastructure.CollectionName);
+        await EnsureCollectionExistsOnCollectionAsync(collection!, cancellationToken).ConfigureAwait(false);
+        await EnsureCollectionExistsAsync((VectorStoreCollection<string, EntityVectorRecord>)collection, cancellationToken).ConfigureAwait(false);
 
         var results = new List<(EntityVectorRecord, double)>();
         try

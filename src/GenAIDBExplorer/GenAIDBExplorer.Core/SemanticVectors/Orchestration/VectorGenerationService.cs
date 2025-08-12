@@ -287,7 +287,7 @@ public sealed class VectorGenerationService : IVectorGenerationService
         // Try multiple strategies to avoid transient file locks on Windows
         const int maxAttempts = 5;
         int attempt = 0;
-        for (;;)
+        for (; ; )
         {
             cancellationToken.ThrowIfCancellationRequested();
             try
