@@ -61,7 +61,7 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: Download Console App Artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: console-app-published
           path: ./publish
