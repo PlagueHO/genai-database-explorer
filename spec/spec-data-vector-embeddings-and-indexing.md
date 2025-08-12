@@ -2,20 +2,20 @@
 title: Data Vector Embeddings and Indexing Specification
 version: 1.0
 date_created: 2025-08-08
-last_updated: 2025-08-08
+last_updated: 2025-08-12
 owner: GenAI Database Explorer Team
 tags: [data, design, vector, embeddings, search, semantic-kernel, azure, ai-search, cosmosdb]
 ---
 
 ## Introduction
 
-This specification defines the architecture, patterns, interfaces, and behaviors required to add vector embeddings and vector search over semantic model entities (tables, views, stored procedures). It aligns with existing repository strategies (Local Disk, Azure Blob Storage, Cosmos DB) and uses Semantic Kernel vector-store connectors with Microsoft.Extensions.VectorData abstractions.
+This specification defines the architecture, patterns, interfaces, and behaviors required to add vector embeddings and vector search over semantic model entities (tables, views, stored procedures). It aligns with existing repository strategies (Local Disk, Azure Blob Storage, CosmosDB) and uses Semantic Kernel vector-store connectors with Microsoft.Extensions.VectorData abstractions.
 
 The goals are to:
 
 - Generate embeddings from entity descriptions and related context.
 - Persist embeddings alongside entities where appropriate.
-- Expose consistent vector search across connectors (Cosmos DB NoSQL, Azure AI Search, and an in-memory store for tests).
+- Expose consistent vector search across connectors (CosmosDB, Azure AI Search, and an in-memory store for tests).
 - Provide a CLI command to generate and optionally push vectors to an index.
 
 ## 1. Purpose & Scope
@@ -40,7 +40,7 @@ Assumptions: .NET 9, C# 11+, DI, async/await, existing project settings and DI p
 - SK: Microsoft Semantic Kernel (connectors and AI services).
 - Vector Store Connector: SK connector implementing VectorData abstractions.
 - Local/Blob Strategy: Semantic model persisted as JSON files on disk or in Azure Blob.
-- Cosmos Strategy: Semantic model persisted in Azure Cosmos DB for NoSQL.
+- CosmosDB Strategy: Semantic model persisted in Azure CosmosDB.
 - InMemory Store: Semantic Kernel InMemory vector store connector used for testing/dev (Volatile is legacy/obsolete).
 - Entity: SemanticModelEntity (Table, View, StoredProcedure) within the semantic model.
 
@@ -50,10 +50,10 @@ Assumptions: .NET 9, C# 11+, DI, async/await, existing project settings and DI p
 
 - REQ-001: Generate embeddings for entities based on enriched descriptions and structural context.
 - REQ-002: Use Microsoft.Extensions.VectorData.Abstractions for record/collection modeling.
-- REQ-003: Use Semantic Kernel vector-store connectors for Cosmos DB NoSQL, Azure AI Search, and the SK InMemory connector for tests/dev. Do not implement a custom in-memory indexer. Do not use Microsoft.Extensions.AI for vector storage.
+- REQ-003: Use Semantic Kernel vector-store connectors for CosmosDB, Azure AI Search, and the SK InMemory connector for tests/dev. Do not implement a custom in-memory indexer. Do not use Microsoft.Extensions.AI for vector storage.
 - REQ-004: Provide a new CLI command generate-vectors to compute/update embeddings post enrich-model and data-dictionary.
 - REQ-005: For Local/Blob strategies, persist embedding floats and metadata with the entity JSON; optionally push to external index (AI Search or In-Memory).
-- REQ-006: For Cosmos strategy, store vectors through the Cosmos NoSQL connector; do not duplicate floats in entity JSON; keep embedding metadata only.
+- REQ-006: For CosmosDB strategy, store vectors in the SAME CosmosDB container and documents as the semantic model entities (same-container colocation). Persist the embedding floats in a configured vector field path on the entity document and maintain embedding metadata alongside. Do not use a separate vector container.
 - REQ-007: Provide a search API that returns top-k relevant entities by vector similarity, independent of the underlying index provider.
 - REQ-008: Ensure idempotent embedding updates via content hashing and embedding metadata (model, dims, timestamp, version).
 - REQ-009: Dimension, model/deployment, and index configuration must validate at startup and fail-fast on mismatch.
@@ -74,7 +74,7 @@ Assumptions: .NET 9, C# 11+, DI, async/await, existing project settings and DI p
 ### Constraints
 
 - CON-001: Align with existing DI and SemanticKernelFactory usage; embeddings must be registered with a serviceId (e.g., "Embeddings").
-- CON-002: Cosmos strategy must use Cosmos NoSQL vector index; do not support external vector indices concurrently.
+- CON-002: CosmosDB strategy must use CosmosDB vector indexing on the Entities container (same container as entity documents) with a container-level vector policy; do not support external vector indices concurrently, and do not use a separate CosmosDB container for vectors.
 - CON-003: Local/Blob may use external index (AI Search) or in-memory; floats must still be persisted locally.
 - CON-004: Embedding dimension must match the configured embedding model.
 - CON-005: For in-memory vectors, use the SK InMemory connector via DI (services.AddInMemoryVectorStore()) or direct types (InMemoryVectorStore/InMemoryCollection). The Volatile connector is obsolete and must not be used.
@@ -102,7 +102,7 @@ Assumptions: .NET 9, C# 11+, DI, async/await, existing project settings and DI p
 // Decides allowed index provider given repository strategy and config
 public interface IVectorIndexPolicy
 {
-    VectorIndexProvider ResolveProvider(); // Auto|Cosmos|AzureAISearch|InMemory
+  VectorIndexProvider ResolveProvider(); // Auto|CosmosDB|AzureAISearch|InMemory
     bool AllowExternalIndexForRepo(string repoStrategy);
 }
 
@@ -233,7 +233,7 @@ public sealed record EmbeddingMetadata(
 public enum VectorIndexProvider
 {
   Auto,
-  Cosmos,
+  CosmosDB,
   AzureAISearch,
   InMemory
 }
@@ -244,19 +244,22 @@ public enum VectorIndexProvider
 ```json
 {
   "VectorIndex": {
-    "Provider": "Auto|Cosmos|AzureAISearch|InMemory",
+  "Provider": "Auto|CosmosDB|AzureAISearch|InMemory",
     "CollectionName": "entities",
     "PushOnGenerate": true,
   "ProvisionIfMissing": false,
-    "AllowedForRepository": "Auto|CosmosOnly|ExternalAllowed",
+  "AllowedForRepository": "Auto|CosmosDBOnly|ExternalAllowed",
     "AzureAISearch": {
       "Endpoint": "https://<name>.search.windows.net",
       "ApiKey": "env:AZURE_SEARCH_KEY",
       "IndexName": "sk-entities"
     },
-    "CosmosNoSql": {
-      "ConnectionString": "env:AZURE_COSMOS_CS",
-      "Database": "skvectors"
+  "CosmosDB": {
+      // When using Cosmos strategy, vectors are stored in the same container as entity documents
+      // (SemanticModelRepository.CosmosDb.EntitiesContainerName). Configure only vector specifics here.
+      "VectorPath": "/embedding/vector",          // JSON path on the entity document holding the vector
+      "DistanceFunction": "cosine",               // cosine | dotproduct | euclidean
+      "IndexType": "diskANN"                      // diskANN | quantizedFlat | flat
     },
   "EmbeddingServiceId": "Embeddings",
   "ExpectedDimensions": 1536
@@ -268,7 +271,7 @@ public enum VectorIndexProvider
 
 - AC-001: Given Local/Blob repository, When generate-vectors runs without --push, Then embeddings are computed for changed entities and persisted as floats + metadata in entity JSON.
 - AC-002: Given Local/Blob repository and PushOnGenerate=true or --push, When generate-vectors runs, Then records are upserted into the configured external index (AI Search or InMemory) and local JSON is updated.
-- AC-003: Given Cosmos repository, When generate-vectors runs, Then records are upserted via the Cosmos NoSQL vector connector and entity JSON does not persist floats (metadata only).
+- AC-003: Given CosmosDB repository, When generate-vectors runs, Then the embedding floats are written to the configured vector field on the SAME entity documents in the Entities container (with container-level vector policy) and metadata is updated; no separate vector container is used.
 - AC-004: Given unchanged entity text and no --overwrite, When generate-vectors runs, Then embeddings are skipped (idempotent via content hash).
 - AC-005: Given a natural language query, When SearchAsync is called, Then top-k relevant entities are returned consistently across providers.
 - AC-006: Given invalid dimension/model config, When app starts, Then it fails-fast with a clear error.
@@ -294,11 +297,11 @@ public enum VectorIndexProvider
 ### External Systems
 
 - EXT-001: Azure AI Search — vector/hybrid indexing and similarity search.
-- EXT-002: Azure Cosmos DB for NoSQL — native vector indexing and search.
+- EXT-002: Azure CosmosDB for NoSQL — native vector indexing and search.
 
 ### Third-Party Services
 
-- SVC-001: Semantic Kernel Vector Store Connectors — Azure AI Search, Cosmos NoSQL, InMemory.
+- SVC-001: Semantic Kernel Vector Store Connectors — Azure AI Search, CosmosDB NoSQL, InMemory.
 
 ### Infrastructure Dependencies
 
@@ -396,7 +399,7 @@ Notes: human-readable JSON; floats array may be large. If absent, treat as “no
 |---|---|---|---|
 | Local Disk | InMemory, AzureAISearch | AzureAISearch if explicitly configured; otherwise InMemory | Yes |
 | Azure Blob | InMemory, AzureAISearch | AzureAISearch if explicitly configured; otherwise InMemory | Yes |
-| Cosmos DB NoSQL | Cosmos | Cosmos (external disallowed) | No (metadata only) |
+| CosmosDB | CosmosDB | CosmosDB (external disallowed) | Yes (same document field) |
 
 Validation: Cosmos + external provider → fail-fast. For Local/Blob with Provider=Auto: choose the first allowed provider with valid configuration (prefers AzureAISearch when configured; otherwise InMemory). If Provider is explicitly set but misconfigured, fail-fast.
 
@@ -415,7 +418,7 @@ Deterministic dimension logic:
 ### 12.4 Index defaults & ownership
 
 - Azure AI Search: HNSW by default; cosine distance recommended. Analyzer config not supported by connector—provision index via infra (Bicep) when custom analyzers needed.
-- Cosmos NoSQL: recommend IndexKind=QuantizedFlat (or provider default) and cosine distance. Define partition key (see 12.11). Containers and indexing policy should be provisioned via infra.
+- CosmosDB: apply a container-level vector policy and vector index on the Entities container (that stores semantic model entity documents). Recommend IndexType=diskANN for large sets, or quantizedFlat/flat per workload, with cosine distance. Define partition key (see 12.11). Prefer provisioning via infra.
 
 ### 12.5 CLI: generate-vectors (options & examples)
 
@@ -457,15 +460,17 @@ dotnet run --project GenAIDBExplorer.Console/ -- generate-vectors --project d:/t
 
 - Controlled by settings (enableHybrid, keywordWeight). If provider lacks support, ignore gracefully.
 
-### 12.11 Cosmos partitioning & keys
+### 12.11 CosmosDB partitioning & keys
 
 - Recommended partition key: Model or Model/EntityType to balance queries.
-- When a custom partition key is used, prefer CosmosNoSqlCompositeKey for Get/Upsert.
+- When a custom partition key is used, prefer CosmosDBCompositeKey for Get/Upsert.
 - Example id: "adventureworks:Table:dbo.Customer"; partition: "adventureworks/table".
+- Vector field path: configure a JSON path on the entity document (e.g., "/embedding/vector") that matches the container vector policy and indexing policy.
 
 ### 12.12 Resource lifecycle & ownership
 
-- Provision Azure AI Search indexes and Cosmos containers via infra (e.g., infra/main.bicep). Runtime will not configure analyzers or advanced index features. If VectorIndex.ProvisionIfMissing=true, runtime may create minimal resources (key/text/vector fields only) when absent.
+- Provision Azure AI Search indexes and CosmosDB containers via infra (e.g., infra/main.bicep). Runtime will not configure analyzers or advanced index features. If VectorIndex.ProvisionIfMissing=true, runtime may create minimal resources when absent:
+  - CosmosDB: ensure the Entities container exists and has a vector policy for the configured VectorPath and a matching vector index (IndexType, DistanceFunction). No separate vector container is created.
 
 ### 12.13 Versioning & migration
 
@@ -510,7 +515,7 @@ dotnet run --project GenAIDBExplorer.Console/ -- generate-vectors --project d:/t
 
 - Configuration: VectorIndex.ProvisionIfMissing (bool, default false). When true, runtime attempts to create minimal resources if not found.
 - Azure AI Search: create index with fields: Id (key), Text (searchable), Model/EntityType/Schema/Name (filterable), Embedding (vector, cosine), HNSW defaults. No custom analyzers.
-- Cosmos NoSQL: create database if missing; create container with partition key as configured (recommend Model or Model/EntityType) and vector indexing policy. Idempotent creation; skip if exists.
+- Cosmos NoSQL: create database if missing; on the Entities container (SemanticModelRepository.CosmosDb.EntitiesContainerName), ensure vector policy and vector index exist for the configured VectorPath (and IndexType/DistanceFunction). Idempotent creation; skip if exists. Do not create a separate vectors container.
 - Safety: Log a clear warning when creating resources; failures surface as errors. Intended for dev/test and controlled environments; infra-as-code remains the primary provisioning mechanism.
 
 ## 13. Remaining high‑impact design issues (for prioritization)
@@ -542,7 +547,7 @@ flowchart LR
   end
 
   B --> G[VectorIndexProvider (Strategy)]
-  G --> H1[CosmosNoSql Connector]
+  G --> H1[CosmosDB Connector]
   G --> H2[Azure AI Search Connector]
   G --> H3[InMemory Connector]
 
@@ -562,7 +567,7 @@ Keep `SemanticModelRepository` unchanged. Persistence strategies will map domain
 |---|---|---:|---|---|
 | Local Disk | PersistedEntityDto | ✅ Included | ISecureJsonSerializer | Human-readable JSON, safe serialization (SEC-003) |
 | Azure Blob | PersistedEntityDto | ✅ Included | ISecureJsonSerializer | Per-entity blobs; index.json maintained |
-| Cosmos NoSQL | CosmosEntityDto | ❌ Excluded | ISecureJsonSerializer | Keep metadata only in doc; vectors go to Cosmos vector index via SK connector |
+| CosmosDB | CosmosEntityDto | ✅ Included (same doc field) | ISecureJsonSerializer | Same container colocation: vectors are stored on the entity documents at the configured VectorPath with container vector policy |
 
 Small flow diagram of write operations by strategy:
 
@@ -572,11 +577,13 @@ flowchart TB
     D1[Domain Entity] --> M1[Persistence Mapper]
     M1 --> P1[PersistedEntityDto (with floats)] --> S1[(JSON on disk/blob)]
   end
-  subgraph Cosmos
+  subgraph CosmosDB (Same-container)
     D2[Domain Entity] --> M2[Cosmos Mapper]
-    M2 --> P2[CosmosEntityDto (no floats, metadata only)] --> S2[(Cosmos doc)]
-    D2 --> G[Vector Generation] --> W[Vector Index Writer] --> I[(Cosmos Vector Index)]
+    M2 --> P2[CosmosEntityDto (with vector field + metadata)] --> S2[(Cosmos doc in Entities container)]
+    Q[Container Vector Policy + Index]:::note
   end
+
+  classDef note fill:#eef,stroke:#99f,color:#003;
 ```
 
 ### 14.2 PersistedEntityDto (Local/Blob) — includes embeddings 📦➡️🧠
@@ -612,9 +619,9 @@ Mapping rules:
 - PersistedEntityDto → Domain: ignore `Embedding` fields when loading (vector orchestration governs embeddings), but preserve non-vector fields.
 - JSON remains indented and human-readable (PER-003).
 
-### 14.3 CosmosEntityDto (Cosmos NoSQL) — no floats, metadata only ☁️🧩
+### 14.3 CosmosEntityDto (CosmosDB) — vectors colocated on entity docs ☁️🧩
 
-For Cosmos, do not duplicate floats in entity documents (REQ-006). Store only embedding metadata alongside a float-free entity payload. Vector floats are stored exclusively via the Cosmos NoSQL vector connector.
+For CosmosDB, vectors are stored in the SAME container and documents as the entities. Persist the vector array at the configured VectorPath together with metadata.
 
 ```csharp
 public sealed class CosmosEntityDto<T>
@@ -623,17 +630,21 @@ public sealed class CosmosEntityDto<T>
   public required string modelName { get; init; }          // partition key per 12.11
   public required string entityType { get; init; }         // table|view|storedprocedure
   public required string entityName { get; init; }
-  public required T data { get; init; }                    // domain entity clone WITHOUT embeddings
+  public required T data { get; init; }                    // domain entity payload (no duplication of vectors here)
+
+  // Vector and metadata colocated on the entity document
+  public float[]? embedding_vector { get; init; }          // matches VectorIndex.CosmosDB.VectorPath
   public EmbeddingMetadata? embeddingMetadata { get; init; }
+
   public DateTimeOffset createdAt { get; init; } = DateTimeOffset.UtcNow;
 }
 ```
 
 Mapping rules:
 
-- Domain → `T` (float-free clone): strip any embedding vector fields from the domain representation before assignment to `data`.
+- Domain → `T`: domain entity payload as-is (non-vector fields). The vector is written to `embedding_vector` (or the configured path) on the same document.
 - Metadata: include `EmbeddingMetadata` for drift detection and reconciliation.
-- Floats: never present in `CosmosEntityDto`; upsert vectors via the SK Cosmos connector (`IVectorIndexWriter`).
+- Queries/Search: use container vector policy + `VectorDistance` queries or compatible SDK abstractions.
 
 ### 14.4 LocalDisk secure serialization 🔒
 
@@ -664,7 +675,7 @@ public class LocalDiskPersistenceStrategy : ILocalDiskPersistenceStrategy
 - `SemanticModelRepository` remains unchanged; it orchestrates strategy calls, caching, and concurrency but is agnostic of vector shapes.
 - Full-save semantics in strategies are acceptable. Vector flows update:
   - Local/Blob: entity JSON (via `PersistedEntityDto`) includes floats + metadata after generation.
-  - Cosmos: entity docs (via `CosmosEntityDto`) include metadata only; floats live in the vector index managed by SK connector.
+  - CosmosDB: entity docs (via `CosmosEntityDto`) include metadata only; floats live in the vector index managed by SK connector.
 
 ### 14.6 Optional supporting components (recommended)
 

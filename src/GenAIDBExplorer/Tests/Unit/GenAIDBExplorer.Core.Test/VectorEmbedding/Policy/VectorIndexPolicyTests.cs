@@ -35,7 +35,7 @@ public class VectorIndexPolicyTests
         var policy = new VectorIndexPolicy();
         var settings = new VectorIndexSettings { Provider = "Auto" };
         var provider = policy.ResolveProvider(settings, repositoryStrategy: "Cosmos");
-        provider.Should().Be("CosmosNoSql");
+    provider.Should().Be("CosmosDB");
     }
 
     [TestMethod]
@@ -45,6 +45,6 @@ public class VectorIndexPolicyTests
         var settings = new VectorIndexSettings { Provider = "InMemory" };
         Action act = () => policy.Validate(settings, repositoryStrategy: "Cosmos");
         act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*Cosmos persistence requires CosmosNoSql*");
+            .WithMessage("*Cosmos persistence requires CosmosDB*");
     }
 }

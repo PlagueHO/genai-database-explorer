@@ -12,12 +12,12 @@ public class VectorIndexPolicy : IVectorIndexPolicy
         if (!string.Equals(settings.Provider, "Auto", StringComparison.OrdinalIgnoreCase))
             return settings.Provider;
 
-        // Auto rules:
-        // - If repository is Cosmos, require CosmosNoSql (CON-002)
+    // Auto rules:
+    // - If repository is Cosmos, require CosmosDB (CON-002)
         // - Otherwise default to InMemory for local development
         if (repositoryStrategy.Equals("Cosmos", StringComparison.OrdinalIgnoreCase))
         {
-            return "CosmosNoSql";
+            return "CosmosDB";
         }
 
         // Future: detect Azure AI Search availability/env vars and prefer it.
@@ -33,9 +33,9 @@ public class VectorIndexPolicy : IVectorIndexPolicy
         if (repositoryStrategy.Equals("Cosmos", StringComparison.OrdinalIgnoreCase))
         {
             var provider = ResolveProvider(settings, repositoryStrategy);
-            if (!string.Equals(provider, "CosmosNoSql", StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(provider, "CosmosDB", StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException("Cosmos persistence requires CosmosNoSql vector provider (CON-002).");
+                throw new InvalidOperationException("Cosmos persistence requires CosmosDB vector provider (CON-002).");
             }
         }
 

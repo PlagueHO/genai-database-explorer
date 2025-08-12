@@ -4,6 +4,7 @@ version: 1.0
 date_created: 2025-06-25
 last_updated: 2025-06-25
 owner: GenAI Database Explorer Team
+status: 'Completed'
 tags: [upgrade, dependency, breaking-changes, command-line]
 ---
 

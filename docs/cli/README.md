@@ -41,12 +41,12 @@ Extracts a semantic model from the database schema.
 **Usage:**
 
 ```bash
-gaidbexp extract-model --projectPath <path> [--skipTables] [--skipViews] [--skipStoredProcedures]
+gaidbexp extract-model --project <path> [--skipTables] [--skipViews] [--skipStoredProcedures]
 ```
 
 **Options:**
 
-- `--projectPath` (required): Path to the project directory.
+- `--project`, `-p` (required): Path to the project directory.
 - `--skipTables`: Skip tables during extraction.
 - `--skipViews`: Skip views during extraction.
 - `--skipStoredProcedures`: Skip stored procedures during extraction.
@@ -58,16 +58,15 @@ Applies data dictionary files to the semantic model.
 **Usage:**
 
 ```bash
-gaidbexp data-dictionary --projectPath <path> --sourcePathPattern <pattern> [--objectType <type>] [--schemaName <name>] [--objectName <name>] [--show]
+gaidbexp data-dictionary table --project <path> --source-path <pattern> [--schema <name>] [--name <object>] [--show]
 ```
 
 **Options:**
 
-- `--projectPath` (required): Path to the project directory.
-- `--sourcePathPattern` (required): Path pattern to the data dictionary files.
-- `--objectType`: Type of object to process (e.g., table).
-- `--schemaName`: Schema name of the object.
-- `--objectName`: Name of the object.
+- `--project`, `-p` (required): Path to the project directory.
+- `--source-path`, `-d` (required): Path pattern to the data dictionary files.
+- `--schema`, `-s`: Schema name of the table to process.
+- `--name`, `-n`: Name of the table to process.
 - `--show`: Display the entity after processing.
 
 ### enrich-model
@@ -77,18 +76,21 @@ Enriches the semantic model using Generative AI.
 **Usage:**
 
 ```bash
-gaidbexp enrich-model --projectPath <path> [--skipTables] [--skipViews] [--skipStoredProcedures] [--objectType <type>] [--schemaName <name>] [--objectName <name>] [--show]
+gaidbexp enrich-model --project <path> [--skipTables] [--skipViews] [--skipStoredProcedures]
+
+# Target a single object type
+gaidbexp enrich-model table --project <path> --schema <name> --name <object> [--show]
+gaidbexp enrich-model view --project <path> --schema <name> --name <object> [--show]
+gaidbexp enrich-model storedprocedure --project <path> --schema <name> --name <object> [--show]
 ```
 
 **Options:**
 
-- `--projectPath` (required): Path to the project directory.
+- `--project`, `-p` (required): Path to the project directory.
 - `--skipTables`: Skip tables during enrichment.
 - `--skipViews`: Skip views during enrichment.
 - `--skipStoredProcedures`: Skip stored procedures during enrichment.
-- `--objectType`: Type of object to enrich (table, view, storedprocedure).
-- `--schemaName`: Schema name of the object.
-- `--objectName`: Name of the object.
+- For subcommands: `--schema`, `-s` and `--name`, `-n` select a specific object.
 - `--show`: Display the entity after enrichment.
 
 ### show-object
@@ -98,15 +100,16 @@ Displays details of a table, view, or stored procedure.
 **Usage:**
 
 ```bash
-gaidbexp show-object --projectPath <path> --schemaName <name> --objectName <name> --objectType <type>
+gaidbexp show-object table --project <path> --schemaName <name> --name <object>
+gaidbexp show-object view --project <path> --schemaName <name> --name <object>
+gaidbexp show-object storedprocedure --project <path> --schemaName <name> --name <object>
 ```
 
 **Options:**
 
-- `--projectPath` (required): Path to the project directory.
-- `--schemaName` (required): Schema name of the object.
-- `--objectName` (required): Name of the object.
-- `--objectType` (required): Type of object (table, view, storedprocedure).
+- `--project`, `-p` (required): Path to the project directory.
+- `--schemaName`, `-s` (required): Schema name of the object.
+- `--name`, `-n` (required): Name of the object.
 
 ### query-model
 
@@ -115,12 +118,13 @@ Generates SQL or answers questions against the semantic model.
 **Usage:**
 
 ```bash
-gaidbexp query-model --projectPath <path>
+gaidbexp query-model --project <path> --question <text>
 ```
 
 **Options:**
 
-- `--projectPath` (required): Path to the project directory.
+- `--project`, `-p` (required): Path to the project directory.
+- `--question`, `-q` (required): The question to ask the model.
 
 ### export-model
 
@@ -129,15 +133,15 @@ Exports the semantic model to a file.
 **Usage:**
 
 ```bash
-gaidbexp export-model --projectPath <path> [--outputPath <file>] [--fileType <type>] [--splitFiles]
+gaidbexp export-model --project <path> [--outputFileName <file>] [--fileType <type>] [--splitFiles]
 ```
 
 **Options:**
 
-- `--projectPath` (required): Path to the project directory.
-- `--outputPath`: Name of the output file (defaults to `exported_model.md`).
-- `--fileType`: Type of output file (defaults to `markdown`).
-- `--splitFiles`: Split export into individual files per entity.
+- `--project`, `-p` (required): Path to the project directory.
+- `--outputFileName`, `-o`: Name of the output file (defaults to `exported_model.md`).
+- `--fileType`, `-f`: Type of output file (defaults to `markdown`).
+- `--splitFiles`, `-s`: Split export into individual files per entity.
 
 ---
 

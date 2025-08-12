@@ -1,9 +1,9 @@
 {
-    "SettingsVersion": "1.0.0",
+    "SettingsVersion": "1.0.0", // Internal schema version of this settings file
     "Database": {
-        "Name": "AdventureWorksLT",
+        "Name": "AdventureWorksLT", // Display name of the database/project used across outputs
         "Description": "Product, sales, and customer data for the AdventureWorks company.", // This helps ground the AI on the context of the database.
-        "ConnectionString": "Server=.;Database=AdventureWorksLT;Trusted_Connection=True;MultipleActiveResultSets=True;",
+        "ConnectionString": "Server=.;Database=AdventureWorksLT;Trusted_Connection=True;MultipleActiveResultSets=True;", // SQL Server connection string used to extract schema
         "Schema": "dbo", // If omitted will get all schemas.
         "MaxDegreeOfParallelism": 10, // Number of parallel SQL tasks to run.
         "NotUsedTables": [ // Array of regex's to set NotUsed flag on tables in the database
@@ -23,7 +23,7 @@
         ] // Array of mappings to convert column types during data dictionary import.
     },
     "SemanticModel": {
-        "PersistenceStrategy": "LocalDisk", // LocalDisk, AzureBlob, Cosmos
+        "PersistenceStrategy": "LocalDisk", // LocalDisk, AzureBlob, CosmosDB
         "MaxDegreeOfParallelism": 10 // Number of parallel semantic model tasks to run.
     },
     "SemanticModelRepository": {
@@ -33,26 +33,26 @@
         },
         // Configuration for Azure Blob Storage persistence strategy
         "AzureBlobStorage": {
-            "AccountEndpoint": "https://<Set your Azure Storage account endpoint>.blob.core.windows.net",
-            "ContainerName": "semantic-models",
+            "AccountEndpoint": "https://<Set your Azure Storage account endpoint>.blob.core.windows.net", // Azure Storage account endpoint URL
+            "ContainerName": "semantic-models", // Blob container name to store semantic models
             "BlobPrefix": "", // Optional prefix for organizing models
-            "OperationTimeoutSeconds": 300,
-            "MaxConcurrentOperations": 4,
-            "UseCustomerManagedKeys": false,
+            "OperationTimeoutSeconds": 300, // Per-operation timeout for blob operations (seconds)
+            "MaxConcurrentOperations": 4, // Max parallel blob operations
+            "UseCustomerManagedKeys": false, // Enable CMK encryption for blobs
             "CustomerManagedKeyUrl": "" // Required if UseCustomerManagedKeys is true
         },
         // Configuration for Azure Cosmos DB persistence strategy
         "CosmosDb": {
-            "AccountEndpoint": "https://<Set your Azure Cosmos DB account endpoint>.documents.azure.com:443/",
-            "DatabaseName": "SemanticModels",
-            "ModelsContainerName": "Models",
-            "EntitiesContainerName": "ModelEntities",
-            "ModelsPartitionKeyPath": "/modelName",
-            "EntitiesPartitionKeyPath": "/modelName",
+            "AccountEndpoint": "https://<Set your Azure Cosmos DB account endpoint>.documents.azure.com:443/", // Cosmos DB account endpoint URL
+            "DatabaseName": "SemanticModels", // Cosmos database name to hold model and entity containers
+            "ModelsContainerName": "Models", // Container for semantic model metadata
+            "EntitiesContainerName": "ModelEntities", // Container for per-entity documents
+            "ModelsPartitionKeyPath": "/modelName", // Partition key path for models container
+            "EntitiesPartitionKeyPath": "/modelName", // Partition key path for entities container
             "DatabaseThroughput": 400, // RU/s - Set to null for serverless
-            "OperationTimeoutSeconds": 300,
-            "MaxConcurrentOperations": 4,
-            "MaxRetryAttempts": 3,
+            "OperationTimeoutSeconds": 300, // Per-operation timeout for Cosmos requests (seconds)
+            "MaxConcurrentOperations": 4, // Max parallel Cosmos operations
+            "MaxRetryAttempts": 3, // Transient failure retry attempts
             "ConsistencyLevel": "Session" // Eventual, ConsistentPrefix, Session, BoundedStaleness, Strong
         },
         // Performance and behavior configuration
@@ -82,36 +82,38 @@
             // "AzureOpenAIAppId": "" // Azure OpenAI App Id
         },
         "ChatCompletion": {
-            // "ModelId": "gpt-4o-mini-2024-07-18", // Only required when using OpenAI. Recommend gpt-4o-2024-08-06 or gpt-4o-mini-2024-07-18
+            // "ModelId": "gpt-4.1-mini-2025-04-14", // Only required when using OpenAI. Recommend gpt-4.1-2025-04-14 or gpt-4.1-mini-2025-04-14 (or above)
             "AzureOpenAIDeploymentId": "<Set your Azure OpenAI deployment id>" // Only required when using Azure OpenAI. Recommend gpt-4o or gpt-4o-mini
         },
         // Required for structured chat completion to reliably extract entity lists. Must be a model that supports structured output.
         "ChatCompletionStructured": {
-            // "ModelId": "gpt-4o-mini-2024-07-18", // Only required when using OpenAI. Recommend gpt-4o-2024-08-06 or gpt-4o-mini-2024-07-18
+            // "ModelId": "gpt-4.1-mini-2025-04-14", // Only required when using OpenAI. Recommend gpt-4.1-2025-04-14 or gpt-4.1-mini-2025-04-14 (or above)
             "AzureOpenAIDeploymentId": "<Set your Azure OpenAI deployment id>" // Only required when using Azure OpenAI. Recommend gpt-4o (2024-08-06 or later)
         },
         "Embedding": {
             // "ModelId": "gpt-4o-mini-2024-07-18", // Only required when using OpenAI. Recommend gpt-4o-2024-08-06 or gpt-4o-mini-2024-07-18
-            "AzureOpenAIDeploymentId": "<Set your Azure OpenAI deployment id>" // Only required when using Azure OpenAI. Recommend text-embedding-3-large, text-embedding-3-small or text-embedding-ada-002
+            "AzureOpenAIDeploymentId": "<Set your Azure OpenAI deployment id>" // Only required when using Azure OpenAI. Used for vector embeddings generation (recommend text-embedding-3-large/small or ada-002)
         }
     },
     "VectorIndex": {
-        "Provider": "Auto",
-        "CollectionName": "genaide-entities",
-        "PushOnGenerate": true,
-        "ProvisionIfMissing": false,
-        "EmbeddingServiceId": "Embeddings",
-        "ExpectedDimensions": 3072,
-        "AllowedForRepository": ["LocalDisk", "AzureBlob", "Cosmos"],
+        "Provider": "Auto", // Index provider selection: Auto, AzureAISearch, CosmosDB, InMemory
+        "CollectionName": "genaide-entities", // Logical index/collection name for vectors
+        "PushOnGenerate": true, // Upsert vectors into the index immediately after generation
+        "ProvisionIfMissing": false, // Attempt to create the index/collection if it does not exist
+        "EmbeddingServiceId": "Embeddings", // The registered SK embeddings service name to use
+        "ExpectedDimensions": 3072, // Expected embedding vector size (validates against model/index)
+        "AllowedForRepository": ["LocalDisk", "AzureBlob", "CosmosDB"], // Allowed persistence strategies for indexing integration
         "AzureAISearch": {
-            "Endpoint": "${ENV:AZURE_SEARCH_ENDPOINT}",
-            "IndexName": "${ENV:AZURE_SEARCH_INDEX_NAME}",
-            "ApiKey": "${ENV:AZURE_SEARCH_API_KEY}"
+                "Endpoint": "https://<Set your Azure AI Search endpoint>.search.windows.net", // Azure AI Search endpoint URL
+                "IndexName": "<Set your Azure AI Search index name>", // AI Search index name to store vectors
+                "ApiKey": "<Set your Azure AI Search API key>" // Admin/Query API key (use managed identity in production when possible)
         },
-        "CosmosNoSql": {
-            "AccountEndpoint": "${ENV:AZURE_COSMOS_ENDPOINT}",
-            "Database": "${ENV:AZURE_COSMOS_DATABASE}",
-            "Container": "${ENV:AZURE_COSMOS_CONTAINER}"
+        "CosmosDB": {
+                // When using the CosmosDB repository strategy, vectors are stored on the SAME entity documents
+                // in the Entities container. Configure only vector specifics here.
+                "VectorPath": "/embedding/vector",          // JSON path on the entity document holding the vector
+                "DistanceFunction": "cosine",               // cosine | dotproduct | euclidean
+                "IndexType": "diskANN"                      // diskANN | quantizedFlat | flat
         },
         "Hybrid": {
             "Enabled": false

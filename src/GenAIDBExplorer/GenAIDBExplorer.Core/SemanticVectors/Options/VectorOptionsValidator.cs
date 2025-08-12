@@ -21,7 +21,7 @@ public sealed class VectorOptionsValidator : IValidateOptions<VectorIndexOptions
         var provider = options.Provider?.Trim();
         var validProviders = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "Auto", "InMemory", "AzureAISearch", "CosmosNoSql"
+            "Auto", "InMemory", "AzureAISearch", "CosmosDB"
         };
         if (string.IsNullOrWhiteSpace(provider) || !validProviders.Contains(provider))
         {
@@ -67,15 +67,31 @@ public sealed class VectorOptionsValidator : IValidateOptions<VectorIndexOptions
             }
         }
 
-        if (provider?.Equals("CosmosNoSql", StringComparison.OrdinalIgnoreCase) == true)
+        if (provider?.Equals("CosmosDB", StringComparison.OrdinalIgnoreCase) == true)
         {
-            if (string.IsNullOrWhiteSpace(options.CosmosNoSql?.AccountEndpoint))
+            if (string.IsNullOrWhiteSpace(options.CosmosDB?.VectorPath))
             {
-                errors.Add("CosmosNoSql.AccountEndpoint is required when Provider=CosmosNoSql.");
+                errors.Add("CosmosDB.VectorPath is required when Provider=CosmosDB.");
             }
-            if (string.IsNullOrWhiteSpace(options.CosmosNoSql?.Database) || string.IsNullOrWhiteSpace(options.CosmosNoSql?.Container))
+
+            var distance = options.CosmosDB?.DistanceFunction?.Trim();
+            if (!string.IsNullOrWhiteSpace(distance))
             {
-                errors.Add("CosmosNoSql.Database and CosmosNoSql.Container are required when Provider=CosmosNoSql.");
+                var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "cosine", "dotproduct", "euclidean" };
+                if (!allowed.Contains(distance))
+                {
+                    errors.Add("CosmosDB.DistanceFunction must be one of: cosine, dotproduct, euclidean.");
+                }
+            }
+
+            var indexType = options.CosmosDB?.IndexType?.Trim();
+            if (!string.IsNullOrWhiteSpace(indexType))
+            {
+                var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "diskANN", "quantizedFlat", "flat" };
+                if (!allowed.Contains(indexType))
+                {
+                    errors.Add("CosmosDB.IndexType must be one of: diskANN, quantizedFlat, flat.");
+                }
             }
         }
 

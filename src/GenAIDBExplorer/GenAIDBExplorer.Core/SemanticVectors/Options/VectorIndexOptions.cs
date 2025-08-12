@@ -10,7 +10,7 @@ public sealed class VectorIndexOptions
     public const string SectionName = "VectorIndex";
 
     /// <summary>
-    /// Provider for vector indexing. Valid values: Auto, InMemory, AzureAISearch, CosmosNoSql.
+    /// Provider for vector indexing. Valid values: Auto, InMemory, AzureAISearch, CosmosDB.
     /// </summary>
     [Required]
     public string Provider { get; init; } = "Auto";
@@ -42,8 +42,14 @@ public sealed class VectorIndexOptions
     public AzureAISearchOptions AzureAISearch { get; init; } = new();
 
     /// <summary>
-    /// Cosmos NoSQL specific options.
+    /// CosmosDB same-container specific options.
     /// </summary>
+    public CosmosDBOptions CosmosDB { get; init; } = new();
+
+    /// <summary>
+    /// Legacy Cosmos NoSQL options. Deprecated in favor of CosmosDB.
+    /// </summary>
+    [Obsolete("Use CosmosDB with VectorPath/DistanceFunction/IndexType. This will be removed in a future version.")]
     public CosmosNoSqlOptions CosmosNoSql { get; init; } = new();
 
     /// <summary>
@@ -70,6 +76,32 @@ public sealed class VectorIndexOptions
         public string? ApiKey { get; init; }
     }
 
+    /// <summary>
+    /// CosmosDB vector options for same-container storage. These settings control
+    /// the vector field and index behavior on the Entities container.
+    /// </summary>
+    public sealed class CosmosDBOptions
+    {
+        /// <summary>
+        /// Path to the vector field on the entity document, e.g. "/embeddings/title".
+        /// </summary>
+        public string? VectorPath { get; init; }
+
+        /// <summary>
+        /// Distance function to use. Allowed values: cosine, dotproduct, euclidean.
+        /// </summary>
+        public string? DistanceFunction { get; init; }
+
+        /// <summary>
+        /// Index type to use. Allowed values: diskANN, quantizedFlat, flat.
+        /// </summary>
+        public string? IndexType { get; init; }
+    }
+
+    /// <summary>
+    /// Legacy Cosmos NoSQL options kept for backward compatibility during transition.
+    /// </summary>
+    [Obsolete("Use CosmosDB options. This legacy options class will be removed in a future version.")]
     public sealed class CosmosNoSqlOptions
     {
         public string? AccountEndpoint { get; init; }
