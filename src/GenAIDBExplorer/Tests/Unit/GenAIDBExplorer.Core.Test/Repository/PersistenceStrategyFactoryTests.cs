@@ -18,7 +18,7 @@ public class PersistenceStrategyFactoryTests
     private Mock<IConfiguration> _mockConfiguration = null!;
     private Mock<ILocalDiskPersistenceStrategy> _mockLocalDiskStrategy = null!;
     private Mock<IAzureBlobPersistenceStrategy> _mockAzureBlobStrategy = null!;
-    private Mock<ICosmosPersistenceStrategy> _mockCosmosStrategy = null!;
+    private Mock<ICosmosDbPersistenceStrategy> _mockCosmosDbStrategy = null!;
     private PersistenceStrategyFactory _factory = null!;
 
     [TestInitialize]
@@ -29,7 +29,7 @@ public class PersistenceStrategyFactoryTests
         _mockConfiguration = new Mock<IConfiguration>();
         _mockLocalDiskStrategy = new Mock<ILocalDiskPersistenceStrategy>();
         _mockAzureBlobStrategy = new Mock<IAzureBlobPersistenceStrategy>();
-        _mockCosmosStrategy = new Mock<ICosmosPersistenceStrategy>();
+        _mockCosmosDbStrategy = new Mock<ICosmosDbPersistenceStrategy>();
 
         // Setup default configuration to return LocalDisk
         _mockConfiguration.Setup(c => c["PersistenceStrategy"]).Returns((string?)null);
@@ -97,15 +97,15 @@ public class PersistenceStrategyFactoryTests
     public void GetStrategy_ShouldReturnCosmosStrategy_WhenCosmosSpecified()
     {
         // Arrange
-        _mockServiceProvider.Setup(sp => sp.GetService(typeof(ICosmosPersistenceStrategy)))
-            .Returns(_mockCosmosStrategy.Object);
+        _mockServiceProvider.Setup(sp => sp.GetService(typeof(ICosmosDbPersistenceStrategy)))
+            .Returns(_mockCosmosDbStrategy.Object);
 
         // Act
         var result = _factory.GetStrategy("Cosmos");
 
         // Assert
-        result.Should().BeSameAs(_mockCosmosStrategy.Object);
-        _mockServiceProvider.Verify(sp => sp.GetService(typeof(ICosmosPersistenceStrategy)), Times.Once);
+        result.Should().BeSameAs(_mockCosmosDbStrategy.Object);
+        _mockServiceProvider.Verify(sp => sp.GetService(typeof(ICosmosDbPersistenceStrategy)), Times.Once);
     }
 
     [TestMethod]
@@ -183,6 +183,6 @@ public class PersistenceStrategyFactoryTests
         // Verify that only LocalDisk strategy was requested
         _mockServiceProvider.Verify(sp => sp.GetService(typeof(ILocalDiskPersistenceStrategy)), Times.Once);
         _mockServiceProvider.Verify(sp => sp.GetService(typeof(IAzureBlobPersistenceStrategy)), Times.Never);
-        _mockServiceProvider.Verify(sp => sp.GetService(typeof(ICosmosPersistenceStrategy)), Times.Never);
+        _mockServiceProvider.Verify(sp => sp.GetService(typeof(ICosmosDbPersistenceStrategy)), Times.Never);
     }
 }

@@ -23,7 +23,7 @@
     ] // Array of mappings to convert column types during data dictionary import.
   },
   "SemanticModel": {
-    "PersistenceStrategy": "LocalDisk", // LocalDisk, AzureBlob, Cosmos
+    "PersistenceStrategy": "LocalDisk", // LocalDisk, AzureBlob, CosmosDb
     "MaxDegreeOfParallelism": 10 // Number of parallel semantic model tasks to run.
   },
   "SemanticModelRepository": {
@@ -100,7 +100,7 @@
     "CollectionName": "genaide-entities",
     "EmbeddingServiceId": "Embeddings",
     "ExpectedDimensions": 3072,
-    "AllowedForRepository": ["LocalDisk", "AzureBlob", "Cosmos"],
+    "AllowedForRepository": ["LocalDisk", "AzureBlob", "CosmosDb"],
     "Hybrid": { "Enabled": false }
   }
 }

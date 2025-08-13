@@ -21,7 +21,7 @@ namespace GenAIDBExplorer.Core.Repository
     /// This interface allows for dependency injection scenarios where specific Cosmos DB
     /// features or resource management capabilities are required beyond the base persistence contract.
     /// </remarks>
-    public interface ICosmosPersistenceStrategy : ISemanticModelPersistenceStrategy, IDisposable
+    public interface ICosmosDbPersistenceStrategy : ISemanticModelPersistenceStrategy, IDisposable
     {
         // This interface extends the base persistence strategy with disposable resource management
         // All core persistence methods are inherited from ISemanticModelPersistenceStrategy

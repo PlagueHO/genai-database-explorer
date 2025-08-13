@@ -22,7 +22,7 @@ public sealed class EmbeddingPayload
 {
     /// <summary>
     /// The vector floats. For Local/Blob this is persisted as human-readable JSON.
-    /// For Cosmos, vectors are not stored (see CosmosEntityDto). May be null when not generated.
+    /// For Cosmos DB, vectors are not stored (see CosmosDbEntityDto). May be null when not generated.
     /// </summary>
     [JsonPropertyName("vector")] public float[]? Vector { get; set; }
 

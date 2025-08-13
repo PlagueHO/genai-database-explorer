@@ -210,7 +210,7 @@ public static class HostBuilderExtensions
         // Register persistence strategies
         services.AddSingleton<ILocalDiskPersistenceStrategy, LocalDiskPersistenceStrategy>();
         services.AddSingleton<IAzureBlobPersistenceStrategy, AzureBlobPersistenceStrategy>();
-        services.AddSingleton<ICosmosPersistenceStrategy, CosmosPersistenceStrategy>();
+        services.AddSingleton<ICosmosDbPersistenceStrategy, CosmosDbPersistenceStrategy>();
 
         // Register performance monitoring services (basic implementation, extensible for OpenTelemetry)
         services.AddSingleton<IPerformanceMonitor, PerformanceMonitor>();

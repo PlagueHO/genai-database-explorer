@@ -19,7 +19,7 @@ graph TB
     D --> F[ISemanticModelPersistenceStrategy]
     F --> G[LocalDiskPersistenceStrategy]
     F --> H[AzureBlobPersistenceStrategy]
-    F --> I[CosmosPersistenceStrategy]
+    F --> I[CosmosDbPersistenceStrategy]
     
     G --> J[File System<br/>📁 Local Storage]
     H --> K[Azure Blob Storage<br/>☁️ Cloud Storage]

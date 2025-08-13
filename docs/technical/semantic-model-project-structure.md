@@ -38,7 +38,7 @@ The settings file supports three persistence strategies for semantic model stora
 
 - **LocalDisk**: Stores semantic models in a local directory (development scenarios) - Default strategy.
 - **AzureBlob**: Stores semantic models in Azure Blob Storage (cloud scenarios)  
-- **Cosmos**: Stores semantic models in Azure Cosmos DB (global scale scenarios)
+- **CosmosDb**: Stores semantic models in Azure Cosmos DB (global scale scenarios)
 
 Each persistence strategy has its own dedicated configuration section under `SemanticModelRepository`:
 

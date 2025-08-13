@@ -36,8 +36,8 @@ public class RepositoryDtoShapeTests
     public void Cosmos_Document_ShouldNotContain_Vectors()
     {
         var table = new SemanticModelTable("dbo", "Y");
-        var mapper = new CosmosEntityMapper();
-        var dto = mapper.ToCosmosEntity("M", "table", "dbo.Y", table, new EmbeddingMetadata { ContentHash = "xyz" });
+        var mapper = new CosmosDbEntityMapper();
+        var dto = mapper.ToCosmosDbEntity("M", "table", "dbo.Y", table, new EmbeddingMetadata { ContentHash = "xyz" });
 
         var json = System.Text.Json.JsonSerializer.Serialize(dto, new JsonSerializerOptions { WriteIndented = false });
 

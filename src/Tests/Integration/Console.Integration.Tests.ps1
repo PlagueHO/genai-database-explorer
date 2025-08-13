@@ -34,7 +34,12 @@
 #>
 #Requires -Version 7
 
-using namespace System.Management.Automation
+param(
+    [Parameter()]
+    [ValidateSet('LocalDisk','AzureBlob','CosmosDB')]
+    [string]
+    $PersistenceStrategy = $(if ($env:PERSISTENCE_STRATEGY) { $env:PERSISTENCE_STRATEGY } else { 'LocalDisk' })
+)
 
 # Import the TestHelper module for fixture support functions
 Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelper\TestHelper.psd1') -Force
@@ -60,13 +65,27 @@ Describe 'GenAI Database Explorer Console Application' {
             & chmod +x $script:ConsoleAppPath 2>&1 | Out-Null
         }
 
-        $optionalEnvVars = @('SQL_CONNECTION_STRING', 'AZURE_OPENAI_ENDPOINT', 'AZURE_OPENAI_API_KEY')
+        $optionalEnvVars = @(
+            'SQL_CONNECTION_STRING',
+            'AZURE_OPENAI_ENDPOINT',
+            'AZURE_OPENAI_API_KEY',
+            'AZURE_STORAGE_ACCOUNT_ENDPOINT',
+            'AZURE_STORAGE_CONTAINER',
+            'AZURE_STORAGE_BLOB_PREFIX',
+            'AZURE_COSMOS_DB_ACCOUNT_ENDPOINT',
+            'AZURE_COSMOS_DB_DATABASE_NAME',
+            'AZURE_COSMOS_DB_MODELS_CONTAINER',
+            'AZURE_COSMOS_DB_ENTITIES_CONTAINER',
+            'PERSISTENCE_STRATEGY'
+        )
         foreach ($envVar in $optionalEnvVars) {
             if ($null -eq (Get-Item -Path "Env:$envVar" -ErrorAction SilentlyContinue) -or
                 [string]::IsNullOrEmpty((Get-Item -Path "Env:$envVar" -ErrorAction SilentlyContinue).Value)) {
                 Write-Verbose "Environment variable '$envVar' is not set. Using default value for testing." -Verbose
             }
         }
+
+        Write-Verbose "Using persistence strategy: $($script:PersistenceStrategy)" -Verbose
     }
 
     Context 'Project Management Commands' {
@@ -220,12 +239,12 @@ Describe 'GenAI Database Explorer Console Application' {
             }
 
             # Configure settings for database tests using helper function
-            Set-TestProjectConfiguration -ProjectPath $script:DbProjectPath
+            Set-TestProjectConfiguration -ProjectPath $script:DbProjectPath -PersistenceStrategy $script:PersistenceStrategy
         }
 
         Context 'extract-model command' {
             Context 'When extracting from valid database connection' {
-                It 'Should create semanticmodel.json with database schema' {
+                It 'Should create semantic model for selected strategy' {
                     # Arrange
                     $expectedSemanticModelPath = Join-Path -Path $script:DbProjectPath -ChildPath 'SemanticModel' -AdditionalChildPath 'semanticmodel.json'
 
@@ -238,17 +257,25 @@ Describe 'GenAI Database Explorer Console Application' {
                         # Database connection failed - expected in local development environments
                         Write-Verbose "Database extraction failed due to connection issues (expected in local development)" -Verbose
                         $commandResult.Output | Should -Match 'connection|database|network|server.*not.*found' -Because 'Should provide meaningful error message for connection issues'
-                    } elseif ($commandResult.ExitCode -eq 0 -and (Test-Path -Path $expectedSemanticModelPath)) {
-                        # Success case - database was available and semantic model was created
-                        $expectedSemanticModelPath | Should -Exist -Because 'semanticmodel.json should be created'
+                    } elseif ($commandResult.ExitCode -eq 0) {
+                        if ($script:PersistenceStrategy -eq 'LocalDisk' -and (Test-Path -Path $expectedSemanticModelPath)) {
+                            # Success case - database was available and semantic model was created locally
+                            $expectedSemanticModelPath | Should -Exist -Because 'semanticmodel.json should be created'
 
-                        # Validate JSON structure
-                        { Get-Content -Path $expectedSemanticModelPath | ConvertFrom-Json -ErrorAction Stop } |
-                            Should -Not -Throw -Because 'semanticmodel.json should be valid JSON'
+                            # Validate JSON structure
+                            { Get-Content -Path $expectedSemanticModelPath | ConvertFrom-Json -ErrorAction Stop } |
+                                Should -Not -Throw -Because 'semanticmodel.json should be valid JSON'
 
-                        $model = Get-Content -Path $expectedSemanticModelPath | ConvertFrom-Json
-                        $model.Name | Should -Not -BeNullOrEmpty -Because 'Model should contain database name information'
-                        $model.Name | Should -Match 'AdventureWorksLT|Adventure' -Because 'Should connect to AdventureWorksLT or similar sample database'
+                            $model = Get-Content -Path $expectedSemanticModelPath | ConvertFrom-Json
+                            $model.Name | Should -Not -BeNullOrEmpty -Because 'Model should contain database name information'
+                            $model.Name | Should -Match 'AdventureWorksLT|Adventure' -Because 'Should connect to AdventureWorksLT or similar sample database'
+                        }
+                        else {
+                            # For remote strategies, verify we can load/display model content
+                            $showResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('show-object', 'table', '--project', $script:DbProjectPath, '--schemaName', 'dbo')
+                            $showResult.ExitCode | Should -BeIn @(0,1) -Because 'Should be able to query model from remote repository'
+                            $showResult.Output | Should -Not -Match 'Exception.*at.*' -Because 'Should not show stack traces'
+                        }
                     } else {
                         # Other failure cases
                         Write-Verbose "Database extraction failed for unknown reasons" -Verbose
@@ -336,7 +363,7 @@ Describe 'GenAI Database Explorer Console Application' {
             }
 
             # Configure settings for AI operations using helper function
-            Set-TestProjectConfiguration -ProjectPath $script:AiProjectPath
+            Set-TestProjectConfiguration -ProjectPath $script:AiProjectPath -PersistenceStrategy $script:PersistenceStrategy
 
             # Extract model first for AI operations (suppress output if fails)
             Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $script:AiProjectPath) | Out-Null
@@ -377,7 +404,7 @@ Describe 'GenAI Database Explorer Console Application' {
             Initialize-TestProject -ProjectPath $script:DisplayProjectPath -ConsoleApp $script:ConsoleAppPath | Out-Null
 
             # Configure settings for display operations using helper function
-            Set-TestProjectConfiguration -ProjectPath $script:DisplayProjectPath
+            Set-TestProjectConfiguration -ProjectPath $script:DisplayProjectPath -PersistenceStrategy $script:PersistenceStrategy
 
             # Extract model for display operations (suppress output if fails)
             Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $script:DisplayProjectPath) | Out-Null

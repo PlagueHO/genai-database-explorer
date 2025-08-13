@@ -816,24 +816,24 @@ var loadedModel = await repository.LoadModelAsync(new DirectoryInfo("adventurewo
 
 ```csharp
 // Create and save to Cosmos DB using builder pattern
-var cosmosStrategy = serviceProvider.GetRequiredService<ICosmosPersistenceStrategy>();
+var cosmosDbStrategy = serviceProvider.GetRequiredService<ICosmosDbPersistenceStrategy>();
 var repository = serviceProvider.GetRequiredService<ISemanticModelRepository>();
 var optionsBuilder = serviceProvider.GetRequiredService<ISemanticModelRepositoryOptionsBuilder>();
 
-cosmosStrategy.ConnectionString = "AccountEndpoint=https://...;AccountKey=...";
-cosmosStrategy.PartitionKeyPath = "/partitionKey"; // Hierarchical partition key path
+cosmosDbStrategy.ConnectionString = "AccountEndpoint=https://...;AccountKey=...";
+cosmosDbStrategy.PartitionKeyPath = "/partitionKey"; // Hierarchical partition key path
 var model = await provider.ExtractSemanticModelAsync();
-await cosmosStrategy.SaveModelAsync(model, "SemanticModels", "Models");
+await cosmosDbStrategy.SaveModelAsync(model, "SemanticModels", "Models");
 
 // Load from Cosmos DB with high-performance settings
-var cosmosOptions = optionsBuilder
+var cosmosDbOptions = optionsBuilder
     .WithLazyLoading()
     .WithChangeTracking()
     .WithCaching(true, TimeSpan.FromHours(1))
     .WithStrategyName("cosmos")
     .WithMaxConcurrentOperations(12)
     .Build();
-var loadedModel = await repository.LoadModelAsync(new DirectoryInfo("Models"), cosmosOptions);
+var loadedModel = await repository.LoadModelAsync(new DirectoryInfo("Models"), cosmosDbOptions);
 
 // Query specific entity by partition key for optimal performance
 // Partition key format: "{model-name}/{entity-type}/{entity-name}"

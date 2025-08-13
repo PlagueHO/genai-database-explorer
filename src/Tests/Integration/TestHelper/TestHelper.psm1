@@ -372,7 +372,11 @@ function Set-TestProjectConfiguration {
         [string]$AzureOpenAIEndpoint,
 
         [Parameter()]
-        [string]$AzureOpenAIApiKey
+        [string]$AzureOpenAIApiKey,
+
+        [Parameter()]
+        [ValidateSet('LocalDisk','AzureBlob','Cosmos','CosmosDB')]
+        [string]$PersistenceStrategy
     )
 
     $configParams = @{ ProjectPath = $ProjectPath }
@@ -416,6 +420,66 @@ function Set-TestProjectConfiguration {
     $configParams.EmbeddingDeploymentId = 'text-embedding-ada-002'
 
     Set-ProjectSettings @configParams
+
+    # After setting base settings, optionally configure persistence strategy and repository settings
+    $strategy = if ($PersistenceStrategy) { $PersistenceStrategy } elseif ($env:PERSISTENCE_STRATEGY) { $env:PERSISTENCE_STRATEGY } else { 'LocalDisk' }
+    if ($strategy -eq 'CosmosDB') { $strategy = 'Cosmos' }
+
+    $settingsPath = Join-Path -Path $ProjectPath -ChildPath 'settings.json'
+    if (Test-Path -Path $settingsPath) {
+        $settings = Get-Content -Path $settingsPath | ConvertFrom-Json
+
+        # Ensure SemanticModel section exists
+        if (-not $settings.SemanticModel) {
+            $settings | Add-Member -NotePropertyName 'SemanticModel' -NotePropertyValue (@{})
+        }
+        $settings.SemanticModel.PersistenceStrategy = $strategy
+
+        # Ensure SemanticModelRepository section exists
+        if (-not $settings.SemanticModelRepository) {
+            $settings | Add-Member -NotePropertyName 'SemanticModelRepository' -NotePropertyValue (@{})
+        }
+
+        switch ($strategy) {
+            'LocalDisk' {
+                if (-not $settings.SemanticModelRepository.LocalDisk) {
+                    $settings.SemanticModelRepository | Add-Member -NotePropertyName 'LocalDisk' -NotePropertyValue (@{})
+                }
+                if (-not $settings.SemanticModelRepository.LocalDisk.Directory) {
+                    $settings.SemanticModelRepository.LocalDisk.Directory = 'SemanticModel'
+                }
+            }
+            'AzureBlob' {
+                if (-not $settings.SemanticModelRepository.AzureBlobStorage) {
+                    $settings.SemanticModelRepository | Add-Member -NotePropertyName 'AzureBlobStorage' -NotePropertyValue (@{})
+                }
+                $blobEndpoint = $env:AZURE_STORAGE_ACCOUNT_ENDPOINT
+                $containerName = if ($env:AZURE_STORAGE_CONTAINER) { $env:AZURE_STORAGE_CONTAINER } else { 'semantic-models' }
+                $blobPrefix = $env:AZURE_STORAGE_BLOB_PREFIX
+
+                if ($blobEndpoint) { $settings.SemanticModelRepository.AzureBlobStorage.AccountEndpoint = $blobEndpoint }
+                if ($containerName) { $settings.SemanticModelRepository.AzureBlobStorage.ContainerName = $containerName }
+                if ($blobPrefix) { $settings.SemanticModelRepository.AzureBlobStorage.BlobPrefix = $blobPrefix }
+            }
+            'Cosmos' {
+                if (-not $settings.SemanticModelRepository.CosmosDb) {
+                    $settings.SemanticModelRepository | Add-Member -NotePropertyName 'CosmosDb' -NotePropertyValue (@{})
+                }
+                $cosmosDbEndpoint = $env:AZURE_COSMOS_DB_ACCOUNT_ENDPOINT
+                $databaseName = if ($env:AZURE_COSMOS_DB_DATABASE_NAME) { $env:AZURE_COSMOS_DB_DATABASE_NAME } else { 'SemanticModels' }
+                $modelsContainer = if ($env:AZURE_COSMOS_DB_MODELS_CONTAINER) { $env:AZURE_COSMOS_DB_MODELS_CONTAINER } else { 'Models' }
+                $entitiesContainer = if ($env:AZURE_COSMOS_DB_ENTITIES_CONTAINER) { $env:AZURE_COSMOS_DB_ENTITIES_CONTAINER } else { 'ModelEntities' }
+
+                if ($cosmosDbEndpoint) { $settings.SemanticModelRepository.CosmosDb.AccountEndpoint = $cosmosDbEndpoint }
+                if ($databaseName) { $settings.SemanticModelRepository.CosmosDb.DatabaseName = $databaseName }
+                if ($modelsContainer) { $settings.SemanticModelRepository.CosmosDb.ModelsContainerName = $modelsContainer }
+                if ($entitiesContainer) { $settings.SemanticModelRepository.CosmosDb.EntitiesContainerName = $entitiesContainer }
+            }
+        }
+
+        $settings | ConvertTo-Json -Depth 10 | Set-Content -Path $settingsPath
+        Write-Verbose "Configured SemanticModel PersistenceStrategy: $strategy" -Verbose
+    }
 }
 
 # Export all functions

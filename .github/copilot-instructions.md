@@ -16,7 +16,7 @@ The application follows a **project-based workflow** where each database analysi
 - **Semantic Model**: Core domain object (`SemanticModel.cs`) with lazy loading, change tracking, and caching
 - **Command Handlers**: System.CommandLine-based CLI in `GenAIDBExplorer.Console/CommandHandlers/`
 - **Semantic Providers**: AI-powered enrichment services using Prompty templates in `Core/Prompty/`
-- **Repository Pattern**: Abstract persistence with multiple backends (disk, blob, cosmos)
+- **Repository Pattern**: Abstract persistence with multiple backends (LocalDisk/AzureBlob/CosmosDB)
 - **Project Settings**: JSON-based configuration driving all operations (`samples/AdventureWorksLT/settings.json`)
 
 ## Critical Patterns
@@ -106,6 +106,7 @@ samples/AdventureWorksLT/
 - Logging via `Microsoft.Extensions.Logging`
 - Code formatting: run `dotnet format` (pre-commit), follow default .editorconfig or EditorConfig conventions
 - Tests: Use AAA pattern, clear test names `Method_State_Expected`, mock with Moq, assert with FluentAssertions
+- Never refer to Cosmos DB as just `Cosmos`. It should always be `CosmosDb` or `CosmosDB` or `COSMOS_DB` depending on usecase.
 
 ## Agent Rules
 

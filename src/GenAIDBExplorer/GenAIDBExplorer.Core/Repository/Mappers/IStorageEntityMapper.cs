@@ -12,5 +12,5 @@ public interface IStorageEntityMapper
     object ToPersistedEntity(object entity, EmbeddingPayload? embedding);
 
     // Cosmos: metadata only
-    CosmosEntityDto<T> ToCosmosEntity<T>(string modelName, string entityType, string entityName, T entity, EmbeddingMetadata? metadata);
+    CosmosDbEntityDto<T> ToCosmosDbEntity<T>(string modelName, string entityType, string entityName, T entity, EmbeddingMetadata? metadata);
 }

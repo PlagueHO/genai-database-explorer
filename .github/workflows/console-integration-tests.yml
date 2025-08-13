@@ -43,7 +43,11 @@ on:
 
 jobs:
   console-app-integration-tests:
-    name: Console App Integration Tests
+    name: Console App Integration Tests (${{ matrix.persistence }})
+    strategy:
+      fail-fast: false
+      matrix:
+        persistence: [LocalDisk, AzureBlob, CosmosDb]
     runs-on: ubuntu-latest
     environment: ${{ inputs.ENVIRONMENT }}
     permissions:
@@ -76,6 +80,88 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           enable-AzPSSession: true
+
+      - name: Discover and Configure Azure Storage (for AzureBlob)
+        if: matrix.persistence == 'AzureBlob'
+        uses: azure/powershell@v2
+        with:
+          azPSVersion: "latest"
+          inlineScript: |
+            $ResourceGroup = "${{ inputs.RESOURCE_GROUP_NAME }}"
+            $RunnerIP = (Invoke-RestMethod -Uri "https://ipinfo.io/ip" -Method Get).Trim()
+
+            try {
+              $storage = Get-AzStorageAccount -ResourceGroupName $ResourceGroup | Select-Object -First 1
+              if (-not $storage) {
+                Write-Warning "No Storage Account found in resource group $ResourceGroup. AzureBlob persistence tests may be skipped/fail."
+                return
+              }
+              Write-Host "Using Storage Account: $($storage.StorageAccountName)"
+
+              # Ensure public access is enabled for the duration of tests
+              Update-AzStorageAccount -ResourceGroupName $ResourceGroup -Name $storage.StorageAccountName -PublicNetworkAccess Enabled -AllowBlobPublicAccess $true -Force | Out-Null
+
+              # Attempt to set network rule default action to Allow (ignore if not supported)
+              try {
+                Update-AzStorageAccountNetworkRuleSet -ResourceGroupName $ResourceGroup -Name $storage.StorageAccountName -DefaultAction Allow | Out-Null
+              } catch {
+                Write-Warning "Could not update storage network rule set: $($_.Exception.Message)"
+              }
+
+              $endpoint = "https://$($storage.StorageAccountName).blob.core.windows.net"
+              "AZURE_STORAGE_ACCOUNT_ENDPOINT=$endpoint" | Out-File -FilePath $env:GITHUB_ENV -Append
+              # Use default container name unless pipeline overrides
+              "AZURE_STORAGE_CONTAINER=semantic-models" | Out-File -FilePath $env:GITHUB_ENV -Append
+              # Helpful to separate test runs
+              "AZURE_STORAGE_BLOB_PREFIX=${{ inputs.ENVIRONMENT }}/${{ github.run_id }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+              Write-Host "Configured Storage endpoint: $endpoint"
+            }
+            catch {
+              Write-Warning "Storage discovery/configuration failed: $($_.Exception.Message)"
+            }
+
+      - name: Discover and Configure Azure Cosmos DB (for CosmosDb)
+        if: matrix.persistence == 'CosmosDb'
+        uses: azure/powershell@v2
+        with:
+          azPSVersion: "latest"
+          inlineScript: |
+            $ResourceGroup = "${{ inputs.RESOURCE_GROUP_NAME }}"
+            $RunnerIP = (Invoke-RestMethod -Uri "https://ipinfo.io/ip" -Method Get).Trim()
+            try {
+              $cosmosDb = Get-AzCosmosDBAccount -ResourceGroupName $ResourceGroup | Select-Object -First 1
+              if (-not $cosmosDb) {
+                Write-Warning "No Cosmos DB Account found in resource group $ResourceGroup. Cosmos DB persistence tests may be skipped/fail."
+                return
+              }
+              Write-Host "Using Cosmos DB Account: $($cosmosDb.Name)"
+
+              # Enable public network access for tests (ignore if already enabled)
+              try {
+                # Update cmdlet name varies across Az versions; attempt common variants
+                if (Get-Command Update-AzCosmosDBAccount -ErrorAction SilentlyContinue) {
+                  Update-AzCosmosDBAccount -ResourceGroupName $ResourceGroup -Name $cosmosDb.Name -PublicNetworkAccess Enabled | Out-Null
+                } elseif (Get-Command Set-AzCosmosDBAccount -ErrorAction SilentlyContinue) {
+                  Set-AzCosmosDBAccount -ResourceGroupName $ResourceGroup -Name $cosmosDb.Name -PublicNetworkAccess Enabled | Out-Null
+                }
+              } catch {
+                Write-Warning "Could not enable public network access on Cosmos DB: $($_.Exception.Message)"
+              }
+
+              # Compose endpoint and default database/containers matching app defaults
+              $endpoint = $cosmosDb.DocumentEndpoint
+              if (-not $endpoint) { $endpoint = "https://$($cosmosDb.Name).documents.azure.com:443/" }
+              "AZURE_COSMOS_DB_ACCOUNT_ENDPOINT=$endpoint" | Out-File -FilePath $env:GITHUB_ENV -Append
+              "AZURE_COSMOS_DB_DATABASE_NAME=SemanticModels" | Out-File -FilePath $env:GITHUB_ENV -Append
+              "AZURE_COSMOS_DB_MODELS_CONTAINER=Models" | Out-File -FilePath $env:GITHUB_ENV -Append
+              "AZURE_COSMOS_DB_ENTITIES_CONTAINER=ModelEntities" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+              Write-Host "Configured Cosmos DB endpoint: $endpoint"
+            }
+            catch {
+              Write-Warning "Cosmos DB discovery/configuration failed: $($_.Exception.Message)"
+            }
 
       - name: Configure SQL Server Firewall for GitHub Runner
         uses: azure/powershell@v2
@@ -218,13 +304,22 @@ jobs:
               Write-Host "AI-related integration tests may fail or be skipped"
             }
 
-      - name: Setup PowerShell and Run Console Integration Tests
+      - name: "Setup PowerShell and Run Console Integration Tests (${{ matrix.persistence }})"
         shell: pwsh
         env:
           SQL_CONNECTION_STRING: "Server=${{ inputs.SQL_SERVER_NAME }}.database.windows.net;Database=AdventureWorksLT;User Id=${{ secrets.SQL_SERVER_USERNAME }};Password=${{ secrets.SQL_SERVER_PASSWORD }};Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
           AZURE_OPENAI_ENDPOINT: ${{ inputs.AZURE_AI_FOUNDRY_ENDPOINT }}
           AZURE_OPENAI_API_KEY: ${{ env.AZURE_OPENAI_API_KEY }}
           CONSOLE_APP_PATH: ./publish/GenAIDBExplorer.Console
+          PERSISTENCE_STRATEGY: ${{ matrix.persistence }}
+          # Optional envs for strategies
+          AZURE_STORAGE_ACCOUNT_ENDPOINT: ${{ env.AZURE_STORAGE_ACCOUNT_ENDPOINT }}
+          AZURE_STORAGE_CONTAINER: ${{ env.AZURE_STORAGE_CONTAINER }}
+          AZURE_STORAGE_BLOB_PREFIX: ${{ env.AZURE_STORAGE_BLOB_PREFIX }}
+          AZURE_COSMOS_DB_ACCOUNT_ENDPOINT: ${{ env.AZURE_COSMOS_DB_ACCOUNT_ENDPOINT }}
+          AZURE_COSMOS_DB_DATABASE_NAME: ${{ env.AZURE_COSMOS_DB_DATABASE_NAME }}
+          AZURE_COSMOS_DB_MODELS_CONTAINER: ${{ env.AZURE_COSMOS_DB_MODELS_CONTAINER }}
+          AZURE_COSMOS_DB_ENTITIES_CONTAINER: ${{ env.AZURE_COSMOS_DB_ENTITIES_CONTAINER }}
         run: |
           # Install and import Pester in the same session
           Write-Host "Installing and importing Pester module..." -ForegroundColor Yellow
@@ -242,6 +337,13 @@ jobs:
           Write-Host "AZURE_OPENAI_API_KEY: $($env:AZURE_OPENAI_API_KEY.Length) characters (masked)" -ForegroundColor Yellow
           Write-Host "Input AZURE_AI_FOUNDRY_ENDPOINT: '${{ inputs.AZURE_AI_FOUNDRY_ENDPOINT }}'" -ForegroundColor Yellow
           Write-Host "Input AZURE_AI_FOUNDRY_NAME: '${{ inputs.AZURE_AI_FOUNDRY_NAME }}'" -ForegroundColor Yellow
+          Write-Host "Persistence strategy: '$env:PERSISTENCE_STRATEGY'" -ForegroundColor Yellow
+          if ($env:PERSISTENCE_STRATEGY -eq 'AzureBlob') {
+            Write-Host "Blob endpoint: $env:AZURE_STORAGE_ACCOUNT_ENDPOINT, container: $env:AZURE_STORAGE_CONTAINER, prefix: $env:AZURE_STORAGE_BLOB_PREFIX" -ForegroundColor Yellow
+          }
+          if ($env:PERSISTENCE_STRATEGY -match 'CosmosDb') {
+            Write-Host "Cosmos DB endpoint: $env:AZURE_COSMOS_DB_ACCOUNT_ENDPOINT, db: $env:AZURE_COSMOS_DB_DATABASE_NAME, models: $env:AZURE_COSMOS_DB_MODELS_CONTAINER, entities: $env:AZURE_COSMOS_DB_ENTITIES_CONTAINER" -ForegroundColor Yellow
+          }
 
           # Construct OpenAI endpoint if not provided but name is available
           if ([string]::IsNullOrEmpty($env:AZURE_OPENAI_ENDPOINT) -and -not [string]::IsNullOrEmpty('${{ inputs.AZURE_AI_FOUNDRY_NAME }}')) {

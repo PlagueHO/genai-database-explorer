@@ -26,7 +26,7 @@ Links: see `spec/spec-data-semantic-model-repository.md` and `.github/copilot-in
 
 - ARC-001: Patterns used
   - Repository (ISemanticModelRepository, SemanticModelRepository)
-  - Strategy (ISemanticModelPersistenceStrategy + LocalDisk/AzureBlob/Cosmos)
+  - Strategy (ISemanticModelPersistenceStrategy + LocalDisk/AzureBlob/CosmosDb)
   - Factory (IPersistenceStrategyFactory, PersistenceStrategyFactory)
   - Builder (SemanticModelRepositoryOptionsBuilder → SemanticModelRepositoryOptions)
   - Composition for cross-cutting concerns (ISemanticModelCache, IPerformanceMonitor, ILogger)
@@ -36,7 +36,7 @@ Links: see `spec/spec-data-semantic-model-repository.md` and `.github/copilot-in
   - Security: `PathValidator`, `EntityNameSanitizer`, `SecureJsonSerializer`, `KeyVaultConfigurationProvider`
   - Caching: `ISemanticModelCache` (e.g., Memory cache)
   - Performance: `IPerformanceMonitor`, `IPerformanceTrackingContext`
-  - Azure: `Azure.Storage.Blobs`, `Azure.Identity` (Blob), `Microsoft.Azure.Cosmos` (Cosmos)
+  - Azure: `Azure.Storage.Blobs` (AzureBlob), `Microsoft.Azure.Cosmos` (CosmosDb) and `Azure.Identity` (AzureIdentity)
 
 - ARC-003: Interactions and relationships
   - Repository selects a strategy via factory, validates/sanitizes paths, applies concurrency protection, optionally loads/stores from cache, then enables lazy loading and change tracking on the loaded model.
@@ -61,7 +61,7 @@ graph TD
     subgraph "Strategies"
         S1[LocalDiskPersistenceStrategy]
         S2[AzureBlobPersistenceStrategy]
-        S3[CosmosPersistenceStrategy]
+        S3[CosmosDbPersistenceStrategy]
         ISTR[ISemanticModelPersistenceStrategy]
     end
 
@@ -127,7 +127,7 @@ classDiagram
   }
   class AzureBlobPersistenceStrategy
   class LocalDiskPersistenceStrategy
-  class CosmosPersistenceStrategy
+  class CosmosDbPersistenceStrategy
   class ISemanticModelCache
   class IPerformanceMonitor
   class PathValidator
@@ -137,14 +137,14 @@ classDiagram
   SemanticModelRepository ..|> ISemanticModelRepository
   AzureBlobPersistenceStrategy ..|> ISemanticModelPersistenceStrategy
   LocalDiskPersistenceStrategy ..|> ISemanticModelPersistenceStrategy
-  CosmosPersistenceStrategy ..|> ISemanticModelPersistenceStrategy
+  CosmosDbPersistenceStrategy ..|> ISemanticModelPersistenceStrategy
   SemanticModelRepository --> ISemanticModelCache
   SemanticModelRepository --> IPerformanceMonitor
   SemanticModelRepository --> PersistenceStrategyFactory
   SemanticModelRepository --> PathValidator
   SemanticModelRepository --> EntityNameSanitizer
   AzureBlobPersistenceStrategy --> SecureJsonSerializer
-  CosmosPersistenceStrategy --> SecureJsonSerializer
+  CosmosDbPersistenceStrategy --> SecureJsonSerializer
   LocalDiskPersistenceStrategy --> SecureJsonSerializer
 ```
 
@@ -163,7 +163,7 @@ Key secondary APIs: `ISemanticModelPersistenceStrategy`
 
 | Method | Purpose | Parameters | Return Type | Notes |
 |--------|---------|------------|-------------|-------|
-| SaveModelAsync | Write model and entities | SemanticModel, DirectoryInfo | Task | LocalDisk writes JSON to folders; AzureBlob writes blobs; Cosmos writes documents |
+| SaveModelAsync | Write model and entities | SemanticModel, DirectoryInfo | Task | LocalDisk writes JSON to folders; AzureBlob writes blobs; CosmosDb writes documents |
 | LoadModelAsync | Read model and entities | DirectoryInfo | Task&lt;SemanticModel&gt; | Supports envelope `{ data, embedding }` for entities |
 | ExistsAsync | Check for presence | DirectoryInfo | Task&lt;bool&gt; | Strategy-specific existence check |
 | ListModelsAsync | Enumerate stored models | DirectoryInfo | Task&lt;IEnumerable&lt;string&gt;&gt; | Container/path scope |
@@ -175,7 +175,7 @@ Events/Callbacks: none. Observability via `IPerformanceMonitor` scopes and struc
 
 - IMP-001: Main classes
   - `SemanticModelRepository`: orchestrates load/save, cache, concurrency, performance.
-  - Strategies: `LocalDiskPersistenceStrategy`, `AzureBlobPersistenceStrategy`, `CosmosPersistenceStrategy` implementing `ISemanticModelPersistenceStrategy`.
+  - Strategies: `LocalDiskPersistenceStrategy`, `AzureBlobPersistenceStrategy`, `CosmosDbPersistenceStrategy` implementing `ISemanticModelPersistenceStrategy`.
   - `PersistenceStrategyFactory`: resolves strategy by name (default: LocalDisk) from DI.
   - Options: `SemanticModelRepositoryOptions` (immutable) built via `SemanticModelRepositoryOptionsBuilder`.
 
@@ -192,7 +192,7 @@ Events/Callbacks: none. Observability via `IPerformanceMonitor` scopes and struc
 
 - IMP-004: Performance
   - `IPerformanceMonitor.StartOperation("LoadModel"|"SaveModel")` with metadata; recommendations via metrics API.
-  - Strategies implement parallelism (Azure Blob/Cosmos with semaphores and SDK retry policies).
+  - Strategies implement parallelism (Azure Blob/Cosmos DB with semaphores and SDK retry policies).
 
 ## 5. Usage Examples
 

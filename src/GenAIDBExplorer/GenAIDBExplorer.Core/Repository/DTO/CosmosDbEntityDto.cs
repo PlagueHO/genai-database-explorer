@@ -3,10 +3,10 @@ using System.Text.Json.Serialization;
 namespace GenAIDBExplorer.Core.Repository.DTO;
 
 /// <summary>
-/// Cosmos-specific entity DTO that stores only metadata about embeddings, not the raw vectors.
+/// Cosmos DB-specific entity DTO that stores only metadata about embeddings, not the raw vectors.
 /// </summary>
 /// <typeparam name="T">Domain entity type (e.g., SemanticModelTable)</typeparam>
-public sealed class CosmosEntityDto<T>
+public sealed class CosmosDbEntityDto<T>
 {
     [JsonPropertyName("id")] public string Id { get; set; } = string.Empty;
     [JsonPropertyName("modelName")] public string ModelName { get; set; } = string.Empty;

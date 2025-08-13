@@ -54,29 +54,29 @@ namespace GenAIDBExplorer.Core.Repository
     /// - https://learn.microsoft.com/en-us/azure/cosmos-db/sql/sql-api-sdk-dotnet-standard
     /// - https://learn.microsoft.com/en-us/azure/key-vault/secrets/quick-create-net
     /// </remarks>
-    public class CosmosPersistenceStrategy : ICosmosPersistenceStrategy
+    public class CosmosDbPersistenceStrategy : ICosmosDbPersistenceStrategy
     {
         private readonly CosmosClient _cosmosClient;
         private readonly Database _database;
         private readonly Container _modelsContainer;
         private readonly Container _entitiesContainer;
         private readonly CosmosDbConfiguration _configuration;
-        private readonly ILogger<CosmosPersistenceStrategy> _logger;
+        private readonly ILogger<CosmosDbPersistenceStrategy> _logger;
         private readonly SemaphoreSlim _concurrencySemaphore;
         private readonly ISecureJsonSerializer _secureJsonSerializer;
         private readonly KeyVaultConfigurationProvider? _keyVaultProvider;
 
         /// <summary>
-        /// Initializes a new instance of the CosmosPersistenceStrategy class with enhanced security features.
+        /// Initializes a new instance of the CosmosDbPersistenceStrategy class with enhanced security features.
         /// </summary>
         /// <param name="configuration">Cosmos DB configuration options.</param>
         /// <param name="logger">Logger for structured logging.</param>
         /// <param name="secureJsonSerializer">Secure JSON serializer for injection protection.</param>
         /// <param name="keyVaultProvider">Optional Azure Key Vault configuration provider for secure credential management.</param>
         /// <exception cref="ArgumentException">Thrown when configuration is invalid.</exception>
-        public CosmosPersistenceStrategy(
+        public CosmosDbPersistenceStrategy(
             IOptions<CosmosDbConfiguration> configuration,
-            ILogger<CosmosPersistenceStrategy> logger,
+            ILogger<CosmosDbPersistenceStrategy> logger,
             ISecureJsonSerializer secureJsonSerializer,
             KeyVaultConfigurationProvider? keyVaultProvider = null)
         {
@@ -257,7 +257,7 @@ namespace GenAIDBExplorer.Core.Repository
                 foreach (var table in semanticModel.Tables)
                 {
                     var tableName = EntityNameSanitizer.SanitizeEntityName(table.Name);
-                    var tableDocument = new CosmosEntityDto<SemanticModelTable>
+                    var tableDocument = new CosmosDbEntityDto<SemanticModelTable>
                     {
                         Id = $"{modelName}_table_{tableName}",
                         ModelName = modelName,
@@ -275,7 +275,7 @@ namespace GenAIDBExplorer.Core.Repository
                 foreach (var view in semanticModel.Views)
                 {
                     var viewName = EntityNameSanitizer.SanitizeEntityName(view.Name);
-                    var viewDocument = new CosmosEntityDto<SemanticModelView>
+                    var viewDocument = new CosmosDbEntityDto<SemanticModelView>
                     {
                         Id = $"{modelName}_view_{viewName}",
                         ModelName = modelName,
@@ -293,7 +293,7 @@ namespace GenAIDBExplorer.Core.Repository
                 foreach (var storedProcedure in semanticModel.StoredProcedures)
                 {
                     var procedureName = EntityNameSanitizer.SanitizeEntityName(storedProcedure.Name);
-                    var procedureDocument = new CosmosEntityDto<SemanticModelStoredProcedure>
+                    var procedureDocument = new CosmosDbEntityDto<SemanticModelStoredProcedure>
                     {
                         Id = $"{modelName}_storedprocedure_{procedureName}",
                         ModelName = modelName,
