@@ -12,8 +12,8 @@ public class VectorIndexPolicy : IVectorIndexPolicy
         if (!string.Equals(settings.Provider, "Auto", StringComparison.OrdinalIgnoreCase))
             return settings.Provider;
 
-    // Auto rules:
-    // - If repository is Cosmos, require CosmosDB (CON-002)
+        // Auto rules:
+        // - If repository is Cosmos, require CosmosDB (CON-002)
         // - Otherwise default to InMemory for local development
         if (repositoryStrategy.Equals("Cosmos", StringComparison.OrdinalIgnoreCase))
         {

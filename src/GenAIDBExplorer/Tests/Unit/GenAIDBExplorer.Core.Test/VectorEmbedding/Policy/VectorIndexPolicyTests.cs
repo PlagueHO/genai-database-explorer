@@ -35,7 +35,7 @@ public class VectorIndexPolicyTests
         var policy = new VectorIndexPolicy();
         var settings = new VectorIndexSettings { Provider = "Auto" };
         var provider = policy.ResolveProvider(settings, repositoryStrategy: "Cosmos");
-    provider.Should().Be("CosmosDB");
+        provider.Should().Be("CosmosDB");
     }
 
     [TestMethod]

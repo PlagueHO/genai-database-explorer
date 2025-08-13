@@ -113,6 +113,7 @@ samples/AdventureWorksLT/
 - This `.github/copilot-instructions.md` directs AI agents in this repo
 - Preserve existing Azure and infrastructure guidance
 - Merge, don’t overwrite; be concise and factual
+- After making changes to any `*.cs` file, always run VS Code task `format-fix-whitespace-only` task
 
 ## Test
 
