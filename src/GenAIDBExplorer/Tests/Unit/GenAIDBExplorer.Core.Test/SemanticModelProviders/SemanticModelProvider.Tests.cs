@@ -460,13 +460,13 @@ public class SemanticModelProviderTests
     {
         // Arrange
         var projectSettings = _mockProject.Object.Settings;
-        projectSettings.SemanticModel.PersistenceStrategy = "Cosmos";
+        projectSettings.SemanticModel.PersistenceStrategy = "CosmosDb";
 
         // Act & Assert
         var exception = await Assert.ThrowsExactlyAsync<NotSupportedException>(
             () => _semanticModelProvider.LoadSemanticModelAsync());
 
-        exception.Message.Should().Contain("Cosmos");
+        exception.Message.Should().Contain("CosmosDb");
         exception.Message.Should().Contain("not yet supported");
     }
 

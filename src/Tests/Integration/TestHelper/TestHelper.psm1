@@ -375,7 +375,7 @@ function Set-TestProjectConfiguration {
         [string]$AzureOpenAIApiKey,
 
         [Parameter()]
-        [ValidateSet('LocalDisk','AzureBlob','Cosmos','CosmosDB')]
+        [ValidateSet('LocalDisk','AzureBlob','CosmosDB')]
         [string]$PersistenceStrategy
     )
 
@@ -422,8 +422,13 @@ function Set-TestProjectConfiguration {
     Set-ProjectSettings @configParams
 
     # After setting base settings, optionally configure persistence strategy and repository settings
-    $strategy = if ($PersistenceStrategy) { $PersistenceStrategy } elseif ($env:PERSISTENCE_STRATEGY) { $env:PERSISTENCE_STRATEGY } else { 'LocalDisk' }
-    if ($strategy -eq 'CosmosDB') { $strategy = 'Cosmos' }
+    $strategy = if ($PersistenceStrategy -and -not [string]::IsNullOrEmpty($PersistenceStrategy)) { 
+        $PersistenceStrategy 
+    } elseif ($env:PERSISTENCE_STRATEGY -and -not [string]::IsNullOrEmpty($env:PERSISTENCE_STRATEGY)) { 
+        $env:PERSISTENCE_STRATEGY 
+    } else { 
+        'LocalDisk' 
+    }
 
     $settingsPath = Join-Path -Path $ProjectPath -ChildPath 'settings.json'
     if (Test-Path -Path $settingsPath) {
@@ -461,7 +466,7 @@ function Set-TestProjectConfiguration {
                 if ($containerName) { $settings.SemanticModelRepository.AzureBlobStorage.ContainerName = $containerName }
                 if ($blobPrefix) { $settings.SemanticModelRepository.AzureBlobStorage.BlobPrefix = $blobPrefix }
             }
-            'Cosmos' {
+            'CosmosDb' {
                 if (-not $settings.SemanticModelRepository.CosmosDb) {
                     $settings.SemanticModelRepository | Add-Member -NotePropertyName 'CosmosDb' -NotePropertyValue (@{})
                 }

@@ -15,7 +15,7 @@ public class VectorIndexPolicy : IVectorIndexPolicy
         // Auto rules:
         // - If repository is Cosmos, require CosmosDB (CON-002)
         // - Otherwise default to InMemory for local development
-        if (repositoryStrategy.Equals("Cosmos", StringComparison.OrdinalIgnoreCase))
+        if (repositoryStrategy.Equals("CosmosDb", StringComparison.OrdinalIgnoreCase))
         {
             return "CosmosDB";
         }
@@ -30,7 +30,7 @@ public class VectorIndexPolicy : IVectorIndexPolicy
         repositoryStrategy = repositoryStrategy?.Trim() ?? string.Empty;
 
         // Basic compatibility: Cosmos strategy can't use external index simultaneously (CON-002)
-        if (repositoryStrategy.Equals("Cosmos", StringComparison.OrdinalIgnoreCase))
+        if (repositoryStrategy.Equals("CosmosDb", StringComparison.OrdinalIgnoreCase))
         {
             var provider = ResolveProvider(settings, repositoryStrategy);
             if (!string.Equals(provider, "CosmosDB", StringComparison.OrdinalIgnoreCase))

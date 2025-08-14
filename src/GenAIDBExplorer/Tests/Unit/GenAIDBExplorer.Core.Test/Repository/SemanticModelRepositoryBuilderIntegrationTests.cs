@@ -130,7 +130,7 @@ public class SemanticModelRepositoryBuilderIntegrationTests
             .WithLazyLoading(true)
             .WithChangeTracking(false)
             .WithCaching(true, TimeSpan.FromMinutes(30))
-            .WithStrategyName("Cosmos")
+            .WithStrategyName("CosmosDb")
             .WithMaxConcurrentOperations(5)
             .WithPerformanceMonitoring(perf => perf
                 .EnableLocalMonitoring(true)
@@ -148,13 +148,13 @@ public class SemanticModelRepositoryBuilderIntegrationTests
         options.EnableChangeTracking.Should().BeFalse();
         options.EnableCaching.Should().BeTrue();
         options.CacheExpiration.Should().Be(TimeSpan.FromMinutes(30));
-        options.StrategyName.Should().Be("Cosmos");
+        options.StrategyName.Should().Be("CosmosDb");
         options.MaxConcurrentOperations.Should().Be(5);
         options.PerformanceMonitoring.Should().NotBeNull();
         options.PerformanceMonitoring!.EnableLocalMonitoring.Should().BeTrue();
         options.PerformanceMonitoring.MetricsRetentionPeriod.Should().Be(TimeSpan.FromHours(12));
 
-        _mockStrategyFactory.Verify(f => f.GetStrategy("Cosmos"), Times.Once);
+        _mockStrategyFactory.Verify(f => f.GetStrategy("CosmosDb"), Times.Once);
     }
 
     [TestMethod]

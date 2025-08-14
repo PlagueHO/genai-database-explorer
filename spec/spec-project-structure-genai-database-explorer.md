@@ -345,9 +345,9 @@ public enum CosmosConsistencyLevel
 - **AC-008**: Given lazy loading requirements, When expensive services are registered, Then instantiation is deferred until actual usage
 - **AC-009**: Given SemanticModel section with PersistenceStrategy "LocalDisk", When project configuration is loaded, Then LocalDiskPersistenceStrategy is selected and LocalDisk.Directory setting is applied
 - **AC-010**: Given SemanticModel section with PersistenceStrategy "AzureBlob", When project configuration is loaded, Then AzureBlobPersistenceStrategy is selected and AzureBlobStorage settings are validated
-- **AC-011**: Given SemanticModel section with PersistenceStrategy "Cosmos", When project configuration is loaded, Then CosmosPersistenceStrategy is selected and CosmosDb settings are validated
+- **AC-011**: Given SemanticModel section with PersistenceStrategy "CosmosDb", When project configuration is loaded, Then CosmosPersistenceStrategy is selected and CosmosDb settings are validated
 - **AC-012**: Given missing AzureBlobStorage configuration, When PersistenceStrategy is "AzureBlob", Then configuration validation fails with descriptive error message
-- **AC-013**: Given missing CosmosDb configuration, When PersistenceStrategy is "Cosmos", Then configuration validation fails with descriptive error message
+- **AC-013**: Given missing CosmosDb configuration, When PersistenceStrategy is "CosmosDb", Then configuration validation fails with descriptive error message
 - **AC-014**: Given invalid Azure endpoints or container names, When configuration validation occurs, Then DataAnnotation validation reports specific field errors
 - **AC-015**: Given production Azure deployment, When DefaultAzureCredential is used, Then authentication succeeds without requiring connection strings in configuration
 
@@ -528,7 +528,7 @@ services.Configure<CosmosDbConfiguration>(configuration.GetSection("SemanticMode
 ```json
 {
     "SemanticModel": {
-        "PersistenceStrategy": "Cosmos",
+        "PersistenceStrategy": "CosmosDb",
         "MaxDegreeOfParallelism": 8
     },
     "SemanticModelRepository": {
@@ -598,7 +598,7 @@ services.AddTransient<IAzureBlobPersistenceStrategy>(provider =>
 // Strategy factory resolves based on configuration
 var factory = serviceProvider.GetRequiredService<IPersistenceStrategyFactory>();
 var strategy = factory.GetStrategy("AzureBlob"); // Returns IAzureBlobPersistenceStrategy
-var cosmosStrategy = factory.GetStrategy("Cosmos"); // Returns ICosmosPersistenceStrategy
+var cosmosStrategy = factory.GetStrategy("CosmosDb"); // Returns ICosmosPersistenceStrategy
 var localStrategy = factory.GetStrategy(); // Defaults to LocalDisk
 ```
 
@@ -613,7 +613,7 @@ var localStrategy = factory.GetStrategy(); // Defaults to LocalDisk
 - Version compatibility must be verified between settings schema and application
 - SemanticModel PersistenceStrategy must be one of: LocalDisk, AzureBlob, Cosmos
 - When PersistenceStrategy is "AzureBlob", AzureBlobStorage configuration section must be present and valid
-- When PersistenceStrategy is "Cosmos", CosmosDb configuration section must be present and valid
+- When PersistenceStrategy is "CosmosDb", CosmosDb configuration section must be present and valid
 - Azure endpoints must be valid URLs with appropriate domain patterns
 - Container and database names must meet Azure naming requirements
 - Timeout and concurrency settings must be within acceptable ranges

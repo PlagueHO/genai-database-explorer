@@ -38,7 +38,7 @@ public interface ISemanticModelRepositoryOptionsBuilder
     /// <summary>
     /// Configures the persistence strategy to use.
     /// </summary>
-    /// <param name="strategyName">The name of the persistence strategy (e.g., "LocalDisk", "AzureBlob", "Cosmos").</param>
+    /// <param name="strategyName">The name of the persistence strategy (e.g., "LocalDisk", "AzureBlob", "CosmosDb").</param>
     /// <returns>A new builder instance with strategy configuration applied.</returns>
     ISemanticModelRepositoryOptionsBuilder WithStrategyName(string strategyName);
 

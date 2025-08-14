@@ -22,7 +22,7 @@ public record SemanticModelRepositoryOptions
     public bool EnableCaching { get; init; } = false;
 
     /// <summary>
-    /// Gets the name of the persistence strategy to use (e.g., "LocalDisk", "AzureBlob", "Cosmos").
+    /// Gets the name of the persistence strategy to use (e.g., "LocalDisk", "AzureBlob", "CosmosDb").
     /// </summary>
     public string? StrategyName { get; init; }
 

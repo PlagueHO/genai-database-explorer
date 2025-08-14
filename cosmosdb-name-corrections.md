@@ -108,7 +108,7 @@ All major naming corrections have been completed:
    - Error messages updated
 
 6. **Backward compatibility**: ✅ Maintained
-   - Repository strategy name stays "Cosmos" (as intended)
+   - Repository strategy name stays "CosmosDb" (as intended)
    - Legacy CosmosNoSql options marked obsolete but kept for backward compatibility
    - New CosmosDB options properly implemented
 
@@ -130,4 +130,4 @@ All major naming corrections have been completed:
 - The analysis revealed that many areas are already correctly named (environment variables, most settings)
 - Primary issues are with class names, interface names, and some variable names
 - Some PowerShell variables use `$cosmosDb` which should remain as is (PowerShell convention)
-- Repository strategy name stays as "Cosmos" as noted in the copilot instructions
+- Repository strategy name stays as "CosmosDb" as noted in the copilot instructions

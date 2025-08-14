@@ -6,7 +6,7 @@ public interface IVectorIndexPolicy
 {
     /// <summary>
     /// Resolve the effective vector provider. When settings.Provider is "Auto",
-    /// uses the repositoryStrategy hint (e.g., "LocalDisk", "AzureBlob", "Cosmos").
+    /// uses the repositoryStrategy hint (e.g., "LocalDisk", "AzureBlob", "CosmosDb").
     /// </summary>
     string ResolveProvider(VectorIndexSettings settings, string repositoryStrategy);
 

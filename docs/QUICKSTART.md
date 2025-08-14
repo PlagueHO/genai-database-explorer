@@ -72,14 +72,14 @@ Edit the `settings.json` file in the project directory to set the desired config
         "ProvisionIfMissing": false, // Attempt to create the index/collection if it does not exist
         "EmbeddingServiceId": "Embeddings", // The registered SK embeddings service name to use
         "ExpectedDimensions": 3072, // Expected embedding vector size (validates against model/index)
-        "AllowedForRepository": ["LocalDisk", "AzureBlob", "Cosmos"], // Allowed persistence strategies for indexing integration
+        "AllowedForRepository": ["LocalDisk", "AzureBlob", "CosmosDb"], // Allowed persistence strategies for indexing integration
         "AzureAISearch": {
                 "Endpoint": "https://<Set your Azure AI Search endpoint>.search.windows.net", // Azure AI Search endpoint URL
                 "IndexName": "<Set your Azure AI Search index name>", // AI Search index name to store vectors
                 "ApiKey": "<Set your Azure AI Search API key>" // Admin/Query API key (use managed identity in production when possible)
         },
         "CosmosDB": {
-                // When using the Cosmos repository strategy, vectors are stored on the SAME entity documents
+                // When using the CosmosDB repository strategy, vectors are stored on the SAME entity documents
                 // in the Entities container. Configure only vector specifics here.
                 "VectorPath": "/embedding/vector",          // JSON path on the entity document holding the vector
                 "DistanceFunction": "cosine",               // cosine | dotproduct | euclidean

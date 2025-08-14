@@ -32,7 +32,7 @@ public sealed class VectorIndexOptions
     public bool ProvisionIfMissing { get; init; } = false;
 
     /// <summary>
-    /// Restrict providers that can be used for the current repository strategy. Example: ["LocalDisk","AzureBlob","Cosmos"].
+    /// Restrict providers that can be used for the current repository strategy. Example: ["LocalDisk","AzureBlob","CosmosDb"].
     /// </summary>
     public string[] AllowedForRepository { get; init; } = [];
 

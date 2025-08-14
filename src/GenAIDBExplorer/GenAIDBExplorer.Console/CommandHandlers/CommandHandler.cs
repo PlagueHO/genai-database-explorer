@@ -156,7 +156,7 @@ public abstract class CommandHandler<TOptions>(
         {
             "LocalDisk" => GetLocalDiskSemanticModelDirectory(projectPath),
             "AzureBlob" => throw new NotSupportedException($"Persistence strategy '{persistenceStrategy}' is not yet supported for saving semantic models."),
-            "Cosmos" => throw new NotSupportedException($"Persistence strategy '{persistenceStrategy}' is not yet supported for saving semantic models."),
+            "CosmosDb" => throw new NotSupportedException($"Persistence strategy '{persistenceStrategy}' is not yet supported for saving semantic models."),
             _ => throw new ArgumentException($"Unknown persistence strategy '{persistenceStrategy}' specified in project settings.")
         };
     }

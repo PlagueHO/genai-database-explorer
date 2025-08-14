@@ -231,7 +231,7 @@ await repo.SaveChangesAsync(model, new DirectoryInfo(@"d:\\projects\\sample-mode
 
 ```csharp
 // Use settings or pass explicit name per call
-await repo.SaveModelAsync(model, new DirectoryInfo(@"d:\\projects\\sample-model"), strategyName: "Cosmos");
+await repo.SaveModelAsync(model, new DirectoryInfo(@"d:\\projects\\sample-model"), strategyName: "CosmosDb");
 ```
 
 - USE-001: Prefer immutable options builder over boolean overloads for clarity and thread safety.

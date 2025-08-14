@@ -246,7 +246,7 @@ switch (persistenceStrategy?.ToLowerInvariant())
     case "azureblob":
         var blobConfig = project.Settings.SemanticModelRepository.AzureBlobStorage;
         break;
-    case "cosmos":
+    case "cosmosdb":
         var cosmosConfig = project.Settings.SemanticModelRepository.CosmosDb;
         break;
 }

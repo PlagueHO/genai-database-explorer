@@ -50,7 +50,7 @@ public sealed class SemanticModelProvider(
             case "AzureBlob":
                 throw new NotSupportedException($"Persistence strategy '{persistenceStrategy}' is not yet supported for loading semantic models.");
 
-            case "Cosmos":
+            case "CosmosDb":
                 throw new NotSupportedException($"Persistence strategy '{persistenceStrategy}' is not yet supported for loading semantic models.");
 
             default:

@@ -830,7 +830,7 @@ var cosmosDbOptions = optionsBuilder
     .WithLazyLoading()
     .WithChangeTracking()
     .WithCaching(true, TimeSpan.FromHours(1))
-    .WithStrategyName("cosmos")
+    .WithStrategyName("CosmosDb")
     .WithMaxConcurrentOperations(12)
     .Build();
 var loadedModel = await repository.LoadModelAsync(new DirectoryInfo("Models"), cosmosDbOptions);

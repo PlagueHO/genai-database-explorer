@@ -182,10 +182,10 @@ public class Project(
                 Validator.ValidateObject(Settings.SemanticModelRepository.AzureBlobStorage, azureBlobContext, validateAllProperties: true);
                 break;
 
-            case "cosmos":
+            case "cosmosdb":
                 if (Settings.SemanticModelRepository.CosmosDb == null)
                 {
-                    throw new ValidationException("CosmosDb configuration is required when PersistenceStrategy is 'Cosmos'.");
+                    throw new ValidationException("CosmosDb configuration is required when PersistenceStrategy is 'CosmosDb'.");
                 }
                 var cosmosContext = new ValidationContext(Settings.SemanticModelRepository.CosmosDb);
                 Validator.ValidateObject(Settings.SemanticModelRepository.CosmosDb, cosmosContext, validateAllProperties: true);

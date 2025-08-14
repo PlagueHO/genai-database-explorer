@@ -101,7 +101,7 @@ public class PersistenceStrategyFactoryTests
             .Returns(_mockCosmosDbStrategy.Object);
 
         // Act
-        var result = _factory.GetStrategy("Cosmos");
+        var result = _factory.GetStrategy("CosmosDb");
 
         // Assert
         result.Should().BeSameAs(_mockCosmosDbStrategy.Object);

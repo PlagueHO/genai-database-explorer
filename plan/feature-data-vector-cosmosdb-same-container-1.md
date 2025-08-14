@@ -44,7 +44,7 @@ Implement only the code changes needed to match the updated spec for CosmosDB ve
 | Task | Description | Completed | Date |
 |------|-------------|-----------|------|
 | TASK-003 | Edit `src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticVectors/Options/VectorOptionsValidator.cs`: change `validProviders` set to `{"Auto","InMemory","AzureAISearch","CosmosDB"}`. Remove checks for `CosmosNoSql.AccountEndpoint/Database/Container`. Add CosmosDB checks: `VectorPath` required and non-empty (recommend starts with "/"); `DistanceFunction` in {cosine, dotproduct, euclidean}; `IndexType` in {diskANN, quantizedFlat, flat}. | ✅ | 2025-08-12 |
-| TASK-004 | Edit `src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticVectors/Policy/VectorIndexPolicy.cs`: in `ResolveProvider`, when `repositoryStrategy.Equals("Cosmos", OrdinalIgnoreCase)`, return `"CosmosDB"`. In `Validate`, require provider `CosmosDB` when `repositoryStrategy.Equals("Cosmos", ...)`; update exception text to: "Cosmos persistence requires CosmosDB vector provider (CON-002)." | ✅ | 2025-08-12 |
+| TASK-004 | Edit `src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticVectors/Policy/VectorIndexPolicy.cs`: in `ResolveProvider`, when `repositoryStrategy.Equals("CosmosDb", OrdinalIgnoreCase)`, return `"CosmosDB"`. In `Validate`, require provider `CosmosDB` when `repositoryStrategy.Equals("CosmosDb", ...)`; update exception text to: "Cosmos persistence requires CosmosDB vector provider (CON-002)." | ✅ | 2025-08-12 |
 
 ### Implementation Phase 3
 
@@ -86,7 +86,7 @@ Implement only the code changes needed to match the updated spec for CosmosDB ve
 ## 6. Testing
 
 - TEST-001: Policy Auto resolves to `CosmosDB` when repository strategy is `Cosmos`.
-- TEST-002: Policy Validate throws when repository strategy is `Cosmos` and provider != `CosmosDB`.
+- TEST-002: Policy Validate throws when repository strategy is `CosmosDb` and provider != `CosmosDB`.
 - TEST-003: Validator fails when CosmosDB.VectorPath is null/empty.
 - TEST-004: Validator fails when CosmosDB.DistanceFunction ∉ {cosine, dotproduct, euclidean}.
 - TEST-005: Validator fails when CosmosDB.IndexType ∉ {diskANN, quantizedFlat, flat}.
@@ -95,7 +95,7 @@ Implement only the code changes needed to match the updated spec for CosmosDB ve
 ## 7. Risks & Assumptions
 
 - RISK-001: Renaming options/properties breaks existing configs referencing `CosmosNoSql`. Mitigation: communicate change in release notes; consider backward-compat shim in a future task.
-- ASSUMPTION-001: Repository strategy string remains `"Cosmos"` elsewhere in the codebase; this plan does not rename the repository strategy itself, only the vector provider/options.
+- ASSUMPTION-001: Repository strategy string remains `"CosmosDb"` elsewhere in the codebase; this plan does not rename the repository strategy itself, only the vector provider/options.
 
 ## 8. Related Specifications / Further Reading
 

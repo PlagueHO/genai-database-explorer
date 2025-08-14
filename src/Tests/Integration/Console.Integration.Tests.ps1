@@ -38,7 +38,7 @@ param(
     [Parameter()]
     [ValidateSet('LocalDisk','AzureBlob','CosmosDB')]
     [string]
-    $PersistenceStrategy = $(if ($env:PERSISTENCE_STRATEGY) { $env:PERSISTENCE_STRATEGY } else { 'LocalDisk' })
+    $PersistenceStrategy = $(if ($env:PERSISTENCE_STRATEGY -and -not [string]::IsNullOrEmpty($env:PERSISTENCE_STRATEGY)) { $env:PERSISTENCE_STRATEGY } else { 'LocalDisk' })
 )
 
 # Import the TestHelper module for fixture support functions
@@ -239,7 +239,11 @@ Describe 'GenAI Database Explorer Console Application' {
             }
 
             # Configure settings for database tests using helper function
-            Set-TestProjectConfiguration -ProjectPath $script:DbProjectPath -PersistenceStrategy $script:PersistenceStrategy
+            if ($script:PersistenceStrategy -and -not [string]::IsNullOrEmpty($script:PersistenceStrategy)) {
+                Set-TestProjectConfiguration -ProjectPath $script:DbProjectPath -PersistenceStrategy $script:PersistenceStrategy
+            } else {
+                Set-TestProjectConfiguration -ProjectPath $script:DbProjectPath
+            }
         }
 
         Context 'extract-model command' {
@@ -363,7 +367,11 @@ Describe 'GenAI Database Explorer Console Application' {
             }
 
             # Configure settings for AI operations using helper function
-            Set-TestProjectConfiguration -ProjectPath $script:AiProjectPath -PersistenceStrategy $script:PersistenceStrategy
+            if ($script:PersistenceStrategy -and -not [string]::IsNullOrEmpty($script:PersistenceStrategy)) {
+                Set-TestProjectConfiguration -ProjectPath $script:AiProjectPath -PersistenceStrategy $script:PersistenceStrategy
+            } else {
+                Set-TestProjectConfiguration -ProjectPath $script:AiProjectPath
+            }
 
             # Extract model first for AI operations (suppress output if fails)
             Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $script:AiProjectPath) | Out-Null
@@ -404,7 +412,11 @@ Describe 'GenAI Database Explorer Console Application' {
             Initialize-TestProject -ProjectPath $script:DisplayProjectPath -ConsoleApp $script:ConsoleAppPath | Out-Null
 
             # Configure settings for display operations using helper function
-            Set-TestProjectConfiguration -ProjectPath $script:DisplayProjectPath -PersistenceStrategy $script:PersistenceStrategy
+            if ($script:PersistenceStrategy -and -not [string]::IsNullOrEmpty($script:PersistenceStrategy)) {
+                Set-TestProjectConfiguration -ProjectPath $script:DisplayProjectPath -PersistenceStrategy $script:PersistenceStrategy
+            } else {
+                Set-TestProjectConfiguration -ProjectPath $script:DisplayProjectPath
+            }
 
             # Extract model for display operations (suppress output if fails)
             Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $script:DisplayProjectPath) | Out-Null
