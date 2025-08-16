@@ -175,7 +175,7 @@ jobs:
             # Use the provided resource group and SQL server names
             $SqlServerName = "${{ inputs.SQL_SERVER_NAME }}"
             $ResourceGroup = "${{ inputs.RESOURCE_GROUP_NAME }}"
-            $FirewallRuleName = "GitHubRunner-${{ github.run_id }}"
+            $FirewallRuleName = "GitHubRunner-${{ github.run_id }}-${{ matrix.persistence }}"
             
             Write-Host "Adding firewall rule for SQL Server: $SqlServerName"
             Write-Host "Resource Group: $ResourceGroup"
@@ -183,6 +183,18 @@ jobs:
             Write-Host "Firewall Rule Name: $FirewallRuleName"
             
             try {
+              # Check if the rule already exists first
+              try {
+                $existingRule = Get-AzSqlServerFirewallRule -ResourceGroupName $ResourceGroup -ServerName $SqlServerName -FirewallRuleName $FirewallRuleName -ErrorAction SilentlyContinue
+                if ($existingRule) {
+                  Write-Host "Firewall rule already exists with same name and IP range - skipping creation" -ForegroundColor Yellow
+                  return
+                }
+              }
+              catch {
+                # Rule doesn't exist, continue with creation
+              }
+              
               # Add firewall rule for the GitHub runner IP
               New-AzSqlServerFirewallRule `
                 -ResourceGroupName $ResourceGroup `
@@ -194,8 +206,14 @@ jobs:
               Write-Host "✅ Firewall rule created successfully" -ForegroundColor Green
             }
             catch {
-              Write-Error "Failed to create firewall rule: $($_.Exception.Message)"
-              throw
+              if ($_.Exception.Message -like "*already exists*") {
+                Write-Warning "Firewall rule already exists - this may be due to parallel job execution"
+                Write-Host "Continuing with existing rule" -ForegroundColor Yellow
+              }
+              else {
+                Write-Error "Failed to create firewall rule: $($_.Exception.Message)"
+                throw
+              }
             }
 
       - name: Enable Azure AI Foundry Public Access for Integration Tests
@@ -549,7 +567,7 @@ jobs:
             # Use the provided resource group and SQL server names
             $ResourceGroup = "${{ inputs.RESOURCE_GROUP_NAME }}"
             $SqlServerName = "${{ inputs.SQL_SERVER_NAME }}"
-            $FirewallRuleName = "GitHubRunner-${{ github.run_id }}"
+            $FirewallRuleName = "GitHubRunner-${{ github.run_id }}-${{ matrix.persistence }}"
             
             Write-Host "Removing firewall rule for SQL Server: $SqlServerName"
             Write-Host "Resource Group: $ResourceGroup"
