@@ -3,6 +3,38 @@ using System.ComponentModel.DataAnnotations;
 namespace GenAIDBExplorer.Core.Models.Project;
 
 /// <summary>
+/// Custom validation attribute that validates URLs only when they are not null or empty.
+/// </summary>
+public sealed class ConditionalUrlAttribute : ValidationAttribute
+{
+    /// <summary>
+    /// Validates that the value is a valid URL if it is not null or empty.
+    /// </summary>
+    /// <param name="value">The value to validate.</param>
+    /// <returns>True if the value is null, empty, or a valid URL; otherwise, false.</returns>
+    public override bool IsValid(object? value)
+    {
+        // Allow null or empty values - this handles the case where the URL is optional
+        if (value is null or "")
+        {
+            return true;
+        }
+
+        // If we have a value, validate it as a URL
+        var urlAttribute = new UrlAttribute();
+        return urlAttribute.IsValid(value);
+    }
+
+    /// <summary>
+    /// Gets the default error message for invalid URLs.
+    /// </summary>
+    public override string FormatErrorMessage(string name)
+    {
+        return $"The {name} field is not a valid fully-qualified http, https, or ftp URL.";
+    }
+}
+
+/// <summary>
 /// Configuration options for Azure Blob Storage persistence strategy.
 /// </summary>
 public sealed class AzureBlobStorageConfiguration
@@ -58,7 +90,8 @@ public sealed class AzureBlobStorageConfiguration
     /// <summary>
     /// Gets or sets the Key Vault key URL for customer-managed encryption.
     /// Required if UseCustomerManagedKeys is true.
+    /// Only validated as a URL if not null or empty.
     /// </summary>
-    [Url]
+    [ConditionalUrl]
     public string? CustomerManagedKeyUrl { get; set; }
 }

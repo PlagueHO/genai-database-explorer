@@ -14,10 +14,24 @@ namespace GenAIDBExplorer.Core.SemanticVectors.Search;
 /// <summary>
 /// Vector search service powered by SK InMemoryVectorStore collections.
 /// </summary>
-public sealed class SkInMemoryVectorSearchService(InMemoryVectorStore store, IPerformanceMonitor performanceMonitor) : IVectorSearchService
+public sealed class SkInMemoryVectorSearchService : IVectorSearchService
 {
-    private readonly InMemoryVectorStore _store = store;
-    private readonly IPerformanceMonitor _performanceMonitor = performanceMonitor;
+    private readonly InMemoryVectorStore? _store;
+    private readonly IVectorStoreAdapter? _adapter;
+    private readonly IPerformanceMonitor _performanceMonitor;
+
+    public SkInMemoryVectorSearchService(InMemoryVectorStore store, IPerformanceMonitor performanceMonitor)
+    {
+        _store = store;
+        _performanceMonitor = performanceMonitor;
+        _adapter = new InMemoryVectorStoreAdapter(store);
+    }
+
+    public SkInMemoryVectorSearchService(IVectorStoreAdapter adapter, IPerformanceMonitor performanceMonitor)
+    {
+        _adapter = adapter;
+        _performanceMonitor = performanceMonitor;
+    }
     private static Task EnsureCollectionExistsAsync(VectorStoreCollection<string, EntityVectorRecord> collection, CancellationToken cancellationToken)
         => collection.EnsureCollectionExistsAsync(cancellationToken);
 
@@ -106,7 +120,9 @@ public sealed class SkInMemoryVectorSearchService(InMemoryVectorStore store, IPe
             ["TopK"] = topK
         });
 
-        var collection = _store.GetCollection<string, EntityVectorRecord>(infrastructure.CollectionName);
+        var collection = (_adapter != null)
+            ? _adapter.GetCollection<string, EntityVectorRecord>(infrastructure.CollectionName)
+            : _store!.GetCollection<string, EntityVectorRecord>(infrastructure.CollectionName);
         await EnsureCollectionExistsOnCollectionAsync(collection!, cancellationToken).ConfigureAwait(false);
         await EnsureCollectionExistsAsync((VectorStoreCollection<string, EntityVectorRecord>)collection, cancellationToken).ConfigureAwait(false);
 

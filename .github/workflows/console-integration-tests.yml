@@ -498,7 +498,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: console-integration-test-results
+          name: console-integration-test-results-${{ matrix.persistence }}
           path: |
             ./test-results/
             ./temp-workspaces/
