@@ -3,9 +3,8 @@
         Integration tests for GenAI Database Explorer Console Application
 
     .DESCRIPTION
-        Comprehensive integration tests that validate all CLI commands against live Azure infrastructure.
+ 
         Tests include project initialization, database model extraction, AI enrichment, and export functionality.
-
         These tests require:
         - GenAI Database Explorer Console application (published)
         - Azure SQL Database connection (AdventureWorksLT recommended)
@@ -39,6 +38,10 @@ param(
     [ValidateSet('LocalDisk','AzureBlob','CosmosDB')]
     [string]
     $PersistenceStrategy = $(if ($env:PERSISTENCE_STRATEGY -and -not [string]::IsNullOrEmpty($env:PERSISTENCE_STRATEGY)) { $env:PERSISTENCE_STRATEGY } else { 'LocalDisk' })
+    ,
+    [Parameter()]
+    [string]
+    $TestFilter = $(if ($env:TEST_FILTER -and -not [string]::IsNullOrEmpty($env:TEST_FILTER)) { $env:TEST_FILTER } else { $null })
 )
 
 # Import the TestHelper module for fixture support functions
@@ -47,6 +50,12 @@ Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelper\TestHe
 Describe 'GenAI Database Explorer Console Application' {
     BeforeAll {
         # Arrange: Create test workspace and validate console app
+        # Determine no-azure (local-only) test mode early via TEST_FILTER='no-azure'
+        $script:NoAzureMode = $false
+        $tf = if ($TestFilter) { $TestFilter } elseif ($env:TEST_FILTER) { $env:TEST_FILTER } else { $null }
+        if ($tf -and ($tf.ToString().Trim().ToLower() -eq 'no-azure')) {
+            $script:NoAzureMode = $true
+        }
         $script:TestWorkspace = New-Item -ItemType Directory -Path (Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "genaidb-integration-test-$(Get-Random)") -Force
         # Prefer environment variable if set, otherwise use default path
         $script:ConsoleAppPath = if ($env:CONSOLE_APP_PATH -and -not [string]::IsNullOrEmpty($env:CONSOLE_APP_PATH)) {
@@ -86,6 +95,43 @@ Describe 'GenAI Database Explorer Console Application' {
         }
 
         Write-Verbose "Using persistence strategy: $($script:PersistenceStrategy)" -Verbose
+        # Validate required environment variables and collect them into a single hashtable
+        $script:TestEnv = @{
+            SQL_CONNECTION_STRING = if ($env:SQL_CONNECTION_STRING) { $env:SQL_CONNECTION_STRING } else { $null }
+            AZURE_OPENAI_ENDPOINT = if ($env:AZURE_OPENAI_ENDPOINT) { $env:AZURE_OPENAI_ENDPOINT } else { $null }
+            AZURE_OPENAI_API_KEY = if ($env:AZURE_OPENAI_API_KEY) { $env:AZURE_OPENAI_API_KEY } else { $null }
+            AZURE_STORAGE_ACCOUNT_ENDPOINT = if ($env:AZURE_STORAGE_ACCOUNT_ENDPOINT) { $env:AZURE_STORAGE_ACCOUNT_ENDPOINT } else { $null }
+            AZURE_STORAGE_CONTAINER = if ($env:AZURE_STORAGE_CONTAINER) { $env:AZURE_STORAGE_CONTAINER } else { $null }
+            AZURE_STORAGE_BLOB_PREFIX = if ($env:AZURE_STORAGE_BLOB_PREFIX) { $env:AZURE_STORAGE_BLOB_PREFIX } else { $null }
+            AZURE_COSMOS_DB_ACCOUNT_ENDPOINT = if ($env:AZURE_COSMOS_DB_ACCOUNT_ENDPOINT) { $env:AZURE_COSMOS_DB_ACCOUNT_ENDPOINT } else { $null }
+            AZURE_COSMOS_DB_DATABASE_NAME = if ($env:AZURE_COSMOS_DB_DATABASE_NAME) { $env:AZURE_COSMOS_DB_DATABASE_NAME } else { $null }
+            AZURE_COSMOS_DB_MODELS_CONTAINER = if ($env:AZURE_COSMOS_DB_MODELS_CONTAINER) { $env:AZURE_COSMOS_DB_MODELS_CONTAINER } else { $null }
+            AZURE_COSMOS_DB_ENTITIES_CONTAINER = if ($env:AZURE_COSMOS_DB_ENTITIES_CONTAINER) { $env:AZURE_COSMOS_DB_ENTITIES_CONTAINER } else { $null }
+            PERSISTENCE_STRATEGY = $script:PersistenceStrategy
+        }
+
+        # Determine no-azure (local-only) test mode via TEST_FILTER='no-azure'
+        $script:NoAzureMode = $false
+        if ($TestFilter -and $TestFilter -eq 'no-azure') { $script:NoAzureMode = $true }
+
+        # Enforce required vars: SQL_CONNECTION_STRING and Azure OpenAI info must be present for full integration runs
+        $missingRequired = @()
+        if (-not $script:TestEnv.SQL_CONNECTION_STRING) { $missingRequired += 'SQL_CONNECTION_STRING' }
+        if (-not $script:TestEnv.AZURE_OPENAI_ENDPOINT) { $missingRequired += 'AZURE_OPENAI_ENDPOINT' }
+        if (-not $script:TestEnv.AZURE_OPENAI_API_KEY) { $missingRequired += 'AZURE_OPENAI_API_KEY' }
+
+        if ($missingRequired.Count -gt 0) {
+            if ($script:NoAzureMode) {
+                Write-Verbose "NoAzure mode active (TEST_FILTER=no-azure): skipping required env var enforcement" -Verbose
+                # In no-azure mode, replace missing values with null/dummy safe values
+                if (-not $script:TestEnv.SQL_CONNECTION_STRING) { $script:TestEnv.SQL_CONNECTION_STRING = $null }
+                if (-not $script:TestEnv.AZURE_OPENAI_ENDPOINT) { $script:TestEnv.AZURE_OPENAI_ENDPOINT = $null }
+                if (-not $script:TestEnv.AZURE_OPENAI_API_KEY) { $script:TestEnv.AZURE_OPENAI_API_KEY = $null }
+            } else {
+                Write-Warning "Missing required environment variables: $($missingRequired -join ', ')"
+                throw "Missing required environment variables: $($missingRequired -join ', ')"
+            }
+        }
     }
 
     Context 'Project Management Commands' {
@@ -238,12 +284,27 @@ Describe 'GenAI Database Explorer Console Application' {
                 throw "Failed to initialize database test project"
             }
 
-            # Configure settings for database tests using helper function
-            if ($script:PersistenceStrategy -and -not [string]::IsNullOrEmpty($script:PersistenceStrategy)) {
-                Set-TestProjectConfiguration -ProjectPath $script:DbProjectPath -PersistenceStrategy $script:PersistenceStrategy
-            } else {
-                Set-TestProjectConfiguration -ProjectPath $script:DbProjectPath
+            # Configure settings for database tests using helper function (splat to reduce duplication)
+            $dbConfig = @{
+                ProjectPath = $script:DbProjectPath
+                ConnectionString = $script:TestEnv.SQL_CONNECTION_STRING
+                AzureOpenAIEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
+                AzureOpenAIApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
+                AzureStorageAccountEndpoint = $script:TestEnv.AZURE_STORAGE_ACCOUNT_ENDPOINT
+                AzureStorageContainer = $script:TestEnv.AZURE_STORAGE_CONTAINER
+                AzureStorageBlobPrefix = $script:TestEnv.AZURE_STORAGE_BLOB_PREFIX
+                AzureCosmosDbAccountEndpoint = $script:TestEnv.AZURE_COSMOS_DB_ACCOUNT_ENDPOINT
+                AzureCosmosDbDatabaseName = $script:TestEnv.AZURE_COSMOS_DB_DATABASE_NAME
+                AzureCosmosDbModelsContainer = $script:TestEnv.AZURE_COSMOS_DB_MODELS_CONTAINER
+                AzureCosmosDbEntitiesContainer = $script:TestEnv.AZURE_COSMOS_DB_ENTITIES_CONTAINER
+                NoAzureMode = $script:NoAzureMode
             }
+
+            if ($script:PersistenceStrategy -and -not [string]::IsNullOrEmpty($script:PersistenceStrategy)) {
+                $dbConfig.PersistenceStrategy = $script:PersistenceStrategy
+            }
+
+            Set-TestProjectConfiguration @dbConfig
         }
 
         Context 'extract-model command' {
@@ -351,7 +412,9 @@ Describe 'GenAI Database Explorer Console Application' {
 
                 # Assert
                 $commandResult.ExitCode | Should -Be 0 -Because 'generate-vectors dry-run should succeed'
-                $commandResult.Output | Should -Match 'Processed' -Because 'Should log processed entities summary'
+                # Join the output array into a single string for regex matching (some Invoke-ConsoleCommand implementations return arrays)
+                $joinedOutput = $commandResult.Output -join "`n"
+                $joinedOutput | Should -Match 'Processed' -Because 'Should log processed entities summary'
             }
         }
     }
@@ -366,12 +429,27 @@ Describe 'GenAI Database Explorer Console Application' {
                 Write-Warning "Failed to initialize AI test project: $($projectSetup.InitResult)"
             }
 
-            # Configure settings for AI operations using helper function
-            if ($script:PersistenceStrategy -and -not [string]::IsNullOrEmpty($script:PersistenceStrategy)) {
-                Set-TestProjectConfiguration -ProjectPath $script:AiProjectPath -PersistenceStrategy $script:PersistenceStrategy
-            } else {
-                Set-TestProjectConfiguration -ProjectPath $script:AiProjectPath
+            # Configure settings for AI operations using helper function (splat to reduce duplication)
+            $aiConfig = @{
+                ProjectPath = $script:AiProjectPath
+                ConnectionString = $script:TestEnv.SQL_CONNECTION_STRING
+                AzureOpenAIEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
+                AzureOpenAIApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
+                AzureStorageAccountEndpoint = $script:TestEnv.AZURE_STORAGE_ACCOUNT_ENDPOINT
+                AzureStorageContainer = $script:TestEnv.AZURE_STORAGE_CONTAINER
+                AzureStorageBlobPrefix = $script:TestEnv.AZURE_STORAGE_BLOB_PREFIX
+                AzureCosmosDbAccountEndpoint = $script:TestEnv.AZURE_COSMOS_DB_ACCOUNT_ENDPOINT
+                AzureCosmosDbDatabaseName = $script:TestEnv.AZURE_COSMOS_DB_DATABASE_NAME
+                AzureCosmosDbModelsContainer = $script:TestEnv.AZURE_COSMOS_DB_MODELS_CONTAINER
+                AzureCosmosDbEntitiesContainer = $script:TestEnv.AZURE_COSMOS_DB_ENTITIES_CONTAINER
+                NoAzureMode = $script:NoAzureMode
             }
+
+            if ($script:PersistenceStrategy -and -not [string]::IsNullOrEmpty($script:PersistenceStrategy)) {
+                $aiConfig.PersistenceStrategy = $script:PersistenceStrategy
+            }
+
+            Set-TestProjectConfiguration @aiConfig
 
             # Extract model first for AI operations (suppress output if fails)
             Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $script:AiProjectPath) | Out-Null
@@ -411,12 +489,27 @@ Describe 'GenAI Database Explorer Console Application' {
             $script:DisplayProjectPath = Join-Path -Path $script:BaseProjectPath -ChildPath 'display-test'
             Initialize-TestProject -ProjectPath $script:DisplayProjectPath -ConsoleApp $script:ConsoleAppPath | Out-Null
 
-            # Configure settings for display operations using helper function
-            if ($script:PersistenceStrategy -and -not [string]::IsNullOrEmpty($script:PersistenceStrategy)) {
-                Set-TestProjectConfiguration -ProjectPath $script:DisplayProjectPath -PersistenceStrategy $script:PersistenceStrategy
-            } else {
-                Set-TestProjectConfiguration -ProjectPath $script:DisplayProjectPath
+            # Configure settings for display operations using helper function (splat to reduce duplication)
+            $displayConfig = @{
+                ProjectPath = $script:DisplayProjectPath
+                ConnectionString = $script:TestEnv.SQL_CONNECTION_STRING
+                AzureOpenAIEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
+                AzureOpenAIApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
+                AzureStorageAccountEndpoint = $script:TestEnv.AZURE_STORAGE_ACCOUNT_ENDPOINT
+                AzureStorageContainer = $script:TestEnv.AZURE_STORAGE_CONTAINER
+                AzureStorageBlobPrefix = $script:TestEnv.AZURE_STORAGE_BLOB_PREFIX
+                AzureCosmosDbAccountEndpoint = $script:TestEnv.AZURE_COSMOS_DB_ACCOUNT_ENDPOINT
+                AzureCosmosDbDatabaseName = $script:TestEnv.AZURE_COSMOS_DB_DATABASE_NAME
+                AzureCosmosDbModelsContainer = $script:TestEnv.AZURE_COSMOS_DB_MODELS_CONTAINER
+                AzureCosmosDbEntitiesContainer = $script:TestEnv.AZURE_COSMOS_DB_ENTITIES_CONTAINER
+                NoAzureMode = $script:NoAzureMode
             }
+
+            if ($script:PersistenceStrategy -and -not [string]::IsNullOrEmpty($script:PersistenceStrategy)) {
+                $displayConfig.PersistenceStrategy = $script:PersistenceStrategy
+            }
+
+            Set-TestProjectConfiguration @displayConfig
 
             # Extract model for display operations (suppress output if fails)
             Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $script:DisplayProjectPath) | Out-Null

@@ -122,7 +122,7 @@
 			"command": "pwsh",
 			"args": [
 				"-Command",
-				"New-Item -ItemType Directory -Path './test-results' -Force | Out-Null; $config = New-PesterConfiguration; $config.Run.Path = './src/Tests/Integration/Console.Integration.Tests.ps1'; $config.Output.Verbosity = 'Detailed'; $config.TestResult.Enabled = $true; $config.TestResult.OutputFormat = 'NUnitXml'; $config.TestResult.OutputPath = './test-results/integration-tests.xml'; $config.CodeCoverage.Enabled = $false; $config.Should.ErrorAction = 'Continue'; Invoke-Pester -Configuration $config"
+				"New-Item -ItemType Directory -Path './test-results' -Force | Out-Null; & ./.github/scripts/Invoke-IntegrationTests.ps1 -TestFilter $env:TEST_FILTER"
 			],
 			"group": {
 				"kind": "test",

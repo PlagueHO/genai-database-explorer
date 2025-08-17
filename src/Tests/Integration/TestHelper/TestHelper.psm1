@@ -1,209 +1,22 @@
 <#
-    .SYNOPSIS
-        Test Helper module for GenAI Database Explorer Console Integration Tests
+    Test Helper module for GenAI Database Explorer Console Integration Tests
 
-    .DESCRIPTION
-        This module provides common fixture support functions for integration testing
-        of the GenAI Database Explorer Console application. It includes functions for
-        project initialization, settings configuration, command execution, and test
-        data creation.
-
-    .NOTES
-        Module: TestHelper
-        Author: GenAI Database Explorer Team
-        Version: 1.0.0
-        PowerShell Version: 7+
-        Dependencies: None
-
-    .EXAMPLE
-        Import-Module -Name .\TestHelper\TestHelper.psm1
-        $result = Initialize-TestProject -ProjectPath "C:\temp\test" -ConsoleApp ".\app.exe"
+    This module provides fixture helper functions consumed by the Pester integration
+    test suite. Functions are parameter-driven and do not read environment variables
+    directly. The test script collects environment values and passes them into these
+    helpers.
 #>
 
 #Requires -Version 7
 
-using namespace System.Management.Automation
-
-function Initialize-TestProject {
-    <#
-    .SYNOPSIS
-        Initializes a new test project using the console application.
-
-    .DESCRIPTION
-        Creates a new project using the GenAI Database Explorer console application
-        and returns information about the initialization result.
-
-    .PARAMETER ProjectPath
-        The path where the project should be created.
-
-    .PARAMETER ConsoleApp
-        The path to the console application executable.
-
-    .OUTPUTS
-        Returns a hashtable with InitResult, ExitCode, and ProjectPath properties.
-
-    .EXAMPLE
-        $result = Initialize-TestProject -ProjectPath "C:\temp\testproject" -ConsoleApp ".\GenAIDBExplorer.Console.exe"
-        if ($result.ExitCode -eq 0) {
-            Write-Host "Project initialized successfully at $($result.ProjectPath)"
-        }
-
-    .NOTES
-        This function executes the 'init-project' command of the console application
-        and captures both the output and exit code for validation in tests.
-    #>
-    [CmdletBinding()]
-    [OutputType([hashtable])]
-    param(
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [string]$ProjectPath,
-
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [string]$ConsoleApp
-    )
-
-    Write-Verbose "Initializing test project at: $ProjectPath" -Verbose
-    $initResult = & $ConsoleApp init-project --project $ProjectPath 2>&1
-    $exitCode = $LASTEXITCODE
-
-    return @{
-        InitResult = $initResult
-        ExitCode = $exitCode
-        ProjectPath = $ProjectPath
-    }
-}
-
-function Set-ProjectSettings {
-    <#
-    .SYNOPSIS
-        Configures project settings with connection strings and AI endpoints.
-
-    .DESCRIPTION
-        Updates the settings.json file in a GenAI Database Explorer project with
-        database connection strings and Azure OpenAI configuration.
-
-    .PARAMETER ProjectPath
-        The path to the project containing settings.json.
-
-    .PARAMETER ConnectionString
-        The database connection string to configure.
-
-    .PARAMETER AzureOpenAIEndpoint
-        The Azure OpenAI endpoint URL.
-
-    .PARAMETER AzureOpenAIApiKey
-        The Azure OpenAI API key (optional).
-
-    .PARAMETER ChatCompletionDeploymentId
-        The deployment ID for chat completion operations.
-
-    .PARAMETER ChatCompletionStructuredDeploymentId
-        The deployment ID for structured chat completion operations.
-
-    .PARAMETER EmbeddingDeploymentId
-        The deployment ID for embedding operations.
-
-    .EXAMPLE
-        Set-ProjectSettings -ProjectPath "C:\temp\project" -ConnectionString "Server=localhost;Database=Test;Integrated Security=true"
-
-    .EXAMPLE
-        Set-ProjectSettings -ProjectPath "C:\temp\project" -AzureOpenAIEndpoint "https://myopenai.openai.azure.com" -AzureOpenAIApiKey "abc123"
-
-    .NOTES
-        This function modifies the settings.json file in place. If the file doesn't exist,
-        a warning is issued and the function returns without making changes.
-    #>
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [string]$ProjectPath,
-
-        [Parameter()]
-        [string]$ConnectionString,
-
-        [Parameter()]
-        [string]$AzureOpenAIEndpoint,
-
-        [Parameter()]
-        [string]$AzureOpenAIApiKey,
-
-        [Parameter()]
-        [string]$ChatCompletionDeploymentId,
-
-        [Parameter()]
-        [string]$ChatCompletionStructuredDeploymentId,
-
-        [Parameter()]
-        [string]$EmbeddingDeploymentId
-    )
-
-    $settingsPath = Join-Path -Path $ProjectPath -ChildPath 'settings.json'
-
-    if (-not (Test-Path -Path $settingsPath)) {
-        Write-Warning "Settings file not found at: $settingsPath"
-        return
-    }
-
-    $settings = Get-Content -Path $settingsPath | ConvertFrom-Json
-
-    if ($ConnectionString) {
-        # Ensure MultipleActiveResultSets=True is included for the GenAI Database Explorer
-        if ($ConnectionString -notmatch 'MultipleActiveResultSets\s*=') {
-            # Add MultipleActiveResultSets=True if not present
-            $ConnectionString = if ($ConnectionString.EndsWith(';')) {
-                $ConnectionString + 'MultipleActiveResultSets=True;'
-            } else {
-                $ConnectionString + ';MultipleActiveResultSets=True;'
-            }
-            Write-Verbose "Added MultipleActiveResultSets=True to connection string" -Verbose
-        }
-        
-        $settings.Database.ConnectionString = $ConnectionString
-        Write-Verbose "Connection string configured in settings.json" -Verbose
-    }
-
-    # Set the Schema to empty to ensure all schemas are used
-    $settings.Database.Schema = ''
-
-    if ($AzureOpenAIEndpoint) {
-        $settings.OpenAIService.Default.AzureOpenAIEndpoint = $AzureOpenAIEndpoint
-        Write-Verbose "Azure OpenAI endpoint configured in settings.json" -Verbose
-    }
-
-    if ($AzureOpenAIApiKey) {
-        $settings.OpenAIService.Default.AzureOpenAIKey = $AzureOpenAIApiKey
-        Write-Verbose "Azure OpenAI API key configured in settings.json" -Verbose
-    }
-
-    if ($ChatCompletionDeploymentId) {
-        $settings.OpenAIService.ChatCompletion.AzureOpenAIDeploymentId = $ChatCompletionDeploymentId
-        Write-Verbose "Chat completion deployment ID configured in settings.json: $ChatCompletionDeploymentId" -Verbose
-    }
-
-    if ($ChatCompletionStructuredDeploymentId) {
-        $settings.OpenAIService.ChatCompletionStructured.AzureOpenAIDeploymentId = $ChatCompletionStructuredDeploymentId
-        Write-Verbose "Structured chat completion deployment ID configured in settings.json: $ChatCompletionStructuredDeploymentId" -Verbose
-    }
-
-    if ($EmbeddingDeploymentId) {
-        $settings.OpenAIService.Embedding.AzureOpenAIDeploymentId = $EmbeddingDeploymentId
-        Write-Verbose "Embedding deployment ID configured in settings.json: $EmbeddingDeploymentId" -Verbose
-    }
-
-    $settings | ConvertTo-Json -Depth 10 | Set-Content -Path $settingsPath
-}
-
 function Invoke-ConsoleCommand {
     <#
     .SYNOPSIS
-        Executes a console application command and captures output and exit code.
+        Executes the console application and captures output and exit code.
 
     .DESCRIPTION
-        Provides a standardized way to execute the GenAI Database Explorer console
-        application with arguments, capturing both output and exit codes for test validation.
+        This function executes a console application with specified arguments and returns
+        the output, exit code, and command line for testing purposes.
 
     .PARAMETER ConsoleApp
         The path to the console application executable.
@@ -215,14 +28,11 @@ function Invoke-ConsoleCommand {
         Returns a hashtable with Output, ExitCode, and Command properties.
 
     .EXAMPLE
-        $result = Invoke-ConsoleCommand -ConsoleApp ".\app.exe" -Arguments @('extract-model', '--project', 'C:\temp\project')
-        if ($result.ExitCode -eq 0) {
-            Write-Host "Command succeeded: $($result.Command)"
-        }
+        $result = Invoke-ConsoleCommand -ConsoleApp ".\app.exe" -Arguments @('--help')
+        Write-Host "Exit Code: $($result.ExitCode)"
 
     .NOTES
-        This function centralizes command execution logging and provides consistent
-        output capture patterns for all console application interactions in tests.
+        This function is designed for test scenarios and captures both stdout and stderr.
     #>
     [CmdletBinding()]
     [OutputType([hashtable])]
@@ -239,48 +49,90 @@ function Invoke-ConsoleCommand {
     $commandLine = "$ConsoleApp $($Arguments -join ' ')"
     Write-Verbose "Executing: $commandLine" -Verbose
 
-    $result = & $ConsoleApp @Arguments 2>&1
+    $output = & $ConsoleApp @Arguments 2>&1
     $exitCode = $LASTEXITCODE
 
-    Write-Verbose "Console Output:" -Verbose
-    foreach ($line in $result) {
-        Write-Verbose "  $line" -Verbose
-    }
-    Write-Verbose "Exit Code: $exitCode" -Verbose
+    return @{ Output = $output; ExitCode = $exitCode; Command = $commandLine }
+}
 
+function Initialize-TestProject {
+    <#
+    .SYNOPSIS
+        Initializes a new test project by invoking the console app 'init-project' command.
+
+    .DESCRIPTION
+        This function creates a new test project directory and initializes it using the
+        GenAI Database Explorer console application's init-project command.
+
+    .PARAMETER ProjectPath
+        The filesystem path where the new test project should be created.
+
+    .PARAMETER ConsoleApp
+        The path to the console application executable.
+
+    .OUTPUTS
+        Returns a hashtable with InitResult (console output array) and ExitCode properties.
+
+    .EXAMPLE
+        $result = Initialize-TestProject -ProjectPath "C:\temp\test" -ConsoleApp ".\app.exe"
+        if ($result.ExitCode -eq 0) {
+            Write-Host "Project initialized successfully"
+        }
+
+    .NOTES
+        This function will create the project directory if it doesn't exist.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ProjectPath,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ConsoleApp
+    )
+
+    if (-not (Test-Path -Path $ProjectPath)) {
+        New-Item -ItemType Directory -Path $ProjectPath -Force | Out-Null
+    }
+
+    $result = Invoke-ConsoleCommand -ConsoleApp $ConsoleApp -Arguments @('init-project', '--project', $ProjectPath)
     return @{
-        Output = $result
-        ExitCode = $exitCode
-        Command = $commandLine
+        InitResult = $result.Output
+        ExitCode = $result.ExitCode
     }
 }
 
 function New-TestDataDictionary {
     <#
     .SYNOPSIS
-        Creates a sample data dictionary file for testing.
+        Creates a simple JSON data dictionary used by tests.
 
     .DESCRIPTION
-        Generates a JSON data dictionary file with the specified database object
-        information for use in integration tests of the data dictionary functionality.
+        This function generates a JSON data dictionary file with the specified database
+        object information for use in integration tests of the data dictionary functionality.
 
     .PARAMETER DictionaryPath
         The path where the dictionary file should be created.
 
     .PARAMETER ObjectType
-        The type of database object (e.g., 'table').
+        The type of database object (e.g., 'table', 'view').
 
     .PARAMETER SchemaName
-        The schema name for the object.
+        The schema name for the database object.
 
     .PARAMETER ObjectName
         The name of the database object.
 
     .PARAMETER Description
-        The description for the object.
+        The description for the database object.
+
+    .OUTPUTS
+        This function does not return output but creates a JSON file at the specified path.
 
     .EXAMPLE
-        New-TestDataDictionary -DictionaryPath "C:\temp\dict.json" -ObjectType "table" -SchemaName "dbo" -ObjectName "Customer" -Description "Customer information"
+        New-TestDataDictionary -DictionaryPath "C:\temp\dict.json" -ObjectType "table" -SchemaName "dbo" -ObjectName "Customer" -Description "Customer information table"
 
     .NOTES
         This function creates the parent directory if it doesn't exist and generates
@@ -309,55 +161,171 @@ function New-TestDataDictionary {
         [string]$Description
     )
 
-    $dictionaryDir = Split-Path -Path $DictionaryPath -Parent
-    if (-not (Test-Path -Path $dictionaryDir)) {
-        New-Item -ItemType Directory -Path $dictionaryDir -Force | Out-Null
+    $dir = Split-Path -Path $DictionaryPath -Parent
+    if (-not (Test-Path -Path $dir)) {
+        New-Item -ItemType Directory -Path $dir -Force | Out-Null
     }
 
-    $sampleDict = @{
-        objectType = $ObjectType
-        schemaName = $SchemaName
-        objectName = $ObjectName
+    $sample = @{
+        objectType  = $ObjectType
+        schemaName  = $SchemaName
+        objectName  = $ObjectName
         description = $Description
-        columns = @(
+        columns     = @(
             @{
-                name = 'ID'
+                name        = 'ID'
                 description = 'Unique identifier'
             }
         )
     }
 
-    $sampleDict | ConvertTo-Json -Depth 3 | Set-Content -Path $DictionaryPath
+    $sample | ConvertTo-Json -Depth 5 | Set-Content -Path $DictionaryPath
     Write-Verbose "Created test data dictionary at: $DictionaryPath" -Verbose
 }
 
+function Set-ProjectSettings {
+    <#
+    .SYNOPSIS
+        Writes a minimal settings.json for a test project from provided values.
+
+    .DESCRIPTION
+        This function creates a JSON settings configuration file for the test project
+        with the minimum required settings including database connection, OpenAI service
+        configuration, and semantic model repository settings.
+
+    .PARAMETER ProjectPath
+        The path to the test project directory where settings.json will be created.
+
+    .PARAMETER Database
+        A hashtable containing database configuration including connectionString,
+        schema, and other database-related settings.
+
+    .PARAMETER OpenAIService
+        A hashtable containing OpenAI service configuration including authentication
+        and model deployment settings.
+
+    .PARAMETER SemanticModelRepository
+        A hashtable containing semantic model repository configuration including
+        provider type and related settings.
+
+    .OUTPUTS
+        This function does not return output but creates a settings.json file in the project directory.
+
+    .EXAMPLE
+        $dbConfig = @{ connectionString = "Server=.;Database=Test"; schema = "dbo" }
+        $aiConfig = @{ authType = "Key"; apiKey = "test-key" }
+        $repoConfig = @{ provider = "LocalDisk" }
+        Set-ProjectSettings -ProjectPath "C:\temp\project" -Database $dbConfig -OpenAIService $aiConfig -SemanticModelRepository $repoConfig
+
+    .NOTES
+        This function creates a complete settings.json file with all required sections
+        for the GenAI Database Explorer project configuration.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ProjectPath,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNull()]
+        [hashtable]$Database,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNull()]
+        [hashtable]$OpenAIService,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNull()]
+        [hashtable]$SemanticModelRepository
+    )
+
+    if (-not (Test-Path -Path $ProjectPath)) {
+        New-Item -ItemType Directory -Path $ProjectPath -Force | Out-Null
+    }
+
+    $settings = [ordered]@{
+        SettingsVersion         = 1
+        Database                = $Database
+        OpenAIService           = $OpenAIService
+        SemanticModelRepository = $SemanticModelRepository
+    }
+
+    $settingsPath = Join-Path -Path $ProjectPath -ChildPath 'settings.json'
+    $settings | ConvertTo-Json -Depth 10 | Set-Content -Path $settingsPath
+    Write-Verbose "Created project settings at: $settingsPath" -Verbose
+}
 
 function Set-TestProjectConfiguration {
     <#
     .SYNOPSIS
-        Configures all required settings for a test project (database and Azure OpenAI).
+        High-level helper that prepares settings.json for a test project.
 
     .DESCRIPTION
-        Sets up the settings.json for a test project, including database connection string,
-        Azure OpenAI endpoint, API key, and required deployment IDs for all AI operations.
+        This function is a convenience wrapper that creates a complete project settings
+        configuration by building the required hashtables and calling Set-ProjectSettings.
+        It supports multiple authentication modes and persistence strategies.
 
     .PARAMETER ProjectPath
-        The path to the project containing settings.json.
+        The path to the test project directory where settings.json will be created.
 
     .PARAMETER ConnectionString
-        The database connection string to configure.
+        The database connection string for connecting to the test database.
 
     .PARAMETER AzureOpenAIEndpoint
-        The Azure OpenAI endpoint URL.
+        The Azure OpenAI service endpoint URL.
 
     .PARAMETER AzureOpenAIApiKey
-        The Azure OpenAI API key (optional).
+        The API key for authenticating with Azure OpenAI service.
+
+    .PARAMETER NoAzureMode
+        Switch to enable no-azure mode, which uses mock/local configurations instead of Azure services.
+
+    .PARAMETER ChatCompletionDeploymentId
+        The deployment ID for the chat completion model (default: 'gpt-4-1').
+
+    .PARAMETER ChatCompletionStructuredDeploymentId
+        The deployment ID for structured chat completion model (default: 'gpt-4-1-mini').
+
+    .PARAMETER EmbeddingDeploymentId
+        The deployment ID for the text embedding model (default: 'text-embedding-ada-002').
+
+    .PARAMETER PersistenceStrategy
+        The persistence strategy for semantic model storage. Valid values: 'LocalDisk', 'AzureBlob', 'CosmosDB'.
+
+    .PARAMETER AzureStorageAccountEndpoint
+        The Azure Storage account endpoint (required for AzureBlob persistence).
+
+    .PARAMETER AzureStorageContainer
+        The Azure Storage container name (optional, defaults to 'semantic-models').
+
+    .PARAMETER AzureStorageBlobPrefix
+        The blob prefix for Azure Storage (optional).
+
+    .PARAMETER AzureCosmosDbAccountEndpoint
+        The Azure Cosmos DB account endpoint (required for CosmosDB persistence).
+
+    .PARAMETER AzureCosmosDbDatabaseName
+        The Cosmos DB database name (optional, defaults to 'SemanticModels').
+
+    .PARAMETER AzureCosmosDbModelsContainer
+        The Cosmos DB models container name (optional, defaults to 'Models').
+
+    .PARAMETER AzureCosmosDbEntitiesContainer
+        The Cosmos DB entities container name (optional, defaults to 'ModelEntities').
+
+    .OUTPUTS
+        This function does not return output but creates a settings.json file in the project directory.
 
     .EXAMPLE
-        Set-TestProjectConfiguration -ProjectPath "C:\temp\project" -ConnectionString "..." -AzureOpenAIEndpoint "..." -AzureOpenAIApiKey "..."
+        Set-TestProjectConfiguration -ProjectPath "C:\temp\project" -ConnectionString "Server=.;Database=Test" -AzureOpenAIEndpoint "https://test.openai.azure.com" -AzureOpenAIApiKey "test-key"
+
+    .EXAMPLE
+        Set-TestProjectConfiguration -ProjectPath "C:\temp\project" -ConnectionString "Server=.;Database=Test" -NoAzureMode -PersistenceStrategy "LocalDisk"
 
     .NOTES
-        This function is intended for use in integration test setup blocks.
+        This function builds the required configuration hashtables and delegates to Set-ProjectSettings
+        for the actual file creation. It handles different persistence strategies and authentication modes.
     #>
     [CmdletBinding()]
     param(
@@ -375,117 +343,84 @@ function Set-TestProjectConfiguration {
         [string]$AzureOpenAIApiKey,
 
         [Parameter()]
-        [ValidateSet('LocalDisk','AzureBlob','CosmosDB')]
-        [string]$PersistenceStrategy
+        [bool]$NoAzureMode = $false,
+
+        [Parameter()]
+        [string]$ChatCompletionDeploymentId = 'gpt-4-1',
+
+        [Parameter()]
+        [string]$ChatCompletionStructuredDeploymentId = 'gpt-4-1-mini',
+
+        [Parameter()]
+        [string]$EmbeddingDeploymentId = 'text-embedding-ada-002',
+
+        [Parameter()]
+        [ValidateSet('LocalDisk', 'AzureBlob', 'CosmosDB')]
+        [string]$PersistenceStrategy = 'LocalDisk',
+
+        [Parameter()]
+        [string]$AzureStorageAccountEndpoint,
+
+        [Parameter()]
+        [string]$AzureStorageContainer,
+
+        [Parameter()]
+        [string]$AzureStorageBlobPrefix,
+
+        [Parameter()]
+        [string]$AzureCosmosDbAccountEndpoint,
+
+        [Parameter()]
+        [string]$AzureCosmosDbDatabaseName,
+
+        [Parameter()]
+        [string]$AzureCosmosDbModelsContainer,
+
+        [Parameter()]
+        [string]$AzureCosmosDbEntitiesContainer
     )
 
-    $configParams = @{ ProjectPath = $ProjectPath }
-
-    # Read environment variables for configuration
-    $envConnectionString = Get-Item -Path 'Env:SQL_CONNECTION_STRING' -ErrorAction SilentlyContinue
-    $envOpenAiEndpoint = Get-Item -Path 'Env:AZURE_OPENAI_ENDPOINT' -ErrorAction SilentlyContinue
-    $envOpenAiApiKey = Get-Item -Path 'Env:AZURE_OPENAI_API_KEY' -ErrorAction SilentlyContinue
-
-    # Use provided parameters or environment variables
-    if ($ConnectionString) {
-        $configParams.ConnectionString = $ConnectionString
-    } elseif ($envConnectionString -and -not [string]::IsNullOrEmpty($envConnectionString.Value)) {
-        $configParams.ConnectionString = $envConnectionString.Value
-    } else {
-        # Use Azure SQL Database with Active Directory Default authentication for testing
-        $configParams.ConnectionString = 'Server=tcp:criticalthinking.database.windows.net,1433;Initial Catalog=AdventureWorksLT;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;Authentication="Active Directory Default";'
-        Write-Verbose "No SQL connection string provided - using default Azure SQL Database for testing" -Verbose
+    # Build database configuration
+    $dbConfig = @{
+        ConnectionString = $ConnectionString
     }
 
-    if ($AzureOpenAIEndpoint) {
-        $configParams.AzureOpenAIEndpoint = $AzureOpenAIEndpoint
-    } elseif ($envOpenAiEndpoint -and -not [string]::IsNullOrEmpty($envOpenAiEndpoint.Value)) {
-        $configParams.AzureOpenAIEndpoint = $envOpenAiEndpoint.Value
-    } else {
-        $configParams.AzureOpenAIEndpoint = 'https://test-openai-resource.cognitiveservices.azure.com/'
+    # Build OpenAI service configuration
+    $openAIConfig = @{
+        Endpoint                              = if ($NoAzureMode) { $null } else { $AzureOpenAIEndpoint }
+        ApiKey                                = if ($NoAzureMode) { $null } else { $AzureOpenAIApiKey }
+        ChatCompletionDeploymentId            = $ChatCompletionDeploymentId
+        ChatCompletionStructuredDeploymentId = $ChatCompletionStructuredDeploymentId
+        EmbeddingDeploymentId                 = $EmbeddingDeploymentId
     }
 
-    # Always set API key (dummy if not present)
-    if ($AzureOpenAIApiKey) {
-        $configParams.AzureOpenAIApiKey = $AzureOpenAIApiKey
-    } elseif ($envOpenAiApiKey -and -not [string]::IsNullOrEmpty($envOpenAiApiKey.Value)) {
-        $configParams.AzureOpenAIApiKey = $envOpenAiApiKey.Value
-    } else {
-        $configParams.AzureOpenAIApiKey = 'dummy-key-for-ci-or-local'
-    }
-
-    # Set required deployment IDs
-    $configParams.ChatCompletionDeploymentId = 'gpt-4-1'
-    $configParams.ChatCompletionStructuredDeploymentId = 'gpt-4-1-mini'
-    $configParams.EmbeddingDeploymentId = 'text-embedding-ada-002'
-
-    Set-ProjectSettings @configParams
-
-    # After setting base settings, optionally configure persistence strategy and repository settings
-    $strategy = if ($PersistenceStrategy -and -not [string]::IsNullOrEmpty($PersistenceStrategy)) { 
-        $PersistenceStrategy 
-    } elseif ($env:PERSISTENCE_STRATEGY -and -not [string]::IsNullOrEmpty($env:PERSISTENCE_STRATEGY)) { 
-        $env:PERSISTENCE_STRATEGY 
-    } else { 
-        'LocalDisk' 
-    }
-
-    $settingsPath = Join-Path -Path $ProjectPath -ChildPath 'settings.json'
-    if (Test-Path -Path $settingsPath) {
-        $settings = Get-Content -Path $settingsPath | ConvertFrom-Json
-
-        # Ensure SemanticModel section exists
-        if (-not $settings.SemanticModel) {
-            $settings | Add-Member -NotePropertyName 'SemanticModel' -NotePropertyValue (@{})
-        }
-        $settings.SemanticModel.PersistenceStrategy = $strategy
-
-        # Ensure SemanticModelRepository section exists
-        if (-not $settings.SemanticModelRepository) {
-            $settings | Add-Member -NotePropertyName 'SemanticModelRepository' -NotePropertyValue (@{})
-        }
-
-        switch ($strategy) {
-            'LocalDisk' {
-                if (-not $settings.SemanticModelRepository.LocalDisk) {
-                    $settings.SemanticModelRepository | Add-Member -NotePropertyName 'LocalDisk' -NotePropertyValue (@{})
-                }
-                if (-not $settings.SemanticModelRepository.LocalDisk.Directory) {
-                    $settings.SemanticModelRepository.LocalDisk.Directory = 'SemanticModel'
-                }
-            }
-            'AzureBlob' {
-                if (-not $settings.SemanticModelRepository.AzureBlobStorage) {
-                    $settings.SemanticModelRepository | Add-Member -NotePropertyName 'AzureBlobStorage' -NotePropertyValue (@{})
-                }
-                $blobEndpoint = $env:AZURE_STORAGE_ACCOUNT_ENDPOINT
-                $containerName = if ($env:AZURE_STORAGE_CONTAINER) { $env:AZURE_STORAGE_CONTAINER } else { 'semantic-models' }
-                $blobPrefix = $env:AZURE_STORAGE_BLOB_PREFIX
-
-                if ($blobEndpoint) { $settings.SemanticModelRepository.AzureBlobStorage.AccountEndpoint = $blobEndpoint }
-                if ($containerName) { $settings.SemanticModelRepository.AzureBlobStorage.ContainerName = $containerName }
-                if ($blobPrefix) { $settings.SemanticModelRepository.AzureBlobStorage.BlobPrefix = $blobPrefix }
-            }
-            'CosmosDb' {
-                if (-not $settings.SemanticModelRepository.CosmosDb) {
-                    $settings.SemanticModelRepository | Add-Member -NotePropertyName 'CosmosDb' -NotePropertyValue (@{})
-                }
-                $cosmosDbEndpoint = $env:AZURE_COSMOS_DB_ACCOUNT_ENDPOINT
-                $databaseName = if ($env:AZURE_COSMOS_DB_DATABASE_NAME) { $env:AZURE_COSMOS_DB_DATABASE_NAME } else { 'SemanticModels' }
-                $modelsContainer = if ($env:AZURE_COSMOS_DB_MODELS_CONTAINER) { $env:AZURE_COSMOS_DB_MODELS_CONTAINER } else { 'Models' }
-                $entitiesContainer = if ($env:AZURE_COSMOS_DB_ENTITIES_CONTAINER) { $env:AZURE_COSMOS_DB_ENTITIES_CONTAINER } else { 'ModelEntities' }
-
-                if ($cosmosDbEndpoint) { $settings.SemanticModelRepository.CosmosDb.AccountEndpoint = $cosmosDbEndpoint }
-                if ($databaseName) { $settings.SemanticModelRepository.CosmosDb.DatabaseName = $databaseName }
-                if ($modelsContainer) { $settings.SemanticModelRepository.CosmosDb.ModelsContainerName = $modelsContainer }
-                if ($entitiesContainer) { $settings.SemanticModelRepository.CosmosDb.EntitiesContainerName = $entitiesContainer }
+    # Build semantic model repository configuration based on persistence strategy
+    $repoConfig = @{}
+    switch ($PersistenceStrategy) {
+        'LocalDisk' {
+            $repoConfig.LocalDisk = @{
+                Directory = 'SemanticModel'
             }
         }
-
-        $settings | ConvertTo-Json -Depth 10 | Set-Content -Path $settingsPath
-        Write-Verbose "Configured SemanticModel PersistenceStrategy: $strategy" -Verbose
+        'AzureBlob' {
+            $repoConfig.AzureBlobStorage = @{
+                AccountEndpoint = $AzureStorageAccountEndpoint
+                ContainerName   = ($AzureStorageContainer -or 'semantic-models')
+                BlobPrefix      = $AzureStorageBlobPrefix
+            }
+        }
+        'CosmosDB' {
+            $repoConfig.CosmosDb = @{
+                AccountEndpoint        = $AzureCosmosDbAccountEndpoint
+                DatabaseName           = ($AzureCosmosDbDatabaseName -or 'SemanticModels')
+                ModelsContainerName    = ($AzureCosmosDbModelsContainer -or 'Models')
+                EntitiesContainerName  = ($AzureCosmosDbEntitiesContainer -or 'ModelEntities')
+            }
+        }
     }
+
+    # Call the core settings function with properly structured configurations
+    Set-ProjectSettings -ProjectPath $ProjectPath -Database $dbConfig -OpenAIService $openAIConfig -SemanticModelRepository $repoConfig
 }
 
-# Export all functions
 Export-ModuleMember -Function Initialize-TestProject, Set-ProjectSettings, Invoke-ConsoleCommand, New-TestDataDictionary, Set-TestProjectConfiguration
