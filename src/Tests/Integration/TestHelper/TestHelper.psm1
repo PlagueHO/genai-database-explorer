@@ -245,10 +245,24 @@ function Set-ProjectSettings {
     }
 
     $settings = [ordered]@{
-        SettingsVersion         = 1
+        SettingsVersion         = "1.0.0"
         Database                = $Database
-        OpenAIService           = $OpenAIService
+        DataDictionary          = @{
+            ColumnTypeMapping = @()
+        }
+        SemanticModel          = @{
+            PersistenceStrategy = 'LocalDisk'
+            MaxDegreeOfParallelism = 1
+        }
         SemanticModelRepository = $SemanticModelRepository
+        OpenAIService           = $OpenAIService
+        VectorIndex            = @{
+            Provider = 'Auto'
+            CollectionName = 'genaide-entities'
+            EmbeddingServiceId = 'Embeddings'
+            AllowedForRepository = @('LocalDisk', 'AzureBlob', 'CosmosDb')
+            Hybrid = @{ Enabled = $false }
+        }
     }
 
     $settingsPath = Join-Path -Path $ProjectPath -ChildPath 'settings.json'
@@ -381,16 +395,34 @@ function Set-TestProjectConfiguration {
 
     # Build database configuration
     $dbConfig = @{
-        ConnectionString = $ConnectionString
+        Name = 'TestDatabase'
+        ConnectionString = if ([string]::IsNullOrEmpty($ConnectionString)) {
+            'Server=dummy;Database=TestDB;Trusted_Connection=true;'
+        } else {
+            $ConnectionString
+        }
     }
 
     # Build OpenAI service configuration
     $openAIConfig = @{
-        Endpoint                              = if ($NoAzureMode) { $null } else { $AzureOpenAIEndpoint }
-        ApiKey                                = if ($NoAzureMode) { $null } else { $AzureOpenAIApiKey }
-        ChatCompletionDeploymentId            = $ChatCompletionDeploymentId
-        ChatCompletionStructuredDeploymentId = $ChatCompletionStructuredDeploymentId
-        EmbeddingDeploymentId                 = $EmbeddingDeploymentId
+        Default = @{
+            ServiceType = if ($NoAzureMode) { 'OpenAI' } else { 'AzureOpenAI' }
+            AzureOpenAIEndpoint = if ($NoAzureMode) { $null } else { $AzureOpenAIEndpoint }
+            AzureOpenAIKey = if ($NoAzureMode) { $null } else { $AzureOpenAIApiKey }
+            OpenAIKey = if ($NoAzureMode) { 'dummy-openai-key' } else { $null }
+        }
+        ChatCompletion = @{
+            AzureOpenAIDeploymentId = if ($NoAzureMode) { $null } else { $ChatCompletionDeploymentId }
+            ModelId = if ($NoAzureMode) { 'gpt-4o-mini' } else { $null }
+        }
+        ChatCompletionStructured = @{
+            AzureOpenAIDeploymentId = if ($NoAzureMode) { $null } else { $ChatCompletionStructuredDeploymentId }
+            ModelId = if ($NoAzureMode) { 'gpt-4o-mini' } else { $null }
+        }
+        Embedding = @{
+            AzureOpenAIDeploymentId = if ($NoAzureMode) { $null } else { $EmbeddingDeploymentId }
+            ModelId = if ($NoAzureMode) { 'text-embedding-3-small' } else { $null }
+        }
     }
 
     # Build semantic model repository configuration based on persistence strategy
