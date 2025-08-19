@@ -289,7 +289,6 @@ function Set-TestProjectConfiguration {
 
     .PARAMETER EmbeddingDeploymentId
         The deployment ID for the text embedding model (default: 'text-embedding-ada-002').
-
     .PARAMETER PersistenceStrategy
         The persistence strategy for semantic model storage. Valid values: 'LocalDisk', 'AzureBlob', 'CosmosDB'.
 
