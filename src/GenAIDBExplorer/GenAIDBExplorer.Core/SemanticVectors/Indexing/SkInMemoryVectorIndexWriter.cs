@@ -1,5 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
+using System.Linq;
+using System.Collections.Generic;
 using GenAIDBExplorer.Core.SemanticVectors.Infrastructure;
 using GenAIDBExplorer.Core.SemanticVectors.Records;
 using Microsoft.SemanticKernel.Connectors.InMemory;
@@ -17,9 +19,24 @@ public sealed class SkInMemoryVectorIndexWriter(InMemoryVectorStore store, IPerf
 {
     private readonly InMemoryVectorStore _store = store;
     private readonly IPerformanceMonitor _performanceMonitor = performanceMonitor;
+    /// <summary>
+    /// Ensures that the specified vector store collection exists by calling its EnsureCollectionExistsAsync method.
+    /// </summary>
+    /// <param name="collection">The vector store collection to ensure exists.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     private static Task EnsureCollectionExistsAsync(VectorStoreCollection<string, EntityVectorRecord> collection, CancellationToken cancellationToken)
         => collection.EnsureCollectionExistsAsync(cancellationToken);
 
+    /// <summary>
+    /// Ensures that a collection with the specified name exists on the vector store using reflection to call
+    /// the appropriate creation method. This method tries various method names and signatures to accommodate
+    /// different versions of the Semantic Kernel API.
+    /// </summary>
+    /// <param name="store">The InMemoryVectorStore instance.</param>
+    /// <param name="collectionName">The name of the collection to create.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     private static async Task EnsureCollectionExistsOnStoreAsync(InMemoryVectorStore store, string collectionName, CancellationToken cancellationToken)
     {
         var type = store.GetType();
@@ -63,6 +80,14 @@ public sealed class SkInMemoryVectorIndexWriter(InMemoryVectorStore store, IPerf
         }
     }
 
+    /// <summary>
+    /// Ensures that a collection exists by calling collection-level creation methods using reflection.
+    /// This method tries various method names and signatures to accommodate different versions of the
+    /// Semantic Kernel API and provides a fallback mechanism for collection creation.
+    /// </summary>
+    /// <param name="collection">The collection object on which to call the creation method.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     private static async Task EnsureCollectionExistsOnCollectionAsync(object collection, CancellationToken cancellationToken)
     {
         var type = collection.GetType();
@@ -94,6 +119,17 @@ public sealed class SkInMemoryVectorIndexWriter(InMemoryVectorStore store, IPerf
         }
     }
 
+    /// <summary>
+    /// Upserts (inserts or updates) a vector record in the specified collection within the vector infrastructure.
+    /// This method ensures the collection exists before performing the upsert operation and includes retry logic
+    /// for handling race conditions or API version differences.
+    /// </summary>
+    /// <param name="record">The entity vector record to upsert. Cannot be null.</param>
+    /// <param name="infrastructure">The vector infrastructure configuration containing collection details. Cannot be null.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>A task representing the asynchronous upsert operation.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="record"/> or <paramref name="infrastructure"/> is null.</exception>
+    /// <exception cref="VectorStoreException">Thrown when the vector store operation fails after retry attempts.</exception>
     public async Task UpsertAsync(EntityVectorRecord record, VectorInfrastructure infrastructure, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(record);
