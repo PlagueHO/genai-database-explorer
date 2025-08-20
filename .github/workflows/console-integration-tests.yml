@@ -293,12 +293,25 @@ jobs:
         with:
           azPSVersion: "latest"
           inlineScript: |
-            # Use the AI Foundry service name from the previous step
+            # Try to get the AI Foundry service name from environment or construct it
             $AIFoundryName = $env:AI_FOUNDRY_NAME
+            $SqlServerName = "${{ inputs.SQL_SERVER_NAME }}"
+            $ResourceGroup = "${{ inputs.RESOURCE_GROUP_NAME }}"
+            
+            # If AI_FOUNDRY_NAME wasn't set, try to construct it from SQL server name pattern
+            if (-not $AIFoundryName -and $SqlServerName -match '^sql-(.+)$') {
+              $EnvSuffix = $matches[1]
+              $AIFoundryName = "aif-$EnvSuffix"
+              Write-Host "Constructed AI Foundry service name from SQL server pattern: $AIFoundryName"
+            }
+            
             if ($AIFoundryName) {
-              $ResourceGroup = "${{ inputs.RESOURCE_GROUP_NAME }}"
-              
               try {
+                # Verify the AI Foundry service exists first
+                Write-Host "Checking if AI Foundry service exists: $AIFoundryName"
+                $account = Get-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroup -Name $AIFoundryName -ErrorAction Stop
+                Write-Host "Found AI Foundry service: $AIFoundryName"
+                
                 # Get Azure OpenAI API key from Cognitive Services
                 Write-Host "Retrieving Azure OpenAI API key from AI Foundry service: $AIFoundryName"
                 $keys = Get-AzCognitiveServicesAccountKey -ResourceGroupName $ResourceGroup -Name $AIFoundryName
@@ -312,13 +325,14 @@ jobs:
                 }
               }
               catch {
-                Write-Warning "Could not retrieve Azure OpenAI API key from service: $AIFoundryName"
+                Write-Warning "Could not find or access AI Foundry service: $AIFoundryName"
                 Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
                 Write-Host "AI-related integration tests may fail or be skipped"
               }
             }
             else {
-              Write-Warning "No AI Foundry service name available from previous step"
+              Write-Warning "Could not determine AI Foundry service name"
+              Write-Host "Expected SQL server naming pattern: sql-<environment-suffix>, got: $SqlServerName" -ForegroundColor Yellow
               Write-Host "AI-related integration tests may fail or be skipped"
             }
 
