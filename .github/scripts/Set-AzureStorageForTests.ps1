@@ -1,0 +1,132 @@
+function Set-AzureStorageForTests {
+    <#
+    .SYNOPSIS
+    Discovers and configures Azure Storage account for integration testing.
+
+    .DESCRIPTION
+    Finds the first Storage Account in the specified resource group, enables public access,
+    configures network rules, and exports environment variables for test execution.
+
+    .PARAMETER ResourceGroupName
+    The Azure resource group containing the Storage Account.
+
+    .PARAMETER Environment
+    The environment identifier used for blob prefix generation.
+
+    .PARAMETER RunId
+    The unique run identifier used for blob prefix generation.
+
+    .PARAMETER ContainerName
+    The container name to use for storage operations. Defaults to 'semantic-models'.
+
+    .EXAMPLE
+    Set-AzureStorageForTests -ResourceGroupName 'rg-test' -Environment 'dev' -RunId '12345'
+
+    .OUTPUTS
+    None. Exports AZURE_STORAGE_ACCOUNT_ENDPOINT, AZURE_STORAGE_CONTAINER, and AZURE_STORAGE_BLOB_PREFIX to $env:GITHUB_ENV.
+
+    .NOTES
+    This function is designed for CI/CD scenarios and requires Azure PowerShell modules.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ResourceGroupName,
+        
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Environment,
+        
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string]$RunId,
+        
+        [Parameter()]
+        [ValidateNotNullOrEmpty()]
+        [string]$ContainerName = 'semantic-models'
+    )
+    
+    begin {
+        Set-StrictMode -Version Latest
+        $ErrorActionPreference = 'Stop'
+        
+        Write-Verbose "Starting Set-AzureStorageForTests process"
+        
+        # Get runner IP for diagnostics
+        function Get-RunnerIPAddress {
+            [CmdletBinding()]
+            param()
+            
+            try {
+                $ip = (Invoke-RestMethod -Uri "https://ipinfo.io/ip" -Method Get).Trim()
+                Write-Verbose "Retrieved runner IP address: $ip"
+                return $ip
+            }
+            catch {
+                Write-Warning "Could not retrieve runner IP address: $($_.Exception.Message)"
+                return $null
+            }
+        }
+    }
+    
+    process {
+        try {
+            $runnerIP = Get-RunnerIPAddress
+            if ($runnerIP) {
+                Write-Host "GitHub Runner IP: $runnerIP"
+            }
+            
+            # Find the first storage account in the resource group
+            Write-Verbose "Searching for Storage Account in resource group: $ResourceGroupName"
+            $storage = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName | Select-Object -First 1
+            
+            if (-not $storage) {
+                Write-Warning "No Storage Account found in resource group $ResourceGroupName. AzureBlob persistence tests may be skipped/fail."
+                return
+            }
+            
+            Write-Host "Using Storage Account: $($storage.StorageAccountName)"
+
+            # Ensure public access is enabled for the duration of tests
+            Write-Verbose "Enabling public network access on Storage Account: $($storage.StorageAccountName)"
+            Update-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $storage.StorageAccountName -PublicNetworkAccess Enabled -AllowBlobPublicAccess $true -Force | Out-Null
+
+            # Attempt to set network rule default action to Allow (ignore if not supported)
+            try {
+                Write-Verbose "Updating storage network rule set to Allow"
+                Update-AzStorageAccountNetworkRuleSet -ResourceGroupName $ResourceGroupName -Name $storage.StorageAccountName -DefaultAction Allow | Out-Null
+            } catch {
+                Write-Warning "Could not update storage network rule set: $($_.Exception.Message)"
+            }
+
+            # Configure endpoints and export environment variables
+            $endpoint = "https://$($storage.StorageAccountName).blob.core.windows.net"
+            $blobPrefix = "$Environment/$RunId"
+            
+            Write-Host "Configured Storage endpoint: $endpoint"
+            Write-Host "Container name: $ContainerName"
+            Write-Host "Blob prefix: $blobPrefix"
+            
+            # Export environment variables for GitHub Actions
+            "AZURE_STORAGE_ACCOUNT_ENDPOINT=$endpoint" | Out-File -FilePath $env:GITHUB_ENV -Append
+            "AZURE_STORAGE_CONTAINER=$ContainerName" | Out-File -FilePath $env:GITHUB_ENV -Append
+            "AZURE_STORAGE_BLOB_PREFIX=$blobPrefix" | Out-File -FilePath $env:GITHUB_ENV -Append
+            
+            Write-Verbose "Successfully configured Azure Storage for tests"
+        }
+        catch {
+            Write-Error "Storage discovery/configuration failed: $($_.Exception.Message)"
+            throw
+        }
+    }
+    
+    end {
+        Write-Verbose "Set-AzureStorageForTests process completed"
+    }
+}
+
+# Call the function with script parameters when run as script
+if ($MyInvocation.InvocationName -ne '.') {
+    Set-AzureStorageForTests @PSBoundParameters
+}

@@ -87,39 +87,7 @@ jobs:
         with:
           azPSVersion: "latest"
           inlineScript: |
-            $ResourceGroup = "${{ inputs.RESOURCE_GROUP_NAME }}"
-            $RunnerIP = (Invoke-RestMethod -Uri "https://ipinfo.io/ip" -Method Get).Trim()
-
-            try {
-              $storage = Get-AzStorageAccount -ResourceGroupName $ResourceGroup | Select-Object -First 1
-              if (-not $storage) {
-                Write-Warning "No Storage Account found in resource group $ResourceGroup. AzureBlob persistence tests may be skipped/fail."
-                return
-              }
-              Write-Host "Using Storage Account: $($storage.StorageAccountName)"
-
-              # Ensure public access is enabled for the duration of tests
-              Update-AzStorageAccount -ResourceGroupName $ResourceGroup -Name $storage.StorageAccountName -PublicNetworkAccess Enabled -AllowBlobPublicAccess $true -Force | Out-Null
-
-              # Attempt to set network rule default action to Allow (ignore if not supported)
-              try {
-                Update-AzStorageAccountNetworkRuleSet -ResourceGroupName $ResourceGroup -Name $storage.StorageAccountName -DefaultAction Allow | Out-Null
-              } catch {
-                Write-Warning "Could not update storage network rule set: $($_.Exception.Message)"
-              }
-
-              $endpoint = "https://$($storage.StorageAccountName).blob.core.windows.net"
-              "AZURE_STORAGE_ACCOUNT_ENDPOINT=$endpoint" | Out-File -FilePath $env:GITHUB_ENV -Append
-              # Use default container name unless pipeline overrides
-              "AZURE_STORAGE_CONTAINER=semantic-models" | Out-File -FilePath $env:GITHUB_ENV -Append
-              # Helpful to separate test runs
-              "AZURE_STORAGE_BLOB_PREFIX=${{ inputs.ENVIRONMENT }}/${{ github.run_id }}" | Out-File -FilePath $env:GITHUB_ENV -Append
-
-              Write-Host "Configured Storage endpoint: $endpoint"
-            }
-            catch {
-              Write-Warning "Storage discovery/configuration failed: $($_.Exception.Message)"
-            }
+            ./.github/scripts/Set-AzureStorageForTests.ps1 -ResourceGroupName "${{ inputs.RESOURCE_GROUP_NAME }}" -Environment "${{ inputs.ENVIRONMENT }}" -RunId "${{ github.run_id }}"
 
       - name: Discover and Configure Azure Cosmos DB (for CosmosDb)
         if: matrix.persistence == 'CosmosDb'
@@ -127,220 +95,34 @@ jobs:
         with:
           azPSVersion: "latest"
           inlineScript: |
-            $ResourceGroup = "${{ inputs.RESOURCE_GROUP_NAME }}"
-            $RunnerIP = (Invoke-RestMethod -Uri "https://ipinfo.io/ip" -Method Get).Trim()
-            try {
-              $cosmosDb = Get-AzCosmosDBAccount -ResourceGroupName $ResourceGroup | Select-Object -First 1
-              if (-not $cosmosDb) {
-                Write-Warning "No Cosmos DB Account found in resource group $ResourceGroup. Cosmos DB persistence tests may be skipped/fail."
-                return
-              }
-              Write-Host "Using Cosmos DB Account: $($cosmosDb.Name)"
-
-              # Enable public network access for tests (ignore if already enabled)
-              try {
-                # Update cmdlet name varies across Az versions; attempt common variants
-                if (Get-Command Update-AzCosmosDBAccount -ErrorAction SilentlyContinue) {
-                  Update-AzCosmosDBAccount -ResourceGroupName $ResourceGroup -Name $cosmosDb.Name -PublicNetworkAccess Enabled | Out-Null
-                } elseif (Get-Command Set-AzCosmosDBAccount -ErrorAction SilentlyContinue) {
-                  Set-AzCosmosDBAccount -ResourceGroupName $ResourceGroup -Name $cosmosDb.Name -PublicNetworkAccess Enabled | Out-Null
-                }
-              } catch {
-                Write-Warning "Could not enable public network access on Cosmos DB: $($_.Exception.Message)"
-              }
-
-              # Compose endpoint and default database/containers matching app defaults
-              $endpoint = $cosmosDb.DocumentEndpoint
-              if (-not $endpoint) { $endpoint = "https://$($cosmosDb.Name).documents.azure.com:443/" }
-              "AZURE_COSMOS_DB_ACCOUNT_ENDPOINT=$endpoint" | Out-File -FilePath $env:GITHUB_ENV -Append
-              "AZURE_COSMOS_DB_DATABASE_NAME=SemanticModels" | Out-File -FilePath $env:GITHUB_ENV -Append
-              "AZURE_COSMOS_DB_MODELS_CONTAINER=Models" | Out-File -FilePath $env:GITHUB_ENV -Append
-              "AZURE_COSMOS_DB_ENTITIES_CONTAINER=ModelEntities" | Out-File -FilePath $env:GITHUB_ENV -Append
-
-              Write-Host "Configured Cosmos DB endpoint: $endpoint"
-            }
-            catch {
-              Write-Warning "Cosmos DB discovery/configuration failed: $($_.Exception.Message)"
-            }
+            ./.github/scripts/Set-CosmosDbForTests.ps1 -ResourceGroupName "${{ inputs.RESOURCE_GROUP_NAME }}"
 
       - name: Configure SQL Server Firewall for GitHub Runner
         uses: azure/powershell@v2
         with:
           azPSVersion: "latest"
           inlineScript: |
-            # Get the current runner's public IP address
-            $RunnerIP = (Invoke-RestMethod -Uri "https://ipinfo.io/ip" -Method Get).Trim()
-            Write-Host "GitHub Runner IP: $RunnerIP"
-            
-            # Use the provided resource group and SQL server names
-            $SqlServerName = "${{ inputs.SQL_SERVER_NAME }}"
-            $ResourceGroup = "${{ inputs.RESOURCE_GROUP_NAME }}"
-            $FirewallRuleName = "GitHubRunner-${{ github.run_id }}-${{ matrix.persistence }}"
-            
-            Write-Host "Adding firewall rule for SQL Server: $SqlServerName"
-            Write-Host "Resource Group: $ResourceGroup"
-            Write-Host "Runner IP: $RunnerIP"
-            Write-Host "Firewall Rule Name: $FirewallRuleName"
-            
-            try {
-              # Check if the rule already exists first
-              try {
-                $existingRule = Get-AzSqlServerFirewallRule -ResourceGroupName $ResourceGroup -ServerName $SqlServerName -FirewallRuleName $FirewallRuleName -ErrorAction SilentlyContinue
-                if ($existingRule) {
-                  Write-Host "Firewall rule already exists with same name and IP range - skipping creation" -ForegroundColor Yellow
-                  return
-                }
-              }
-              catch {
-                # Rule doesn't exist, continue with creation
-              }
-              
-              # Add firewall rule for the GitHub runner IP
-              New-AzSqlServerFirewallRule `
-                -ResourceGroupName $ResourceGroup `
-                -ServerName $SqlServerName `
-                -FirewallRuleName $FirewallRuleName `
-                -StartIpAddress $RunnerIP `
-                -EndIpAddress $RunnerIP
-              
-              Write-Host "✅ Firewall rule created successfully" -ForegroundColor Green
-            }
-            catch {
-              if ($_.Exception.Message -like "*already exists*") {
-                Write-Warning "Firewall rule already exists - this may be due to parallel job execution"
-                Write-Host "Continuing with existing rule" -ForegroundColor Yellow
-              }
-              else {
-                Write-Error "Failed to create firewall rule: $($_.Exception.Message)"
-                throw
-              }
-            }
+            ./.github/scripts/Add-SqlServerFirewallRule.ps1 -ResourceGroupName "${{ inputs.RESOURCE_GROUP_NAME }}" -SqlServerName "${{ inputs.SQL_SERVER_NAME }}" -RunId "${{ github.run_id }}" -MatrixPersistence "${{ matrix.persistence }}"
 
       - name: Enable Azure AI Foundry Public Access for Integration Tests
         uses: azure/powershell@v2
         with:
           azPSVersion: "latest"
           inlineScript: |
-            # Extract environment suffix from SQL server name for AI Foundry service name
-            $SqlServerName = "${{ inputs.SQL_SERVER_NAME }}"
-            $ResourceGroup = "${{ inputs.RESOURCE_GROUP_NAME }}"
-            
-            # Try to construct AI Foundry service name from SQL server pattern
-            if ($SqlServerName -match '^sql-(.+)$') {
-              $EnvSuffix = $matches[1]
-              $AIFoundryName = "aif-$EnvSuffix"
-              Write-Host "Constructed AI Foundry service name: $AIFoundryName"
-              
-              # Check if the AI Foundry service exists
-              Write-Host "Checking if AI Foundry service exists: $AIFoundryName"
-              try {
-                $account = Get-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroup -Name $AIFoundryName -ErrorAction Stop
-                Write-Host "Found AI Foundry service: $AIFoundryName"
-                
-                # Check current network configuration
-                Write-Host "Checking current network configuration for AI Foundry service: $AIFoundryName"
-                Write-Host "Current public network access: $($account.Properties.PublicNetworkAccess)"
-                Write-Host "Current network ACLs default action: $($account.Properties.NetworkAcls.DefaultAction)"
-                
-                # Always update to ensure public access is enabled
-                Write-Host "Setting public network access to Enabled for AI Foundry service: $AIFoundryName"
-                
-                # Create a network rule set that allows all access
-                $networkRuleSet = New-Object Microsoft.Azure.Commands.Management.CognitiveServices.Models.PSNetworkRuleSet
-                $networkRuleSet.DefaultAction = "Allow"
-                
-                Set-AzCognitiveServicesAccount `
-                  -ResourceGroupName $ResourceGroup `
-                  -Name $AIFoundryName `
-                  -PublicNetworkAccess "Enabled" `
-                  -NetworkRuleSet $networkRuleSet `
-                  -Force
-                
-                # Wait a moment for the change to propagate
-                Write-Host "Waiting 10 seconds for network configuration to propagate..."
-                Start-Sleep -Seconds 10
-                
-                # Verify the changes took effect
-                $updatedAccount = Get-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroup -Name $AIFoundryName
-                Write-Host "Updated public network access: $($updatedAccount.Properties.PublicNetworkAccess)"
-                Write-Host "Updated network ACLs default action: $($updatedAccount.Properties.NetworkAcls.DefaultAction)"
-                
-                if ($updatedAccount.Properties.PublicNetworkAccess -eq "Enabled" -and $updatedAccount.Properties.NetworkAcls.DefaultAction -eq "Allow") {
-                  Write-Host "✅ Public network access successfully enabled for AI Foundry service" -ForegroundColor Green
-                } else {
-                  Write-Warning "⚠️  Network access may not have been properly updated."
-                  Write-Host "   Expected: PublicNetworkAccess=Enabled, DefaultAction=Allow" -ForegroundColor Yellow
-                  Write-Host "   Actual: PublicNetworkAccess=$($updatedAccount.Properties.PublicNetworkAccess), DefaultAction=$($updatedAccount.Properties.NetworkAcls.DefaultAction)" -ForegroundColor Yellow
-                }
-                
-                # Set environment variable for cleanup step
-                "AI_FOUNDRY_NAME=$AIFoundryName" | Out-File -FilePath $env:GITHUB_ENV -Append
-              }
-              catch {
-                Write-Warning "Could not find AI Foundry service: $AIFoundryName"
-                Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
-                Write-Host "AI Foundry public access will not be modified"
-              }
-            }
-            else {
-              Write-Warning "Could not parse SQL server name pattern to construct AI Foundry service name"
-              Write-Host "Expected format: sql-<environment-suffix>, got: $SqlServerName" -ForegroundColor Yellow
-              Write-Host "AI Foundry public access will not be modified"
-            }
+            ./.github/scripts/Enable-AIFoundryPublicAccess.ps1 -ResourceGroupName "${{ inputs.RESOURCE_GROUP_NAME }}" -AIFoundryName "${{ inputs.AZURE_AI_FOUNDRY_NAME }}" -SqlServerName "${{ inputs.SQL_SERVER_NAME }}"
 
       - name: Get Azure OpenAI API Key
         uses: azure/powershell@v2
         with:
           azPSVersion: "latest"
           inlineScript: |
-            # Try to get the AI Foundry service name from environment or construct it
-            $AIFoundryName = $env:AI_FOUNDRY_NAME
-            $SqlServerName = "${{ inputs.SQL_SERVER_NAME }}"
-            $ResourceGroup = "${{ inputs.RESOURCE_GROUP_NAME }}"
-            
-            # If AI_FOUNDRY_NAME wasn't set, try to construct it from SQL server name pattern
-            if (-not $AIFoundryName -and $SqlServerName -match '^sql-(.+)$') {
-              $EnvSuffix = $matches[1]
-              $AIFoundryName = "aif-$EnvSuffix"
-              Write-Host "Constructed AI Foundry service name from SQL server pattern: $AIFoundryName"
-            }
-            
-            if ($AIFoundryName) {
-              try {
-                # Verify the AI Foundry service exists first
-                Write-Host "Checking if AI Foundry service exists: $AIFoundryName"
-                $account = Get-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroup -Name $AIFoundryName -ErrorAction Stop
-                Write-Host "Found AI Foundry service: $AIFoundryName"
-                
-                # Get Azure OpenAI API key from Cognitive Services
-                Write-Host "Retrieving Azure OpenAI API key from AI Foundry service: $AIFoundryName"
-                $keys = Get-AzCognitiveServicesAccountKey -ResourceGroupName $ResourceGroup -Name $AIFoundryName
-                
-                if ($keys.Key1) {
-                  Write-Host "Azure OpenAI API key retrieved successfully"
-                  "AZURE_OPENAI_API_KEY=$($keys.Key1)" | Out-File -FilePath $env:GITHUB_ENV -Append
-                } else {
-                  Write-Warning "Could not retrieve Azure OpenAI API key from service: $AIFoundryName"
-                  Write-Host "AI-related integration tests may fail or be skipped"
-                }
-              }
-              catch {
-                Write-Warning "Could not find or access AI Foundry service: $AIFoundryName"
-                Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
-                Write-Host "AI-related integration tests may fail or be skipped"
-              }
-            }
-            else {
-              Write-Warning "Could not determine AI Foundry service name"
-              Write-Host "Expected SQL server naming pattern: sql-<environment-suffix>, got: $SqlServerName" -ForegroundColor Yellow
-              Write-Host "AI-related integration tests may fail or be skipped"
-            }
+            ./.github/scripts/Get-AIFoundryApiKey.ps1 -ResourceGroupName "${{ inputs.RESOURCE_GROUP_NAME }}" -AIFoundryName "${{ inputs.AZURE_AI_FOUNDRY_NAME }}" -SqlServerName "${{ inputs.SQL_SERVER_NAME }}"
 
       - name: "Setup PowerShell and Run Console Integration Tests (${{ matrix.persistence }})"
         shell: pwsh
         env:
           SQL_CONNECTION_STRING: "Server=${{ inputs.SQL_SERVER_NAME }}.database.windows.net;Database=AdventureWorksLT;User Id=${{ secrets.SQL_SERVER_USERNAME }};Password=${{ secrets.SQL_SERVER_PASSWORD }};Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
-          AZURE_OPENAI_ENDPOINT: ${{ inputs.AZURE_AI_FOUNDRY_ENDPOINT }}
+          AZURE_OPENAI_ENDPOINT: ${{ inputs.AZURE_AI_FOUNDRY_ENDPOINT || env.AZURE_OPENAI_ENDPOINT }}
           AZURE_OPENAI_API_KEY: ${{ env.AZURE_OPENAI_API_KEY }}
           CONSOLE_APP_PATH: ./publish/GenAIDBExplorer.Console
           PERSISTENCE_STRATEGY: ${{ matrix.persistence }}
@@ -353,16 +135,7 @@ jobs:
           AZURE_COSMOS_DB_MODELS_CONTAINER: ${{ env.AZURE_COSMOS_DB_MODELS_CONTAINER }}
           AZURE_COSMOS_DB_ENTITIES_CONTAINER: ${{ env.AZURE_COSMOS_DB_ENTITIES_CONTAINER }}
         run: |
-          # Install and import Pester in the same session
-          Write-Host "Installing and importing Pester module..." -ForegroundColor Yellow
-          Install-Module -Name Pester -Force -Scope CurrentUser -MinimumVersion 5.7.1 -AllowClobber
-          Import-Module Pester -Force -PassThru
-
-          # Verify Pester is loaded
-          $pesterVersion = Get-Module Pester | Select-Object -ExpandProperty Version
-          Write-Host "Pester version loaded: $pesterVersion" -ForegroundColor Green
-
-          # Debug environment variables
+          # Debug environment variables for diagnostic purposes
           Write-Host "=== Environment Variables Debug ===" -ForegroundColor Magenta
           Write-Host "SQL_CONNECTION_STRING: $($env:SQL_CONNECTION_STRING.Length) characters" -ForegroundColor Yellow
           Write-Host "AZURE_OPENAI_ENDPOINT: '$env:AZURE_OPENAI_ENDPOINT'" -ForegroundColor Yellow
@@ -422,83 +195,19 @@ jobs:
           }
           Write-Host "===================================" -ForegroundColor Magenta
 
-          # Create test results directory
-          New-Item -ItemType Directory -Path "./test-results" -Force | Out-Null
-
-          # Configure Pester
-          $config = New-PesterConfiguration
-          $config.Run.Path = './src/Tests/Integration/Console.Integration.Tests.ps1'
-          $config.Output.Verbosity = 'Detailed'
-          $config.TestResult.Enabled = $true
-          $config.TestResult.OutputFormat = 'NUnitXml'
-          $config.TestResult.OutputPath = './test-results/integration-tests.xml'
-          $config.CodeCoverage.Enabled = $false
-          $config.Should.ErrorAction = 'Continue'
-
-          try {
-            Write-Host "Starting console integration tests..." -ForegroundColor Green
-            Write-Host "SQL Server: ${{ inputs.SQL_SERVER_NAME }}" -ForegroundColor Yellow
-            Write-Host "Azure AI Foundry Endpoint: ${{ inputs.AZURE_AI_FOUNDRY_ENDPOINT }}" -ForegroundColor Yellow
-            Invoke-Pester -Configuration $config
-            Write-Host "Integration tests completed" -ForegroundColor Green
-            
-            # Verify test results file was created
-            if (Test-Path './test-results/integration-tests.xml') {
-              $testResultsSize = (Get-Item './test-results/integration-tests.xml').Length
-              Write-Host "✅ Test results file created successfully (Size: $testResultsSize bytes)" -ForegroundColor Green
-              
-              # Show first few lines of the XML file for debugging
-              Write-Host "=== Test Results XML Preview ===" -ForegroundColor Cyan
-              Get-Content './test-results/integration-tests.xml' -Head 10 | ForEach-Object { Write-Host "  $_" -ForegroundColor Gray }
-              Write-Host "=================================" -ForegroundColor Cyan
-            } else {
-              Write-Warning "⚠️  Test results file not found at './test-results/integration-tests.xml'"
-              Write-Host "Available files in test-results directory:" -ForegroundColor Yellow
-              if (Test-Path './test-results') {
-                Get-ChildItem './test-results' | ForEach-Object { Write-Host "  - $($_.Name)" -ForegroundColor Gray }
-              } else {
-                Write-Host "  test-results directory does not exist" -ForegroundColor Red
-              }
-            }
-          } catch {
-            Write-Error "Integration tests failed: $($_.Exception.Message)"
-            
-            # Still try to create a minimal test results file if it doesn't exist
-            if (-not (Test-Path './test-results/integration-tests.xml')) {
-              Write-Host "Creating minimal test results file for error reporting..." -ForegroundColor Yellow
-              $xmlContent = '<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="Console Integration Tests" tests="1" failures="1" errors="0" time="0"><testcase name="Integration Test Execution" classname="Console.Integration.Tests"><failure message="Test execution failed">' + $_.Exception.Message + '</failure></testcase></testsuite></testsuites>'
-              $xmlContent | Out-File -FilePath './test-results/integration-tests.xml' -Encoding UTF8
-            }
-            throw
-          }
+          # Run integration tests using extracted PowerShell script
+          Write-Host "Starting console integration tests..." -ForegroundColor Green
+          Write-Host "SQL Server: ${{ inputs.SQL_SERVER_NAME }}" -ForegroundColor Yellow
+          Write-Host "Azure AI Foundry Endpoint: ${{ inputs.AZURE_AI_FOUNDRY_ENDPOINT }}" -ForegroundColor Yellow
+          
+          ./.github/scripts/Invoke-IntegrationTests.ps1 -TestResultsPath './test-results' -TestScriptPath './src/Tests/Integration/Console.Integration.Tests.ps1'
 
       - name: Check Test Results File
         id: check-test-results
         if: always()
         shell: pwsh
         run: |
-          if (Test-Path './test-results/integration-tests.xml') {
-            $content = Get-Content './test-results/integration-tests.xml' -Raw
-            $fileSize = (Get-Item './test-results/integration-tests.xml').Length
-            Write-Host "✅ Test results file exists (Size: $fileSize bytes)" -ForegroundColor Green
-            
-            # Validate XML structure
-            try {
-              [xml]$xmlContent = $content
-              Write-Host "✅ Test results XML is valid" -ForegroundColor Green
-              Write-Host "Found $($xmlContent.testsuites.testsuite.Count) test suite(s)" -ForegroundColor Green
-              "test-results-valid=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            }
-            catch {
-              Write-Warning "⚠️  Test results XML appears to be malformed: $($_.Exception.Message)"
-              Write-Host "First 500 characters of file:" -ForegroundColor Yellow
-              Write-Host $content.Substring(0, [Math]::Min(500, $content.Length)) -ForegroundColor Gray
-              "test-results-valid=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            }
-          } else {
-            Write-Warning "❌ Test results file does not exist at './test-results/integration-tests.xml'"
-            "test-results-valid=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-          }
+          ./.github/scripts/Test-IntegrationTestResults.ps1 -TestResultsPath './test-results/integration-tests.xml' -OutputVariable 'test-results-valid' -ShowPreview
 
       - name: Publish Integration Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
@@ -524,51 +233,9 @@ jobs:
         with:
           azPSVersion: "latest"
           inlineScript: |
-            # Disable public network access for AI Foundry service after tests
-            $AIFoundryName = $env:AI_FOUNDRY_NAME
-            if ($AIFoundryName) {
-              $ResourceGroup = "${{ inputs.RESOURCE_GROUP_NAME }}"
-              
-              try {
-                # Get current configuration
-                Write-Host "Checking current network configuration for AI Foundry service: $AIFoundryName"
-                $account = Get-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroup -Name $AIFoundryName -ErrorAction Stop
-                Write-Host "Current public network access: $($account.Properties.PublicNetworkAccess)"
-                Write-Host "Current network ACLs default action: $($account.Properties.NetworkAcls.DefaultAction)"
-                
-                # Always disable after tests to restore security
-                Write-Host "Disabling public network access for AI Foundry service: $AIFoundryName"
-                
-                # Create a network rule set that denies all access
-                $networkRuleSet = New-Object Microsoft.Azure.Commands.Management.CognitiveServices.Models.PSNetworkRuleSet
-                $networkRuleSet.DefaultAction = "Deny"
-                
-                Set-AzCognitiveServicesAccount `
-                  -ResourceGroupName $ResourceGroup `
-                  -Name $AIFoundryName `
-                  -PublicNetworkAccess "Disabled" `
-                  -NetworkRuleSet $networkRuleSet `
-                  -Force
-                
-                # Verify the changes took effect
-                $updatedAccount = Get-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroup -Name $AIFoundryName
-                Write-Host "Updated public network access: $($updatedAccount.Properties.PublicNetworkAccess)"
-                Write-Host "Updated network ACLs default action: $($updatedAccount.Properties.NetworkAcls.DefaultAction)"
-                
-                if ($updatedAccount.Properties.PublicNetworkAccess -eq "Disabled" -and $updatedAccount.Properties.NetworkAcls.DefaultAction -eq "Deny") {
-                  Write-Host "✅ Public network access successfully disabled for AI Foundry service" -ForegroundColor Green
-                } else {
-                  Write-Warning "⚠️  Network access may not have been properly updated."
-                  Write-Host "   Expected: PublicNetworkAccess=Disabled, DefaultAction=Deny" -ForegroundColor Yellow
-                  Write-Host "   Actual: PublicNetworkAccess=$($updatedAccount.Properties.PublicNetworkAccess), DefaultAction=$($updatedAccount.Properties.NetworkAcls.DefaultAction)" -ForegroundColor Yellow
-                }
-              }
-              catch {
-                Write-Warning "Could not find AI Foundry service: $AIFoundryName"
-                Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
-              }
-            }
-            else {
+            if ($env:AI_FOUNDRY_NAME) {
+              ./.github/scripts/Disable-AIFoundryPublicAccess.ps1 -ResourceGroupName "${{ inputs.RESOURCE_GROUP_NAME }}" -AIFoundryName $env:AI_FOUNDRY_NAME
+            } else {
               Write-Host "No AI Foundry service name available - skipping public access cleanup"
             }
 
@@ -578,29 +245,4 @@ jobs:
         with:
           azPSVersion: "latest"
           inlineScript: |
-            # Use the provided resource group and SQL server names
-            $ResourceGroup = "${{ inputs.RESOURCE_GROUP_NAME }}"
-            $SqlServerName = "${{ inputs.SQL_SERVER_NAME }}"
-            $FirewallRuleName = "GitHubRunner-${{ github.run_id }}-${{ matrix.persistence }}"
-            
-            Write-Host "Removing firewall rule for SQL Server: $SqlServerName"
-            Write-Host "Resource Group: $ResourceGroup"
-            Write-Host "Firewall Rule Name: $FirewallRuleName"
-            
-            try {
-              # Remove the firewall rule
-              Remove-AzSqlServerFirewallRule `
-                -ResourceGroupName $ResourceGroup `
-                -ServerName $SqlServerName `
-                -FirewallRuleName $FirewallRuleName `
-                -Force
-              
-              Write-Host "✅ Firewall rule removed successfully" -ForegroundColor Green
-            }
-            catch {
-              # Ignore errors if rule doesn't exist or already removed
-              Write-Warning "Firewall rule not found or already removed: $($_.Exception.Message)"
-              Write-Host "This is expected if the rule was already cleaned up or never created"
-            }
-            
-            Write-Host "Firewall rule cleanup completed"
+            ./.github/scripts/Remove-SqlServerFirewallRule.ps1 -ResourceGroupName "${{ inputs.RESOURCE_GROUP_NAME }}" -SqlServerName "${{ inputs.SQL_SERVER_NAME }}" -RunId "${{ github.run_id }}" -MatrixPersistence "${{ matrix.persistence }}"
