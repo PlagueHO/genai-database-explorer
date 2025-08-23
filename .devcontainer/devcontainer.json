@@ -81,7 +81,9 @@
                 "esbenp.prettier-vscode",
                 "ms-vsliveshare.vsliveshare",
                 "microsoft-aspire.aspire-vscode",
-                "github.vscode-github-actions"
+                "github.vscode-github-actions",
+                "ms-azuretools.vscode-azure-github-copilot",
+                "TeamsDevApp.vscode-ai-foundry"
             ]
         }
     },
