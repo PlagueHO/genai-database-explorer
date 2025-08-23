@@ -1,58 +1,62 @@
-function Invoke-IntegrationTests {
-    <#
-    .SYNOPSIS
-    Runs console integration tests with a consistent Pester configuration.
+<#
+.SYNOPSIS
+Runs console integration tests with a consistent Pester configuration.
 
-    .DESCRIPTION
-    Creates the `test-results` folder, sets up a Pester configuration targeting the console integration test script, and executes tests.
-    Optionally sets an environment variable `TEST_FILTER` to drive conditional test execution (e.g., no-azure scenarios).
-    Fails with a non-zero exit code when tests fail.
+.DESCRIPTION
+Create}
+catch {
+    Write-Error "Integration tests failed: $($_.Exception.Message)"
+    exit 1
+}
 
-    .PARAMETER TestFilter
-    Optional filter string exported to environment variable `TEST_FILTER` for tests to consume.
+Write-Verbose "Integration tests execution completed"lts` folder, sets up a Pester configuration targeting the console integration test script, and executes tests.
+Optionally sets an environment variable `TEST_FILTER` to drive conditional test execution (e.g., no-azure scenarios).
+Fails with a non-zero exit code when tests fail.
 
-    .PARAMETER TestResultsPath
-    Path where test results XML file should be saved. Defaults to './test-results'.
+.PARAMETER TestFilter
+Optional filter string exported to environment variable `TEST_FILTER` for tests to consume.
 
-    .PARAMETER TestScriptPath
-    Path to the Pester test script to execute. Defaults to console integration tests.
+.PARAMETER TestResultsPath
+Path where test results XML file should be saved. Defaults to './test-results'.
 
-    .EXAMPLE
-    Invoke-IntegrationTests
+.PARAMETER TestScriptPath
+Path to the Pester test script to execute. Defaults to console integration tests.
 
-    .EXAMPLE
-    Invoke-IntegrationTests -TestFilter 'no-azure'
+.EXAMPLE
+./Invoke-IntegrationTests.ps1
+
+.EXAMPLE
+./Invoke-IntegrationTests.ps1 -TestFilter 'no-azure'
+
+.OUTPUTS
+None. Creates test result files and exits with appropriate code.
+
+.NOTES
+This script requires Pester v5.7.1 or later and will install it if needed.
+#>
+[CmdletBinding()]
+param(
+    [Parameter()]
+    [string]$TestFilter,
     
-    .OUTPUTS
-    None. Creates test result files and exits with appropriate code.
+    [Parameter()]
+    [ValidateNotNullOrEmpty()]
+    [string]$TestResultsPath = './test-results',
     
-    .NOTES
-    This function requires Pester v5.7.1 or later and will install it if needed.
-    #>
+    [Parameter()]
+    [ValidateNotNullOrEmpty()]
+    [string]$TestScriptPath = './src/Tests/Integration/Console.Integration.Tests.ps1'
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
+Write-Verbose "Starting integration tests execution"
+
+# Ensure Pester is available
+function Install-RequiredPester {
     [CmdletBinding()]
-    param(
-        [Parameter()]
-        [string]$TestFilter,
-        
-        [Parameter()]
-        [ValidateNotNullOrEmpty()]
-        [string]$TestResultsPath = './test-results',
-        
-        [Parameter()]
-        [ValidateNotNullOrEmpty()]
-        [string]$TestScriptPath = './src/Tests/Integration/Console.Integration.Tests.ps1'
-    )
-    
-    begin {
-        Set-StrictMode -Version Latest
-        $ErrorActionPreference = 'Stop'
-        
-        Write-Verbose "Starting Invoke-IntegrationTests process"
-        
-        # Ensure Pester is available
-        function Install-RequiredPester {
-            [CmdletBinding()]
-            param()
+    param()
             
             try {
                 $minPesterVersion = [Version]'5.7.1'
