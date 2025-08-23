@@ -1,63 +1,59 @@
 <#
-.SYNOPSIS
-Runs console integration tests with a consistent Pester configuration.
+    .SYNOPSIS
+    Runs console integration tests with a consistent Pester configuration.
 
-.DESCRIPTION
-Create}
-catch {
-    Write-Error "Integration tests failed: $($_.Exception.Message)"
-    exit 1
-}
+    .DESCRIPTION
+    Creates a consistent Pester configuration for running integration tests.
+    Optionally sets an environment variable `TEST_FILTER` to drive conditional test execution (e.g., no-azure scenarios).
+    Fails with a non-zero exit code when tests fail.
 
-Write-Verbose "Integration tests execution completed"lts` folder, sets up a Pester configuration targeting the console integration test script, and executes tests.
-Optionally sets an environment variable `TEST_FILTER` to drive conditional test execution (e.g., no-azure scenarios).
-Fails with a non-zero exit code when tests fail.
+    .PARAMETER TestFilter
+    Optional filter string exported to environment variable `TEST_FILTER` for tests to consume.
 
-.PARAMETER TestFilter
-Optional filter string exported to environment variable `TEST_FILTER` for tests to consume.
+    .PARAMETER TestResultsPath
+    Path where test results XML file should be saved. Defaults to './test-results'.
 
-.PARAMETER TestResultsPath
-Path where test results XML file should be saved. Defaults to './test-results'.
+    .PARAMETER TestScriptPath
+    Path to the Pester test script to execute. Defaults to console integration tests.
 
-.PARAMETER TestScriptPath
-Path to the Pester test script to execute. Defaults to console integration tests.
+    .EXAMPLE
+    Invoke-IntegrationTests.ps1
 
-.EXAMPLE
-./Invoke-IntegrationTests.ps1
+    .EXAMPLE
+    Invoke-IntegrationTests.ps1 -TestFilter 'no-azure'
 
-.EXAMPLE
-./Invoke-IntegrationTests.ps1 -TestFilter 'no-azure'
+    .OUTPUTS
+    None. Creates test result files and exits with appropriate code.
 
-.OUTPUTS
-None. Creates test result files and exits with appropriate code.
-
-.NOTES
-This script requires Pester v5.7.1 or later and will install it if needed.
+    .NOTES
+    This script requires Pester v5.7.1 or later and will install it if needed.
 #>
-[CmdletBinding()]
-param(
-    [Parameter()]
-    [string]$TestFilter,
-    
-    [Parameter()]
-    [ValidateNotNullOrEmpty()]
-    [string]$TestResultsPath = './test-results',
-    
-    [Parameter()]
-    [ValidateNotNullOrEmpty()]
-    [string]$TestScriptPath = './src/Tests/Integration/Console.Integration.Tests.ps1'
-)
-
-Set-StrictMode -Version Latest
-$ErrorActionPreference = 'Stop'
-
-Write-Verbose "Starting integration tests execution"
-
-# Ensure Pester is available
-function Install-RequiredPester {
+function Invoke-IntegrationTests {
     [CmdletBinding()]
-    param()
-            
+    param(
+        [Parameter()]
+        [string]$TestFilter,
+        
+        [Parameter()]
+        [ValidateNotNullOrEmpty()]
+        [string]$TestResultsPath = './test-results',
+        
+        [Parameter()]
+        [ValidateNotNullOrEmpty()]
+        [string]$TestScriptPath = './src/Tests/Integration/Console.Integration.Tests.ps1'
+    )
+
+    begin {
+        Set-StrictMode -Version Latest
+        $ErrorActionPreference = 'Stop'
+
+        Write-Verbose "Starting integration tests execution"
+
+        # Ensure Pester is available
+        function Install-RequiredPester {
+            [CmdletBinding()]
+            param()
+                    
             try {
                 $minPesterVersion = [Version]'5.7.1'
                 $pesterModule = Get-Module -ListAvailable -Name Pester | Sort-Object Version -Descending | Select-Object -First 1
@@ -74,7 +70,7 @@ function Install-RequiredPester {
             }
         }
     }
-    
+        
     process {
         try {
             # Install and import Pester if needed
@@ -123,9 +119,4 @@ function Install-RequiredPester {
     end {
         Write-Verbose "Invoke-IntegrationTests process completed"
     }
-}
-
-# Call the function with script parameters when run as script
-if ($MyInvocation.InvocationName -ne '.') {
-    Invoke-IntegrationTests @PSBoundParameters
 }

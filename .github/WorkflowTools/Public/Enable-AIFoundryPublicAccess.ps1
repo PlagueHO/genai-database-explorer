@@ -1,78 +1,80 @@
 <#
-.SYNOPSIS
-Enables public network access on an Azure AI Foundry (Cognitive Services) account and waits until the resource is ready.
+    .SYNOPSIS
+    Enables public network access on an Azure AI Foundry (Cognitive Services) account and waits until the resource is ready.
 
-.DESCRIPTION
-Resolves the AI Foundry account name from an explicit parameter or from a SQL server naming pattern, waits for the account to reach a terminal provisioning state with a valid endpoint,
-then enables public network access with a permissive network rule set. Exports the account name and endpoint into the GitHub Actions environment for downstream steps.
+    .DESCRIPTION
+    Resolves the AI Foundry account name from an explicit parameter or from a SQL server naming pattern, waits for the account to reach a terminal provisioning state with a valid endpoint,
+    then enables public network access with a permissive network rule set. Exports the account name and endpoint into the GitHub Actions environment for downstream steps.
 
-.PARAMETER ResourceGroupName
-The Azure resource group containing the AI Foundry account.
+    .PARAMETER ResourceGroupName
+    The Azure resource group containing the AI Foundry account.
 
-.PARAMETER AIFoundryName
-Optional explicit AI Foundry account name. If omitted, the name is derived from the SQL server name pattern.
+    .PARAMETER AIFoundryName
+    Optional explicit AI Foundry account name. If omitted, the name is derived from the SQL server name pattern.
 
-.PARAMETER SqlServerName
-Optional SQL server name. When provided and following the pattern 'sql-<suffix>', the account name is assumed to be 'aif-<suffix>'.
+    .PARAMETER SqlServerName
+    Optional SQL server name. When provided and following the pattern 'sql-<suffix>', the account name is assumed to be 'aif-<suffix>'.
 
-.PARAMETER TimeoutSeconds
-Maximum time to wait for the account to become ready.
+    .PARAMETER TimeoutSeconds
+    Maximum time to wait for the account to become ready.
 
-.PARAMETER PollSeconds
-Polling interval while waiting for the account.
+    .PARAMETER PollSeconds
+    Polling interval while waiting for the account.
 
-.PARAMETER InitialJitterMinSeconds
-Minimum seconds for initial random delay to reduce matrix contention.
+    .PARAMETER InitialJitterMinSeconds
+    Minimum seconds for initial random delay to reduce matrix contention.
 
-.PARAMETER InitialJitterMaxSeconds
-Maximum seconds for initial random delay to reduce matrix contention.
+    .PARAMETER InitialJitterMaxSeconds
+    Maximum seconds for initial random delay to reduce matrix contention.
 
-.EXAMPLE
-./Enable-AIFoundryPublicAccess.ps1 -ResourceGroupName rg-demo -AIFoundryName aif-demo-123
+    .EXAMPLE
+    Enable-AIFoundryPublicAccess.ps1 -ResourceGroupName rg-demo -AIFoundryName aif-demo-123
 
-.EXAMPLE
-./Enable-AIFoundryPublicAccess.ps1 -ResourceGroupName rg-demo -SqlServerName sql-demo-123
+    .EXAMPLE
+    Enable-AIFoundryPublicAccess.ps1 -ResourceGroupName rg-demo -SqlServerName sql-demo-123
 
-.OUTPUTS
-None. Exports environment variables AI_FOUNDRY_NAME and AZURE_OPENAI_ENDPOINT.
+    .OUTPUTS
+    None. Exports environment variables AI_FOUNDRY_NAME and AZURE_OPENAI_ENDPOINT.
 
-.NOTES
-Intended for CI usage. Uses Write-Host for progress messages and Write-Verbose for detailed output. Mutating operations are guarded by ShouldProcess.
+    .NOTES
+    Intended for CI usage. Uses Write-Host for progress messages and Write-Verbose for detailed output. Mutating operations are guarded by ShouldProcess.
 #>
-[CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
-param(
-    [Parameter(Mandatory)]
-    [ValidateNotNullOrEmpty()]
-    [string]$ResourceGroupName,
+function Enable-AIFoundryPublicAccess {
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    param(
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ResourceGroupName,
 
-    [Parameter()]
-    [string]$AIFoundryName,
+        [Parameter()]
+        [string]$AIFoundryName,
 
-    [Parameter()]
-    [string]$SqlServerName,
-    
-    [Parameter()]
-    [ValidateRange(60, 7200)]
-    [int]$TimeoutSeconds = 1200,
-
-    [Parameter()]
-    [ValidateRange(1, 60)]
-    [int]$PollSeconds = 10,
-
-    [Parameter()]
-    [ValidateRange(1, 60)]
-    [int]$InitialJitterMinSeconds = 5,
-
-    [Parameter()]
-    [ValidateRange(1, 60)]
-    [int]$InitialJitterMaxSeconds = 25
-)
-
-Set-StrictMode -Version Latest
-$ErrorActionPreference = 'Stop'
-
-Write-Verbose "Starting AI Foundry public access enablement"
+        [Parameter()]
+        [string]$SqlServerName,
         
+        [Parameter()]
+        [ValidateRange(60, 7200)]
+        [int]$TimeoutSeconds = 1200,
+
+        [Parameter()]
+        [ValidateRange(1, 60)]
+        [int]$PollSeconds = 10,
+
+        [Parameter()]
+        [ValidateRange(1, 60)]
+        [int]$InitialJitterMinSeconds = 5,
+
+        [Parameter()]
+        [ValidateRange(1, 60)]
+        [int]$InitialJitterMaxSeconds = 25
+    )
+
+    begin {
+        Set-StrictMode -Version Latest
+        $ErrorActionPreference = 'Stop'
+
+        Write-Verbose "Starting AI Foundry public access enablement"
+                
         function Get-ProvisioningState {
             [CmdletBinding()]
             param($Account)
@@ -113,7 +115,7 @@ Write-Verbose "Starting AI Foundry public access enablement"
             }
             throw "AI Foundry service '$Name' was not ready within timeout ($TimeoutSeconds s)."
         }
-        
+            
         # Initial jitter to reduce matrix contention
         $initialDelay = Get-Random -Minimum $InitialJitterMinSeconds -Maximum $InitialJitterMaxSeconds
         Write-Host "Initial jitter delay: $initialDelay seconds"
@@ -189,11 +191,13 @@ Write-Verbose "Starting AI Foundry public access enablement"
                 Write-Host "Exported endpoint: $endpoint"
             }
         }
+        catch {
+            Write-Error "Failed to enable public access for AI Foundry: $($_.Exception.Message)"
+            throw
+        }
+    }
+    
+    end {
+        Write-Verbose "AI Foundry public access enablement completed"
     }
 }
-catch {
-    Write-Error "Failed to enable public access for AI Foundry: $($_.Exception.Message)"
-    throw
-}
-
-Write-Verbose "AI Foundry public access enablement completed"

@@ -1,63 +1,65 @@
 <#
-.SYNOPSIS
-Validates integration test result files and outputs GitHub Actions variables.
+    .SYNOPSIS
+    Validates integration test result files and outputs GitHub Actions variables.
 
-.DESCRIPTION
-Checks for the existence of test result XML files, validates their XML structure,
-and sets GitHub Actions output variables to indicate whether results are valid.
-Provides detailed diagnostics for troubleshooting test execution issues.
+    .DESCRIPTION
+    Checks for the existence of test result XML files, validates their XML structure,
+    and sets GitHub Actions output variables to indicate whether results are valid.
+    Provides detailed diagnostics for troubleshooting test execution issues.
 
-.PARAMETER TestResultsPath
-The path to the test results XML file. Defaults to './test-results/integration-tests.xml'.
+    .PARAMETER TestResultsPath
+    The path to the test results XML file. Defaults to './test-results/integration-tests.xml'.
 
-.PARAMETER OutputVariable
-The name of the GitHub Actions output variable to set. Defaults to 'test-results-valid'.
+    .PARAMETER OutputVariable
+    The name of the GitHub Actions output variable to set. Defaults to 'test-results-valid'.
 
-.PARAMETER ShowPreview
-If specified, displays a preview of the XML content for debugging purposes.
+    .PARAMETER ShowPreview
+    If specified, displays a preview of the XML content for debugging purposes.
 
-.PARAMETER PreviewLength
-The number of characters to show in the XML preview. Defaults to 500.
+    .PARAMETER PreviewLength
+    The number of characters to show in the XML preview. Defaults to 500.
 
-.EXAMPLE
-./Test-IntegrationTestResults.ps1
+    .EXAMPLE
+    Test-IntegrationTestResults.ps1
 
-.EXAMPLE
-./Test-IntegrationTestResults.ps1 -TestResultsPath './custom-results/tests.xml' -OutputVariable 'custom-results-valid'
+    .EXAMPLE
+    Test-IntegrationTestResults.ps1 -TestResultsPath './custom-results/tests.xml' -OutputVariable 'custom-results-valid'
 
-.EXAMPLE
-./Test-IntegrationTestResults.ps1 -ShowPreview -PreviewLength 1000
+    .EXAMPLE
+    Test-IntegrationTestResults.ps1 -ShowPreview -PreviewLength 1000
 
-.OUTPUTS
-None. Sets GitHub Actions output variables and displays validation results.
+    .OUTPUTS
+    None. Sets GitHub Actions output variables and displays validation results.
 
-.NOTES
-This script is designed for GitHub Actions workflows and requires the GITHUB_OUTPUT environment variable.
-It validates NUnit XML format commonly used by testing frameworks like Pester.
+    .NOTES
+    This script is designed for GitHub Actions workflows and requires the GITHUB_OUTPUT environment variable.
+    It validates NUnit XML format commonly used by testing frameworks like Pester.
 #>
-[CmdletBinding()]
-param(
-    [Parameter()]
-    [ValidateNotNullOrEmpty()]
-    [string]$TestResultsPath = './test-results/integration-tests.xml',
-    
-    [Parameter()]
-    [ValidateNotNullOrEmpty()]
-    [string]$OutputVariable = 'test-results-valid',
-    
-    [Parameter()]
-    [switch]$ShowPreview,
-    
-    [Parameter()]
-    [ValidateRange(100, 2000)]
-    [int]$PreviewLength = 500
-)
-
-Set-StrictMode -Version Latest
-$ErrorActionPreference = 'Stop'
-
-Write-Verbose "Starting integration test results validation"
+function Test-IntegrationTestResults {
+    [CmdletBinding()]
+    param(
+        [Parameter()]
+        [ValidateNotNullOrEmpty()]
+        [string]$TestResultsPath = './test-results/integration-tests.xml',
         
+        [Parameter()]
+        [ValidateNotNullOrEmpty()]
+        [string]$OutputVariable = 'test-results-valid',
+        
+        [Parameter()]
+        [switch]$ShowPreview,
+        
+        [Parameter()]
+        [ValidateRange(100, 2000)]
+        [int]$PreviewLength = 500
+    )
+
+    begin {
+        Set-StrictMode -Version Latest
+        $ErrorActionPreference = 'Stop'
+
+        Write-Verbose "Starting integration test results validation"
+            
         # Function to set GitHub Actions output
         function Set-GitHubOutput {
             [CmdletBinding()]
@@ -109,7 +111,7 @@ Write-Verbose "Starting integration test results validation"
             }
         }
     }
-    
+        
     process {
         try {
             Write-Verbose "Checking test results file: $TestResultsPath"
@@ -171,12 +173,14 @@ Write-Verbose "Starting integration test results validation"
                 }
             }
         }
+        catch {
+            Write-Error "Failed to validate test results: $($_.Exception.Message)"
+            Set-GitHubOutput -Name $OutputVariable -Value 'false'
+            throw
+        }
+    }
+
+    end {
+        Write-Verbose "Integration test results validation completed"
     }
 }
-catch {
-    Write-Error "Failed to validate test results: $($_.Exception.Message)"
-    Set-GitHubOutput -Name $OutputVariable -Value 'false'
-    throw
-}
-
-Write-Verbose "Integration test results validation completed"

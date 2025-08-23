@@ -87,7 +87,8 @@ jobs:
         with:
           azPSVersion: "latest"
           inlineScript: |
-            ./.github/scripts/Set-AzureStorageForTests.ps1 -ResourceGroupName "${{ inputs.RESOURCE_GROUP_NAME }}" -Environment "${{ inputs.ENVIRONMENT }}" -RunId "${{ github.run_id }}"
+            Import-Module ./.github/WorkflowTools/WorkflowTools.psd1 -Force
+            Set-AzureStorageForTests -ResourceGroupName "${{ inputs.RESOURCE_GROUP_NAME }}" -Environment "${{ inputs.ENVIRONMENT }}" -RunId "${{ github.run_id }}"
 
       - name: Discover and Configure Azure Cosmos DB (for CosmosDb)
         if: matrix.persistence == 'CosmosDb'
@@ -95,28 +96,33 @@ jobs:
         with:
           azPSVersion: "latest"
           inlineScript: |
-            ./.github/scripts/Set-CosmosDbForTests.ps1 -ResourceGroupName "${{ inputs.RESOURCE_GROUP_NAME }}"
+            Import-Module ./.github/WorkflowTools/WorkflowTools.psd1 -Force
+            Set-CosmosDbForTests -ResourceGroupName "${{ inputs.RESOURCE_GROUP_NAME }}"
 
       - name: Configure SQL Server Firewall for GitHub Runner
         uses: azure/powershell@v2
         with:
           azPSVersion: "latest"
           inlineScript: |
-            ./.github/scripts/Add-SqlServerFirewallRule.ps1 -ResourceGroupName "${{ inputs.RESOURCE_GROUP_NAME }}" -SqlServerName "${{ inputs.SQL_SERVER_NAME }}" -RunId "${{ github.run_id }}" -MatrixPersistence "${{ matrix.persistence }}"
+            Import-Module ./.github/WorkflowTools/WorkflowTools.psd1 -Force
+            $fwName = "GitHubRunner-${{ github.run_id }}-${{ matrix.persistence }}"
+            Add-SqlServerFirewallRule -ResourceGroupName "${{ inputs.RESOURCE_GROUP_NAME }}" -SqlServerName "${{ inputs.SQL_SERVER_NAME }}" -FirewallRuleName $fwName
 
       - name: Enable Azure AI Foundry Public Access for Integration Tests
         uses: azure/powershell@v2
         with:
           azPSVersion: "latest"
           inlineScript: |
-            ./.github/scripts/Enable-AIFoundryPublicAccess.ps1 -ResourceGroupName "${{ inputs.RESOURCE_GROUP_NAME }}" -AIFoundryName "${{ inputs.AZURE_AI_FOUNDRY_NAME }}" -SqlServerName "${{ inputs.SQL_SERVER_NAME }}"
+            Import-Module ./.github/WorkflowTools/WorkflowTools.psd1 -Force
+            Enable-AIFoundryPublicAccess -ResourceGroupName "${{ inputs.RESOURCE_GROUP_NAME }}" -AIFoundryName "${{ inputs.AZURE_AI_FOUNDRY_NAME }}" -SqlServerName "${{ inputs.SQL_SERVER_NAME }}"
 
       - name: Get Azure OpenAI API Key
         uses: azure/powershell@v2
         with:
           azPSVersion: "latest"
           inlineScript: |
-            ./.github/scripts/Get-AIFoundryApiKey.ps1 -ResourceGroupName "${{ inputs.RESOURCE_GROUP_NAME }}" -AIFoundryName "${{ inputs.AZURE_AI_FOUNDRY_NAME }}" -SqlServerName "${{ inputs.SQL_SERVER_NAME }}"
+            Import-Module ./.github/WorkflowTools/WorkflowTools.psd1 -Force
+            Get-AIFoundryApiKey -ResourceGroupName "${{ inputs.RESOURCE_GROUP_NAME }}" -AIFoundryName "${{ inputs.AZURE_AI_FOUNDRY_NAME }}" -SqlServerName "${{ inputs.SQL_SERVER_NAME }}"
 
       - name: "Setup PowerShell and Run Console Integration Tests (${{ matrix.persistence }})"
         shell: pwsh
@@ -200,14 +206,16 @@ jobs:
           Write-Host "SQL Server: ${{ inputs.SQL_SERVER_NAME }}" -ForegroundColor Yellow
           Write-Host "Azure AI Foundry Endpoint: ${{ inputs.AZURE_AI_FOUNDRY_ENDPOINT }}" -ForegroundColor Yellow
           
-          ./.github/scripts/Invoke-IntegrationTests.ps1 -TestResultsPath './test-results' -TestScriptPath './src/Tests/Integration/Console.Integration.Tests.ps1'
+          Import-Module ./.github/WorkflowTools/WorkflowTools.psd1 -Force
+          Invoke-IntegrationTests -TestResultsPath './test-results' -TestScriptPath './src/Tests/Integration/Console.Integration.Tests.ps1'
 
       - name: Check Test Results File
         id: check-test-results
         if: always()
         shell: pwsh
         run: |
-          ./.github/scripts/Test-IntegrationTestResults.ps1 -TestResultsPath './test-results/integration-tests.xml' -OutputVariable 'test-results-valid' -ShowPreview
+          Import-Module ./.github/WorkflowTools/WorkflowTools.psd1 -Force
+          Test-IntegrationTestResults -TestResultsPath './test-results/integration-tests.xml' -OutputVariable 'test-results-valid' -ShowPreview
 
       - name: Publish Integration Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
@@ -233,8 +241,9 @@ jobs:
         with:
           azPSVersion: "latest"
           inlineScript: |
+            Import-Module ./.github/WorkflowTools/WorkflowTools.psd1 -Force
             if ($env:AI_FOUNDRY_NAME) {
-              ./.github/scripts/Disable-AIFoundryPublicAccess.ps1 -ResourceGroupName "${{ inputs.RESOURCE_GROUP_NAME }}" -AIFoundryName $env:AI_FOUNDRY_NAME
+              Disable-AIFoundryPublicAccess -ResourceGroupName "${{ inputs.RESOURCE_GROUP_NAME }}" -AIFoundryName $env:AI_FOUNDRY_NAME
             } else {
               Write-Host "No AI Foundry service name available - skipping public access cleanup"
             }
@@ -245,4 +254,6 @@ jobs:
         with:
           azPSVersion: "latest"
           inlineScript: |
-            ./.github/scripts/Remove-SqlServerFirewallRule.ps1 -ResourceGroupName "${{ inputs.RESOURCE_GROUP_NAME }}" -SqlServerName "${{ inputs.SQL_SERVER_NAME }}" -RunId "${{ github.run_id }}" -MatrixPersistence "${{ matrix.persistence }}"
+            Import-Module ./.github/WorkflowTools/WorkflowTools.psd1 -Force
+            $fwName = "GitHubRunner-${{ github.run_id }}-${{ matrix.persistence }}"
+            Remove-SqlServerFirewallRule -ResourceGroupName "${{ inputs.RESOURCE_GROUP_NAME }}" -SqlServerName "${{ inputs.SQL_SERVER_NAME }}" -FirewallRuleName $fwName

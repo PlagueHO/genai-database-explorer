@@ -14,7 +14,8 @@
             "aspNetCoreRuntimeVersions": "9.0"
         },
         "ghcr.io/devcontainers/features/powershell:1": {
-            "version": "latest"
+            "version": "latest",
+            "modules": "Az"
         },
         "ghcr.io/devcontainers/features/git:1": {
             "version": "latest"
@@ -83,7 +84,9 @@
                 "microsoft-aspire.aspire-vscode",
                 "github.vscode-github-actions",
                 "ms-azuretools.vscode-azure-github-copilot",
-                "TeamsDevApp.vscode-ai-foundry"
+                "TeamsDevApp.vscode-ai-foundry",
+                "azps-tools.azps-tools",
+                "pspester.pester-test"
             ]
         }
     },
