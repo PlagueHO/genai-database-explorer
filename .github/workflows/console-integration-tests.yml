@@ -214,10 +214,12 @@ jobs:
       - name: Check Test Results File
         id: check-test-results
         if: always()
-        shell: pwsh
-        run: |
-          Import-Module ./.github/WorkflowTools/WorkflowTools.psd1 -Force
-          Test-IntegrationTestResults -TestResultsPath './test-results/integration-tests.xml' -OutputVariable 'test-results-valid' -ShowPreview
+        uses: azure/powershell@v2
+        with:
+          azPSVersion: "latest"
+          inlineScript: |
+            Import-Module ./.github/WorkflowTools/WorkflowTools.psd1 -Force
+            Test-IntegrationTestResults -TestResultsPath './test-results/integration-tests.xml' -OutputVariable 'test-results-valid' -ShowPreview
 
       - name: Publish Integration Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
