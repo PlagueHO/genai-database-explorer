@@ -113,16 +113,16 @@ Describe 'GenAI Database Explorer Console Application' {
             }
         }
 
-        function Test-RequiredEnvironmentVariables {
+    function Test-RequiredEnvironmentVariables {
             param(
                 [hashtable]$Environment,
                 [bool]$NoAzureMode
             )
             
             $requiredVars = @('SQL_CONNECTION_STRING', 'AZURE_OPENAI_ENDPOINT', 'AZURE_OPENAI_API_KEY')
-            $missingVars = $requiredVars | Where-Object { [string]::IsNullOrEmpty($Environment[$_]) }
-            
-            if ($missingVars.Count -gt 0) {
+            $missingVars = @($requiredVars | Where-Object { [string]::IsNullOrEmpty($Environment[$_]) })
+
+            if ($missingVars -and $missingVars.Count -gt 0) {
                 if ($NoAzureMode) {
                     Write-Verbose "NoAzure mode active (TEST_FILTER=no-azure): skipping required env var enforcement" -Verbose
                     return $true
