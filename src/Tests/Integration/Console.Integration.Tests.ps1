@@ -137,18 +137,18 @@ Describe 'GenAI Database Explorer Console Application' {
 
         function Initialize-TestWorkspace {
             param(
+                [string]$TestDriveRoot,
                 [string]$ConsoleAppPath
             )
 
             # Prefer Pester's TestDrive for ephemeral workspace; fallback to OS temp when not under Pester
-            $testDriveRoot = 'TestDrive:\'
-            if (-not (Test-Path -LiteralPath $testDriveRoot)) {
+            if (-not (Test-Path -LiteralPath $TestDriveRoot)) {
                 $tempRoot = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ("genaidb-integration-test-" + [Guid]::NewGuid().ToString('N'))
                 New-Item -ItemType Directory -Path $tempRoot -Force | Out-Null
-                $testDriveRoot = $tempRoot
+                $TestDriveRoot = $tempRoot
             }
 
-            $testWorkspacePath = Join-Path -Path $testDriveRoot -ChildPath 'workspace'
+            $testWorkspacePath = Join-Path -Path $TestDriveRoot -ChildPath 'workspace'
             New-Item -ItemType Directory -Path $testWorkspacePath -Force | Out-Null
 
             $baseProjectPath = Join-Path -Path $testWorkspacePath -ChildPath 'projects'
@@ -190,8 +190,10 @@ Describe 'GenAI Database Explorer Console Application' {
         } else {
             "./src/GenAIDBExplorer/GenAIDBExplorer.Console/bin/Debug/net9.0/GenAIDBExplorer.Console.exe"
         }
-        
-        $workspaceConfig = Initialize-TestWorkspace -ConsoleAppPath $consoleAppPath
+
+        # Use the $TestDrive Pester 5 variable as the root test drive folder because we're testing .NET apps
+        # which can't use the TestDrive:\ because it's a PSDrive
+        $workspaceConfig = Initialize-TestWorkspace -TestDriveRoot $TestDrive -ConsoleAppPath $consoleAppPath
         $script:TestWorkspace = $workspaceConfig.TestWorkspace
         $script:BaseProjectPath = $workspaceConfig.BaseProjectPath
         $script:ConsoleAppPath = $workspaceConfig.ConsoleAppPath
