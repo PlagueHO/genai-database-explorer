@@ -125,7 +125,77 @@ jobs:
             Get-AIFoundryApiKey -ResourceGroupName "${{ inputs.RESOURCE_GROUP_NAME }}" -AIFoundryName "${{ inputs.AZURE_AI_FOUNDRY_NAME }}" -SqlServerName "${{ inputs.SQL_SERVER_NAME }}"
 
       - name: "Setup PowerShell and Run Console Integration Tests (${{ matrix.persistence }})"
-        shell: pwsh
+        uses: azure/powershell@v2
+        with:
+          azPSVersion: "latest"
+          inlineScript: |
+            # Debug environment variables for diagnostic purposes
+            Write-Host "=== Environment Variables Debug ===" -ForegroundColor Magenta
+            Write-Host "SQL_CONNECTION_STRING: $($env:SQL_CONNECTION_STRING.Length) characters" -ForegroundColor Yellow
+            Write-Host "AZURE_OPENAI_ENDPOINT: '$env:AZURE_OPENAI_ENDPOINT'" -ForegroundColor Yellow
+            Write-Host "AZURE_OPENAI_API_KEY: $($env:AZURE_OPENAI_API_KEY.Length) characters (masked)" -ForegroundColor Yellow
+            Write-Host "Input AZURE_AI_FOUNDRY_ENDPOINT: '${{ inputs.AZURE_AI_FOUNDRY_ENDPOINT }}'" -ForegroundColor Yellow
+            Write-Host "Input AZURE_AI_FOUNDRY_NAME: '${{ inputs.AZURE_AI_FOUNDRY_NAME }}'" -ForegroundColor Yellow
+            Write-Host "Persistence strategy: '$env:PERSISTENCE_STRATEGY'" -ForegroundColor Yellow
+            if ($env:PERSISTENCE_STRATEGY -eq 'AzureBlob') {
+              Write-Host "Blob endpoint: $env:AZURE_STORAGE_ACCOUNT_ENDPOINT, container: $env:AZURE_STORAGE_CONTAINER, prefix: $env:AZURE_STORAGE_BLOB_PREFIX" -ForegroundColor Yellow
+            }
+            if ($env:PERSISTENCE_STRATEGY -match 'CosmosDb') {
+              Write-Host "Cosmos DB endpoint: $env:AZURE_COSMOS_DB_ACCOUNT_ENDPOINT, db: $env:AZURE_COSMOS_DB_DATABASE_NAME, models: $env:AZURE_COSMOS_DB_MODELS_CONTAINER, entities: $env:AZURE_COSMOS_DB_ENTITIES_CONTAINER" -ForegroundColor Yellow
+            }
+
+            # Construct OpenAI endpoint if not provided but name is available
+            if ([string]::IsNullOrEmpty($env:AZURE_OPENAI_ENDPOINT) -and -not [string]::IsNullOrEmpty('${{ inputs.AZURE_AI_FOUNDRY_NAME }}')) {
+              $constructedEndpoint = "https://${{ inputs.AZURE_AI_FOUNDRY_NAME }}.cognitiveservices.azure.com/"
+              Write-Host "Constructing OpenAI endpoint from AI Foundry name: $constructedEndpoint" -ForegroundColor Cyan
+              $env:AZURE_OPENAI_ENDPOINT = $constructedEndpoint
+            }
+
+            # If we still don't have an endpoint and we know the SQL server name, try to construct from that pattern
+            if ([string]::IsNullOrEmpty($env:AZURE_OPENAI_ENDPOINT) -and -not [string]::IsNullOrEmpty('${{ inputs.SQL_SERVER_NAME }}')) {
+              # Extract the environment suffix from SQL server name (e.g., sql-gaidbexp-16461932142 -> gaidbexp-16461932142)
+              $sqlServerName = '${{ inputs.SQL_SERVER_NAME }}'
+              if ($sqlServerName -match '^sql-(.+)$') {
+                $envSuffix = $matches[1]
+                $constructedEndpoint = "https://$envSuffix.cognitiveservices.azure.com/"
+                Write-Host "Constructing OpenAI endpoint from SQL server pattern: $constructedEndpoint" -ForegroundColor Yellow
+                $env:AZURE_OPENAI_ENDPOINT = $constructedEndpoint
+              }
+            }
+
+            # Check if endpoint and API key are available for AI tests
+            if ([string]::IsNullOrEmpty($env:AZURE_OPENAI_ENDPOINT) -or [string]::IsNullOrEmpty($env:AZURE_OPENAI_API_KEY)) {
+              Write-Warning "Azure AI Foundry endpoint or API key not available. AI-related integration tests will be skipped or may fail gracefully."
+              Write-Host "This is expected behavior when AI services are not deployed or configured." -ForegroundColor Yellow
+              Write-Host "To enable AI tests, ensure AZURE_AI_FOUNDRY_ENDPOINT is passed correctly from infrastructure provisioning." -ForegroundColor Yellow
+              Write-Host "Check the 'Get Output Endpoints' step in provision-infrastructure workflow for Azure CLI endpoint retrieval." -ForegroundColor Yellow
+              if ([string]::IsNullOrEmpty($env:AZURE_OPENAI_API_KEY)) {
+                Write-Host "API key was not retrieved - check that the AI Foundry service exists and has the expected naming pattern." -ForegroundColor Yellow
+              }
+            } else {
+              Write-Host "Azure AI services configured with endpoint and API key. AI integration tests will run." -ForegroundColor Green
+              Write-Host "Endpoint format: $($env:AZURE_OPENAI_ENDPOINT)" -ForegroundColor Cyan
+
+              # Validate endpoint format
+              if ($env:AZURE_OPENAI_ENDPOINT -match 'https://.*\.cognitiveservices\.azure\.com/?$') {
+                Write-Host "✅ Valid Azure Cognitive Services endpoint format detected" -ForegroundColor Green
+                Write-Host "   This endpoint supports OpenAI API calls at /openai/* paths" -ForegroundColor Green
+              } elseif ($env:AZURE_OPENAI_ENDPOINT -match 'https://.*\.openai\.azure\.com/?$') {
+                Write-Host "✅ Valid Azure OpenAI endpoint format detected" -ForegroundColor Green
+              } else {
+                Write-Warning "⚠️  Unexpected endpoint format - tests may still work but verify configuration"
+                Write-Host "   Expected: https://<name>.cognitiveservices.azure.com/ or https://<name>.openai.azure.com/" -ForegroundColor Yellow
+              }
+            }
+            Write-Host "===================================" -ForegroundColor Magenta
+
+            # Run integration tests using extracted PowerShell script
+            Write-Host "Starting console integration tests..." -ForegroundColor Green
+            Write-Host "SQL Server: ${{ inputs.SQL_SERVER_NAME }}" -ForegroundColor Yellow
+            Write-Host "Azure AI Foundry Endpoint: ${{ inputs.AZURE_AI_FOUNDRY_ENDPOINT }}" -ForegroundColor Yellow
+            
+            Import-Module ./.github/WorkflowTools/WorkflowTools.psd1 -Force
+            Invoke-IntegrationTests -TestResultsPath './test-results' -TestScriptPath './src/Tests/Integration/Console.Integration.Tests.ps1'
         env:
           SQL_CONNECTION_STRING: "Server=${{ inputs.SQL_SERVER_NAME }}.database.windows.net;Database=AdventureWorksLT;User Id=${{ secrets.SQL_SERVER_USERNAME }};Password=${{ secrets.SQL_SERVER_PASSWORD }};Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
           AZURE_OPENAI_ENDPOINT: ${{ inputs.AZURE_AI_FOUNDRY_ENDPOINT || env.AZURE_OPENAI_ENDPOINT }}
@@ -140,74 +210,6 @@ jobs:
           AZURE_COSMOS_DB_DATABASE_NAME: ${{ env.AZURE_COSMOS_DB_DATABASE_NAME }}
           AZURE_COSMOS_DB_MODELS_CONTAINER: ${{ env.AZURE_COSMOS_DB_MODELS_CONTAINER }}
           AZURE_COSMOS_DB_ENTITIES_CONTAINER: ${{ env.AZURE_COSMOS_DB_ENTITIES_CONTAINER }}
-        run: |
-          # Debug environment variables for diagnostic purposes
-          Write-Host "=== Environment Variables Debug ===" -ForegroundColor Magenta
-          Write-Host "SQL_CONNECTION_STRING: $($env:SQL_CONNECTION_STRING.Length) characters" -ForegroundColor Yellow
-          Write-Host "AZURE_OPENAI_ENDPOINT: '$env:AZURE_OPENAI_ENDPOINT'" -ForegroundColor Yellow
-          Write-Host "AZURE_OPENAI_API_KEY: $($env:AZURE_OPENAI_API_KEY.Length) characters (masked)" -ForegroundColor Yellow
-          Write-Host "Input AZURE_AI_FOUNDRY_ENDPOINT: '${{ inputs.AZURE_AI_FOUNDRY_ENDPOINT }}'" -ForegroundColor Yellow
-          Write-Host "Input AZURE_AI_FOUNDRY_NAME: '${{ inputs.AZURE_AI_FOUNDRY_NAME }}'" -ForegroundColor Yellow
-          Write-Host "Persistence strategy: '$env:PERSISTENCE_STRATEGY'" -ForegroundColor Yellow
-          if ($env:PERSISTENCE_STRATEGY -eq 'AzureBlob') {
-            Write-Host "Blob endpoint: $env:AZURE_STORAGE_ACCOUNT_ENDPOINT, container: $env:AZURE_STORAGE_CONTAINER, prefix: $env:AZURE_STORAGE_BLOB_PREFIX" -ForegroundColor Yellow
-          }
-          if ($env:PERSISTENCE_STRATEGY -match 'CosmosDb') {
-            Write-Host "Cosmos DB endpoint: $env:AZURE_COSMOS_DB_ACCOUNT_ENDPOINT, db: $env:AZURE_COSMOS_DB_DATABASE_NAME, models: $env:AZURE_COSMOS_DB_MODELS_CONTAINER, entities: $env:AZURE_COSMOS_DB_ENTITIES_CONTAINER" -ForegroundColor Yellow
-          }
-
-          # Construct OpenAI endpoint if not provided but name is available
-          if ([string]::IsNullOrEmpty($env:AZURE_OPENAI_ENDPOINT) -and -not [string]::IsNullOrEmpty('${{ inputs.AZURE_AI_FOUNDRY_NAME }}')) {
-            $constructedEndpoint = "https://${{ inputs.AZURE_AI_FOUNDRY_NAME }}.cognitiveservices.azure.com/"
-            Write-Host "Constructing OpenAI endpoint from AI Foundry name: $constructedEndpoint" -ForegroundColor Cyan
-            $env:AZURE_OPENAI_ENDPOINT = $constructedEndpoint
-          }
-
-          # If we still don't have an endpoint and we know the SQL server name, try to construct from that pattern
-          if ([string]::IsNullOrEmpty($env:AZURE_OPENAI_ENDPOINT) -and -not [string]::IsNullOrEmpty('${{ inputs.SQL_SERVER_NAME }}')) {
-            # Extract the environment suffix from SQL server name (e.g., sql-gaidbexp-16461932142 -> gaidbexp-16461932142)
-            $sqlServerName = '${{ inputs.SQL_SERVER_NAME }}'
-            if ($sqlServerName -match '^sql-(.+)$') {
-              $envSuffix = $matches[1]
-              $constructedEndpoint = "https://$envSuffix.cognitiveservices.azure.com/"
-              Write-Host "Constructing OpenAI endpoint from SQL server pattern: $constructedEndpoint" -ForegroundColor Yellow
-              $env:AZURE_OPENAI_ENDPOINT = $constructedEndpoint
-            }
-          }
-
-          # Check if endpoint and API key are available for AI tests
-          if ([string]::IsNullOrEmpty($env:AZURE_OPENAI_ENDPOINT) -or [string]::IsNullOrEmpty($env:AZURE_OPENAI_API_KEY)) {
-            Write-Warning "Azure AI Foundry endpoint or API key not available. AI-related integration tests will be skipped or may fail gracefully."
-            Write-Host "This is expected behavior when AI services are not deployed or configured." -ForegroundColor Yellow
-            Write-Host "To enable AI tests, ensure AZURE_AI_FOUNDRY_ENDPOINT is passed correctly from infrastructure provisioning." -ForegroundColor Yellow
-            Write-Host "Check the 'Get Output Endpoints' step in provision-infrastructure workflow for Azure CLI endpoint retrieval." -ForegroundColor Yellow
-            if ([string]::IsNullOrEmpty($env:AZURE_OPENAI_API_KEY)) {
-              Write-Host "API key was not retrieved - check that the AI Foundry service exists and has the expected naming pattern." -ForegroundColor Yellow
-            }
-          } else {
-            Write-Host "Azure AI services configured with endpoint and API key. AI integration tests will run." -ForegroundColor Green
-            Write-Host "Endpoint format: $($env:AZURE_OPENAI_ENDPOINT)" -ForegroundColor Cyan
-
-            # Validate endpoint format
-            if ($env:AZURE_OPENAI_ENDPOINT -match 'https://.*\.cognitiveservices\.azure\.com/?$') {
-              Write-Host "✅ Valid Azure Cognitive Services endpoint format detected" -ForegroundColor Green
-              Write-Host "   This endpoint supports OpenAI API calls at /openai/* paths" -ForegroundColor Green
-            } elseif ($env:AZURE_OPENAI_ENDPOINT -match 'https://.*\.openai\.azure\.com/?$') {
-              Write-Host "✅ Valid Azure OpenAI endpoint format detected" -ForegroundColor Green
-            } else {
-              Write-Warning "⚠️  Unexpected endpoint format - tests may still work but verify configuration"
-              Write-Host "   Expected: https://<name>.cognitiveservices.azure.com/ or https://<name>.openai.azure.com/" -ForegroundColor Yellow
-            }
-          }
-          Write-Host "===================================" -ForegroundColor Magenta
-
-          # Run integration tests using extracted PowerShell script
-          Write-Host "Starting console integration tests..." -ForegroundColor Green
-          Write-Host "SQL Server: ${{ inputs.SQL_SERVER_NAME }}" -ForegroundColor Yellow
-          Write-Host "Azure AI Foundry Endpoint: ${{ inputs.AZURE_AI_FOUNDRY_ENDPOINT }}" -ForegroundColor Yellow
-          
-          Import-Module ./.github/WorkflowTools/WorkflowTools.psd1 -Force
-          Invoke-IntegrationTests -TestResultsPath './test-results' -TestScriptPath './src/Tests/Integration/Console.Integration.Tests.ps1'
 
       - name: Check Test Results File
         id: check-test-results
