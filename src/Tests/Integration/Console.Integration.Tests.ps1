@@ -35,7 +35,7 @@
 
 param(
     [Parameter()]
-    [ValidateSet('LocalDisk', 'AzureBlob', 'CosmosDB')]
+    [ValidateSet('LocalDisk', 'AzureBlob', 'CosmosDb')]
     [string]
     $PersistenceStrategy = 'LocalDisk',
     

@@ -117,14 +117,57 @@ function Invoke-IntegrationTests {
             
             $result = Invoke-Pester -Configuration $config
 
-            # Validate test results
-            if ($null -ne $result -and $result.FailedCount -gt 0) {
-                Write-Error "Integration tests failed: $($result.FailedCount) test(s) failed out of $($result.TotalCount)."
+            # Validate test results - Check for failures and provide detailed error info
+            if ($null -ne $result) {
+                # Try to access result properties safely, accommodating different Pester versions
+                try {
+                    $totalTests = 0
+                    $failedTests = 0
+                    $passedTests = 0
+                    
+                    # Pester v5+ uses these properties
+                    if ($result.PSObject.Properties.Name -contains 'TotalCount') {
+                        $totalTests = $result.TotalCount
+                        $failedTests = $result.FailedCount
+                        $passedTests = $result.PassedCount
+                    }
+                    # Fallback to Tests collection if main properties don't exist
+                    elseif ($result.PSObject.Properties.Name -contains 'Tests') {
+                        $totalTests = $result.Tests.Count
+                        $failedTests = ($result.Tests | Where-Object { $_.Result -eq 'Failed' }).Count
+                        $passedTests = ($result.Tests | Where-Object { $_.Result -eq 'Passed' }).Count
+                    }
+                    # Last resort - try to infer from result object properties
+                    else {
+                        Write-Warning "Unknown Pester result format. Available properties: $($result.PSObject.Properties.Name -join ', ')"
+                        # Try common alternative property names
+                        $totalTests = $result.Total ?? $result.TestCount ?? 0
+                        $failedTests = $result.Failed ?? $result.FailureCount ?? 0
+                        $passedTests = $result.Passed ?? $result.PassCount ?? 0
+                    }
+                    
+                    Write-Host "Test execution completed." -ForegroundColor Cyan
+                    Write-Host "Total tests: $totalTests, Passed: $passedTests, Failed: $failedTests" -ForegroundColor Cyan
+                    
+                    if ($failedTests -gt 0) {
+                        Write-Error "Integration tests failed: $failedTests test(s) failed out of $totalTests."
+                        exit 1
+                    }
+                    
+                    Write-Host "Integration tests completed successfully." -ForegroundColor Green
+                }
+                catch {
+                    Write-Warning "Error accessing Pester result properties: $($_.Exception.Message)"
+                    Write-Host "Pester result object structure:" -ForegroundColor Yellow
+                    $result | Format-List | Out-String | Write-Host
+                    Write-Error "Integration tests failed: Unable to parse test results."
+                    exit 1
+                }
+            } else {
+                Write-Warning "Pester result object is null - this may indicate a configuration or execution error."
+                Write-Error "Integration tests failed: No result object returned from Pester."
                 exit 1
             }
-            
-            Write-Host "Integration tests completed successfully." -ForegroundColor Green
-            Write-Verbose "Total tests: $($result.TotalCount), Passed: $($result.PassedCount), Failed: $($result.FailedCount)"
         }
         catch {
             Write-Error "Failed to execute integration tests: $($_.Exception.Message)"
