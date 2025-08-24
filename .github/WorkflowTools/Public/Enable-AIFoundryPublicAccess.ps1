@@ -74,19 +74,50 @@ function Enable-AIFoundryPublicAccess {
         $ErrorActionPreference = 'Stop'
 
         Write-Verbose "Starting AI Foundry public access enablement"
-                
-        function Get-ProvisioningState {
+
+        # Helper function to safely get property values with fallbacks
+        function Get-AccountProperty {
             [CmdletBinding()]
-            param($Account)
-            try {
-                if ($null -ne $Account.Properties -and $Account.Properties.PSObject.Properties.Name -contains 'ProvisioningState') {
-                    return $Account.Properties.ProvisioningState
+            param($Account, [string]$PropertyPath, $DefaultValue = $null)
+            
+            $pathParts = $PropertyPath -split '\.'
+            $current = $Account
+            
+            foreach ($part in $pathParts) {
+                if ($current -and $current.PSObject.Properties.Name -contains $part) {
+                    $current = $current.$part
+                } elseif ($current -and $current.Properties -and $current.Properties.PSObject.Properties.Name -contains $part) {
+                    $current = $current.Properties.$part
+                } else {
+                    return $DefaultValue
                 }
-                if ($Account.PSObject.Properties.Name -contains 'ProvisioningState') {
-                    return $Account.ProvisioningState
+            }
+            return $current
+        }
+
+        # Helper function for retry operations
+        function Invoke-WithRetry {
+            [CmdletBinding()]
+            param(
+                [ScriptBlock]$ScriptBlock,
+                [int]$MaxAttempts = 10,
+                [string]$OperationName = "Operation"
+            )
+            
+            for ($i = 1; $i -le $MaxAttempts; $i++) {
+                try {
+                    return & $ScriptBlock
+                } catch {
+                    $msg = $_.Exception.Message
+                    if ($msg -match 'Conflict|Too Many Requests|temporar' -and $i -lt $MaxAttempts) {
+                        $backoff = [Math]::Min(60, 3 * $i)
+                        Write-Warning "$OperationName conflict/transient error: $msg. Retrying in $backoff s..."
+                        Start-Sleep -Seconds $backoff
+                        continue
+                    }
+                    throw
                 }
-            } catch { }
-            return $null
+            }
         }
 
         function Wait-ForFoundryReady {
@@ -101,9 +132,9 @@ function Enable-AIFoundryPublicAccess {
             while ([DateTime]::UtcNow -lt $deadline) {
                 try {
                     $acc = Get-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroup -Name $Name -ErrorAction Stop
-                    $state = Get-ProvisioningState $acc
-                    $endpoint = $acc.Properties.Endpoint
-                    if ([string]::IsNullOrEmpty($endpoint) -and $acc.PSObject.Properties.Name -contains 'Endpoint') { $endpoint = $acc.Endpoint }
+                    $state = Get-AccountProperty $acc 'ProvisioningState'
+                    $endpoint = Get-AccountProperty $acc 'Endpoint'
+                    
                     Write-Verbose "Provisioning state: '$state', Endpoint: '$endpoint'"
                     if ($state -in @('Succeeded','SucceededWithWarnings','Active') -and -not [string]::IsNullOrEmpty($endpoint)) {
                         return $acc
@@ -125,14 +156,14 @@ function Enable-AIFoundryPublicAccess {
     process {
         try {
             # Determine Foundry name
-            $resolvedFoundryName = $null
-            if (-not [string]::IsNullOrEmpty($AIFoundryName)) {
-                $resolvedFoundryName = $AIFoundryName
-                Write-Host "Using provided AI Foundry service name: $resolvedFoundryName"
+            $resolvedFoundryName = if (-not [string]::IsNullOrEmpty($AIFoundryName)) {
+                Write-Host "Using provided AI Foundry service name: $AIFoundryName"
+                $AIFoundryName
             } elseif ($SqlServerName -match '^sql-(.+)$') {
                 $envSuffix = $matches[1]
-                $resolvedFoundryName = "aif-$envSuffix"
-                Write-Host "Constructed AI Foundry service name from SQL server: $resolvedFoundryName"
+                $computedName = "aif-$envSuffix"
+                Write-Host "Constructed AI Foundry service name from SQL server: $computedName"
+                $computedName
             } else {
                 Write-Warning "Could not determine AI Foundry service name (no input and SQL name not matching pattern). Skipping public access configuration."
                 return
@@ -141,51 +172,48 @@ function Enable-AIFoundryPublicAccess {
             Write-Host "Waiting for AI Foundry service '$resolvedFoundryName' to be ready..."
             $account = Wait-ForFoundryReady -ResourceGroup $ResourceGroupName -Name $resolvedFoundryName -TimeoutSeconds $TimeoutSeconds -PollSeconds $PollSeconds
 
-            Write-Host "Current public network access: $($account.Properties.PublicNetworkAccess)"
-            Write-Host "Current network ACLs default action: $($account.Properties.NetworkAcls.DefaultAction)"
+            # Display current state
+            $currPublicNetworkAccess = Get-AccountProperty $account 'PublicNetworkAccess' '<not set>'
+            $currDefaultAction = Get-AccountProperty $account 'NetworkAcls.DefaultAction' '<not set>'
+            Write-Host "Current public network access: $currPublicNetworkAccess"
+            Write-Host "Current network ACLs default action: $currDefaultAction"
 
-            $networkRuleSet = New-Object Microsoft.Azure.Commands.Management.CognitiveServices.Models.PSNetworkRuleSet
-            $networkRuleSet.DefaultAction = "Allow"
-
+            # Update network access with retry
             $target = "AI Foundry '$resolvedFoundryName' in resource group '$ResourceGroupName'"
-            $maxAttempts = 10
-            for ($i=1; $i -le $maxAttempts; $i++) {
-                try {
-                    if ($PSCmdlet.ShouldProcess($target, "Enable public network access and set DefaultAction=Allow")) {
-                        Set-AzCognitiveServicesAccount `
-                            -ResourceGroupName $ResourceGroupName `
-                            -Name $resolvedFoundryName `
-                            -PublicNetworkAccess "Enabled" `
-                            -NetworkRuleSet $networkRuleSet `
-                            -Force
+            Invoke-WithRetry -OperationName "Network access update" -ScriptBlock {
+                if ($PSCmdlet.ShouldProcess($target, "Enable public network access and set DefaultAction=Allow")) {
+                    # Enable public network access at the account level
+                    Set-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $resolvedFoundryName -PublicNetworkAccess "Enabled" -Force -ErrorAction Stop
+
+                    # Use the dedicated network rule cmdlet if available, otherwise fallback to account-level setting
+                    if (Get-Command -Name Update-AzCognitiveServicesAccountNetworkRuleSet -ErrorAction SilentlyContinue) {
+                        Update-AzCognitiveServicesAccountNetworkRuleSet -ResourceGroupName $ResourceGroupName -Name $resolvedFoundryName -DefaultAction Allow -ErrorAction Stop
+                    } else {
+                        Write-Verbose "Update-AzCognitiveServicesAccountNetworkRuleSet not available; using account-level NetworkRuleSet"
+                        $networkRuleSet = @{ DefaultAction = 'Allow' }
+                        Set-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $resolvedFoundryName -NetworkRuleSet $networkRuleSet -Force -ErrorAction Stop
                     }
-                    break
-                } catch {
-                    $msg = $_.Exception.Message
-                    if ($msg -match 'Conflict' -or $msg -match 'Too Many Requests' -or $msg -match 'temporar') {
-                        $backoff = [Math]::Min(60, 3 * $i)
-                        Write-Warning "Update conflict/transient error: $msg. Retrying in $backoff s..."
-                        Start-Sleep -Seconds $backoff
-                        continue
-                    }
-                    throw
                 }
             }
 
+            # Verify the changes
             $updatedAccount = Get-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $resolvedFoundryName
-            Write-Host "Updated public network access: $($updatedAccount.Properties.PublicNetworkAccess)"
-            Write-Host "Updated network ACLs default action: $($updatedAccount.Properties.NetworkAcls.DefaultAction)"
+            $updatedPublicNetworkAccess = Get-AccountProperty $updatedAccount 'PublicNetworkAccess' '<not set>'
+            $updatedDefaultAction = Get-AccountProperty $updatedAccount 'NetworkAcls.DefaultAction' '<not set>'
+            
+            Write-Host "Updated public network access: $updatedPublicNetworkAccess"
+            Write-Host "Updated network ACLs default action: $updatedDefaultAction"
 
-            if ($updatedAccount.Properties.PublicNetworkAccess -eq "Enabled" -and $updatedAccount.Properties.NetworkAcls.DefaultAction -eq "Allow") {
+            if ($updatedPublicNetworkAccess -eq "Enabled" -and $updatedDefaultAction -eq "Allow") {
                 Write-Host "✅ Public network access enabled for AI Foundry service" -ForegroundColor Green
             } else {
                 Write-Warning "⚠️ Network access may not be fully updated yet. Proceeding."
             }
 
-            # Export name and endpoint for later steps
+            # Export environment variables for downstream steps
             "AI_FOUNDRY_NAME=$resolvedFoundryName" | Out-File -FilePath $env:GITHUB_ENV -Append
-            $endpoint = $updatedAccount.Properties.Endpoint
-            if ([string]::IsNullOrEmpty($endpoint) -and $updatedAccount.PSObject.Properties.Name -contains 'Endpoint') { $endpoint = $updatedAccount.Endpoint }
+            
+            $endpoint = Get-AccountProperty $updatedAccount 'Endpoint'
             if (-not [string]::IsNullOrEmpty($endpoint)) {
                 "AZURE_OPENAI_ENDPOINT=$endpoint" | Out-File -FilePath $env:GITHUB_ENV -Append
                 Write-Host "Exported endpoint: $endpoint"

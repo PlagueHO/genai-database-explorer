@@ -90,12 +90,12 @@ function Set-AzureStorageForTests {
 
             # Ensure public access is enabled for the duration of tests
             Write-Verbose "Enabling public network access on Storage Account: $($storage.StorageAccountName)"
-            Update-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $storage.StorageAccountName -PublicNetworkAccess Enabled -AllowBlobPublicAccess $true -Force | Out-Null
+            Set-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $storage.StorageAccountName -PublicNetworkAccess Enabled -AllowBlobPublicAccess $true -Force | Out-Null
 
             # Attempt to set network rule default action to Allow (ignore if not supported)
             try {
                 Write-Verbose "Updating storage network rule set to Allow"
-                Update-AzStorageAccountNetworkRuleSet -ResourceGroupName $ResourceGroupName -Name $storage.StorageAccountName -DefaultAction Allow | Out-Null
+                Set-AzStorageAccountNetworkRuleSet -ResourceGroupName $ResourceGroupName -Name $storage.StorageAccountName -DefaultAction Allow | Out-Null
             } catch {
                 Write-Warning "Could not update storage network rule set: $($_.Exception.Message)"
             }
