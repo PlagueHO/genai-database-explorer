@@ -89,21 +89,28 @@ function Invoke-IntegrationTests {
             # Configure Pester
             $config = New-PesterConfiguration
             $config.Run.Path = $TestScriptPath
-            # Ensure PERSISTENCE_STRATEGY is available to the test script via environment or explicit argument
-            if (-not $env:PERSISTENCE_STRATEGY -and $env:PERSISTENCE_STRATEGY) {
-                # no-op; env already set
-            }
-            # Build argument list for the test script so parameters are passed reliably
-            $argumentList = @()
-            if ($env:PERSISTENCE_STRATEGY) { $argumentList += '-PersistenceStrategy'; $argumentList += $env:PERSISTENCE_STRATEGY }
-            if ($env:TEST_FILTER) { $argumentList += '-TestFilter'; $argumentList += $env:TEST_FILTER }
-            if ($argumentList.Count -gt 0) { $config.Run.ArgumentList = $argumentList }
             $config.Output.Verbosity = 'Detailed'
             $config.TestResult.Enabled = $true
             $config.TestResult.OutputFormat = 'NUnitXml'
             $config.TestResult.OutputPath = Join-Path $TestResultsPath 'integration-tests.xml'
             $config.CodeCoverage.Enabled = $false
             $config.Should.ErrorAction = 'Continue'
+            
+            # Set up script arguments using script parameters (Pester v5 approach)
+            # Pass arguments directly via ScriptParameters hashtable if available
+            $scriptParameters = @{}
+            if ($env:PERSISTENCE_STRATEGY) { 
+                $scriptParameters['PersistenceStrategy'] = $env:PERSISTENCE_STRATEGY 
+            }
+            if ($env:TEST_FILTER) { 
+                $scriptParameters['TestFilter'] = $env:TEST_FILTER 
+            }
+            
+            # Use Container approach for script parameters in Pester v5
+            if ($scriptParameters.Count -gt 0) {
+                $container = New-PesterContainer -Path $TestScriptPath -Data $scriptParameters
+                $config.Run.Container = $container
+            }
 
             Write-Host "Running Pester with test script: $($config.Run.Path)"
             Write-Verbose "Test results will be saved to: $($config.TestResult.OutputPath)"
