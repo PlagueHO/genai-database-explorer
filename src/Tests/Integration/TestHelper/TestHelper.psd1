@@ -46,15 +46,6 @@
 
             # Release notes for this module
             ReleaseNotes = @'
-## 1.0.1
-- Added Set-TestProjectConfiguration function for unified test project setup (database and Azure OpenAI settings)
-
-## 1.0.0
-- Initial release
-- Added Initialize-TestProject function for project setup
-- Added Set-ProjectSettings function for configuration management
-- Added Invoke-ConsoleCommand function for standardized command execution
-- Added New-TestDataDictionary function for test data creation
 '@
         }
     }

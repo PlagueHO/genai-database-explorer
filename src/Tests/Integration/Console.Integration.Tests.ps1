@@ -47,120 +47,130 @@ param(
 # Import the TestHelper module for fixture support functions
 Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelper\TestHelper.psd1') -Force
 
-# Helper functions for cleaner parameter and environment handling
-function Get-ParameterOrEnvironment {
-    param(
-        [string]$ParameterValue,
-        [string]$EnvironmentName,
-        [string]$DefaultValue = $null
-    )
-    
-    if (-not [string]::IsNullOrEmpty($ParameterValue)) {
-        return $ParameterValue
-    }
-    
-    $envValue = Get-Item -Path "Env:$EnvironmentName" -ErrorAction SilentlyContinue
-    if ($envValue -and -not [string]::IsNullOrEmpty($envValue.Value)) {
-        return $envValue.Value
-    }
-    
-    return $DefaultValue
-}
-
-function Initialize-TestEnvironment {
-    param(
-        [string]$PersistenceStrategy,
-        [string]$TestFilter
-    )
-    
-    # Resolve parameters from environment if not explicitly provided
-    $resolvedStrategy = Get-ParameterOrEnvironment -ParameterValue $PersistenceStrategy -EnvironmentName 'PERSISTENCE_STRATEGY' -DefaultValue 'LocalDisk'
-    $resolvedFilter = Get-ParameterOrEnvironment -ParameterValue $TestFilter -EnvironmentName 'TEST_FILTER'
-    
-    # Determine test modes
-    $noAzureMode = $resolvedFilter -and ($resolvedFilter.ToString().Trim().ToLower() -eq 'no-azure')
-    
-    # Collect environment variables into a hashtable
-    $environmentVars = @{
-        SQL_CONNECTION_STRING = $env:SQL_CONNECTION_STRING
-        AZURE_OPENAI_ENDPOINT = $env:AZURE_OPENAI_ENDPOINT
-        AZURE_OPENAI_API_KEY = $env:AZURE_OPENAI_API_KEY
-        AZURE_STORAGE_ACCOUNT_ENDPOINT = $env:AZURE_STORAGE_ACCOUNT_ENDPOINT
-        AZURE_STORAGE_CONTAINER = $env:AZURE_STORAGE_CONTAINER
-        AZURE_STORAGE_BLOB_PREFIX = $env:AZURE_STORAGE_BLOB_PREFIX
-        AZURE_COSMOS_DB_ACCOUNT_ENDPOINT = $env:AZURE_COSMOS_DB_ACCOUNT_ENDPOINT
-        AZURE_COSMOS_DB_DATABASE_NAME = $env:AZURE_COSMOS_DB_DATABASE_NAME
-        AZURE_COSMOS_DB_MODELS_CONTAINER = $env:AZURE_COSMOS_DB_MODELS_CONTAINER
-        AZURE_COSMOS_DB_ENTITIES_CONTAINER = $env:AZURE_COSMOS_DB_ENTITIES_CONTAINER
-        PERSISTENCE_STRATEGY = $resolvedStrategy
-    }
-    
-    # Log missing environment variables
-    $optionalVars = $environmentVars.Keys
-    foreach ($varName in $optionalVars) {
-        if ([string]::IsNullOrEmpty($environmentVars[$varName])) {
-            Write-Verbose "Environment variable '$varName' is not set. Using default value for testing." -Verbose
-        }
-    }
-    
-    return @{
-        PersistenceStrategy = $resolvedStrategy
-        TestFilter = $resolvedFilter
-        NoAzureMode = $noAzureMode
-        Environment = $environmentVars
-    }
-}
-
-function Test-RequiredEnvironmentVariables {
-    param(
-        [hashtable]$Environment,
-        [bool]$NoAzureMode
-    )
-    
-    $requiredVars = @('SQL_CONNECTION_STRING', 'AZURE_OPENAI_ENDPOINT', 'AZURE_OPENAI_API_KEY')
-    $missingVars = $requiredVars | Where-Object { [string]::IsNullOrEmpty($Environment[$_]) }
-    
-    if ($missingVars.Count -gt 0) {
-        if ($NoAzureMode) {
-            Write-Verbose "NoAzure mode active (TEST_FILTER=no-azure): skipping required env var enforcement" -Verbose
-            return $true
-        } else {
-            Write-Warning "Missing required environment variables: $($missingVars -join ', ')"
-            throw "Missing required environment variables: $($missingVars -join ', ')"
-        }
-    }
-    
-    return $true
-}
-
-function Initialize-TestWorkspace {
-    param(
-        [string]$ConsoleAppPath
-    )
-    
-    # Create test workspace
-    $testWorkspace = New-Item -ItemType Directory -Path (Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "genaidb-integration-test-$(Get-Random)") -Force
-    $baseProjectPath = Join-Path -Path $testWorkspace.FullName -ChildPath "projects"
-    New-Item -ItemType Directory -Path $baseProjectPath -Force | Out-Null
-    
-    # Validate console app
-    if (-not (Test-Path -Path $ConsoleAppPath)) {
-        throw "Console application not found at: $ConsoleAppPath"
-    }
-    
-    if (-not $IsWindows) {
-        & chmod +x $ConsoleAppPath 2>&1 | Out-Null
-    }
-    
-    return @{
-        TestWorkspace = $testWorkspace
-        BaseProjectPath = $baseProjectPath
-        ConsoleAppPath = $ConsoleAppPath
-    }
-}
-
 Describe 'GenAI Database Explorer Console Application' {
     BeforeAll {
+        # Helper functions for cleaner parameter and environment handling
+        function Get-ParameterOrEnvironment {
+            param(
+                [string]$ParameterValue,
+                [string]$EnvironmentName,
+                [string]$DefaultValue = $null
+            )
+            
+            if (-not [string]::IsNullOrEmpty($ParameterValue)) {
+                return $ParameterValue
+            }
+            
+            $envValue = Get-Item -Path "Env:$EnvironmentName" -ErrorAction SilentlyContinue
+            if ($envValue -and -not [string]::IsNullOrEmpty($envValue.Value)) {
+                return $envValue.Value
+            }
+            
+            return $DefaultValue
+        }
+
+        function Initialize-TestEnvironment {
+            param(
+                [string]$PersistenceStrategy,
+                [string]$TestFilter
+            )
+            
+            # Resolve parameters from environment if not explicitly provided
+            $resolvedStrategy = Get-ParameterOrEnvironment -ParameterValue $PersistenceStrategy -EnvironmentName 'PERSISTENCE_STRATEGY' -DefaultValue 'LocalDisk'
+            $resolvedFilter = Get-ParameterOrEnvironment -ParameterValue $TestFilter -EnvironmentName 'TEST_FILTER'
+            
+            # Determine test modes
+            $noAzureMode = $resolvedFilter -and ($resolvedFilter.ToString().Trim().ToLower() -eq 'no-azure')
+            
+            # Collect environment variables into a hashtable
+            $environmentVars = @{
+                SQL_CONNECTION_STRING = $env:SQL_CONNECTION_STRING
+                AZURE_OPENAI_ENDPOINT = $env:AZURE_OPENAI_ENDPOINT
+                AZURE_OPENAI_API_KEY = $env:AZURE_OPENAI_API_KEY
+                AZURE_STORAGE_ACCOUNT_ENDPOINT = $env:AZURE_STORAGE_ACCOUNT_ENDPOINT
+                AZURE_STORAGE_CONTAINER = $env:AZURE_STORAGE_CONTAINER
+                AZURE_STORAGE_BLOB_PREFIX = $env:AZURE_STORAGE_BLOB_PREFIX
+                AZURE_COSMOS_DB_ACCOUNT_ENDPOINT = $env:AZURE_COSMOS_DB_ACCOUNT_ENDPOINT
+                AZURE_COSMOS_DB_DATABASE_NAME = $env:AZURE_COSMOS_DB_DATABASE_NAME
+                AZURE_COSMOS_DB_MODELS_CONTAINER = $env:AZURE_COSMOS_DB_MODELS_CONTAINER
+                AZURE_COSMOS_DB_ENTITIES_CONTAINER = $env:AZURE_COSMOS_DB_ENTITIES_CONTAINER
+                PERSISTENCE_STRATEGY = $resolvedStrategy
+            }
+            
+            # Log missing environment variables
+            $optionalVars = $environmentVars.Keys
+            foreach ($varName in $optionalVars) {
+                if ([string]::IsNullOrEmpty($environmentVars[$varName])) {
+                    Write-Verbose "Environment variable '$varName' is not set. Using default value for testing." -Verbose
+                }
+            }
+            
+            return @{
+                PersistenceStrategy = $resolvedStrategy
+                TestFilter = $resolvedFilter
+                NoAzureMode = $noAzureMode
+                Environment = $environmentVars
+            }
+        }
+
+        function Test-RequiredEnvironmentVariables {
+            param(
+                [hashtable]$Environment,
+                [bool]$NoAzureMode
+            )
+            
+            $requiredVars = @('SQL_CONNECTION_STRING', 'AZURE_OPENAI_ENDPOINT', 'AZURE_OPENAI_API_KEY')
+            $missingVars = $requiredVars | Where-Object { [string]::IsNullOrEmpty($Environment[$_]) }
+            
+            if ($missingVars.Count -gt 0) {
+                if ($NoAzureMode) {
+                    Write-Verbose "NoAzure mode active (TEST_FILTER=no-azure): skipping required env var enforcement" -Verbose
+                    return $true
+                } else {
+                    Write-Warning "Missing required environment variables: $($missingVars -join ', ')"
+                    throw "Missing required environment variables: $($missingVars -join ', ')"
+                }
+            }
+            
+            return $true
+        }
+
+        function Initialize-TestWorkspace {
+            param(
+                [string]$ConsoleAppPath
+            )
+
+            # Prefer Pester's TestDrive for ephemeral workspace; fallback to OS temp when not under Pester
+            $testDriveRoot = 'TestDrive:\'
+            if (-not (Test-Path -LiteralPath $testDriveRoot)) {
+                $tempRoot = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ("genaidb-integration-test-" + [Guid]::NewGuid().ToString('N'))
+                New-Item -ItemType Directory -Path $tempRoot -Force | Out-Null
+                $testDriveRoot = $tempRoot
+            }
+
+            $testWorkspacePath = Join-Path -Path $testDriveRoot -ChildPath 'workspace'
+            New-Item -ItemType Directory -Path $testWorkspacePath -Force | Out-Null
+
+            $baseProjectPath = Join-Path -Path $testWorkspacePath -ChildPath 'projects'
+            New-Item -ItemType Directory -Path $baseProjectPath -Force | Out-Null
+
+            # Validate console app
+            if (-not (Test-Path -Path $ConsoleAppPath)) {
+                throw "Console application not found at: $ConsoleAppPath"
+            }
+
+            # Ensure executable bit on non-Windows (usually already handled in CI step)
+            if (-not $IsWindows) {
+                & chmod +x $ConsoleAppPath 2>&1 | Out-Null
+            }
+
+            return @{
+                TestWorkspace  = (Get-Item -LiteralPath $testWorkspacePath)
+                BaseProjectPath = $baseProjectPath
+                ConsoleAppPath  = $ConsoleAppPath
+            }
+        }
+
         # Initialize test configuration from parameters and environment
         $testConfig = Initialize-TestEnvironment -PersistenceStrategy $PersistenceStrategy -TestFilter $TestFilter
         
@@ -672,14 +682,6 @@ Describe 'GenAI Database Explorer Console Application' {
     }
 
     AfterAll {
-        # Cleanup: Remove test workspace if it exists
-        if ($script:TestWorkspace -and (Test-Path -Path $script:TestWorkspace)) {
-            try {
-                Remove-Item -Path $script:TestWorkspace -Recurse -Force -ErrorAction SilentlyContinue
-            } catch {
-                Write-Warning "Failed to clean up test workspace: $($_.Exception.Message)"
-            }
-        }
     }
 }
 
