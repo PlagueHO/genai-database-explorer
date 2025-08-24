@@ -304,7 +304,7 @@ function Set-TestProjectConfiguration {
     .PARAMETER EmbeddingDeploymentId
         The deployment ID for the text embedding model (default: 'text-embedding-ada-002').
     .PARAMETER PersistenceStrategy
-        The persistence strategy for semantic model storage. Valid values: 'LocalDisk', 'AzureBlob', 'CosmosDB'.
+        The persistence strategy for semantic model storage. Valid values: 'LocalDisk', 'AzureBlob', 'CosmosDb'.
 
     .PARAMETER AzureStorageAccountEndpoint
         The Azure Storage account endpoint (required for AzureBlob persistence).
@@ -316,7 +316,7 @@ function Set-TestProjectConfiguration {
         The blob prefix for Azure Storage (optional).
 
     .PARAMETER AzureCosmosDbAccountEndpoint
-        The Azure Cosmos DB account endpoint (required for CosmosDB persistence).
+        The Azure Cosmos DB account endpoint (required for CosmosDb persistence).
 
     .PARAMETER AzureCosmosDbDatabaseName
         The Cosmos DB database name (optional, defaults to 'SemanticModels').
@@ -368,7 +368,7 @@ function Set-TestProjectConfiguration {
         [string]$EmbeddingDeploymentId = 'text-embedding-ada-002',
 
         [Parameter()]
-        [ValidateSet('LocalDisk', 'AzureBlob', 'CosmosDB')]
+        [ValidateSet('LocalDisk', 'AzureBlob', 'CosmosDb')]
         [string]$PersistenceStrategy = 'LocalDisk',
 
         [Parameter()]
@@ -440,7 +440,7 @@ function Set-TestProjectConfiguration {
                 BlobPrefix      = $AzureStorageBlobPrefix
             }
         }
-        'CosmosDB' {
+        'CosmosDb' {
             $repoConfig.CosmosDb = @{
                 AccountEndpoint        = $AzureCosmosDbAccountEndpoint
                 DatabaseName           = ($AzureCosmosDbDatabaseName -or 'SemanticModels')
