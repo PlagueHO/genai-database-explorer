@@ -89,6 +89,15 @@ function Invoke-IntegrationTests {
             # Configure Pester
             $config = New-PesterConfiguration
             $config.Run.Path = $TestScriptPath
+            # Ensure PERSISTENCE_STRATEGY is available to the test script via environment or explicit argument
+            if (-not $env:PERSISTENCE_STRATEGY -and $env:PERSISTENCE_STRATEGY) {
+                # no-op; env already set
+            }
+            # Build argument list for the test script so parameters are passed reliably
+            $argumentList = @()
+            if ($env:PERSISTENCE_STRATEGY) { $argumentList += '-PersistenceStrategy'; $argumentList += $env:PERSISTENCE_STRATEGY }
+            if ($env:TEST_FILTER) { $argumentList += '-TestFilter'; $argumentList += $env:TEST_FILTER }
+            if ($argumentList.Count -gt 0) { $config.Run.ArgumentList = $argumentList }
             $config.Output.Verbosity = 'Detailed'
             $config.TestResult.Enabled = $true
             $config.TestResult.OutputFormat = 'NUnitXml'
