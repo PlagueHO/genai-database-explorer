@@ -31,7 +31,7 @@ resource secrets 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = [
 //   Outputs   //
 // =========== //
 
-import { secretSetOutputType } from 'br/public:avm/utl/types/avm-common-types:0.6.0'
+import { secretSetOutputType } from 'br/public:avm/utl/types/avm-common-types:0.6.1'
 @description('The references to the secrets exported to the provided Key Vault.')
 output secretsSet secretSetOutputType[] = [
   #disable-next-line outputs-should-not-contain-secrets // Only returning the references, not a secret value

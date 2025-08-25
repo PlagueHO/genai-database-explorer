@@ -4,6 +4,7 @@ using GenAIDBExplorer.Core.Repository;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Resources;
+using System.IO;
 
 namespace GenAIDBExplorer.Core.SemanticModelProviders;
 
@@ -111,9 +112,19 @@ public sealed class SemanticModelProvider(
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to load semantic model using repository from '{SemanticModelPath}', falling back to direct loading", semanticModelPath.FullName);
-            // TODO: Remove this fallback once SemanticModelRepository is fully integrated and tested
-            return await CreateSemanticModel().LoadModelAsync(semanticModelPath);
+            _logger.LogWarning(ex, "Failed to load semantic model using repository from '{SemanticModelPath}', attempting direct load or fallback to empty", semanticModelPath.FullName);
+            try
+            {
+                return await CreateSemanticModel().LoadModelAsync(semanticModelPath);
+            }
+            catch (FileNotFoundException)
+            {
+                return CreateSemanticModel();
+            }
+            catch (DirectoryNotFoundException)
+            {
+                return CreateSemanticModel();
+            }
         }
     }
 
@@ -155,11 +166,21 @@ public sealed class SemanticModelProvider(
         {
             semanticModel = await _semanticModelRepository.LoadModelAsync(modelPath, options);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not FileNotFoundException && ex is not DirectoryNotFoundException)
         {
-            _logger.LogWarning(ex, "Failed to load semantic model using repository, falling back to direct loading");
-            // TODO: Remove this fallback once SemanticModelRepository is fully integrated and tested
-            semanticModel = await CreateSemanticModel().LoadModelAsync(modelPath);
+            _logger.LogWarning(ex, "Failed to load semantic model using repository, attempting direct load or fallback to empty");
+            try
+            {
+                semanticModel = await CreateSemanticModel().LoadModelAsync(modelPath);
+            }
+            catch (FileNotFoundException)
+            {
+                throw;
+            }
+            catch (DirectoryNotFoundException)
+            {
+                throw;
+            }
         }
 
         _logger.LogInformation("{Message} '{SemanticModelName}' (LazyLoading: {IsLazyLoadingEnabled}, ChangeTracking: {IsChangeTrackingEnabled})",

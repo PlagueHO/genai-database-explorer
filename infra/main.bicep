@@ -231,7 +231,7 @@ module aiFoundryRoleAssignments './core/security/role_aifoundry.bicep' = {
 var sqlAdminPrincipalType = principalIdType == 'ServicePrincipal' ? 'Application' : (principalIdType == 'User' ? 'User' : 'Application')
 
 // --------- SQL DATABASE ---------
-module sqlServer 'br/public:avm/res/sql/server:0.20.0' = {
+module sqlServer 'br/public:avm/res/sql/server:0.20.2' = {
   name: 'sql-server-deployment-${resourceToken}'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [
@@ -291,7 +291,7 @@ module sqlServer 'br/public:avm/res/sql/server:0.20.0' = {
 }
 
 // --------- COSMOS DB ---------
-module cosmosDbAccount 'br/public:avm/res/document-db/database-account:0.15.0' = if (cosmosDbDeploy) {
+module cosmosDbAccount 'br/public:avm/res/document-db/database-account:0.15.1' = if (cosmosDbDeploy) {
   name: 'cosmos-db-account-deployment-${resourceToken}'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [
@@ -373,7 +373,7 @@ module cosmosDbDataPlaneRoleAssignments './core/security/role_cosmosdb.bicep' = 
 }
 
 // --------- STORAGE ACCOUNT ---------
-module storageAccount 'br/public:avm/res/storage/storage-account:0.25.0' = if (storageAccountDeploy) {
+module storageAccount 'br/public:avm/res/storage/storage-account:0.26.2' = if (storageAccountDeploy) {
   name: 'storage-account-deployment-${resourceToken}'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [
@@ -398,12 +398,6 @@ module storageAccount 'br/public:avm/res/storage/storage-account:0.25.0' = if (s
       {
         name: 'send-to-log-analytics'
         workspaceResourceId: logAnalyticsWorkspace.outputs.resourceId
-        logCategoriesAndGroups: [
-          {
-            categoryGroup: 'allLogs'
-            enabled: true
-          }
-        ]
         metricCategories: [
           {
             category: 'AllMetrics'
@@ -427,7 +421,7 @@ module storageAccount 'br/public:avm/res/storage/storage-account:0.25.0' = if (s
 }
 
 // --------- AI SEARCH (OPTIONAL) ---------
-module aiSearchService 'br/public:avm/res/search/search-service:0.11.0' = if (azureAiSearchDeploy) {
+module aiSearchService 'br/public:avm/res/search/search-service:0.11.1' = if (azureAiSearchDeploy) {
   name: 'ai-search-service-deployment-${resourceToken}'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [

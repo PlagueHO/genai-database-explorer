@@ -144,20 +144,35 @@ public class DataDictionaryCommandHandler(
             {
                 case "table":
 
-                    await _dataDictionaryProvider.EnrichSemanticModelFromDataDictionaryAsync(
-                        semanticModel,
-                        sourcePathPattern,
-                        commandOptions.SchemaName,
-                        commandOptions.ObjectName);
+                    try
+                    {
+                        await _dataDictionaryProvider.EnrichSemanticModelFromDataDictionaryAsync(
+                            semanticModel,
+                            sourcePathPattern,
+                            commandOptions.SchemaName,
+                            commandOptions.ObjectName);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to enrich semantic model from data dictionary at '{SourcePath}'. Continuing.", sourcePathPattern);
+                    }
+
                     if (commandOptions.Show)
                     {
-                        if (commandOptions.SchemaName != null && commandOptions.ObjectName != null)
+                        try
                         {
-                            await ShowTableDetailsAsync(semanticModel, commandOptions.SchemaName, commandOptions.ObjectName);
+                            if (commandOptions.SchemaName != null && commandOptions.ObjectName != null)
+                            {
+                                await ShowTableDetailsAsync(semanticModel, commandOptions.SchemaName, commandOptions.ObjectName);
+                            }
+                            else
+                            {
+                                _logger.LogWarning("Cannot show table details: SchemaName or ObjectName is null");
+                            }
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            _logger.LogWarning("Cannot show table details: SchemaName or ObjectName is null");
+                            _logger.LogWarning(ex, "Failed to display table details after enrichment");
                         }
                     }
                     break;

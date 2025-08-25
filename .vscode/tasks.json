@@ -5,8 +5,7 @@
 		{
 			"label": "dotnet-build-solution",
 			"icon": {
-				"light": "images/light/dotnet.svg",
-				"dark": "images/dark/dotnet.svg"
+				"id": "terminal"
 			},
 			"command": "dotnet",
 			"type": "process",
@@ -206,7 +205,7 @@
 		{
 			"label": "cli-init-project-temp",
 			"icon": {
-				"id": "folder-opened"
+				"id": "folder"
 			},
 			"type": "process",
 			"command": "dotnet",
@@ -381,6 +380,27 @@
 				"cwd": "${workspaceFolder}/src/GenAIDBExplorer"
 			},
 			"problemMatcher": "$msCompile"
+		},
+
+        // Bicep tasks
+		{
+			"label": "Build Bicep",
+			"icon": {
+				"id": "azure"
+			},
+			"type": "shell",
+			"command": "pwsh",
+			"args": [
+				"-NoProfile",
+				"-Command",
+				"bicep build .\\infra\\main.bicep; Get-ChildItem -Path .\\infra -Filter 'main.bicep' -Recurse | ForEach-Object { if ($_.FullName -ne (Resolve-Path '.\\infra\\main.bicep').Path) { bicep build $_.FullName } }"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
+			"presentation": { "reveal": "always" },
+			"problemMatcher": []
 		}
 	]
 }
