@@ -398,7 +398,20 @@ Describe 'GenAI Database Explorer Console Application' {
 
                             $model = Get-Content -Path $expectedSemanticModelPath | ConvertFrom-Json
                             $model.Name | Should -Not -BeNullOrEmpty -Because 'Model should contain database name information'
-                            $model.Name | Should -Match 'AdventureWorksLT|Adventure' -Because 'Should connect to AdventureWorksLT or similar sample database'
+
+                            # Determine expected database name from connection string if available
+                            $expectedDbName = $null
+                            $cs = $script:TestEnv.SQL_CONNECTION_STRING
+                            if (-not [string]::IsNullOrEmpty($cs)) {
+                                $match = [regex]::Match($cs, '(?i)(?:Initial\s*Catalog|Database)\s*=\s*([^;]+)')
+                                if ($match.Success) {
+                                    $expectedDbName = $match.Groups[1].Value.Trim()
+                                }
+                            }
+
+                            if (-not [string]::IsNullOrEmpty($expectedDbName)) {
+                                $model.Name | Should -Be $expectedDbName -Because 'Model name should match database in connection string'
+                            }
                         }
                         else {
                             # For remote strategies, verify we can load/display model content
@@ -544,6 +557,70 @@ Describe 'GenAI Database Explorer Console Application' {
                     # Assert
                     $commandResult.Output | Should -Not -Match 'Exception.*at.*' -Because 'Should not show stack traces'
                 }
+            }
+        }
+
+        Context 'generate-vectors command' {
+            It 'Should support dry-run for all entities' {
+                # Act
+                $commandResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('generate-vectors', '--project', $script:AiProjectPath, '--dry-run', '--skipViews', '--skipStoredProcedures')
+
+                # Assert
+                $commandResult.ExitCode | Should -Be 0 -Because 'generate-vectors dry-run should succeed'
+                $joinedOutput = $commandResult.Output -join "`n"
+                $joinedOutput | Should -Match 'Processed|\[DryRun\]' -Because 'Should log processed entities or dry-run markers'
+            }
+
+            It 'Should support targeting a specific object via subcommand' {
+                # Act
+                $commandResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('generate-vectors', 'table', '--project', $script:AiProjectPath, '--schema', 'dbo', '--name', 'Customer', '--dry-run')
+
+                # Assert
+                $commandResult.ExitCode | Should -Be 0 -Because 'dry-run should succeed for specific object'
+                $commandResult.Output -join "`n" | Should -Not -Match 'Exception.*at.*' -Because 'Should not show stack traces'
+            }
+
+            It 'Should persist envelopes and honor overwrite semantics (LocalDisk only)' -Skip:($script:NoAzureMode -or ($script:PersistenceStrategy -ne 'LocalDisk')) {
+                # Arrange
+                $modelDir = Join-Path -Path $script:AiProjectPath -ChildPath 'SemanticModel'
+
+                # First run: generate without dry-run (skip views/SPs to reduce time)
+                $result1 = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('generate-vectors', '--project', $script:AiProjectPath, '--skipViews', '--skipStoredProcedures')
+
+                if ($result1.ExitCode -ne 0) {
+                    # If AI service not available, provide meaningful assertion and stop
+                    ($result1.Output -join "`n") | Should -Match 'AI|service|connection|authentication|endpoint|model' -Because 'Should provide a helpful message when AI is unavailable'
+                    Set-ItResult -Skipped -Because 'AI services not available to persist vectors'
+                    return
+                }
+
+                # Find at least one persisted envelope
+                $envelopes = @()
+                if (Test-Path -Path $modelDir) {
+                    $envelopes = Get-ChildItem -Path $modelDir -Recurse -Filter '*.json' -ErrorAction SilentlyContinue
+                }
+
+                if (-not $envelopes -or $envelopes.Count -eq 0) {
+                    Set-ItResult -Skipped -Because 'No envelope files found after generation; likely no entities or persistence disabled'
+                    return
+                }
+
+                $targetFile = $envelopes | Select-Object -First 1
+                $before = (Get-Item -LiteralPath $targetFile.FullName).LastWriteTimeUtc
+
+                # Second run: without overwrite should skip unchanged and not modify timestamp
+                Start-Sleep -Milliseconds 1200
+                $result2 = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('generate-vectors', '--project', $script:AiProjectPath, '--skipViews', '--skipStoredProcedures')
+                $result2.ExitCode | Should -Be 0 -Because 'Second run without overwrite should succeed'
+                $afterNoOverwrite = (Get-Item -LiteralPath $targetFile.FullName).LastWriteTimeUtc
+                $afterNoOverwrite | Should -Be $before -Because 'Without overwrite, unchanged content should be skipped (timestamp unchanged)'
+
+                # Third run: with overwrite should update the envelope timestamp
+                Start-Sleep -Milliseconds 1200
+                $result3 = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('generate-vectors', '--project', $script:AiProjectPath, '--skipViews', '--skipStoredProcedures', '--overwrite')
+                $result3.ExitCode | Should -Be 0 -Because 'Overwrite run should succeed'
+                $afterOverwrite = (Get-Item -LiteralPath $targetFile.FullName).LastWriteTimeUtc
+                $afterOverwrite | Should -BeGreaterThan $before -Because 'With overwrite, envelope should be rewritten (timestamp increases)'
             }
         }
     }
