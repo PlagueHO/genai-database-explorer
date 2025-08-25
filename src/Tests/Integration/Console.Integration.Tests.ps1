@@ -47,6 +47,11 @@ param(
 # Import the TestHelper module for fixture support functions
 Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelper\TestHelper.psd1') -Force
 
+# Ensure discovery-safe defaults for script-scoped variables used in -Skip expressions
+# Use null-coalescing with Get-Variable to safely provide defaults at discovery time
+$script:NoAzureMode = (Get-Variable -Name 'NoAzureMode' -Scope Script -ValueOnly -ErrorAction SilentlyContinue) ?? $false
+$script:PersistenceStrategy = (Get-Variable -Name 'PersistenceStrategy' -Scope Script -ValueOnly -ErrorAction SilentlyContinue) ?? 'LocalDisk'
+
 Describe 'GenAI Database Explorer Console Application' {
     BeforeAll {
         # Helper functions for cleaner parameter and environment handling
