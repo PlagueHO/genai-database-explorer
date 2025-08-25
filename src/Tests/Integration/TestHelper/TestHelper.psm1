@@ -9,8 +9,7 @@
 
 #Requires -Version 7
 
-function Invoke-ConsoleCommand {
-    <#
+<#
     .SYNOPSIS
         Executes the console application and captures output and exit code.
 
@@ -33,7 +32,8 @@ function Invoke-ConsoleCommand {
 
     .NOTES
         This function is designed for test scenarios and captures both stdout and stderr.
-    #>
+#>
+function Invoke-ConsoleCommand {
     [CmdletBinding()]
     [OutputType([hashtable])]
     param(
@@ -55,8 +55,7 @@ function Invoke-ConsoleCommand {
     return @{ Output = $output; ExitCode = $exitCode; Command = $commandLine }
 }
 
-function Initialize-TestProject {
-    <#
+<#
     .SYNOPSIS
         Initializes a new test project by invoking the console app 'init-project' command.
 
@@ -81,7 +80,8 @@ function Initialize-TestProject {
 
     .NOTES
         This function will create the project directory if it doesn't exist.
-    #>
+#>
+function Initialize-TestProject {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
@@ -104,8 +104,7 @@ function Initialize-TestProject {
     }
 }
 
-function New-TestDataDictionary {
-    <#
+<#
     .SYNOPSIS
         Creates a simple JSON data dictionary used by tests.
 
@@ -137,7 +136,8 @@ function New-TestDataDictionary {
     .NOTES
         This function creates the parent directory if it doesn't exist and generates
         a standardized JSON structure that matches the expected data dictionary format.
-    #>
+#>
+function New-TestDataDictionary {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
@@ -183,8 +183,7 @@ function New-TestDataDictionary {
     Write-Verbose "Created test data dictionary at: $DictionaryPath" -Verbose
 }
 
-function Set-ProjectSettings {
-    <#
+<#
     .SYNOPSIS
         Writes a minimal settings.json for a test project from provided values.
 
@@ -220,7 +219,8 @@ function Set-ProjectSettings {
     .NOTES
         This function creates a complete settings.json file with all required sections
         for the GenAI Database Explorer project configuration.
-    #>
+#>
+function Set-ProjectSettings {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
@@ -270,8 +270,7 @@ function Set-ProjectSettings {
     Write-Verbose "Created project settings at: $settingsPath" -Verbose
 }
 
-function Set-TestProjectConfiguration {
-    <#
+<#
     .SYNOPSIS
         High-level helper that prepares settings.json for a test project.
 
@@ -339,7 +338,8 @@ function Set-TestProjectConfiguration {
     .NOTES
         This function builds the required configuration hashtables and delegates to Set-ProjectSettings
         for the actual file creation. It handles different persistence strategies and authentication modes.
-    #>
+#>
+function Set-TestProjectConfiguration {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
@@ -347,7 +347,7 @@ function Set-TestProjectConfiguration {
         [string]$ProjectPath,
 
         [Parameter()]
-        [string]$ConnectionString,
+        [string]$ConnectionString = 'Server=dummy;Database=TestDB;Trusted_Connection=true;',
 
         [Parameter()]
         [string]$AzureOpenAIEndpoint,
@@ -393,35 +393,35 @@ function Set-TestProjectConfiguration {
         [string]$AzureCosmosDbEntitiesContainer
     )
 
-    # Build database configuration
+    # Normalize connection string and derive database name
+    $normalizedConnectionString = ([string]::IsNullOrEmpty($ConnectionString)) ? 'Server=dummy;Database=TestDB;Trusted_Connection=true;' : $ConnectionString
+    $dbNameMatch = [regex]::Match($normalizedConnectionString, '(?i)(?:Initial\s*Catalog|Database)\s*=\s*([^;]+)')
+    $databaseName = $dbNameMatch.Success ? $dbNameMatch.Groups[1].Value.Trim() : 'TestDB'
+
     $dbConfig = @{
-        Name = 'TestDatabase'
-        ConnectionString = if ([string]::IsNullOrEmpty($ConnectionString)) {
-            'Server=dummy;Database=TestDB;Trusted_Connection=true;'
-        } else {
-            $ConnectionString
-        }
+        Name = $databaseName
+        ConnectionString = $normalizedConnectionString
     }
 
     # Build OpenAI service configuration
     $openAIConfig = @{
         Default = @{
-            ServiceType = if ($NoAzureMode) { 'OpenAI' } else { 'AzureOpenAI' }
-            AzureOpenAIEndpoint = if ($NoAzureMode) { $null } else { $AzureOpenAIEndpoint }
-            AzureOpenAIKey = if ($NoAzureMode) { $null } else { $AzureOpenAIApiKey }
-            OpenAIKey = if ($NoAzureMode) { 'dummy-openai-key' } else { $null }
+            ServiceType = ($NoAzureMode) ? 'OpenAI' : 'AzureOpenAI'
+            AzureOpenAIEndpoint = ($NoAzureMode) ? $null : $AzureOpenAIEndpoint
+            AzureOpenAIKey = ($NoAzureMode) ? $null : $AzureOpenAIApiKey
+            OpenAIKey = ($NoAzureMode) ? 'dummy-openai-key' : $null
         }
         ChatCompletion = @{
-            AzureOpenAIDeploymentId = if ($NoAzureMode) { $null } else { $ChatCompletionDeploymentId }
-            ModelId = if ($NoAzureMode) { 'gpt-4o-mini' } else { $null }
+            AzureOpenAIDeploymentId = ($NoAzureMode) ? $null : $ChatCompletionDeploymentId
+            ModelId = ($NoAzureMode) ? 'gpt-4o-mini' : $null
         }
         ChatCompletionStructured = @{
-            AzureOpenAIDeploymentId = if ($NoAzureMode) { $null } else { $ChatCompletionStructuredDeploymentId }
-            ModelId = if ($NoAzureMode) { 'gpt-4o-mini' } else { $null }
+            AzureOpenAIDeploymentId = ($NoAzureMode) ? $null : $ChatCompletionStructuredDeploymentId
+            ModelId = ($NoAzureMode) ? 'gpt-4o-mini' : $null
         }
         Embedding = @{
-            AzureOpenAIDeploymentId = if ($NoAzureMode) { $null } else { $EmbeddingDeploymentId }
-            ModelId = if ($NoAzureMode) { 'text-embedding-3-small' } else { $null }
+            AzureOpenAIDeploymentId = ($NoAzureMode) ? $null : $EmbeddingDeploymentId
+            ModelId = ($NoAzureMode) ? 'text-embedding-3-small' : $null
         }
     }
 
@@ -436,16 +436,16 @@ function Set-TestProjectConfiguration {
         'AzureBlob' {
             $repoConfig.AzureBlobStorage = @{
                 AccountEndpoint = $AzureStorageAccountEndpoint
-                ContainerName   = ($AzureStorageContainer -or 'semantic-models')
+                ContainerName   = $AzureStorageContainer ?? 'semantic-models'
                 BlobPrefix      = $AzureStorageBlobPrefix
             }
         }
         'CosmosDb' {
             $repoConfig.CosmosDb = @{
                 AccountEndpoint        = $AzureCosmosDbAccountEndpoint
-                DatabaseName           = ($AzureCosmosDbDatabaseName -or 'SemanticModels')
-                ModelsContainerName    = ($AzureCosmosDbModelsContainer -or 'Models')
-                EntitiesContainerName  = ($AzureCosmosDbEntitiesContainer -or 'ModelEntities')
+                DatabaseName           = $AzureCosmosDbDatabaseName ?? 'SemanticModels'
+                ModelsContainerName    = $AzureCosmosDbModelsContainer ?? 'Models'
+                EntitiesContainerName  = $AzureCosmosDbEntitiesContainer ?? 'ModelEntities'
             }
         }
     }

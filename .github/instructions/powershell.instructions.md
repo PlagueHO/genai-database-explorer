@@ -7,6 +7,11 @@ description: 'PowerShell cmdlet and scripting best practices based on Microsoft 
 
 This guide provides PowerShell-specific instructions to help GitHub Copilot generate idiomatic, safe, and maintainable scripts. It aligns with Microsoft’s PowerShell cmdlet development guidelines.
 
+## Language Syntax
+
+- Use PowerShell 7 language syntax and features: ternary operator, Null conditional operators, Pipeline chain operators, ForEach-Object -Parallel
+- Use $PSBoundParameters.ContainsKey() to check parameter passed.
+
 ## Naming Conventions
 
 - **Verb-Noun Format:**
