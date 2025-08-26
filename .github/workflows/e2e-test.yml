@@ -52,8 +52,44 @@ jobs:
       SQL_SERVER_USERNAME: ${{ secrets.SQL_SERVER_USERNAME }}
       SQL_SERVER_PASSWORD: ${{ secrets.SQL_SERVER_PASSWORD }}
 
-  console-app-integration-tests:
+  # Centralized networking and public access toggles to avoid matrix interference
+  pre-test-network-setup:
     needs: [provision-infrastructure]
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.ENVIRONMENT }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          enable-AzPSSession: true
+
+      - name: Enable AI Foundry Public Access
+        uses: azure/powershell@v2
+        with:
+          azPSVersion: "latest"
+          inlineScript: |
+            Import-Module ./.github/WorkflowTools/WorkflowTools.psd1 -Force
+            try {
+              Write-Host "Enabling AI Foundry public access for integration tests..." -ForegroundColor Yellow
+              Enable-AIFoundryPublicAccess -ResourceGroupName "${{ needs.provision-infrastructure.outputs.AZURE_RESOURCE_GROUP }}" -AIFoundryName "${{ needs.provision-infrastructure.outputs.AZURE_AI_FOUNDRY_NAME }}" -SqlServerName "${{ needs.provision-infrastructure.outputs.SQL_SERVER_NAME }}"
+              Write-Host "✅ Successfully enabled AI Foundry public access" -ForegroundColor Green
+            } catch {
+              if ($_.Exception.Message -match 'Conflict|provisioning state is not terminal') {
+                Write-Warning "⚠️  AI Foundry public access enable encountered conflict; proceeding as another job likely enabled it."
+              } else {
+                Write-Error "Failed to enable AI Foundry public access: $($_.Exception.Message)"
+                throw
+              }
+            }
+
+  console-app-integration-tests:
+    needs: [provision-infrastructure, pre-test-network-setup]
     uses: ./.github/workflows/console-integration-tests.yml
     with:
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
@@ -68,8 +104,73 @@ jobs:
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+  post-test-network-cleanup:
+    needs: [console-app-integration-tests]
+    runs-on: ubuntu-latest
+    if: always()
+    environment: ${{ inputs.ENVIRONMENT }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          enable-AzPSSession: true
+
+      - name: Disable AI Foundry Public Access
+        uses: azure/powershell@v2
+        with:
+          azPSVersion: "latest"
+          inlineScript: |
+            Import-Module ./.github/WorkflowTools/WorkflowTools.psd1 -Force
+            try {
+              $aiFoundryName = '${{ needs.provision-infrastructure.outputs.AZURE_AI_FOUNDRY_NAME }}'
+              if (-not [string]::IsNullOrEmpty($aiFoundryName)) {
+                Write-Host "Disabling AI Foundry public access for: $aiFoundryName" -ForegroundColor Yellow
+                Disable-AIFoundryPublicAccess -ResourceGroupName "${{ needs.provision-infrastructure.outputs.AZURE_RESOURCE_GROUP }}" -AIFoundryName $aiFoundryName
+                Write-Host "✅ Successfully disabled AI Foundry public access" -ForegroundColor Green
+              } else {
+                Write-Host "No AI Foundry service name available - skipping public access cleanup" -ForegroundColor Yellow
+              }
+            } catch {
+              if ($_.Exception.Message -match 'Conflict|provisioning state is not terminal') {
+                Write-Warning "⚠️  AI Foundry cleanup skipped due to concurrent modification by another job."
+              } else {
+                Write-Warning "⚠️  AI Foundry cleanup failed: $($_.Exception.Message)"
+              }
+            }
+
+      - name: Remove SQL Server Firewall Rule
+        uses: azure/powershell@v2
+        with:
+          azPSVersion: "latest"
+          inlineScript: |
+            Import-Module ./.github/WorkflowTools/WorkflowTools.psd1 -Force
+            try {
+              $fwNames = @(
+                "GitHubRunner-${{ github.run_id }}-LocalDisk",
+                "GitHubRunner-${{ github.run_id }}-AzureBlob",
+                "GitHubRunner-${{ github.run_id }}-CosmosDb"
+              )
+              foreach ($fwName in $fwNames) {
+                Write-Host "Removing SQL Server firewall rule: $fwName" -ForegroundColor Yellow
+                Remove-SqlServerFirewallRule -ResourceGroupName "${{ needs.provision-infrastructure.outputs.AZURE_RESOURCE_GROUP }}" -SqlServerName "${{ needs.provision-infrastructure.outputs.SQL_SERVER_NAME }}" -FirewallRuleName $fwName
+              }
+              Write-Host "✅ Successfully removed SQL Server firewall rule" -ForegroundColor Green
+            } catch {
+              if ($_.Exception.Message -match 'NotFound|does not exist') {
+                Write-Host "ℹ️  Firewall rule '$fwName' already removed or not found" -ForegroundColor Cyan
+              } else {
+                Write-Warning "⚠️  Failed to remove firewall rule '$fwName': $($_.Exception.Message)"
+              }
+            }
+
   delete-infrastructure:
-    needs: [provision-infrastructure, console-app-integration-tests]
+    needs: [provision-infrastructure, console-app-integration-tests, post-test-network-cleanup]
     if: always()
     uses: ./.github/workflows/delete-infrastructure.yml
     with:

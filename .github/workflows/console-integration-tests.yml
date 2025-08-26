@@ -99,7 +99,7 @@ jobs:
             Import-Module ./.github/WorkflowTools/WorkflowTools.psd1 -Force
             Set-CosmosDbForTests -ResourceGroupName "${{ inputs.RESOURCE_GROUP_NAME }}"
 
-      - name: Configure SQL Server Firewall for GitHub Runner
+      - name: Add SQL Server Firewall Rule
         uses: azure/powershell@v2
         with:
           azPSVersion: "latest"
@@ -107,33 +107,6 @@ jobs:
             Import-Module ./.github/WorkflowTools/WorkflowTools.psd1 -Force
             $fwName = "GitHubRunner-${{ github.run_id }}-${{ matrix.persistence }}"
             Add-SqlServerFirewallRule -ResourceGroupName "${{ inputs.RESOURCE_GROUP_NAME }}" -SqlServerName "${{ inputs.SQL_SERVER_NAME }}" -FirewallRuleName $fwName
-
-      - name: Enable Azure AI Foundry Public Access for Integration Tests
-        uses: azure/powershell@v2
-        with:
-          azPSVersion: "latest"
-          inlineScript: |
-            Import-Module ./.github/WorkflowTools/WorkflowTools.psd1 -Force
-            try {
-              Write-Host "Enabling AI Foundry public access for integration tests..." -ForegroundColor Yellow
-              Enable-AIFoundryPublicAccess -ResourceGroupName "${{ inputs.RESOURCE_GROUP_NAME }}" -AIFoundryName "${{ inputs.AZURE_AI_FOUNDRY_NAME }}" -SqlServerName "${{ inputs.SQL_SERVER_NAME }}"
-              Write-Host "✅ Successfully enabled AI Foundry public access" -ForegroundColor Green
-            } catch {
-              if ($_.Exception.Message -match 'Conflict|provisioning state is not terminal') {
-                Write-Warning "⚠️  AI Foundry public access enable encountered conflict (likely from parallel job). Waiting 30s and continuing..."
-                Start-Sleep -Seconds 30
-                # Try to verify the state without modifying it
-                try {
-                  $account = Get-AzCognitiveServicesAccount -ResourceGroupName "${{ inputs.RESOURCE_GROUP_NAME }}" -Name "${{ inputs.AZURE_AI_FOUNDRY_NAME }}" -ErrorAction Stop
-                  Write-Host "Current AI Foundry public access state: $($account.PublicNetworkAccess)" -ForegroundColor Cyan
-                } catch {
-                  Write-Warning "Could not verify AI Foundry state: $($_.Exception.Message)"
-                }
-              } else {
-                Write-Error "Failed to enable AI Foundry public access: $($_.Exception.Message)"
-                throw
-              }
-            }
 
       - name: Get Azure OpenAI API Key
         uses: azure/powershell@v2
@@ -143,7 +116,7 @@ jobs:
             Import-Module ./.github/WorkflowTools/WorkflowTools.psd1 -Force
             Get-AIFoundryApiKey -ResourceGroupName "${{ inputs.RESOURCE_GROUP_NAME }}" -AIFoundryName "${{ inputs.AZURE_AI_FOUNDRY_NAME }}" -SqlServerName "${{ inputs.SQL_SERVER_NAME }}"
 
-      - name: "Setup PowerShell and Run Console Integration Tests (${{ matrix.persistence }})"
+      - name: "Run Console Integration Tests (${{ matrix.persistence }})"
         uses: azure/powershell@v2
         with:
           azPSVersion: "latest"
@@ -230,7 +203,7 @@ jobs:
           AZURE_COSMOS_DB_MODELS_CONTAINER: ${{ env.AZURE_COSMOS_DB_MODELS_CONTAINER }}
           AZURE_COSMOS_DB_ENTITIES_CONTAINER: ${{ env.AZURE_COSMOS_DB_ENTITIES_CONTAINER }}
 
-      - name: Check Test Results File
+      - name: Check Integration Test Results File
         id: check-test-results
         if: always()
         uses: azure/powershell@v2
@@ -257,50 +230,3 @@ jobs:
             ./test-results/
             ./temp-workspaces/
           retention-days: 7
-
-      - name: Disable Azure AI Foundry Public Access After Tests
-        if: always()
-        continue-on-error: true
-        uses: azure/powershell@v2
-        with:
-          azPSVersion: "latest"
-          inlineScript: |
-            Import-Module ./.github/WorkflowTools/WorkflowTools.psd1 -Force
-            try {
-              $aiFoundryName = '${{ inputs.AZURE_AI_FOUNDRY_NAME }}'
-              if (-not [string]::IsNullOrEmpty($aiFoundryName)) {
-                Write-Host "Attempting to disable AI Foundry public access for: $aiFoundryName" -ForegroundColor Yellow
-                Disable-AIFoundryPublicAccess -ResourceGroupName "${{ inputs.RESOURCE_GROUP_NAME }}" -AIFoundryName $aiFoundryName
-                Write-Host "✅ Successfully disabled AI Foundry public access" -ForegroundColor Green
-              } else {
-                Write-Host "No AI Foundry service name available - skipping public access cleanup" -ForegroundColor Yellow
-              }
-            } catch {
-              if ($_.Exception.Message -match 'Conflict|provisioning state is not terminal') {
-                Write-Warning "⚠️  AI Foundry cleanup skipped due to concurrent modification by another job: $($_.Exception.Message)"
-                Write-Host "This is expected when multiple test jobs run in parallel. The resource will be cleaned up by the last completing job." -ForegroundColor Yellow
-              } else {
-                Write-Warning "⚠️  AI Foundry cleanup failed: $($_.Exception.Message)"
-              }
-            }
-
-      - name: Remove SQL Server Firewall Rule
-        if: always()
-        continue-on-error: true
-        uses: azure/powershell@v2
-        with:
-          azPSVersion: "latest"
-          inlineScript: |
-            Import-Module ./.github/WorkflowTools/WorkflowTools.psd1 -Force
-            try {
-              $fwName = "GitHubRunner-${{ github.run_id }}-${{ matrix.persistence }}"
-              Write-Host "Attempting to remove SQL Server firewall rule: $fwName" -ForegroundColor Yellow
-              Remove-SqlServerFirewallRule -ResourceGroupName "${{ inputs.RESOURCE_GROUP_NAME }}" -SqlServerName "${{ inputs.SQL_SERVER_NAME }}" -FirewallRuleName $fwName
-              Write-Host "✅ Successfully removed SQL Server firewall rule" -ForegroundColor Green
-            } catch {
-              if ($_.Exception.Message -match 'NotFound|does not exist') {
-                Write-Host "ℹ️  Firewall rule '$fwName' was already removed or does not exist" -ForegroundColor Cyan
-              } else {
-                Write-Warning "⚠️  Failed to remove firewall rule '$fwName': $($_.Exception.Message)"
-              }
-            }
