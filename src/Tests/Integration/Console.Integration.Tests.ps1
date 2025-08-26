@@ -448,21 +448,6 @@ Describe 'GenAI Database Explorer Console Application' {
         }
 
         Context 'data-dictionary command' {
-            BeforeAll {
-                $script:HasSemanticModel = $true
-                if ($script:PersistenceStrategy -eq 'LocalDisk') {
-                    $expectedSemanticModelPath = Join-Path -Path $script:DbProjectPath -ChildPath 'SemanticModel' -AdditionalChildPath 'semanticmodel.json'
-                    if (-not (Test-Path -Path $expectedSemanticModelPath)) {
-                        # Try to create a semantic model via extract-model; ignore output, best-effort only
-                        Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $script:DbProjectPath) | Out-Null
-                    }
-                    $script:HasSemanticModel = Test-Path -Path $expectedSemanticModelPath
-                }
-                else {
-                    # Non-LocalDisk persistence not covered by data-dictionary tests
-                    $script:HasSemanticModel = $false
-                }
-            }
             Context 'When applying data dictionary files' {
                 BeforeAll {
                     # Arrange - Create a sample data dictionary file
@@ -471,7 +456,17 @@ Describe 'GenAI Database Explorer Console Application' {
                     New-TestDataDictionary -DictionaryPath $script:DictPath -ObjectType 'table' -SchemaName 'dbo' -ObjectName 'Customer' -Description 'Customer information table'
                 }
 
-                It 'Should process dictionary files without errors' -Skip:(-not $script:HasSemanticModel) {
+                It 'Should process dictionary files without errors' -Skip:($script:PersistenceStrategy -ne 'LocalDisk') {
+                    # Ensure semantic model exists; attempt extract if missing, else skip at runtime
+                    $expectedSemanticModelPath = Join-Path -Path $script:DbProjectPath -ChildPath 'SemanticModel' -AdditionalChildPath 'semanticmodel.json'
+                    if (-not (Test-Path -Path $expectedSemanticModelPath)) {
+                        Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $script:DbProjectPath) | Out-Null
+                    }
+                    if (-not (Test-Path -Path $expectedSemanticModelPath)) {
+                        Set-ItResult -Skipped -Because 'No semantic model available to apply data dictionary'
+                        return
+                    }
+
                     # Act
                     $commandResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('data-dictionary', 'table', '--project', $script:DbProjectPath, '--source-path', $script:DictPath)
 
@@ -489,7 +484,17 @@ Describe 'GenAI Database Explorer Console Application' {
                     New-TestDataDictionary -DictionaryPath $script:ShowDictPath -ObjectType 'table' -SchemaName 'dbo' -ObjectName 'Product' -Description 'Product catalog table'
                 }
 
-                It 'Should display dictionary information with --show option' -Skip:(-not $script:HasSemanticModel) {
+                It 'Should display dictionary information with --show option' -Skip:($script:PersistenceStrategy -ne 'LocalDisk') {
+                    # Ensure semantic model exists; attempt extract if missing, else skip at runtime
+                    $expectedSemanticModelPath = Join-Path -Path $script:DbProjectPath -ChildPath 'SemanticModel' -AdditionalChildPath 'semanticmodel.json'
+                    if (-not (Test-Path -Path $expectedSemanticModelPath)) {
+                        Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $script:DbProjectPath) | Out-Null
+                    }
+                    if (-not (Test-Path -Path $expectedSemanticModelPath)) {
+                        Set-ItResult -Skipped -Because 'No semantic model available to show data dictionary modifications'
+                        return
+                    }
+
                     # Act
                     $commandResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('data-dictionary', 'table', '--project', $script:DbProjectPath, '--source-path', $script:ShowDictPath, '--show')
 
