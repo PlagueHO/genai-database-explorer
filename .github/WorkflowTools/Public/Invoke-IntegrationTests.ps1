@@ -88,7 +88,6 @@ function Invoke-IntegrationTests {
             
             # Configure Pester
             $config = New-PesterConfiguration
-            $config.Run.Path = $TestScriptPath
             $config.Output.Verbosity = 'Detailed'
             $config.TestResult.Enabled = $true
             $config.TestResult.OutputFormat = 'NUnitXml'
@@ -106,19 +105,23 @@ function Invoke-IntegrationTests {
                 $scriptParameters['TestFilter'] = $env:TEST_FILTER 
             }
             
-            # Use Container approach for script parameters in Pester v5
+            # Use Container approach for script parameters in Pester v5.
+            # IMPORTANT: Do not set Run.Path when using Run.Container (these are mutually exclusive).
             if ($scriptParameters.Count -gt 0) {
                 $container = New-PesterContainer -Path $TestScriptPath -Data $scriptParameters
-                $config.Run.Container = $container
+                $config.Run.Container = @($container)
+            }
+            else {
+                $config.Run.Path = @($TestScriptPath)
             }
 
-            Write-Host "Running Pester with test script: $($config.Run.Path)"
+            Write-Host "Running Pester with test script: $TestScriptPath"
             Write-Verbose "Test results will be saved to: $($config.TestResult.OutputPath)"
             
             # Ensure Pester returns a result object in all environments (GitHub Actions included)
             # Some runners/modules may default to no return value unless passthrough is enabled.
             $config.Run.PassThru = $true
-            $result = Invoke-Pester -Configuration $config -PassThru
+            $result = Invoke-Pester -Configuration $config
 
             # Validate test results - Check for failures and provide detailed error info
             if ($null -ne $result) {
