@@ -115,7 +115,10 @@ function Invoke-IntegrationTests {
             Write-Host "Running Pester with test script: $($config.Run.Path)"
             Write-Verbose "Test results will be saved to: $($config.TestResult.OutputPath)"
             
-            $result = Invoke-Pester -Configuration $config
+            # Ensure Pester returns a result object in all environments (GitHub Actions included)
+            # Some runners/modules may default to no return value unless passthrough is enabled.
+            $config.Run.PassThru = $true
+            $result = Invoke-Pester -Configuration $config -PassThru
 
             # Validate test results - Check for failures and provide detailed error info
             if ($null -ne $result) {
@@ -125,7 +128,12 @@ function Invoke-IntegrationTests {
                     $failedTests = 0
                     $passedTests = 0
                     
-                    # Pester v5+ uses these properties
+                    # Some environments wrap the run result in a Result property
+                    if ($result.PSObject.Properties.Name -contains 'Result' -and $null -ne $result.Result) {
+                        $result = $result.Result
+                    }
+
+                    # Pester v5+ typically exposes these properties
                     if ($result.PSObject.Properties.Name -contains 'TotalCount') {
                         $totalTests = $result.TotalCount
                         $failedTests = $result.FailedCount

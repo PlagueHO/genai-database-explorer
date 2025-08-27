@@ -237,7 +237,11 @@ function Set-ProjectSettings {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNull()]
-        [hashtable]$SemanticModelRepository
+        [hashtable]$SemanticModelRepository,
+
+        [Parameter()]
+        [ValidateSet('LocalDisk', 'AzureBlob', 'CosmosDb')]
+        [string]$PersistenceStrategy = 'LocalDisk'
     )
 
     if (-not (Test-Path -Path $ProjectPath)) {
@@ -251,7 +255,7 @@ function Set-ProjectSettings {
             ColumnTypeMapping = @()
         }
         SemanticModel          = @{
-            PersistenceStrategy = 'LocalDisk'
+            PersistenceStrategy = $PersistenceStrategy
             MaxDegreeOfParallelism = 1
         }
         SemanticModelRepository = $SemanticModelRepository
@@ -451,7 +455,7 @@ function Set-TestProjectConfiguration {
     }
 
     # Call the core settings function with properly structured configurations
-    Set-ProjectSettings -ProjectPath $ProjectPath -Database $dbConfig -OpenAIService $openAIConfig -SemanticModelRepository $repoConfig
+    Set-ProjectSettings -ProjectPath $ProjectPath -Database $dbConfig -OpenAIService $openAIConfig -SemanticModelRepository $repoConfig -PersistenceStrategy $PersistenceStrategy
 }
 
 Export-ModuleMember -Function Initialize-TestProject, Set-ProjectSettings, Invoke-ConsoleCommand, New-TestDataDictionary, Set-TestProjectConfiguration
