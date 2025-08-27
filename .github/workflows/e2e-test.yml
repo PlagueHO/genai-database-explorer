@@ -39,6 +39,7 @@ on:
 
 jobs:
   provision-infrastructure:
+    name: Provision Infrastructure
     uses: ./.github/workflows/provision-infrastructure.yml
     with:
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
@@ -54,6 +55,7 @@ jobs:
 
   # Centralized networking and public access toggles to avoid matrix interference
   pre-test-network-setup:
+    name: Pre-Test Network Setup
     needs: [provision-infrastructure]
     runs-on: ubuntu-latest
     environment: ${{ inputs.ENVIRONMENT }}
@@ -89,6 +91,7 @@ jobs:
             }
 
   console-app-integration-tests:
+    name: Run Console App Integration Tests
     needs: [provision-infrastructure, pre-test-network-setup]
     uses: ./.github/workflows/console-integration-tests.yml
     with:
@@ -105,6 +108,7 @@ jobs:
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
   post-test-network-cleanup:
+    name: Post-Test Network Cleanup
     needs: [console-app-integration-tests]
     runs-on: ubuntu-latest
     if: always()
@@ -170,6 +174,7 @@ jobs:
             }
 
   delete-infrastructure:
+    name: Delete Provisioned Infrastructure
     needs: [provision-infrastructure, console-app-integration-tests, post-test-network-cleanup]
     if: always()
     uses: ./.github/workflows/delete-infrastructure.yml

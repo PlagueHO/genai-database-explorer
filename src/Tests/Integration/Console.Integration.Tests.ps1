@@ -622,10 +622,23 @@ Describe 'GenAI Database Explorer Console Application' {
                     return
                 }
 
-                # Find at least one persisted envelope
+                # Find at least one persisted envelope (exclude semanticmodel.json)
                 $envelopes = @()
                 if (Test-Path -Path $modelDir) {
-                    $envelopes = Get-ChildItem -Path $modelDir -Recurse -Filter '*.json' -ErrorAction SilentlyContinue
+                    # Prefer envelopes in entity folders where embeddings are written
+                    $entityDirs = @('tables', 'views', 'storedprocedures') |
+                        ForEach-Object { Join-Path -Path $modelDir -ChildPath $_ } |
+                        Where-Object { Test-Path -Path $_ }
+
+                    foreach ($dir in $entityDirs) {
+                        $envelopes += Get-ChildItem -Path $dir -Recurse -Filter '*.json' -ErrorAction SilentlyContinue
+                    }
+
+                    # Fallback: search all JSONs under model dir and filter out semanticmodel.json
+                    if (-not $envelopes -or $envelopes.Count -eq 0) {
+                        $envelopes = Get-ChildItem -Path $modelDir -Recurse -Filter '*.json' -ErrorAction SilentlyContinue |
+                            Where-Object { $_.Name -ne 'semanticmodel.json' }
+                    }
                 }
 
                 if (-not $envelopes -or $envelopes.Count -eq 0) {
