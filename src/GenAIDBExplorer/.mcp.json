@@ -1,19 +1,14 @@
 {
+    "inputs": [],
     "servers": {
-          "microsoft.docs.mcp": {
-            "type": "http",
-            "url": "https://learn.microsoft.com/api/mcp"
-        },
-        "filesystem": {
-            "command": "npx",
-            "args": [
-                "-y",
-                "@modelcontextprotocol/server-filesystem",
-                "${input:baseDirectory}"
-            ],
-            "type": "stdio",
-            "env": {}
-        },
+		"context7": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"-y",
+				"@upstash/context7-mcp@latest"
+			]
+		},        
         "playwright": {
             "command": "npx",
             "args": [
@@ -24,27 +19,8 @@
             "env": {}
         },
         "github": {
-            "command": "npx",
-            "args": [
-                "-y",
-                "@modelcontextprotocol/server-github"
-            ],
-            "env": {
-                "GITHUB_PERSONAL_ACCESS_TOKEN": "${input:github_token}"
-            }
+            "url": "https://api.githubcopilot.com/mcp/",
+            "type": "http"
         }
-    },
-    "inputs": [
-        {
-            "id": "baseDirectory",
-            "type": "promptString",
-            "description": "Enter the base directory path for the server"
-        },
-        {
-            "id": "github_token",
-            "type": "promptString",
-            "description": "GitHub Personal Access Token",
-            "password": true
-        }        
-    ]
+    }
 }
