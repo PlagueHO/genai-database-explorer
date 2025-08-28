@@ -132,9 +132,13 @@ function Invoke-IntegrationTests {
                     $passedTests = 0
                     
                     # Some environments wrap the run result in a Result property
-                    if ($result.PSObject.Properties.Name -contains 'Result' -and $null -ne $result.Result) {
+                    if ($null -ne $result -and $result.PSObject.Properties.Name -contains 'Result' -and $null -ne $result.Result) {
                         $result = $result.Result
                     }
+
+                    # If the result is a simple string or otherwise not a rich object, prefer XML fallback
+                    $forceXmlFallback = $false
+                    if ($result -is [string]) { $forceXmlFallback = $true }
 
                     # Pester v5+ typically exposes these properties
                     if ($result.PSObject.Properties.Name -contains 'TotalCount') {
@@ -149,12 +153,64 @@ function Invoke-IntegrationTests {
                         $passedTests = ($result.Tests | Where-Object { $_.Result -eq 'Passed' }).Count
                     }
                     # Last resort - try to infer from result object properties
-                    else {
+                    elseif (-not $forceXmlFallback) {
                         Write-Warning "Unknown Pester result format. Available properties: $($result.PSObject.Properties.Name -join ', ')"
                         # Try common alternative property names
                         $totalTests = $result.Total ?? $result.TestCount ?? 0
                         $failedTests = $result.Failed ?? $result.FailureCount ?? 0
                         $passedTests = $result.Passed ?? $result.PassCount ?? 0
+
+                    }
+
+                    # If we need to fallback to XML (either forced or counts look zero), parse NUnit XML to determine test counts
+                    if ($forceXmlFallback -or $totalTests -eq 0) {
+                        try {
+                            $xmlPath = $config.TestResult.OutputPath
+                            if (Test-Path $xmlPath) {
+                                Write-Verbose "Attempting to parse NUnit XML results at: $xmlPath"
+                                [xml]$nunit = Get-Content -Path $xmlPath -Raw
+
+                                # Count <testcase> nodes as total tests
+                                $testcaseNodes = $nunit.SelectNodes('//testcase')
+                                if ($null -ne $testcaseNodes) {
+                                    $parsedTotal = $testcaseNodes.Count
+                                } else {
+                                    $parsedTotal = 0
+                                }
+
+                                # Count failures by locating <failure> nodes within testcases
+                                $failureNodes = $nunit.SelectNodes('//testcase/failure')
+                                $parsedFailed = if ($null -ne $failureNodes) { $failureNodes.Count } else { 0 }
+
+                                $parsedPassed = $parsedTotal - $parsedFailed
+
+                                if ($parsedTotal -gt 0) {
+                                    $totalTests = $parsedTotal
+                                    $failedTests = $parsedFailed
+                                    $passedTests = $parsedPassed
+                                    Write-Host "Parsed test counts from XML: Total=$totalTests, Passed=$passedTests, Failed=$failedTests" -ForegroundColor Cyan
+                                } else {
+                                    Write-Verbose "Parsed XML but found no testcase elements; attempting attribute-based parse"
+                                    $root = $nunit.testsuites ?? $nunit.testsuite ?? $nunit.'test-results'
+                                    if ($null -ne $root) {
+                                        $parsedTotal = [int]($root.total -as [int] ?? $root.tests -as [int] ?? 0)
+                                        $parsedFailed = [int]($root.failures -as [int] ?? $root.failed -as [int] ?? 0)
+                                        $parsedPassed = [int]($root.passed -as [int] ?? 0)
+                                        if ($parsedTotal -gt 0) {
+                                            $totalTests = $parsedTotal
+                                            $failedTests = $parsedFailed
+                                            $passedTests = $parsedPassed
+                                            Write-Host "Parsed test counts from XML attributes: Total=$totalTests, Passed=$passedTests, Failed=$failedTests" -ForegroundColor Cyan
+                                        }
+                                    }
+                                }
+                            } else {
+                                Write-Verbose "NUnit XML results file not found at expected path: $xmlPath"
+                            }
+                        }
+                        catch {
+                            Write-Warning "Failed to parse NUnit XML fallback: $($_.Exception.Message)"
+                        }
                     }
                     
                     Write-Host "Test execution completed." -ForegroundColor Cyan

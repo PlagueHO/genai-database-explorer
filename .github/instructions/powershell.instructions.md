@@ -11,6 +11,7 @@ This guide provides PowerShell-specific instructions to help GitHub Copilot gene
 
 - Use PowerShell 7 language syntax and features: ternary operator, Null conditional operators, Pipeline chain operators, ForEach-Object -Parallel
 - Use $PSBoundParameters.ContainsKey() to check parameter passed.
+- $null should always be on left of equality checks.
 
 ## Naming Conventions
 
