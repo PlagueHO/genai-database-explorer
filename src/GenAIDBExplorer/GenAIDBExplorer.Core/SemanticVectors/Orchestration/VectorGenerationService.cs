@@ -236,6 +236,19 @@ public sealed class VectorGenerationService : IVectorGenerationService
             {
                 _logger.LogWarning("Embedding generation returned empty vector for {Schema}.{Name}", entity.Schema, entity.Name);
                 perf.MarkAsFailed("Empty vector");
+                // Honor overwrite semantics by touching the existing envelope when present
+                // so that downstream processes can detect the attempted regeneration.
+                if (options.Overwrite && entityFile.Exists)
+                {
+                    try
+                    {
+                        File.SetLastWriteTimeUtc(entityFile.FullName, DateTime.UtcNow);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogDebug(ex, "Failed to touch envelope timestamp for {Schema}.{Name}", entity.Schema, entity.Name);
+                    }
+                }
                 return;
             }
 
@@ -259,6 +272,18 @@ public sealed class VectorGenerationService : IVectorGenerationService
                 var envelope = mapper.ToPersistedEntity(entity, payload);
                 var json = await _secureJsonSerializer.SerializeAsync(envelope, new JsonSerializerOptions { WriteIndented = true }).ConfigureAwait(false);
                 await File.WriteAllTextAsync(entityFile.FullName, json, cancellationToken).ConfigureAwait(false);
+                // Ensure filesystem timestamp reflects overwrite, even if content is unchanged
+                if (options.Overwrite)
+                {
+                    try
+                    {
+                        File.SetLastWriteTimeUtc(entityFile.FullName, DateTime.UtcNow);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogDebug(ex, "Failed to update envelope timestamp for {Schema}.{Name}", entity.Schema, entity.Name);
+                    }
+                }
             }
 
             // Upsert into vector index
