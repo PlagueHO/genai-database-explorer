@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Azure.Core;
 using Azure.Identity;
@@ -693,6 +694,62 @@ namespace GenAIDBExplorer.Core.Repository
         }
 
         #endregion
+
+        /// <summary>
+        /// Loads the raw JSON content of a single entity document from the entities container.
+        /// Returns the inner 'data' JSON (as a string) when present, or null when the document is not found.
+        /// </summary>
+        public async Task<string?> LoadEntityContentAsync(DirectoryInfo modelPath, string relativeEntityPath, CancellationToken cancellationToken)
+        {
+            if (modelPath == null) throw new ArgumentNullException(nameof(modelPath));
+            if (string.IsNullOrWhiteSpace(relativeEntityPath)) throw new ArgumentNullException(nameof(relativeEntityPath));
+
+            var modelName = EntityNameSanitizer.SanitizeEntityName(modelPath.Name);
+
+            try
+            {
+                // Normalize path like "tables/<name>.json" -> entityType and entityName
+                var parts = relativeEntityPath.Replace('\\', '/').Split('/', StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length == 0) return null;
+
+                var folder = parts.Length > 1 ? parts[0].ToLowerInvariant() : string.Empty;
+                var fileName = Path.GetFileNameWithoutExtension(parts[^1]);
+                if (string.IsNullOrWhiteSpace(fileName)) return null;
+
+                string entityType = folder switch
+                {
+                    "tables" => "table",
+                    "views" => "view",
+                    "storedprocedures" => "storedprocedure",
+                    _ => string.Empty
+                };
+
+                if (string.IsNullOrWhiteSpace(entityType)) return null;
+
+                var entityName = EntityNameSanitizer.SanitizeEntityName(fileName);
+                var documentId = $"{modelName}_{entityType}_{entityName}";
+
+                var response = await _entitiesContainer.ReadItemAsync<dynamic>(documentId, new PartitionKey(modelName), cancellationToken: cancellationToken).ConfigureAwait(false);
+                var entityData = response.Resource.data;
+                var jsonString = entityData?.ToString();
+                return jsonString;
+            }
+            catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                _logger.LogDebug("Entity document not found in Cosmos DB: {RelativePath} for model {ModelName}", relativeEntityPath, modelPath.Name);
+                return null;
+            }
+            catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Forbidden)
+            {
+                _logger.LogError(ex, "Access denied when loading entity {RelativePath} from Cosmos DB for model {ModelName}", relativeEntityPath, modelPath.Name);
+                throw new InvalidOperationException($"Access denied when loading entity '{relativeEntityPath}' from Cosmos DB.", ex);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to load entity content {RelativePath} from Cosmos DB for model {ModelName}", relativeEntityPath, modelPath.Name);
+                return null;
+            }
+        }
 
         #region Input Validation
 

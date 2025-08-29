@@ -58,11 +58,12 @@ namespace GenAIDBExplorer.Core.Repository
     /// </remarks>
     public class AzureBlobPersistenceStrategy : IAzureBlobPersistenceStrategy
     {
-        private readonly BlobServiceClient _blobServiceClient;
-        private readonly BlobContainerClient _containerClient;
+        private BlobServiceClient? _blobServiceClient;
+        private BlobContainerClient? _containerClient;
         private readonly AzureBlobStorageConfiguration _configuration;
         private readonly ILogger<AzureBlobPersistenceStrategy> _logger;
         private readonly SemaphoreSlim _concurrencySemaphore;
+        private readonly SemaphoreSlim _clientRefreshSemaphore = new SemaphoreSlim(1, 1);
         private readonly ISecureJsonSerializer _secureJsonSerializer;
         private readonly KeyVaultConfigurationProvider? _keyVaultProvider;
 
@@ -78,7 +79,8 @@ namespace GenAIDBExplorer.Core.Repository
             IOptions<AzureBlobStorageConfiguration> configuration,
             ILogger<AzureBlobPersistenceStrategy> logger,
             ISecureJsonSerializer secureJsonSerializer,
-            KeyVaultConfigurationProvider? keyVaultProvider = null)
+            KeyVaultConfigurationProvider? keyVaultProvider = null,
+            bool skipInitialization = false)
         {
             _configuration = configuration?.Value ?? throw new ArgumentNullException(nameof(configuration));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -99,64 +101,40 @@ namespace GenAIDBExplorer.Core.Repository
             // Initialize concurrency control
             _concurrencySemaphore = new SemaphoreSlim(_configuration.MaxConcurrentOperations, _configuration.MaxConcurrentOperations);
 
-            try
+            if (!skipInitialization)
             {
-                // Enhanced credential management with Key Vault support (synchronous initialization)
-                (_blobServiceClient, _containerClient) = InitializeBlobServiceClient();
+                try
+                {
+                    // Enhanced credential management with Key Vault support (synchronous initialization)
+                    (_blobServiceClient, _containerClient) = InitializeBlobServiceClient();
 
-                _logger.LogInformation("Initialized Azure Blob Storage persistence strategy with enhanced security features, " +
-                    "endpoint {AccountEndpoint} and container {ContainerName}",
-                    _configuration.AccountEndpoint, _configuration.ContainerName);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to initialize Azure Blob Storage client with enhanced security features, " +
-                    "endpoint {AccountEndpoint}",
-                    _configuration.AccountEndpoint);
-                throw;
+                    _logger.LogInformation("Initialized Azure Blob Storage persistence strategy with enhanced security features, " +
+                        "endpoint {AccountEndpoint} and container {ContainerName}",
+                        _configuration.AccountEndpoint, _configuration.ContainerName);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to initialize Azure Blob Storage client with enhanced security features, " +
+                        "endpoint {AccountEndpoint}",
+                        _configuration.AccountEndpoint);
+                    throw;
+                }
             }
         }
 
         /// <summary>
-        /// Initializes the BlobServiceClient with enhanced security features including Key Vault integration.
+        /// Initializes the BlobServiceClient using Entra ID (DefaultAzureCredential). Connection strings are avoided.
         /// </summary>
         private (BlobServiceClient blobServiceClient, BlobContainerClient containerClient) InitializeBlobServiceClient()
         {
             try
             {
-                // Attempt to retrieve connection string from environment variables (Key Vault integration is async,
-                // so we'll rely on environment variable fallback in constructor for immediate initialization)
-                var connectionString = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONNECTION_STRING");
-
-                // Create BlobServiceClient with appropriate authentication method
-                var clientOptions = new BlobClientOptions
-                {
-                    Retry =
-                    {
-                        MaxRetries = 3,
-                        Mode = RetryMode.Exponential,
-                        Delay = TimeSpan.FromSeconds(2),
-                        MaxDelay = TimeSpan.FromSeconds(30)
-                    }
-                };
-
-                BlobServiceClient blobServiceClient;
-                if (!string.IsNullOrWhiteSpace(connectionString))
-                {
-                    // Use connection string if available from environment
-                    blobServiceClient = new BlobServiceClient(connectionString, clientOptions);
-                    _logger.LogDebug("Initialized BlobServiceClient using connection string from environment variable");
-                }
-                else
-                {
-                    // Fall back to DefaultAzureCredential for managed identity/service principal auth
-                    var credential = new DefaultAzureCredential();
-                    blobServiceClient = new BlobServiceClient(new Uri(_configuration.AccountEndpoint), credential, clientOptions);
-                    _logger.LogDebug("Initialized BlobServiceClient using DefaultAzureCredential");
-                }
-
-                var containerClient = blobServiceClient.GetBlobContainerClient(_configuration.ContainerName);
-                return (blobServiceClient, containerClient);
+                var clientOptions = CreateBlobClientOptions();
+                var credential = CreateDefaultCredential();
+                var serviceClient = CreateBlobServiceClient(new Uri(_configuration.AccountEndpoint), credential, clientOptions);
+                var containerClient = CreateBlobContainerClient(serviceClient, _configuration.ContainerName);
+                _logger.LogDebug("Initialized BlobServiceClient using DefaultAzureCredential");
+                return (serviceClient, containerClient);
             }
             catch (Exception ex)
             {
@@ -164,6 +142,43 @@ namespace GenAIDBExplorer.Core.Repository
                 throw;
             }
         }
+
+        /// <summary>
+        /// Factory hook: create BlobClientOptions.
+        /// </summary>
+        protected virtual BlobClientOptions CreateBlobClientOptions() => new BlobClientOptions
+        {
+            Retry =
+            {
+                MaxRetries = 3,
+                Mode = RetryMode.Exponential,
+                Delay = TimeSpan.FromSeconds(2),
+                MaxDelay = TimeSpan.FromSeconds(30)
+            }
+        };
+
+        /// <summary>
+        /// Factory hook: create DefaultAzureCredential (or custom TokenCredential in tests).
+        /// </summary>
+        protected virtual TokenCredential CreateDefaultCredential() => new DefaultAzureCredential();
+
+        /// <summary>
+        /// Factory hook: create BlobServiceClient from endpoint + credential.
+        /// </summary>
+        protected virtual BlobServiceClient CreateBlobServiceClient(Uri endpoint, TokenCredential credential, BlobClientOptions options)
+            => new BlobServiceClient(endpoint, credential, options);
+
+        /// <summary>
+        /// Factory hook: create BlobServiceClient from connection string (kept for extensibility but not used by default).
+        /// </summary>
+        protected virtual BlobServiceClient CreateBlobServiceClient(string connectionString, BlobClientOptions options)
+            => new BlobServiceClient(connectionString, options);
+
+        /// <summary>
+        /// Factory hook: get/create BlobContainerClient for the configured container.
+        /// </summary>
+        protected virtual BlobContainerClient CreateBlobContainerClient(BlobServiceClient serviceClient, string containerName)
+            => serviceClient.GetBlobContainerClient(containerName);
 
         /// <summary>
         /// Asynchronously attempts to retrieve and cache Azure Storage connection string from Key Vault.
@@ -202,6 +217,54 @@ namespace GenAIDBExplorer.Core.Repository
         }
 
         /// <summary>
+        /// Refreshes the blob clients if Key Vault provides a connection string at runtime.
+        /// This method is thread-safe and will not reinitialize clients concurrently.
+        /// </summary>
+        private async Task RefreshBlobClientsIfNeededAsync()
+        {
+            try
+            {
+                // If no key vault provider configured, nothing to do
+                if (_keyVaultProvider == null) return;
+
+                var connectionString = await GetSecureConnectionStringAsync().ConfigureAwait(false);
+
+                await _clientRefreshSemaphore.WaitAsync().ConfigureAwait(false);
+                try
+                {
+                    var clientOptions = CreateBlobClientOptions();
+                    BlobServiceClient newBlobServiceClient;
+                    BlobContainerClient newContainerClient;
+                    if (!string.IsNullOrWhiteSpace(connectionString))
+                    {
+                        newBlobServiceClient = CreateBlobServiceClient(connectionString, clientOptions);
+                        newContainerClient = CreateBlobContainerClient(newBlobServiceClient, _configuration.ContainerName);
+                        _logger.LogInformation("Refreshed Blob clients from provided connection string");
+                    }
+                    else
+                    {
+                        var credential = CreateDefaultCredential();
+                        newBlobServiceClient = CreateBlobServiceClient(new Uri(_configuration.AccountEndpoint), credential, clientOptions);
+                        newContainerClient = CreateBlobContainerClient(newBlobServiceClient, _configuration.ContainerName);
+                        _logger.LogInformation("Refreshed Blob clients using DefaultAzureCredential");
+                    }
+
+                    // Swap in the new instances
+                    _blobServiceClient = newBlobServiceClient;
+                    _containerClient = newContainerClient;
+                }
+                finally
+                {
+                    _clientRefreshSemaphore.Release();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to refresh Blob clients");
+            }
+        }
+
+        /// <summary>
         /// Saves the semantic model to Azure Blob Storage using hierarchical blob naming.
         /// </summary>
         /// <param name="semanticModel">The semantic model to save.</param>
@@ -226,6 +289,8 @@ namespace GenAIDBExplorer.Core.Repository
 
             try
             {
+                // Attempt to refresh clients if Key Vault provided a connection string at runtime
+                await RefreshBlobClientsIfNeededAsync().ConfigureAwait(false);
                 // Ensure container exists
                 await EnsureContainerExistsAsync();
 
@@ -317,10 +382,13 @@ namespace GenAIDBExplorer.Core.Repository
 
             try
             {
+                // Attempt to refresh clients if Key Vault provided a connection string at runtime
+                await RefreshBlobClientsIfNeededAsync().ConfigureAwait(false);
                 var blobPrefix = GetBlobPrefix(modelName);
                 var mainModelBlobName = $"{blobPrefix}/semanticmodel.json";
 
                 // Load main semantic model document
+                if (_containerClient == null) throw new InvalidOperationException("Container client not initialized");
                 var mainModelBlob = _containerClient.GetBlobClient(mainModelBlobName);
 
                 if (!await mainModelBlob.ExistsAsync())
@@ -329,7 +397,7 @@ namespace GenAIDBExplorer.Core.Repository
                 }
 
                 // Download and deserialize main model using secure JSON serializer
-                var response = await mainModelBlob.DownloadContentAsync();
+                var response = await DownloadContentAsync(mainModelBlob, CancellationToken.None);
                 var jsonContent = response.Value.Content.ToString();
 
                 // Use secure JSON serializer for enhanced security
@@ -521,12 +589,17 @@ namespace GenAIDBExplorer.Core.Repository
             if (modelPath == null)
                 throw new ArgumentNullException(nameof(modelPath));
 
-            var modelName = PathValidator.ValidateAndSanitizePath(modelPath.Name);
+            // Validate model name input without requiring absolute filesystem path
+            EntityNameSanitizer.ValidateInputSecurity(modelPath.Name, nameof(modelPath));
+            var modelName = EntityNameSanitizer.SanitizeEntityName(modelPath.Name);
 
             try
             {
+                // Attempt to refresh clients if Key Vault provided a connection string at runtime
+                await RefreshBlobClientsIfNeededAsync().ConfigureAwait(false);
                 var blobPrefix = GetBlobPrefix(modelName);
                 var mainModelBlobName = $"{blobPrefix}/semanticmodel.json";
+                if (_containerClient == null) throw new InvalidOperationException("Container client not initialized");
                 var mainModelBlob = _containerClient.GetBlobClient(mainModelBlobName);
 
                 var exists = await mainModelBlob.ExistsAsync();
@@ -555,11 +628,14 @@ namespace GenAIDBExplorer.Core.Repository
         {
             try
             {
+                // Attempt to refresh clients if Key Vault provided a connection string at runtime
+                await RefreshBlobClientsIfNeededAsync().ConfigureAwait(false);
                 var modelNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 var prefix = string.IsNullOrWhiteSpace(_configuration.BlobPrefix)
                     ? "models/"
                     : $"{_configuration.BlobPrefix.TrimEnd('/')}/models/";
 
+                if (_containerClient == null) throw new InvalidOperationException("Container client not initialized");
                 await foreach (var blobItem in _containerClient.GetBlobsAsync(prefix: prefix))
                 {
                     // Extract model name from blob path: models/{modelName}/...
@@ -602,17 +678,21 @@ namespace GenAIDBExplorer.Core.Repository
             if (modelPath == null)
                 throw new ArgumentNullException(nameof(modelPath));
 
-            var modelName = PathValidator.ValidateAndSanitizePath(modelPath.Name);
+            EntityNameSanitizer.ValidateInputSecurity(modelPath.Name, nameof(modelPath));
+            var modelName = EntityNameSanitizer.SanitizeEntityName(modelPath.Name);
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
             _logger.LogInformation("Starting delete operation for semantic model {ModelName} from Azure Blob Storage", modelName);
 
             try
             {
+                // Attempt to refresh clients if Key Vault provided a connection string at runtime
+                await RefreshBlobClientsIfNeededAsync().ConfigureAwait(false);
                 var blobPrefix = GetBlobPrefix(modelName);
                 var deleteTasks = new List<Task>();
 
                 // List all blobs with the model prefix
+                if (_containerClient == null) throw new InvalidOperationException("Container client not initialized");
                 await foreach (var blobItem in _containerClient.GetBlobsAsync(prefix: $"{blobPrefix}/"))
                 {
                     var blobClient = _containerClient.GetBlobClient(blobItem.Name);
@@ -649,6 +729,11 @@ namespace GenAIDBExplorer.Core.Repository
         {
             try
             {
+                if (_containerClient == null)
+                {
+                    _logger.LogWarning("Container client not initialized; skipping container existence check (tests may inject BlobClient directly)");
+                    return;
+                }
                 await _containerClient.CreateIfNotExistsAsync();
                 _logger.LogDebug("Ensured container {ContainerName} exists", _configuration.ContainerName);
             }
@@ -694,15 +779,41 @@ namespace GenAIDBExplorer.Core.Repository
                 var jsonContent = await _secureJsonSerializer.SerializeWithAuditAsync(
                     data,
                     $"AzureBlob:{blobName}",
-                    jsonOptions);
+                    jsonOptions).ConfigureAwait(false);
 
-                var content = BinaryData.FromString(jsonContent);
+                var content = BinaryData.FromString(jsonContent ?? string.Empty);
 
-                var blobClient = _containerClient.GetBlobClient(blobName);
-                await blobClient.UploadAsync(content, overwrite: true);
+                var blobClient = GetBlobClient(blobName);
+                if (blobClient == null)
+                {
+                    _logger.LogWarning("BlobClient for {BlobName} is null. Ensure test injection or container client is set.", blobName);
+                    return;
+                }
 
-                _logger.LogDebug("Saved blob {BlobName} ({Size} bytes) using secure JSON serializer",
-                    blobName, content.ToArray().Length);
+                // Retry with exponential backoff for transient failures
+                var maxRetries = 3;
+                var delay = TimeSpan.FromSeconds(1);
+                for (int attempt = 1; attempt <= maxRetries; attempt++)
+                {
+                    try
+                    {
+                        await blobClient.UploadAsync(content, overwrite: true).ConfigureAwait(false);
+                        _logger.LogDebug("Saved blob {BlobName} ({Size} bytes) using secure JSON serializer",
+                            blobName, content.ToArray().Length);
+                        break;
+                    }
+                    catch (RequestFailedException rfe) when (IsTransientRequestFailure(rfe) && attempt < maxRetries)
+                    {
+                        _logger.LogWarning(rfe, "Transient failure uploading blob {BlobName}, attempt {Attempt}. Retrying in {Delay}ms", blobName, attempt, delay.TotalMilliseconds);
+                        await Task.Delay(delay).ConfigureAwait(false);
+                        delay = TimeSpan.FromMilliseconds(delay.TotalMilliseconds * 2);
+                    }
+                }
+            }
+            catch (RequestFailedException ex)
+            {
+                _logger.LogError(ex, "Azure request failed while saving blob {BlobName}", blobName);
+                throw new InvalidOperationException($"Failed to save blob '{blobName}' to Azure Blob Storage.", ex);
             }
             finally
             {
@@ -718,26 +829,54 @@ namespace GenAIDBExplorer.Core.Repository
             await _concurrencySemaphore.WaitAsync();
             try
             {
-                var blobClient = _containerClient.GetBlobClient(blobName);
+                var blobClient = GetBlobClient(blobName);
 
-                if (await blobClient.ExistsAsync())
+                // Retry for transient failures when downloading
+                var maxRetries = 3;
+                var delay = TimeSpan.FromSeconds(1);
+                for (int attempt = 1; attempt <= maxRetries; attempt++)
                 {
-                    var response = await blobClient.DownloadContentAsync();
-                    var jsonContent = response.Value.Content.ToString();
-                    await loadFromJsonFunc(jsonContent);
+                    try
+                    {
+                        var response = await DownloadContentAsync(blobClient, CancellationToken.None).ConfigureAwait(false);
+                        if (response == null || response.Value.Content == null)
+                        {
+                            _logger.LogWarning("DownloadContentAsync returned no content for {BlobName}", blobName);
+                            break;
+                        }
 
-                    _logger.LogDebug("Loaded entity from blob {BlobName}", blobName);
+                        var jsonContent = response.Value.Content.ToString();
+                        await loadFromJsonFunc(jsonContent).ConfigureAwait(false);
+                        _logger.LogDebug("Loaded entity from blob {BlobName}", blobName);
+                        break;
+                    }
+                    catch (RequestFailedException rfe) when (IsTransientRequestFailure(rfe) && attempt < maxRetries)
+                    {
+                        _logger.LogWarning(rfe, "Transient failure downloading blob {BlobName}, attempt {Attempt}. Retrying in {Delay}ms", blobName, attempt, delay.TotalMilliseconds);
+                        await Task.Delay(delay).ConfigureAwait(false);
+                        delay = TimeSpan.FromMilliseconds(delay.TotalMilliseconds * 2);
+                    }
                 }
-                else
-                {
-                    _logger.LogWarning("Entity blob {BlobName} not found", blobName);
-                }
+            }
+            catch (RequestFailedException ex)
+            {
+                _logger.LogError(ex, "Azure request failed while loading blob {BlobName}", blobName);
+                throw new InvalidOperationException($"Failed to load blob '{blobName}' from Azure Blob Storage.", ex);
             }
             finally
             {
                 _concurrencySemaphore.Release();
             }
         }
+
+        /// <summary>
+        /// Wrapper for BlobClient.DownloadContentAsync to allow test overrides.
+        /// </summary>
+        /// <param name="blobClient">Blob client.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>The blob download result response.</returns>
+        protected virtual Task<Response<BlobDownloadResult>> DownloadContentAsync(BlobClient blobClient, CancellationToken cancellationToken)
+            => blobClient.DownloadContentAsync(cancellationToken);
 
         /// <summary>
         /// Creates an index blob with model metadata and entity listing for fast discovery.
@@ -769,8 +908,28 @@ namespace GenAIDBExplorer.Core.Repository
             await _concurrencySemaphore.WaitAsync();
             try
             {
-                await blobClient.DeleteIfExistsAsync();
-                _logger.LogDebug("Deleted blob {BlobName}", blobName);
+                var maxRetries = 3;
+                var delay = TimeSpan.FromSeconds(1);
+                for (int attempt = 1; attempt <= maxRetries; attempt++)
+                {
+                    try
+                    {
+                        await blobClient.DeleteIfExistsAsync().ConfigureAwait(false);
+                        _logger.LogDebug("Deleted blob {BlobName}", blobName);
+                        break;
+                    }
+                    catch (RequestFailedException rfe) when (IsTransientRequestFailure(rfe) && attempt < maxRetries)
+                    {
+                        _logger.LogWarning(rfe, "Transient failure deleting blob {BlobName}, attempt {Attempt}. Retrying in {Delay}ms", blobName, attempt, delay.TotalMilliseconds);
+                        await Task.Delay(delay).ConfigureAwait(false);
+                        delay = TimeSpan.FromMilliseconds(delay.TotalMilliseconds * 2);
+                    }
+                }
+            }
+            catch (RequestFailedException ex)
+            {
+                _logger.LogError(ex, "Azure request failed while deleting blob {BlobName}", blobName);
+                throw new InvalidOperationException($"Failed to delete blob '{blobName}' from Azure Blob Storage.", ex);
             }
             finally
             {
@@ -778,7 +937,82 @@ namespace GenAIDBExplorer.Core.Repository
             }
         }
 
+        /// <summary>
+        /// Retrieves a <see cref="BlobClient"/> for the given blob name. Protected virtual to allow testing overrides.
+        /// </summary>
+        /// <param name="blobName">Blob name.</param>
+        protected virtual BlobClient GetBlobClient(string blobName)
+        {
+            if (_containerClient == null) throw new InvalidOperationException("Container client not initialized");
+            return _containerClient.GetBlobClient(blobName);
+        }
+
+        private static bool IsTransientRequestFailure(RequestFailedException rfe)
+        {
+            // Treat common transient status codes as retryable
+            return rfe.Status == 408 || rfe.Status == 429 || (rfe.Status >= 500 && rfe.Status < 600);
+        }
+
         #endregion
+
+        /// <summary>
+        /// Loads the raw JSON content for a single entity blob. Unwraps envelope { data, embedding } when present.
+        /// </summary>
+        public async Task<string?> LoadEntityContentAsync(DirectoryInfo modelPath, string relativeEntityPath, CancellationToken cancellationToken)
+        {
+            if (modelPath == null) throw new ArgumentNullException(nameof(modelPath));
+            if (string.IsNullOrWhiteSpace(relativeEntityPath)) throw new ArgumentNullException(nameof(relativeEntityPath));
+
+            EntityNameSanitizer.ValidateInputSecurity(modelPath.Name, nameof(modelPath));
+
+            try
+            {
+                await RefreshBlobClientsIfNeededAsync().ConfigureAwait(false);
+                var modelName = EntityNameSanitizer.SanitizeEntityName(modelPath.Name);
+                var blobPrefix = GetBlobPrefix(modelName);
+                var blobName = $"{blobPrefix}/{relativeEntityPath.TrimStart('/')}";
+
+                if (_containerClient == null) throw new InvalidOperationException("Container client not initialized");
+                var blobClient = GetBlobClient(blobName);
+
+                // Download directly and handle 404 instead of calling Exists separately
+                Response<BlobDownloadResult>? response;
+                try
+                {
+                    response = await DownloadContentAsync(blobClient, cancellationToken).ConfigureAwait(false);
+                }
+                catch (RequestFailedException ex) when (ex.Status == 404)
+                {
+                    return null;
+                }
+                if (response == null || response.Value.Content == null)
+                {
+                    return null;
+                }
+
+                var json = response.Value.Content.ToString();
+                // Try unwrap envelope
+                try
+                {
+                    using var doc = System.Text.Json.JsonDocument.Parse(json);
+                    if (doc.RootElement.ValueKind == System.Text.Json.JsonValueKind.Object && doc.RootElement.TryGetProperty("data", out var dataProp))
+                    {
+                        return dataProp.GetRawText();
+                    }
+                }
+                catch
+                {
+                    // ignore parse errors and return raw content
+                }
+
+                return json;
+            }
+            catch (RequestFailedException ex) when (IsTransientRequestFailure(ex))
+            {
+                _logger.LogWarning(ex, "Transient failure while loading entity blob {RelativeEntityPath}", relativeEntityPath);
+                throw;
+            }
+        }
 
         #region Input Validation
 
@@ -856,6 +1090,7 @@ namespace GenAIDBExplorer.Core.Repository
         public void Dispose()
         {
             _concurrencySemaphore?.Dispose();
+            _clientRefreshSemaphore?.Dispose();
         }
 
         #endregion

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using GenAIDBExplorer.Core.Models.SemanticModel;
@@ -36,6 +37,105 @@ public class LocalDiskPersistenceStrategyTests
         _testModel.AddTable(new SemanticModelTable("dbo", "TestTable"));
         _testModel.AddView(new SemanticModelView("dbo", "TestView"));
         _testModel.AddStoredProcedure(new SemanticModelStoredProcedure("dbo", "TestProcedure", "CREATE PROCEDURE dbo.TestProcedure AS BEGIN SELECT 1 END"));
+    }
+
+    [TestMethod]
+    public async Task LoadEntityContentAsync_Envelope_ReturnsInnerDataJson()
+    {
+        // Arrange
+        var modelPath = new DirectoryInfo(Path.Combine(_testDirectory!.FullName, "ModelEnvelope"));
+        var entitiesFolder = Path.Combine(modelPath.FullName, "tables");
+        Directory.CreateDirectory(entitiesFolder);
+
+        var relativePath = Path.Combine("tables", "dbo.TestTable.json");
+        var filePath = Path.Combine(modelPath.FullName, relativePath);
+        Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
+
+        var envelopeJson = """
+        {
+          "data": { "schema": "dbo", "name": "TestTable" },
+          "embedding": { "dim": 2, "model": "test" }
+        }
+        """;
+        await File.WriteAllTextAsync(filePath, envelopeJson);
+
+        // Act
+        var content = await _strategy!.LoadEntityContentAsync(modelPath, relativePath, CancellationToken.None);
+
+        // Assert
+        content.Should().NotBeNull();
+        content!.Trim().Should().StartWith("{");
+        content.Should().Contain("\"name\": \"TestTable\"");
+        content.Should().NotContain("embedding");
+    }
+
+    [TestMethod]
+    public async Task LoadEntityContentAsync_EnvelopeWithDifferentCasing_ReturnsInnerDataJson()
+    {
+        // Arrange
+        var modelPath = new DirectoryInfo(Path.Combine(_testDirectory!.FullName, "ModelEnvelopeCase"));
+        var entitiesFolder = Path.Combine(modelPath.FullName, "views");
+        Directory.CreateDirectory(entitiesFolder);
+
+        var relativePath = Path.Combine("views", "dbo.TestView.json");
+        var filePath = Path.Combine(modelPath.FullName, relativePath);
+        Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
+
+        var envelopeJson = """
+        {
+          "DATA": { "schema": "dbo", "name": "TestView" },
+          "Embedding": { "v": [0.1, 0.2] }
+        }
+        """;
+        await File.WriteAllTextAsync(filePath, envelopeJson);
+
+        // Act
+        var content = await _strategy!.LoadEntityContentAsync(modelPath, relativePath, CancellationToken.None);
+
+        // Assert
+        content.Should().NotBeNull();
+        content!.Should().Contain("\"name\": \"TestView\"");
+        content.Should().NotContain("Embedding");
+    }
+
+    [TestMethod]
+    public async Task LoadEntityContentAsync_NoEnvelope_PassesThroughOriginalJson()
+    {
+        // Arrange
+        var modelPath = new DirectoryInfo(Path.Combine(_testDirectory!.FullName, "ModelNoEnvelope"));
+        var entitiesFolder = Path.Combine(modelPath.FullName, "storedprocedures");
+        Directory.CreateDirectory(entitiesFolder);
+
+        var relativePath = Path.Combine("storedprocedures", "dbo.TestProcedure.json");
+        var filePath = Path.Combine(modelPath.FullName, relativePath);
+        Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
+
+        var originalJson = """
+        { "schema": "dbo", "name": "TestProcedure" }
+        """;
+        await File.WriteAllTextAsync(filePath, originalJson);
+
+        // Act
+        var content = await _strategy!.LoadEntityContentAsync(modelPath, relativePath, CancellationToken.None);
+
+        // Assert
+        content.Should().NotBeNull();
+        content.Should().BeEquivalentTo(originalJson.Replace("\r\n", "\n"));
+    }
+
+    [TestMethod]
+    public async Task LoadEntityContentAsync_FileMissing_ReturnsNull()
+    {
+        // Arrange
+        var modelPath = new DirectoryInfo(Path.Combine(_testDirectory!.FullName, "ModelMissing"));
+        Directory.CreateDirectory(modelPath.FullName);
+        var relativePath = Path.Combine("tables", "dbo.DoesNotExist.json");
+
+        // Act
+        var content = await _strategy!.LoadEntityContentAsync(modelPath, relativePath, CancellationToken.None);
+
+        // Assert
+        content.Should().BeNull();
     }
 
     [TestCleanup]

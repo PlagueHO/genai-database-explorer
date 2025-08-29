@@ -321,6 +321,44 @@ namespace GenAIDBExplorer.Core.Repository
             await processJson(json);
         }
 
+        /// <summary>
+        /// Loads the raw JSON content for a single entity file. Unwraps envelope { data, embedding } when present.
+        /// </summary>
+        public Task<string?> LoadEntityContentAsync(DirectoryInfo modelPath, string relativeEntityPath, CancellationToken cancellationToken)
+        {
+            if (modelPath == null) throw new ArgumentNullException(nameof(modelPath));
+            if (string.IsNullOrWhiteSpace(relativeEntityPath)) throw new ArgumentNullException(nameof(relativeEntityPath));
+
+            var validatedPath = PathValidator.ValidateDirectoryPath(modelPath.FullName);
+            var filePath = Path.Combine(validatedPath.FullName, relativeEntityPath);
+
+            if (!File.Exists(filePath)) return Task.FromResult<string?>(null);
+
+            // Read synchronously then return as completed task to keep API simple
+            var json = File.ReadAllText(filePath, Encoding.UTF8);
+
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                if (doc.RootElement.ValueKind == JsonValueKind.Object)
+                {
+                    foreach (var prop in doc.RootElement.EnumerateObject())
+                    {
+                        if (string.Equals(prop.Name, "data", StringComparison.OrdinalIgnoreCase))
+                        {
+                            return Task.FromResult<string?>(prop.Value.GetRawText());
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // ignore parse errors
+            }
+
+            return Task.FromResult<string?>(json);
+        }
+
         private static string ExtractEnvelopeDataOrPassThrough(string jsonContent)
         {
             try

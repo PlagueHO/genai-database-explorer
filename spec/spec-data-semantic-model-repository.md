@@ -32,10 +32,6 @@ Repository pattern implementation for persisting AI-consumable semantic models e
 
 ### Core Requirements
 
-- **REQ-001**: Repository pattern abstraction for semantic model persistence
-- **REQ-002**: Async operations for all I/O activities  
-- **REQ-003**: Support three specific persistence strategies: Local Disk JSON files, Azure Storage Blob Storage JSON files, and Cosmos DB Documents
-- **REQ-004**: Hierarchical structure with separate entity files
 - **REQ-005**: CRUD operations for semantic models
 - **REQ-006**: Dependency injection integration
 - **REQ-007**: Error handling and logging
@@ -47,18 +43,23 @@ Repository pattern implementation for persisting AI-consumable semantic models e
 - **REQ-013**: Performance monitoring implementation that builds on and aligns with the core monitoring requirements defined in the [OpenTelemetry Application Monitoring Specification](./spec-monitoring-azure-application-insights-opentelemetry.md), with graceful degradation when telemetry infrastructure is unavailable
 - **REQ-014**: Zero external dependencies and full functionality when OpenTelemetry services are not configured or available
 - **REQ-015**: Compatibility with .NET Aspire telemetry configuration through standard OpenTelemetry environment variables and OTLP endpoints
-- **REQ-016**: Async Find methods support both lazy-loaded and eager-loaded scenarios transparently
-- **REQ-017**: Automatic loading strategy detection routes Find methods to appropriate collection access
-- **REQ-018**: Breaking API changes for Find methods to support lazy loading without consumer knowledge
-- **REQ-019**: Migration path documentation for existing Find method consumers
 
 ### Security Requirements
 
 - **SEC-001**: Path validation prevents directory traversal
 - **SEC-002**: Entity name sanitization for file paths
-- **SEC-003**: Authentication for persistence operations
-- **SEC-004**: Secure handling of connection strings
+- **SEC-003**: Authentication for persistence operations (Azure: Entra ID with `DefaultAzureCredential`; Shared Key access disabled)
+- **SEC-004**: Secure handling of connection strings (Key Vault optional; fall back to Entra ID when not provided)
 - **SEC-005**: JSON serialization injection protection
+
+**Azure Blob Storage Implementation Notes:**
+
+- Uses Entra ID-first via `DefaultAzureCredential` to create `BlobServiceClient`
+- Storage account policy requires `allowSharedKeyAccess=false`; Shared Key auth is not used
+- Optional: a secure connection string can be retrieved from Azure Key Vault at runtime to refresh clients; if unavailable, the strategy continues with Entra ID
+- Client creation hooks for testability: `CreateBlobClientOptions()`, `CreateDefaultCredential()`, `CreateBlobServiceClient()`, `CreateBlobContainerClient()`, `GetBlobClient()`
+- Download wrapper: `DownloadContentAsync(BlobClient, CancellationToken)` enables deterministic unit testing
+- Existence checks: `ExistsAsync(DirectoryInfo)` validate the model name using `EntityNameSanitizer`
 
 ### Performance Requirements
 
@@ -93,20 +94,6 @@ Repository pattern implementation for persisting AI-consumable semantic models e
 ### Core Interfaces
 
 ```csharp
-/// <summary>Schema repository for database extraction and transformation.</summary>
-public interface ISchemaRepository
-{
-    Task<Dictionary<string, TableInfo>> GetTablesAsync(string? schema = null);
-    Task<Dictionary<string, ViewInfo>> GetViewsAsync(string? schema = null);
-    Task<Dictionary<string, StoredProcedureInfo>> GetStoredProceduresAsync(string? schema = null);
-    Task<string> GetViewDefinitionAsync(ViewInfo view);
-    Task<List<SemanticModelColumn>> GetColumnsForTableAsync(TableInfo table);
-    Task<List<Dictionary<string, object>>> GetSampleTableDataAsync(TableInfo tableInfo, int numberOfRecords = 5, bool selectRandom = false);
-    Task<SemanticModelTable> CreateSemanticModelTableAsync(TableInfo table);
-    Task<SemanticModelView> CreateSemanticModelViewAsync(ViewInfo view);
-    Task<SemanticModelStoredProcedure> CreateSemanticModelStoredProcedureAsync(StoredProcedureInfo storedProcedure);
-}
-
 /// <summary>Repository for semantic model persistence with flexible loading options.</summary>
 public interface ISemanticModelRepository
 {
@@ -116,6 +103,30 @@ public interface ISemanticModelRepository
     Task<SemanticModel> LoadModelAsync(DirectoryInfo modelPath, SemanticModelRepositoryOptions options);
 }
 
+/// <summary>Persistence strategy interface for different storage providers.</summary>
+public interface ISemanticModelPersistenceStrategy
+{
+    Task SaveModelAsync(SemanticModel semanticModel, DirectoryInfo modelPath);
+    Task<SemanticModel> LoadModelAsync(DirectoryInfo modelPath);
+    Task<bool> ExistsAsync(DirectoryInfo modelPath);
+    Task<IEnumerable<string>> ListModelsAsync(DirectoryInfo rootPath);
+    Task DeleteModelAsync(DirectoryInfo modelPath);
+}
+
+/// <summary>Azure Blob Storage persistence strategy.</summary>
+public interface IAzureBlobPersistenceStrategy : ISemanticModelPersistenceStrategy, IDisposable
+{
+}
+
+/// <summary>Cosmos DB persistence strategy.</summary>
+public interface ICosmosDbPersistenceStrategy : ISemanticModelPersistenceStrategy, IDisposable
+{
+}
+```
+
+### Configuration Options
+
+```csharp
 /// <summary>Immutable options record for configuring semantic model repository operations.</summary>
 public record SemanticModelRepositoryOptions
 {
@@ -134,7 +145,11 @@ public record PerformanceMonitoringOptions
     public bool EnableLocalMonitoring { get; init; } = true;
     public TimeSpan? MetricsRetentionPeriod { get; init; } = TimeSpan.FromHours(24);
 }
+```
 
+### Builder Interfaces
+
+```csharp
 /// <summary>Builder for creating SemanticModelRepositoryOptions with fluent interface.</summary>
 public interface ISemanticModelRepositoryOptionsBuilder
 {
@@ -144,7 +159,7 @@ public interface ISemanticModelRepositoryOptionsBuilder
     ISemanticModelRepositoryOptionsBuilder WithCaching(bool enabled, TimeSpan expiration);
     ISemanticModelRepositoryOptionsBuilder WithStrategyName(string strategyName);
     ISemanticModelRepositoryOptionsBuilder WithMaxConcurrentOperations(int maxOperations);
-    ISemanticModelRepositoryOptionsBuilder WithPerformanceMonitoring(Action<IPerformanceMonitoringOptionsBuilder> configure);
+    ISemanticModelRepositoryOptionsBuilder WithPerformanceMonitoring(Func<IPerformanceMonitoringOptionsBuilder, IPerformanceMonitoringOptionsBuilder> configure);
     SemanticModelRepositoryOptions Build();
 }
 
@@ -155,208 +170,6 @@ public interface IPerformanceMonitoringOptionsBuilder
     IPerformanceMonitoringOptionsBuilder WithMetricsRetention(TimeSpan retention);
     PerformanceMonitoringOptions Build();
 }
-
-/// <summary>Thread-safe immutable builder implementation for SemanticModelRepositoryOptions.</summary>
-public class SemanticModelRepositoryOptionsBuilder : ISemanticModelRepositoryOptionsBuilder
-{
-    private readonly SemanticModelRepositoryOptions _current;
-
-    // Private constructor - only used internally for immutable chaining
-    private SemanticModelRepositoryOptionsBuilder(SemanticModelRepositoryOptions options)
-    {
-        _current = options;
-    }
-
-    // Public factory method
-    public static ISemanticModelRepositoryOptionsBuilder Create()
-    {
-        return new SemanticModelRepositoryOptionsBuilder(new SemanticModelRepositoryOptions());
-    }
-
-    public ISemanticModelRepositoryOptionsBuilder WithLazyLoading(bool enabled = true)
-    {
-        // Create new instance instead of mutating current state (immutable pattern)
-        return new SemanticModelRepositoryOptionsBuilder(_current with { EnableLazyLoading = enabled });
-    }
-
-    public ISemanticModelRepositoryOptionsBuilder WithChangeTracking(bool enabled = true)
-    {
-        // Create new instance instead of mutating current state (immutable pattern)
-        return new SemanticModelRepositoryOptionsBuilder(_current with { EnableChangeTracking = enabled });
-    }
-
-    public ISemanticModelRepositoryOptionsBuilder WithCaching(bool enabled = true)
-    {
-        // Create new instance instead of mutating current state (immutable pattern)
-        return new SemanticModelRepositoryOptionsBuilder(_current with { EnableCaching = enabled });
-    }
-
-    public ISemanticModelRepositoryOptionsBuilder WithCaching(bool enabled, TimeSpan expiration)
-    {
-        // Create new instance with multiple properties (immutable pattern)
-        return new SemanticModelRepositoryOptionsBuilder(_current with 
-        { 
-            EnableCaching = enabled,
-            CacheExpiration = expiration
-        });
-    }
-
-    public ISemanticModelRepositoryOptionsBuilder WithStrategyName(string strategyName)
-    {
-        // Create new instance instead of mutating current state (immutable pattern)
-        return new SemanticModelRepositoryOptionsBuilder(_current with { StrategyName = strategyName });
-    }
-
-    public ISemanticModelRepositoryOptionsBuilder WithMaxConcurrentOperations(int maxOperations)
-    {
-        // Create new instance instead of mutating current state (immutable pattern)
-        return new SemanticModelRepositoryOptionsBuilder(_current with { MaxConcurrentOperations = maxOperations });
-    }
-
-    public ISemanticModelRepositoryOptionsBuilder WithPerformanceMonitoring(Action<IPerformanceMonitoringOptionsBuilder> configure)
-    {
-        var builder = PerformanceMonitoringOptionsBuilder.Create();
-        configure(builder);
-        var performanceOptions = builder.Build();
-        
-        // Create new instance instead of mutating current state (immutable pattern)
-        return new SemanticModelRepositoryOptionsBuilder(_current with { PerformanceMonitoring = performanceOptions });
-    }
-
-    public SemanticModelRepositoryOptions Build()
-    {
-        // Return immutable current state (no copying needed)
-        return _current;
-    }
-}
-
-/// <summary>Thread-safe immutable builder implementation for PerformanceMonitoringOptions.</summary>
-public class PerformanceMonitoringOptionsBuilder : IPerformanceMonitoringOptionsBuilder
-{
-    private readonly PerformanceMonitoringOptions _current;
-
-    // Private constructor - only used internally for immutable chaining
-    private PerformanceMonitoringOptionsBuilder(PerformanceMonitoringOptions options)
-    {
-        _current = options;
-    }
-
-    // Public factory method
-    public static IPerformanceMonitoringOptionsBuilder Create()
-    {
-        return new PerformanceMonitoringOptionsBuilder(new PerformanceMonitoringOptions());
-    }
-
-    public IPerformanceMonitoringOptionsBuilder EnableLocalMonitoring(bool enabled = true)
-    {
-        // Create new instance instead of mutating current state (immutable pattern)
-        return new PerformanceMonitoringOptionsBuilder(_current with { EnableLocalMonitoring = enabled });
-    }
-
-    public IPerformanceMonitoringOptionsBuilder WithMetricsRetention(TimeSpan retention)
-    {
-        // Create new instance instead of mutating current state (immutable pattern)
-        return new PerformanceMonitoringOptionsBuilder(_current with { MetricsRetentionPeriod = retention });
-    }
-
-    public PerformanceMonitoringOptions Build()
-    {
-        // Return immutable current state (no copying needed)
-        return _current;
-    }
-}
-
-/// <summary>Semantic model provider for orchestrating model operations.</summary>
-public interface ISemanticModelProvider
-{
-    SemanticModel CreateSemanticModel();
-    Task<SemanticModel> LoadSemanticModelAsync(DirectoryInfo modelPath);
-    Task<SemanticModel> ExtractSemanticModelAsync();
-}
-
-/// <summary>Persistence strategy interface for different storage providers.</summary>
-public interface ISemanticModelPersistenceStrategy
-{
-    Task SaveModelAsync(SemanticModel model, string containerPath);
-    Task<SemanticModel> LoadModelAsync(string containerPath);
-    Task DeleteModelAsync(string containerPath);
-    Task<bool> ExistsAsync(string containerPath);
-    Task<IEnumerable<string>> ListModelsAsync(string basePath);
-}
-
-/// <summary>Local disk JSON file persistence strategy.</summary>
-public interface ILocalDiskPersistenceStrategy : ISemanticModelPersistenceStrategy
-{
-    Task SaveModelAsync(SemanticModel model, DirectoryInfo modelPath);
-    Task<SemanticModel> LoadModelAsync(DirectoryInfo modelPath);
-}
-
-/// <summary>Azure Blob Storage JSON file persistence strategy.</summary>
-public interface IAzureBlobPersistenceStrategy : ISemanticModelPersistenceStrategy
-{
-    Task SaveModelAsync(SemanticModel model, string containerName, string blobPrefix);
-    Task<SemanticModel> LoadModelAsync(string containerName, string blobPrefix);
-    string ConnectionString { get; set; }
-}
-
-/// <summary>Cosmos DB document persistence strategy.</summary>
-public interface ICosmosPersistenceStrategy : ISemanticModelPersistenceStrategy
-{
-    Task SaveModelAsync(SemanticModel model, string databaseName, string containerName);
-    Task<SemanticModel> LoadModelAsync(string databaseName, string containerName);
-    string ConnectionString { get; set; }
-    string PartitionKeyPath { get; set; } // Should be "/partitionKey" for hierarchical keys
-}
-
-/// <summary>Performance monitor interface for repository operations. Implementation details are defined in the OpenTelemetry Application Monitoring Specification.</summary>
-public interface IPerformanceMonitor : IDisposable
-{
-    IPerformanceTrackingContext StartOperation(string operationName, IDictionary<string, object>? metadata = null);
-    Task<OperationStatistics?> GetOperationStatisticsAsync(string operationName);
-}
-
-/// <summary>Semantic model with persistence and entity management.</summary>
-public interface ISemanticModel
-{
-    string Name { get; set; }
-    string Source { get; set; }
-    string? Description { get; set; }
-    List<SemanticModelTable> Tables { get; set; }
-    List<SemanticModelView> Views { get; set; }
-    List<SemanticModelStoredProcedure> StoredProcedures { get; set; }
-    Task SaveModelAsync(DirectoryInfo modelPath);
-    Task<SemanticModel> LoadModelAsync(DirectoryInfo modelPath);
-    void AddTable(SemanticModelTable table);
-    bool RemoveTable(SemanticModelTable table);
-    
-    // BREAKING CHANGE: Make Find methods async to support lazy loading transparently
-    Task<SemanticModelTable?> FindTableAsync(string schemaName, string tableName);
-    Task<SemanticModelView?> FindViewAsync(string schemaName, string viewName);
-    Task<SemanticModelStoredProcedure?> FindStoredProcedureAsync(string schemaName, string storedProcedureName);
-    
-    // Add async collection accessors for lazy loading scenarios
-    Task<IEnumerable<SemanticModelTable>> GetTablesAsync();
-    Task<IEnumerable<SemanticModelView>> GetViewsAsync();
-    Task<IEnumerable<SemanticModelStoredProcedure>> GetStoredProceduresAsync();
-    
-    void Accept(ISemanticModelVisitor visitor);
-}
-
-/// <summary>Semantic model entity with persistence capabilities.</summary>
-public interface ISemanticModelEntity
-{
-    string Schema { get; set; }
-    string Name { get; set; }
-    string? Description { get; set; }
-    string? SemanticDescription { get; set; }
-    DateTime? SemanticDescriptionLastUpdate { get; set; }
-    bool NotUsed { get; set; }
-    string? NotUsedReason { get; set; }
-    Task SaveModelAsync(DirectoryInfo folderPath);
-    Task LoadModelAsync(DirectoryInfo folderPath);
-    void Accept(ISemanticModelVisitor visitor);
-}
-```
 
 ### Persistent Storage Structure
 
@@ -514,17 +327,9 @@ Documents (each with hierarchical partition key):
 - **AC-015**: Given builder pattern usage, When Build() is called multiple times, Then each call returns a new immutable options instance
 - **AC-016**: Given invalid option combinations, When Build() is called, Then appropriate validation exceptions are thrown
 - **AC-017**: Given default builder usage, When no options are specified, Then safe defaults are applied (no lazy loading, no change tracking, no caching)
-- **AC-022**: Given multiple threads using same builder instance, When concurrent method chaining occurs, Then no thread interference or configuration pollution occurs due to immutable builder pattern
-- **AC-023**: Given builder instance stored in static field, When multiple threads access builder simultaneously, Then each thread gets independent configuration without cross-contamination
 - **AC-018**: Given performance monitoring integration, When enabled, Then implementation follows the requirements and acceptance criteria defined in the [OpenTelemetry Application Monitoring Specification](./spec-monitoring-azure-application-insights-opentelemetry.md)
 - **AC-019**: Given OpenTelemetry services are not configured, When repository operations are performed, Then full functionality is maintained with zero performance degradation and no errors or warnings related to telemetry
 - **AC-020**: Given .NET Aspire environment variables are configured, When EnableAspireCompatibility is true, Then telemetry is automatically sent to the configured OTLP endpoint without additional configuration
-- **AC-021**: Given OTEL_EXPORTER_OTLP_ENDPOINT environment variable is not set, When .NET Aspire compatibility is enabled, Then telemetry export is gracefully disabled and repository operations continue normally
-- **AC-022**: Given lazy loading is enabled, When FindTableAsync is called, Then table is found using async collection loading without consumer knowledge of loading strategy
-- **AC-023**: Given lazy loading is disabled, When FindTableAsync is called, Then table is found using synchronous collection with automatic fallback
-- **AC-024**: Given existing synchronous Find method calls, When upgrading to new API, Then compilation errors guide migration to async methods with clear error messages
-- **AC-025**: Given mixed lazy and eager loading scenarios, When async Find methods are called, Then correct loading strategy is automatically selected based on model configuration
-- **AC-026**: Given semantic model storage format, When loading existing models, Then data format backward compatibility is maintained regardless of API changes
 
 ## 6. Test Automation Strategy
 
@@ -575,58 +380,11 @@ Documents (each with hierarchical partition key):
 - **Azure Blob Storage JSON**: Cloud-native scenarios, scalable storage, cost-effective for large models, geo-replication support
 - **Cosmos DB Documents**: Global distribution, low-latency access, automatic indexing, integrated with Azure ecosystem
 
-**Hierarchical Structure with Index**: Separate entity files enable human readability, version control compatibility, lazy loading support, efficient partial updates, and fast model discovery. Index document provides fast model discovery and metadata access.
-
-**JSON Serialization**: Selected for AI compatibility, human readability, language agnostic consumption, and extensive tooling ecosystem.
-
-**Change Tracking**: Essential for performance optimization (selective persistence), conflict resolution, audit trails, and network optimization in distributed scenarios.
-
 **Immutable Options Pattern**: Options objects are immutable after construction through the builder, preventing unintended modifications and ensuring thread safety. The builder pattern provides a clean separation between configuration construction and usage, following modern C# best practices and enabling safe concurrent access to options objects.
 
-**Immutable Builder Pattern Design**: The specification implements the immutable builder pattern to address critical concurrency issues with traditional mutable builders. Key design decisions:
-
-- **Thread Safety by Design**: Each builder method creates a new instance instead of mutating shared state, eliminating race conditions
-- **Static Field Safety**: Multiple threads can safely share builder instances stored in static fields without interference
-- **Record-Based Options**: Uses C# records with `init` properties for structural immutability and efficient copying with `with` expressions
-- **Factory Methods**: Builder construction through static `Create()` methods instead of public constructors for controlled instantiation
-- **Zero Shared Mutable State**: No internal fields are modified after builder creation, preventing configuration pollution between method chains
-- **Memory Efficiency**: .NET 9 record copying is highly optimized, making the performance overhead of immutable instances negligible compared to the safety benefits
-
-This approach prevents common concurrency bugs such as configuration pollution in multi-threaded scenarios, test interference, and unpredictable behavior when builder instances are shared between different parts of an application.
-
-**Performance Monitoring Architecture**: Repository operations integrate with the monitoring framework defined in the [OpenTelemetry Application Monitoring Specification](./spec-monitoring-azure-application-insights-opentelemetry.md). The implementation ensures:
-
-- **Zero External Dependencies**: When telemetry services are disabled or unavailable, the repository operates with full functionality and zero performance impact
-- **Graceful Degradation**: Automatic detection and handling of missing telemetry infrastructure without throwing exceptions or logging errors
-- **Multi-Backend Support**: Seamless integration with Azure Application Insights, .NET Aspire, Prometheus, Jaeger, and other OpenTelemetry-compatible backends when enabled and properly configured
-- **.NET Aspire Compatibility**: Native support for .NET Aspire's OpenTelemetry configuration through standard environment variables (OTEL_EXPORTER_OTLP_ENDPOINT, OTEL_SERVICE_NAME, etc.)
-- **Flexible Configuration**: Runtime configuration of telemetry backends without requiring code changes or application restarts
+**Performance Monitoring Architecture**: Repository operations integrate with the monitoring framework defined in the [OpenTelemetry Application Monitoring Specification](./spec-monitoring-azure-application-insights-opentelemetry.md). The implementation ensures zero external dependencies and graceful degradation when telemetry services are disabled.
 
 ## 8. Dependencies & External Integrations
-
-### External Systems
-
-- **EXT-001**: Source Database Systems - SQL Server, MySQL, PostgreSQL, or other relational databases that provide schema metadata through standard information schema views or system catalogs
-- **EXT-002**: Authentication Providers - Azure Active Directory, Active Directory, or other identity providers for secure access to cloud resources
-
-### Third-Party Services
-
-- **SVC-001**: Azure Storage Account - Blob storage service with standard or premium performance tiers, supporting hierarchical namespace and access control for cloud persistence strategy
-- **SVC-002**: Azure Cosmos DB - Multi-model database service with global distribution capabilities, supporting SQL API and hierarchical partition keys for document persistence strategy
-- **SVC-003**: Azure Key Vault - Secret management service for secure storage and retrieval of connection strings, API keys, and other sensitive configuration data
-
-### Infrastructure Dependencies
-
-- **INF-001**: .NET 9 Runtime - Latest version of .NET runtime with C# 11+ language features, async/await patterns, and modern dependency injection capabilities
-- **INF-002**: File System Access - Local disk storage with read/write permissions for development scenarios and local persistence strategy
-- **INF-003**: Network Connectivity - Reliable internet connection for Azure service access, with appropriate firewall and proxy configurations
-- **INF-004**: Azure Resource Group - Logical container for Azure resources with proper RBAC permissions and resource management policies
-
-### Data Dependencies
-
-- **DAT-001**: Database Schema Metadata - Access to information schema views, system catalogs, or equivalent metadata sources for schema extraction and semantic model generation
-- **DAT-002**: Configuration Data - Application settings, connection strings, and environment-specific configuration accessible through .NET configuration providers
-- **DAT-003**: Semantic Enhancement Data - Optional AI-generated descriptions, business rules, and metadata enrichments from generative AI services
 
 ### Technology Platform Dependencies
 
@@ -635,354 +393,69 @@ This approach prevents common concurrency bugs such as configuration pollution i
 - **PLT-003**: Dependency Injection Framework - Microsoft.Extensions.DependencyInjection or compatible DI container supporting service lifetime management and configuration options
 - **PLT-004**: Logging Framework - Microsoft.Extensions.Logging or compatible structured logging framework for operational monitoring and diagnostics
 - **PLT-005**: OpenTelemetry .NET SDK - Industry-standard observability framework for metrics, traces, and logs with vendor-neutral telemetry collection
-- **PLT-006**: OpenTelemetry Exporters - Configurable exporters for Azure Application Insights, .NET Aspire, Prometheus, Jaeger, and other monitoring backends
-- **PLT-007**: Performance Counters Library - System.Diagnostics.PerformanceCounter or equivalent for local system metrics collection
-- **PLT-008**: .NET Aspire Integration - Optional integration with .NET Aspire's telemetry configuration through standard OpenTelemetry environment variables
 
-### Compliance Dependencies
+### External Systems
 
-- **COM-001**: Data Privacy Regulations - GDPR, CCPA, or regional data protection requirements affecting semantic model storage and processing
-- **COM-002**: Security Standards - Industry security frameworks (SOC 2, ISO 27001) governing cloud service usage and data handling practices
-- **COM-003**: Organizational Policies - Corporate governance policies for cloud resource usage, data classification, and access control requirements
+- **EXT-001**: Source Database Systems - SQL Server, MySQL, PostgreSQL, or other relational databases that provide schema metadata
+- **EXT-002**: Authentication Providers - Azure Active Directory, Active Directory, or other identity providers for secure access to cloud resources
 
-**Note**: This section focuses on architectural and business dependencies required for the semantic model repository pattern implementation. Specific package versions and implementation details are maintained separately in implementation documentation.
+### Third-Party Services
 
-## 9. Examples & Edge Cases
+- **SVC-001**: Azure Storage Account - Blob storage service with standard or premium performance tiers, supporting hierarchical namespace and access control
+- **SVC-002**: Azure Cosmos DB - Multi-model database service with global distribution capabilities, supporting SQL API and hierarchical partition keys
+- **SVC-003**: Azure Key Vault - Secret management service for secure storage and retrieval of connection strings and sensitive configuration data
 
-### Basic Usage - Local Disk
+## 9. Examples & Usage Patterns
+
+### Basic Repository Usage
 
 ```csharp
-// BREAKING CHANGE: Find methods are now async for transparent lazy loading support
-var provider = serviceProvider.GetRequiredService<ISemanticModelProvider>();
+// Load with default options
 var repository = serviceProvider.GetRequiredService<ISemanticModelRepository>();
-var model = await provider.ExtractSemanticModelAsync();
+var model = await repository.LoadModelAsync(new DirectoryInfo(@"C:\Models\Database"));
+
+// Save model
 await repository.SaveModelAsync(model, new DirectoryInfo(@"C:\Models\Database"));
 
-// Load with async Find methods (works with both lazy and eager loading)
-var loadedModel = await repository.LoadModelAsync(
-    new DirectoryInfo(@"C:\Models\Database"), 
-    strategyName: "localdisk");
-
-// BREAKING CHANGE: All Find operations are now async
-var table = await loadedModel.FindTableAsync("dbo", "Customer");
-var view = await loadedModel.FindViewAsync("dbo", "CustomerView");
-var storedProc = await loadedModel.FindStoredProcedureAsync("dbo", "GetCustomer");
+// Save only changes (requires change tracking)
+await repository.SaveChangesAsync(model, new DirectoryInfo(@"C:\Models\Database"));
 ```
 
-### Builder Pattern Usage (Recommended)
+### Builder Pattern Usage
 
 ```csharp
-// Using immutable builder pattern for thread-safe configurations
-var provider = serviceProvider.GetRequiredService<ISemanticModelProvider>();
-var repository = serviceProvider.GetRequiredService<ISemanticModelRepository>();
-
-// Create and save semantic model
-var model = await provider.ExtractSemanticModelAsync();
-await repository.SaveModelAsync(model, new DirectoryInfo(@"C:\Models\Database"));
-
-// Load with immutable builder pattern - basic configuration
-var basicOptions = SemanticModelRepositoryOptionsBuilder.Create()
+// Basic configuration with builder pattern
+var options = SemanticModelRepositoryOptionsBuilder.Create()
     .WithLazyLoading()
     .WithChangeTracking()
     .Build();
-var loadedModel = await repository.LoadModelAsync(new DirectoryInfo(@"C:\Models\Database"), basicOptions);
 
-// Load with immutable builder pattern - advanced configuration
-var advancedOptions = SemanticModelRepositoryOptionsBuilder.Create()
-    .WithLazyLoading(true)
-    .WithChangeTracking(true)
-    .WithCaching(true, TimeSpan.FromMinutes(30))
-    .WithStrategyName("localdisk")
-    .WithMaxConcurrentOperations(5)
-    .Build();
-var optimizedModel = await repository.LoadModelAsync(new DirectoryInfo(@"C:\Models\Database"), advancedOptions);
+var model = await repository.LoadModelAsync(new DirectoryInfo(@"C:\Models\Database"), options);
 
-// Fluent interface for different scenarios - each chain is independent and thread-safe
-var developmentOptions = SemanticModelRepositoryOptionsBuilder.Create()
-    .WithLazyLoading()
-    .WithPerformanceMonitoring(perf => perf
-        .EnableLocalMonitoring()
-        .WithMetricsRetention(TimeSpan.FromHours(8)))
-    .Build();
-
+// Advanced configuration
 var productionOptions = SemanticModelRepositoryOptionsBuilder.Create()
     .WithLazyLoading()
     .WithCaching(true, TimeSpan.FromMinutes(15))
+    .WithMaxConcurrentOperations(20)
     .WithPerformanceMonitoring(perf => perf
         .EnableLocalMonitoring()
         .WithMetricsRetention(TimeSpan.FromHours(24)))
     .Build();
+
+var optimizedModel = await repository.LoadModelAsync(modelPath, productionOptions);
 ```
 
-### .NET Aspire Integration Examples
+### Strategy-Specific Usage
 
 ```csharp
-// .NET Aspire automatic configuration - uses environment variables
-var aspireOptions = optionsBuilder
-    .WithLazyLoading()
-    .WithPerformanceMonitoring(perf => perf
-        .EnableLocalMonitoring()
-        .EnableAspireCompatibility()
-        .EnableOpenTelemetry())
-    .Build();
+// Local Disk strategy
+await repository.SaveModelAsync(model, modelPath, "LocalDisk");
 
-// Explicit OTLP endpoint configuration for custom scenarios
-var customOtlpOptions = optionsBuilder
-    .WithPerformanceMonitoring(perf => perf
-        .EnableLocalMonitoring()
-        .EnableOpenTelemetry()
-        .WithOtlpEndpoint("http://localhost:4318"))
-    .Build();
+// Azure Blob strategy
+await repository.SaveModelAsync(model, modelPath, "AzureBlob");
 
-// Repository operations remain unchanged regardless of telemetry configuration
-var model = await repository.LoadModelAsync(modelPath, aspireOptions);
-// Telemetry automatically flows to .NET Aspire dashboard when available
-```
-
-### Performance Monitoring Examples
-
-```csharp
-// Basic configuration - works without any telemetry infrastructure
-var basicOptions = optionsBuilder
-    .WithLazyLoading()
-    .Build();
-
-// .NET Aspire integration - automatically uses environment variables
-var aspireOptions = optionsBuilder
-    .WithLazyLoading()
-    .Build();
-
-// Repository operations work regardless of telemetry configuration
-var monitor = serviceProvider.GetRequiredService<IPerformanceMonitor>();
-using var context = monitor.StartOperation("LoadSemanticModel");
-try
-{
-    var model = await repository.LoadModelAsync(modelPath, options);
-    // Telemetry is sent if available, ignored if not configured
-}
-catch (Exception ex)
-{
-    // Errors are tracked locally regardless of cloud telemetry status
-    throw;
-}
-```
-
-**Key Benefits**:
-
-- **Zero Configuration Required**: Repository works perfectly without any telemetry setup
-- **No Performance Impact**: When telemetry is unavailable, there's no performance penalty
-- **Automatic .NET Aspire Integration**: Respects standard OpenTelemetry environment variables
-- **Graceful Degradation**: No exceptions or errors when telemetry services are unavailable
-
-*Note*: For detailed performance monitoring implementation including OpenTelemetry integration, multi-backend support, and comprehensive observability configuration, see the [OpenTelemetry Application Monitoring Specification](./spec-monitoring-azure-application-insights-opentelemetry.md).
-
-*Note*: For detailed performance monitoring implementation including OpenTelemetry integration, multi-backend support, and comprehensive observability configuration, see the [OpenTelemetry Application Monitoring Specification](./spec-monitoring-azure-application-insights-opentelemetry.md).
-
-### Memory and Performance Optimization Examples
-
-```csharp
-var memoryOptimizedOptions = optionsBuilder
-    .WithLazyLoading()
-    .Build();
-
-var performanceOptimizedOptions = optionsBuilder
-    .WithChangeTracking()
-    .Build();
-```
-
-### Azure Blob Storage Usage
-
-```csharp
-// Create and save to Azure Blob Storage using builder pattern
-var blobStrategy = serviceProvider.GetRequiredService<IAzureBlobPersistenceStrategy>();
-var repository = serviceProvider.GetRequiredService<ISemanticModelRepository>();
-var optionsBuilder = serviceProvider.GetRequiredService<ISemanticModelRepositoryOptionsBuilder>();
-
-blobStrategy.ConnectionString = "DefaultEndpointsProtocol=https;AccountName=...";
-var model = await provider.ExtractSemanticModelAsync();
-await blobStrategy.SaveModelAsync(model, "semantic-models", "adventureworks");
-
-// Load from Azure Blob Storage with optimized settings
-var azureOptions = optionsBuilder
-    .WithLazyLoading()
-    .WithCaching(true, TimeSpan.FromMinutes(45))
-    .WithStrategyName("azureblob")
-    .WithMaxConcurrentOperations(8)
-    .Build();
-var loadedModel = await repository.LoadModelAsync(new DirectoryInfo("adventureworks"), azureOptions);
-```
-
-### Cosmos DB Usage
-
-```csharp
-// Create and save to Cosmos DB using builder pattern
-var cosmosDbStrategy = serviceProvider.GetRequiredService<ICosmosDbPersistenceStrategy>();
-var repository = serviceProvider.GetRequiredService<ISemanticModelRepository>();
-var optionsBuilder = serviceProvider.GetRequiredService<ISemanticModelRepositoryOptionsBuilder>();
-
-cosmosDbStrategy.ConnectionString = "AccountEndpoint=https://...;AccountKey=...";
-cosmosDbStrategy.PartitionKeyPath = "/partitionKey"; // Hierarchical partition key path
-var model = await provider.ExtractSemanticModelAsync();
-await cosmosDbStrategy.SaveModelAsync(model, "SemanticModels", "Models");
-
-// Load from Cosmos DB with high-performance settings
-var cosmosDbOptions = optionsBuilder
-    .WithLazyLoading()
-    .WithChangeTracking()
-    .WithCaching(true, TimeSpan.FromHours(1))
-    .WithStrategyName("CosmosDb")
-    .WithMaxConcurrentOperations(12)
-    .Build();
-var loadedModel = await repository.LoadModelAsync(new DirectoryInfo("Models"), cosmosDbOptions);
-
-// Query specific entity by partition key for optimal performance
-// Partition key format: "{model-name}/{entity-type}/{entity-name}"
-// Example: "adventureworks/table/Sales.Customer"
-```
-
-### Repository Pattern with Builder
-
-```csharp
-// Schema extraction with repository pattern and builder configuration
-var schemaRepo = serviceProvider.GetRequiredService<ISchemaRepository>();
-var repository = serviceProvider.GetRequiredService<ISemanticModelRepository>();
-var optionsBuilder = serviceProvider.GetRequiredService<ISemanticModelRepositoryOptionsBuilder>();
-
-var tables = await schemaRepo.GetTablesAsync("Sales");
-var semanticTable = await schemaRepo.CreateSemanticModelTableAsync(tables.First().Value);
-
-// Configure different loading strategies based on use case
-var developmentOptions = optionsBuilder
-    .WithLazyLoading()
-    .WithChangeTracking()
-    .WithStrategyName("localdisk")
-    .Build();
-
-var productionOptions = optionsBuilder
-    .WithLazyLoading()
-    .WithCaching(true, TimeSpan.FromMinutes(30))
-    .WithStrategyName("azureblob")
-    .WithMaxConcurrentOperations(10)
-    .Build();
-
-// Load model with appropriate configuration
-var model = await repository.LoadModelAsync(modelPath, developmentOptions);
-```
-
-### Builder Pattern Validation
-
-```csharp
-// Builder with validation for option combinations
-var optionsBuilder = serviceProvider.GetRequiredService<ISemanticModelRepositoryOptionsBuilder>();
-
-try
-{
-    // This should work - valid combination
-    var validOptions = optionsBuilder
-        .WithLazyLoading()
-        .WithChangeTracking()
-        .WithCaching(true, TimeSpan.FromMinutes(30))
-        .Build();
-    
-    // This should throw validation exception - invalid cache expiration
-    var invalidOptions = optionsBuilder
-        .WithCaching(true, TimeSpan.FromSeconds(-1))
-        .Build();
-}
-catch (ArgumentException ex)
-{
-    // Handle validation errors
-    _logger.LogError(ex, "Invalid repository options configuration");
-}
-```
-
-### Builder Pattern Reuse (Thread-Safe)
-
-```csharp
-// Immutable builder instances are safe to use from static fields and across multiple threads
-public static class RepositoryConfiguration
-{
-    // This is now SAFE for concurrent access due to immutable builder pattern
-    private static readonly ISemanticModelRepositoryOptionsBuilder _baseBuilder 
-        = SemanticModelRepositoryOptionsBuilder.Create();
-    
-    public static SemanticModelRepositoryOptions GetDevelopmentOptions()
-    {
-        return _baseBuilder  // Each call creates independent immutable chain
-            .WithLazyLoading(true)
-            .WithChangeTracking(true)
-            .Build();
-    }
-    
-    public static SemanticModelRepositoryOptions GetProductionOptions()
-    {
-        return _baseBuilder  // Completely independent of other calls
-            .WithLazyLoading(false)
-            .WithCaching(true)
-            .Build();
-    }
-}
-
-// Create different preset configurations - all thread-safe
-var memoryOptimizedOptions = SemanticModelRepositoryOptionsBuilder.Create()
-    .WithLazyLoading()
-    .WithCaching(true, TimeSpan.FromHours(2))
-    .Build();
-
-var performanceOptimizedOptions = SemanticModelRepositoryOptionsBuilder.Create()
-    .WithChangeTracking()
-    .WithCaching()
-    .WithMaxConcurrentOperations(15)
-    .Build();
-
-var fullFeaturedOptions = SemanticModelRepositoryOptionsBuilder.Create()
-    .WithLazyLoading()
-    .WithChangeTracking()
-    .WithCaching(true, TimeSpan.FromMinutes(45))
-    .WithMaxConcurrentOperations(8)
-    .Build();
-
-// Each Build() call creates a new immutable options instance
-var model1 = await repository.LoadModelAsync(path1, memoryOptimizedOptions);
-var model2 = await repository.LoadModelAsync(path2, performanceOptimizedOptions);
-var model3 = await repository.LoadModelAsync(path3, fullFeaturedOptions);
-```
-
-### Error Handling
-
-```csharp
-try
-{
-    var model = await provider.LoadSemanticModelAsync(invalidPath);
-}
-catch (DirectoryNotFoundException)
-{
-    model = provider.CreateSemanticModel(); // Fallback
-}
-catch (JsonException)
-{
-    model = await provider.ExtractSemanticModelAsync(); // Re-extract
-}
-```
-
-### Concurrent Operations
-
-```csharp
-// Thread-safe repository access
-private readonly SemaphoreSlim _semaphore = new(1, 1);
-
-public async Task<SemanticModel> SafeLoadAsync(DirectoryInfo path)
-{
-    await _semaphore.WaitAsync();
-    try
-    {
-        return await LoadModelAsync(path);
-    }
-    finally
-    {
-        _semaphore.Release();
-    }
-}
+// Cosmos DB strategy
+await repository.SaveModelAsync(model, modelPath, "CosmosDb");
 ```
 
 ## 10. Validation Criteria
@@ -994,17 +467,15 @@ public async Task<SemanticModel> SafeLoadAsync(DirectoryInfo path)
 - Concurrent access without corruption across all persistence strategies
 - Lazy loading reduces memory usage ≥70% for all storage types
 - Change tracking identifies modifications with 100% accuracy
-- Index document maintains referential integrity to entity documents/files
 - Builder pattern provides fluent interface for options configuration
 - Options objects are immutable after Build() method execution
-- Multiple Build() calls from same builder instance produce independent options objects
 
 **Performance**:
 
 - Model extraction for 100 tables ≤30 seconds
 - Entity loading ≤500 milliseconds (Local Disk), ≤2 seconds (Azure Blob), ≤1 second (Cosmos DB)
 - Memory usage ≤2GB for 10,000 entities across all storage strategies
-- Cosmos DB queries utilize hierarchical partition key for optimal performance and entity isolation
+- Cosmos DB queries utilize hierarchical partition key for optimal performance
 - Azure Blob Storage operations leverage concurrent uploads/downloads
 
 **Security**:
@@ -1020,64 +491,14 @@ public async Task<SemanticModel> SafeLoadAsync(DirectoryInfo path)
 - Structured logging compliance
 - Backward compatibility maintenance
 - Builder pattern registration in dependency injection container
-- Options builder lifecycle management (singleton or scoped as appropriate)
 - Graceful telemetry degradation without application impact
 - .NET Aspire compatibility through standard OpenTelemetry environment variables
 - Zero performance overhead when telemetry services are unavailable
 
-## 11. Breaking Change Migration Guide
+## 11. Related Specifications / Further Reading
 
-### API Changes Summary
-
-This specification introduces breaking changes to improve lazy loading support and provide a cleaner, more consistent API.
-
-**Before (v1.x):**
-
-```csharp
-var table = semanticModel.FindTable("dbo", "Customer");
-var view = semanticModel.FindView("dbo", "CustomerView");
-var storedProc = semanticModel.FindStoredProcedure("dbo", "GetCustomer");
-```
-
-**After (v2.0):**
-
-```csharp
-var table = await semanticModel.FindTableAsync("dbo", "Customer");
-var view = await semanticModel.FindViewAsync("dbo", "CustomerView");
-var storedProc = await semanticModel.FindStoredProcedureAsync("dbo", "GetCustomer");
-```
-
-### Consumer Updates Required
-
-1. **Console Applications**: Update all Find method calls to async patterns
-2. **Web APIs**: Ensure controller methods support async operations
-3. **Service Classes**: Update service method signatures to async
-4. **Unit Tests**: Convert test methods to async patterns with proper assertions
-
-### Migration Benefits
-
-- **Transparent Lazy Loading**: Find methods work seamlessly regardless of loading strategy
-- **Performance**: No sync-over-async patterns - true async throughout
-- **Consistency**: All I/O operations follow async patterns
-- **Future-Proof**: Foundation for advanced caching and optimization features
-
-### Data Format Compatibility
-
-- **Storage Format**: Existing semantic model files remain fully compatible
-- **Index Documents**: New format enhancements are backward compatible
-- **Entity Files**: No changes to entity file structure or content
-
-### Compatibility Strategy
-
-- **Clean Break**: Remove synchronous Find methods entirely for clarity
-- **Compilation Guidance**: Clear compiler errors guide migration process
-- **Documentation**: Comprehensive migration examples for all scenarios
-- **Testing Support**: Migration validation through existing test suites
-
-## 12. Related Specifications / Further Reading
-
-- [Azure Application Insights OpenTelemetry Monitoring Specification](./spec-monitoring-azure-application-insights-opentelemetry.md)
-- [Infrastructure Deployment Bicep AVM Specification](./infrastructure-deployment-bicep-avm.md)
+- [OpenTelemetry Application Monitoring Specification](./spec-monitoring-azure-application-insights-opentelemetry.md)
+- [Infrastructure Deployment Bicep AVM Specification](./spec-infrastructure-deployment-bicep-avm.md)
 - [Microsoft .NET Application Architecture Guides](https://docs.microsoft.com/en-us/dotnet/architecture/)
 - [Repository Pattern Documentation](https://docs.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/infrastructure-persistence-layer-design)
 - [Entity Framework Core Change Tracking](https://docs.microsoft.com/en-us/ef/core/change-tracking/)

@@ -386,6 +386,7 @@ module storageAccount 'br/public:avm/res/storage/storage-account:0.26.2' = if (s
     skuName: 'Standard_LRS'
     accessTier: 'Hot'
     allowBlobPublicAccess: true
+    allowSharedKeyAccess: false // This will force EntraID Auth
     blobServices: {
       containers: [
         {

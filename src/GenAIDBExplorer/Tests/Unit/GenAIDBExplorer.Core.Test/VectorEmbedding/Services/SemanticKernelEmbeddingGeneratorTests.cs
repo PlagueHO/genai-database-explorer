@@ -17,7 +17,6 @@ namespace GenAIDBExplorer.Core.Test.VectorEmbedding.Services;
 public class SemanticKernelEmbeddingGeneratorTests
 {
     [TestMethod]
-    [Ignore("Pending proper GeneratedEmbeddings mock/fake – returns type differs across packages; follow-up to provide a concrete fake implementation.")]
     public async Task GenerateAsync_Should_Return_Embedding_From_Service()
     {
         // Arrange
@@ -26,9 +25,22 @@ public class SemanticKernelEmbeddingGeneratorTests
         var builder = Kernel.CreateBuilder();
         var services = builder.Services;
 
-        // Register a placeholder embedding generator; test is ignored until a proper fake is provided
-        var placeholder = new Mock<IEmbeddingGenerator<string, Embedding<float>>>().Object;
-        services.AddSingleton(placeholder);
+    // Register a mock embedding generator keyed as "Embeddings" with a deterministic vector.
+    // The production code resolves IEmbeddingGenerator via Microsoft.Extensions.AI DI, using a service key.
+    // Returning GeneratedEmbeddings ensures the code path matches the real interface and keeps the test hermetic.
+        var mockGen = new Moq.Mock<IEmbeddingGenerator<string, Embedding<float>>>();
+        mockGen
+            .Setup(g => g.GenerateAsync(
+                It.IsAny<IEnumerable<string>>(),
+                It.IsAny<EmbeddingGenerationOptions?>(),
+                It.IsAny<CancellationToken>()))
+            .Returns((IEnumerable<string> inputs, EmbeddingGenerationOptions? opts, CancellationToken ct) =>
+            {
+                var gen = new GeneratedEmbeddings<Embedding<float>>(
+                    new List<Embedding<float>> { new Embedding<float>(new float[] { 0.1f, 0.2f, 0.3f }) });
+                return Task.FromResult(gen);
+            });
+        services.AddKeyedSingleton<IEmbeddingGenerator<string, Embedding<float>>>("Embeddings", mockGen.Object);
         var kernel = builder.Build();
         factory.Setup(f => f.CreateSemanticKernel()).Returns(kernel);
 

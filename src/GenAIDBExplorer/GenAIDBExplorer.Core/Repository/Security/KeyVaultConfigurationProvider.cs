@@ -102,7 +102,7 @@ public class KeyVaultConfigurationProvider : IDisposable
     /// <returns>The configuration value, or null if not found and no default provided.</returns>
     /// <exception cref="ArgumentException">Thrown when keyName is null or whitespace.</exception>
     /// <exception cref="ObjectDisposedException">Thrown when the provider has been disposed.</exception>
-    public async Task<string?> GetConfigurationValueAsync(
+    public virtual async Task<string?> GetConfigurationValueAsync(
         string keyName,
         string? fallbackEnvironmentVariable = null,
         string? defaultValue = null)
