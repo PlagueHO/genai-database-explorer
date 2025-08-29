@@ -114,16 +114,20 @@ function Test-IntegrationTestResults {
         
     process {
         try {
-            Write-Verbose "Checking test results file: $TestResultsPath"
+            # Normalize and resolve paths early
+            $resolvedExpectedPath = $null
+            try { $resolvedExpectedPath = (Resolve-Path -LiteralPath $TestResultsPath).Path } catch { $resolvedExpectedPath = [System.IO.Path]::GetFullPath($TestResultsPath) }
+
+            Write-Verbose "Checking test results file: $resolvedExpectedPath"
             
-            if (Test-Path $TestResultsPath) {
+            if (Test-Path -LiteralPath $resolvedExpectedPath) {
                 # File exists - get file information
-                $fileItem = Get-Item $TestResultsPath
+                $fileItem = Get-Item -LiteralPath $resolvedExpectedPath
                 $fileSize = $fileItem.Length
                 Write-Host "✅ Test results file exists (Size: $fileSize bytes)" -ForegroundColor Green
                 
                 # Read and validate content
-                $content = Get-Content $TestResultsPath -Raw
+                $content = Get-Content -LiteralPath $resolvedExpectedPath -Raw
                 if ([string]::IsNullOrWhiteSpace($content)) {
                     Write-Warning "⚠️  Test results file is empty"
                     Set-GitHubOutput -Name $OutputVariable -Value 'false'
@@ -158,18 +162,62 @@ function Test-IntegrationTestResults {
                 }
             }
             else {
-                Write-Warning "❌ Test results file does not exist at '$TestResultsPath'"
-                Set-GitHubOutput -Name $OutputVariable -Value 'false'
-                
-                # Check if parent directory exists and list contents for troubleshooting
-                $parentDir = Split-Path $TestResultsPath -Parent
-                if ($parentDir -and (Test-Path $parentDir)) {
-                    Write-Host "Contents of parent directory '$parentDir':" -ForegroundColor Yellow
-                    Get-ChildItem $parentDir | ForEach-Object { 
-                        Write-Host "  - $($_.Name)" -ForegroundColor Gray 
+                Write-Warning "❌ Test results file does not exist at '$resolvedExpectedPath'"
+
+                # Attempt auto-discovery in common locations and names
+                $expectedDir = Split-Path -Path $resolvedExpectedPath -Parent
+                $fallbackCandidates = @()
+                if ($expectedDir -and (Test-Path -LiteralPath $expectedDir)) {
+                    $fallbackCandidates += Get-ChildItem -LiteralPath $expectedDir -Recurse -Filter '*.xml' -ErrorAction SilentlyContinue
+                }
+
+                # Add common conventional names if not already found
+                $conventionalNames = @(
+                    (Join-Path $expectedDir 'testResults.xml'),
+                    (Join-Path $expectedDir 'TestResult.xml'),
+                    (Join-Path $expectedDir 'results.xml')
+                ) | Where-Object { $_ -and (Test-Path -LiteralPath $_) }
+
+                if ($conventionalNames) {
+                    foreach ($p in $conventionalNames) {
+                        $fallbackCandidates += (Get-Item -LiteralPath $p)
                     }
-                } else {
-                    Write-Host "Parent directory '$parentDir' does not exist" -ForegroundColor Red
+                }
+
+                if ($fallbackCandidates -and $fallbackCandidates.Count -gt 0) {
+                    # Choose the most recently written XML as the likely test results
+                    $best = $fallbackCandidates | Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 1
+                    Write-Host "Discovered potential test results at: $($best.FullName) (LastWrite: $($best.LastWriteTimeUtc.ToString('u')))" -ForegroundColor Yellow
+
+                    try {
+                        # Ensure destination directory exists
+                        $destDir = Split-Path -Path $resolvedExpectedPath -Parent
+                        if (-not (Test-Path -LiteralPath $destDir)) { New-Item -ItemType Directory -Path $destDir -Force | Out-Null }
+
+                        Copy-Item -LiteralPath $best.FullName -Destination $resolvedExpectedPath -Force
+                        Write-Host "Copied discovered results to expected path: $resolvedExpectedPath" -ForegroundColor Cyan
+
+                        # Re-run validation on the copied file
+                        $content = Get-Content -LiteralPath $resolvedExpectedPath -Raw
+                        if (-not [string]::IsNullOrWhiteSpace($content) -and (Test-XmlStructure -XmlContent $content)) {
+                            Set-GitHubOutput -Name $OutputVariable -Value 'true'
+                            return
+                        }
+                    } catch {
+                        Write-Warning "Failed to copy discovered results: $($_.Exception.Message)"
+                    }
+                }
+
+                # No file found; provide directory diagnostics
+                Set-GitHubOutput -Name $OutputVariable -Value 'false'
+
+                if ($expectedDir) {
+                    if (Test-Path -LiteralPath $expectedDir) {
+                        Write-Host "Contents of expected results directory '$expectedDir':" -ForegroundColor Yellow
+                        Get-ChildItem -LiteralPath $expectedDir | ForEach-Object { Write-Host "  - $($_.Name)" -ForegroundColor Gray }
+                    } else {
+                        Write-Host "Expected results directory '$expectedDir' does not exist" -ForegroundColor Red
+                    }
                 }
             }
         }

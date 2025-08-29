@@ -91,7 +91,10 @@ function Invoke-IntegrationTests {
             $config.Output.Verbosity = 'Detailed'
             $config.TestResult.Enabled = $true
             $config.TestResult.OutputFormat = 'NUnitXml'
-            $config.TestResult.OutputPath = Join-Path $TestResultsPath 'integration-tests.xml'
+            # Resolve an absolute path for reliability across runners
+            $resolvedResultsDir = (Resolve-Path -LiteralPath $TestResultsPath).Path
+            $xmlPath = Join-Path $resolvedResultsDir 'integration-tests.xml'
+            $config.TestResult.OutputPath = $xmlPath
             $config.CodeCoverage.Enabled = $false
             $config.Should.ErrorAction = 'Continue'
             
@@ -116,7 +119,7 @@ function Invoke-IntegrationTests {
             }
 
             Write-Host "Running Pester with test script: $TestScriptPath"
-            Write-Verbose "Test results will be saved to: $($config.TestResult.OutputPath)"
+            Write-Host "Pester results will be written to: $xmlPath" -ForegroundColor Cyan
             
             # Ensure Pester returns a result object in all environments (GitHub Actions included)
             # Some runners/modules may default to no return value unless passthrough is enabled.
@@ -124,7 +127,6 @@ function Invoke-IntegrationTests {
             $result = Invoke-Pester -Configuration $config
 
             # Always prefer XML result parsing for reliability across runners/Pester versions
-            $xmlPath = $config.TestResult.OutputPath
             if (-not (Test-Path -LiteralPath $xmlPath)) {
                 Write-Warning "Pester did not produce an XML results file at: $xmlPath"
                 # Fall back to result object if available; otherwise fail
