@@ -223,6 +223,32 @@ public sealed class VectorGenerationService : IVectorGenerationService
                 return;
             }
 
+            // If overwrite is requested and content hash matches, we still need to update the file timestamp
+            // to indicate the overwrite operation occurred, even if we don't regenerate embeddings
+            if (options.Overwrite && string.Equals(existingHash?.Trim(), contentHash?.Trim(), StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogInformation("Overwriting unchanged entity {Schema}.{Name}", entity.Schema, entity.Name);
+                
+                // For LocalDisk/AzureBlob strategies, touch the file to update timestamp
+                if ((string.Equals(repoStrategy, "LocalDisk", StringComparison.OrdinalIgnoreCase) || 
+                     string.Equals(repoStrategy, "AzureBlob", StringComparison.OrdinalIgnoreCase)) && 
+                    entityFile.Exists)
+                {
+                    try
+                    {
+                        // Force timestamp update to ensure overwrite semantics are honored
+                        File.SetLastWriteTimeUtc(entityFile.FullName, DateTime.UtcNow);
+                        processed++;
+                        return;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogDebug(ex, "Failed to update envelope timestamp for unchanged {Schema}.{Name}", entity.Schema, entity.Name);
+                        // Continue with full regeneration as fallback
+                    }
+                }
+            }
+
             if (options.DryRun)
             {
                 _logger.LogInformation("[DryRun] Would generate embedding for {Schema}.{Name}", entity.Schema, entity.Name);
@@ -272,7 +298,9 @@ public sealed class VectorGenerationService : IVectorGenerationService
                 var envelope = mapper.ToPersistedEntity(entity, payload);
                 var json = await _secureJsonSerializer.SerializeAsync(envelope, new JsonSerializerOptions { WriteIndented = true }).ConfigureAwait(false);
                 await File.WriteAllTextAsync(entityFile.FullName, json, cancellationToken).ConfigureAwait(false);
-                // Ensure filesystem timestamp reflects overwrite, even if content is unchanged
+                
+                // Explicitly update timestamp after file write to ensure overwrite is reflected in filesystem,
+                // particularly important when content might be identical but overwrite was requested
                 if (options.Overwrite)
                 {
                     try
