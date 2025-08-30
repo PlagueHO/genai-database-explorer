@@ -203,6 +203,7 @@ public sealed class SemanticModelProvider(
     }
 
     /// <inheritdoc/>
+    [Obsolete("This method is deprecated and will be removed in a future version. Use LoadSemanticModelAsync() without parameters instead, which uses the project's configured persistence strategy.", true)]
     public async Task<SemanticModel> LoadSemanticModelAsync(DirectoryInfo modelPath)
     {
         var repositorySettings = _project.Settings.SemanticModelRepository!;
@@ -288,6 +289,56 @@ public sealed class SemanticModelProvider(
 
         // return the semantic model Task
         return semanticModel;
+    }
+
+    /// <inheritdoc/>
+    public async Task SaveSemanticModelAsync(SemanticModel semanticModel)
+    {
+        var persistenceStrategy = _project.Settings.SemanticModel.PersistenceStrategy;
+        _logger.LogInformation("{Message} using strategy '{PersistenceStrategy}'", _resourceManagerLogMessages.GetString("SavingSemanticModel"), persistenceStrategy);
+
+        DirectoryInfo modelPath;
+
+        switch (persistenceStrategy)
+        {
+            case "LocalDisk":
+                modelPath = GetLocalDiskSemanticModelPath();
+                break;
+
+            case "AzureBlob":
+                // For AzureBlob, use the database name as a logical model path
+                modelPath = new DirectoryInfo(_project.Settings.Database.Name);
+                break;
+
+            case "CosmosDb":
+                // For CosmosDb, use the database name as a logical model path  
+                modelPath = new DirectoryInfo(_project.Settings.Database.Name);
+                break;
+
+            default:
+                throw new ArgumentException($"Unknown persistence strategy '{persistenceStrategy}' specified in project settings.", nameof(persistenceStrategy));
+        }
+
+        // Use the repository to save the semantic model with the configured strategy
+        await _semanticModelRepository.SaveModelAsync(semanticModel, modelPath, persistenceStrategy);
+
+        _logger.LogInformation("{Message} '{SemanticModelName}' using strategy '{PersistenceStrategy}'", _resourceManagerLogMessages.GetString("SavedSemanticModelForDatabase"), semanticModel.Name, persistenceStrategy);
+    }
+
+    /// <summary>
+    /// Gets the local disk semantic model path from project settings.
+    /// </summary>
+    /// <returns>The local disk semantic model directory.</returns>
+    private DirectoryInfo GetLocalDiskSemanticModelPath()
+    {
+        var localDiskConfig = _project.Settings.SemanticModelRepository?.LocalDisk;
+        if (localDiskConfig?.Directory == null || string.IsNullOrWhiteSpace(localDiskConfig.Directory))
+        {
+            throw new InvalidOperationException("LocalDisk persistence strategy is configured but no directory is specified in SemanticModelRepository.LocalDisk.Directory.");
+        }
+
+        var projectDirectory = _project.ProjectDirectory;
+        return new DirectoryInfo(Path.Combine(projectDirectory.FullName, localDiskConfig.Directory));
     }
 
     /// <summary>

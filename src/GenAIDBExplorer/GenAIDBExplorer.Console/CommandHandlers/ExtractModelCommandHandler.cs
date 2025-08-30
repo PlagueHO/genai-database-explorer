@@ -97,11 +97,9 @@ public class ExtractModelCommandHandler(
         // Extract the Semantic Model
         var semanticModel = await _semanticModelProvider.ExtractSemanticModelAsync().ConfigureAwait(false);
 
-        // Save the Semantic Model using the configured semantic model directory from settings
-        var semanticModelDirectory = GetSemanticModelDirectory(projectPath);
-
-        _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("SavingSemanticModel"), semanticModelDirectory);
-        await semanticModel.SaveModelAsync(semanticModelDirectory);
+        // Save the Semantic Model using the configured persistence strategy
+        _logger.LogInformation("{Message}", _resourceManagerLogMessages.GetString("SavingSemanticModel"));
+        await _semanticModelProvider.SaveSemanticModelAsync(semanticModel).ConfigureAwait(false);
 
         _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("ExtractSemanticModelComplete"), projectPath.FullName);
     }

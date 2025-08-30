@@ -112,7 +112,7 @@ public class ExtractModelCommandHandlerTests
             x => x.Log(
                 LogLevel.Information,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains($"Saving semantic model. '{Path.Combine(projectPath.FullName, "SemanticModel")}'")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Saving semantic model.")),
                 null,
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);

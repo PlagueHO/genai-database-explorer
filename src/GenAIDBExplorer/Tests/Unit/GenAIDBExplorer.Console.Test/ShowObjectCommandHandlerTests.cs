@@ -78,8 +78,6 @@ public class ShowObjectCommandHandlerTests
 
         _mockSemanticModelProvider.Setup(p => p.LoadSemanticModelAsync())
             .ReturnsAsync(semanticModel);
-        _mockSemanticModelProvider.Setup(p => p.LoadSemanticModelAsync(It.IsAny<DirectoryInfo>()))
-            .ReturnsAsync(semanticModel);
 
         // Act
         await _handler.HandleAsync(commandOptions);
@@ -110,8 +108,6 @@ public class ShowObjectCommandHandlerTests
 
         _mockSemanticModelProvider.Setup(p => p.LoadSemanticModelAsync())
             .ReturnsAsync(semanticModel);
-        _mockSemanticModelProvider.Setup(p => p.LoadSemanticModelAsync(It.IsAny<DirectoryInfo>()))
-            .ReturnsAsync(semanticModel);
 
         // Act
         await _handler.HandleAsync(commandOptions);
@@ -141,8 +137,6 @@ public class ShowObjectCommandHandlerTests
         semanticModel.AddStoredProcedure(storedProcedure);
 
         _mockSemanticModelProvider.Setup(p => p.LoadSemanticModelAsync())
-            .ReturnsAsync(semanticModel);
-        _mockSemanticModelProvider.Setup(p => p.LoadSemanticModelAsync(It.IsAny<DirectoryInfo>()))
             .ReturnsAsync(semanticModel);
 
         // Act

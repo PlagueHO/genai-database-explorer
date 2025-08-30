@@ -187,8 +187,7 @@ public class DataDictionaryCommandHandler(
         }
 
         _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("SavingSemanticModel"), projectPath.FullName);
-        var semanticModelDirectory = GetSemanticModelDirectory(projectPath);
-        await semanticModel.SaveModelAsync(semanticModelDirectory);
+        await _semanticModelProvider.SaveSemanticModelAsync(semanticModel).ConfigureAwait(false);
         _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("SavedSemanticModel"), projectPath.FullName);
 
         _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("DataDictionaryProcessingComplete"), projectPath.FullName);
