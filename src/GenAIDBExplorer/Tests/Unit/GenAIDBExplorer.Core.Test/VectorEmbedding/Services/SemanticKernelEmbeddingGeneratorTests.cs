@@ -25,9 +25,9 @@ public class SemanticKernelEmbeddingGeneratorTests
         var builder = Kernel.CreateBuilder();
         var services = builder.Services;
 
-    // Register a mock embedding generator keyed as "Embeddings" with a deterministic vector.
-    // The production code resolves IEmbeddingGenerator via Microsoft.Extensions.AI DI, using a service key.
-    // Returning GeneratedEmbeddings ensures the code path matches the real interface and keeps the test hermetic.
+        // Register a mock embedding generator keyed as "Embeddings" with a deterministic vector.
+        // The production code resolves IEmbeddingGenerator via Microsoft.Extensions.AI DI, using a service key.
+        // Returning GeneratedEmbeddings ensures the code path matches the real interface and keeps the test hermetic.
         var mockGen = new Moq.Mock<IEmbeddingGenerator<string, Embedding<float>>>();
         mockGen
             .Setup(g => g.GenerateAsync(

@@ -228,10 +228,10 @@ public sealed class VectorGenerationService : IVectorGenerationService
             if (options.Overwrite && string.Equals(existingHash?.Trim(), contentHash?.Trim(), StringComparison.OrdinalIgnoreCase))
             {
                 _logger.LogInformation("Overwriting unchanged entity {Schema}.{Name}", entity.Schema, entity.Name);
-                
+
                 // For LocalDisk/AzureBlob strategies, touch the file to update timestamp
-                if ((string.Equals(repoStrategy, "LocalDisk", StringComparison.OrdinalIgnoreCase) || 
-                     string.Equals(repoStrategy, "AzureBlob", StringComparison.OrdinalIgnoreCase)) && 
+                if ((string.Equals(repoStrategy, "LocalDisk", StringComparison.OrdinalIgnoreCase) ||
+                     string.Equals(repoStrategy, "AzureBlob", StringComparison.OrdinalIgnoreCase)) &&
                     entityFile.Exists)
                 {
                     try
@@ -298,7 +298,7 @@ public sealed class VectorGenerationService : IVectorGenerationService
                 var envelope = mapper.ToPersistedEntity(entity, payload);
                 var json = await _secureJsonSerializer.SerializeAsync(envelope, new JsonSerializerOptions { WriteIndented = true }).ConfigureAwait(false);
                 await File.WriteAllTextAsync(entityFile.FullName, json, cancellationToken).ConfigureAwait(false);
-                
+
                 // Explicitly update timestamp after file write to ensure overwrite is reflected in filesystem,
                 // particularly important when content might be identical but overwrite was requested
                 if (options.Overwrite)
