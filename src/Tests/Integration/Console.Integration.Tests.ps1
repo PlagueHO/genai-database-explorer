@@ -388,24 +388,25 @@ Describe 'GenAI Database Explorer Console Application' {
                 # Act
                 $commandResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $script:DbProjectPath)
 
-                # Assert - check the exit code first to determine the correct path
-                if ($commandResult.ExitCode -eq 0) {
-                    # Success case - should not have stack traces or authorization failures
-                    $commandResult.Output | Should -Not -Match 'Exception.*at.*' -Because 'Successful run should not print stack traces'
-                    $commandResult.Output | Should -Not -Match 'AuthorizationFailure|Access denied|403.*not authorized' -Because 'Successful run should not have authorization errors'
-                    $script:ExtractSucceeded = $true
+                # Assert - check for specific error patterns first, then exit code
+                if ($commandResult.Output -match 'AuthorizationFailure|Access denied|403.*not authorized') {
+                    # Azure authorization error - expected in CI when GitHub runner doesn't have proper RBAC roles
+                    Write-Warning "Azure authorization failure detected - this is expected when GitHub runner lacks Storage Blob Data Contributor role"
+                    Write-Host "AuthorizationFailure indicates the Azure Blob storage configuration is working, but RBAC permissions need to be configured" -ForegroundColor Yellow
+                    $commandResult.ExitCode | Should -Not -Be 0 -Because 'Authorization failure should result in non-zero exit code'
+                    $commandResult.Output | Should -Match 'AuthorizationFailure|Access denied|403.*not authorized' -Because 'Should provide clear authorization error message'
                 } elseif ($commandResult.Output -match 'Persistence strategy.*is not yet supported|not.*supported.*persistence') {
                     # Handle unsupported persistence strategies gracefully
                     $commandResult.ExitCode | Should -Not -Be 0 -Because 'Unsupported persistence strategy should result in non-zero exit code'
                     Write-Warning "Persistence strategy '$($script:PersistenceStrategy)' is not yet supported for extract-model command"
-                } elseif ($commandResult.Output -match 'AuthorizationFailure|Access denied|403.*not authorized') {
-                    # Azure authorization error - expected in CI when GitHub runner doesn't have proper RBAC roles
-                    Write-Warning "Azure authorization failure detected - this is expected when GitHub runner lacks Storage Blob Data Contributor role"
-                    Write-Host "AuthorizationFailure indicates the Azure Blob storage configuration is working, but RBAC permissions need to be configured" -ForegroundColor Yellow
-                    $commandResult.Output | Should -Match 'AuthorizationFailure|Access denied|403.*not authorized' -Because 'Should provide clear authorization error message'
                 } elseif ($commandResult.Output -match 'network-related.*error|connection.*error|server.*not.*found|authentication.*fail|timeout') {
                     # Network/connection error case - should provide meaningful error message
                     $commandResult.Output | Should -Match 'network-related.*error|connection.*error|server.*not.*found|authentication.*fail|timeout' -Because 'Should provide meaningful error message for connection issues'
+                } elseif ($commandResult.ExitCode -eq 0) {
+                    # Success case - should not have stack traces or authorization failures
+                    $commandResult.Output | Should -Not -Match 'Exception.*at.*' -Because 'Successful run should not print stack traces'
+                    $commandResult.Output | Should -Not -Match 'AuthorizationFailure|Access denied|403.*not authorized' -Because 'Successful run should not have authorization errors'
+                    $script:ExtractSucceeded = $true
                 } else {
                     # Any other failure - should not show stack traces
                     $commandResult.Output | Should -Not -Match 'Exception.*at.*' -Because 'Should not show stack traces on handled failures'
@@ -580,8 +581,14 @@ Describe 'GenAI Database Explorer Console Application' {
                     # Act
                     $commandResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('enrich-model', 'table', '--project', $script:AiProjectPath, '--schema', 'dbo')
 
-                    # Assert - May fail if AI service unavailable, but should handle gracefully
-                    if ($commandResult.Output -match 'Persistence strategy.*is not yet supported|not.*supported.*persistence') {
+                    # Assert - check for specific error patterns first, then handle other cases
+                    if ($commandResult.Output -match 'AuthorizationFailure|Access denied|403.*not authorized') {
+                        # Azure authorization error - expected in CI when GitHub runner doesn't have proper RBAC roles
+                        Write-Warning "Azure authorization failure detected - this is expected when GitHub runner lacks Storage Blob Data Contributor role"
+                        Write-Host "AuthorizationFailure indicates the Azure Blob storage configuration is working, but RBAC permissions need to be configured" -ForegroundColor Yellow
+                        $commandResult.ExitCode | Should -Not -Be 0 -Because 'Authorization failure should result in non-zero exit code'
+                        $commandResult.Output | Should -Match 'AuthorizationFailure|Access denied|403.*not authorized' -Because 'Should provide clear authorization error message'
+                    } elseif ($commandResult.Output -match 'Persistence strategy.*is not yet supported|not.*supported.*persistence') {
                         # Handle unsupported persistence strategies gracefully
                         $commandResult.ExitCode | Should -Not -Be 0 -Because 'Unsupported persistence strategy should result in non-zero exit code'
                         Write-Warning "Persistence strategy '$($script:PersistenceStrategy)' is not yet supported for enrich-model command"
@@ -599,13 +606,21 @@ Describe 'GenAI Database Explorer Console Application' {
                     # Act
                     $commandResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('enrich-model', 'table', '--project', $script:AiProjectPath, '--schema', 'dbo', '--name', 'Customer')
 
-                    # Assert
-                    if ($commandResult.Output -match 'Persistence strategy.*is not yet supported|not.*supported.*persistence') {
+                    # Assert - check for specific error patterns first, then handle other cases
+                    # Join output array to single string for reliable pattern matching
+                    $joinedOutput = $commandResult.Output -join "`n"
+                    if ($joinedOutput -match 'AuthorizationFailure|Access denied|403.*not authorized') {
+                        # Azure authorization error - expected in CI when GitHub runner doesn't have proper RBAC roles
+                        Write-Warning "Azure authorization failure detected - this is expected when GitHub runner lacks Storage Blob Data Contributor role"
+                        Write-Host "AuthorizationFailure indicates the Azure Blob storage configuration is working, but RBAC permissions need to be configured" -ForegroundColor Yellow
+                        $commandResult.ExitCode | Should -Not -Be 0 -Because 'Authorization failure should result in non-zero exit code'
+                        $joinedOutput | Should -Match 'AuthorizationFailure|Access denied|403.*not authorized' -Because 'Should provide clear authorization error message'
+                    } elseif ($joinedOutput -match 'Persistence strategy.*is not yet supported|not.*supported.*persistence') {
                         # Handle unsupported persistence strategies gracefully
                         $commandResult.ExitCode | Should -Not -Be 0 -Because 'Unsupported persistence strategy should result in non-zero exit code'
                         Write-Warning "Persistence strategy '$($script:PersistenceStrategy)' is not yet supported for enrich-model command"
                     } else {
-                        $commandResult.Output | Should -Not -Match 'Exception.*at.*' -Because 'Should not show stack traces'
+                        $joinedOutput | Should -Not -Match 'Exception.*at.*' -Because 'Should not show stack traces'
                     }
                 }
             }
@@ -616,8 +631,14 @@ Describe 'GenAI Database Explorer Console Application' {
                 # Act
                 $commandResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('generate-vectors', '--project', $script:AiProjectPath, '--dry-run', '--skipViews', '--skipStoredProcedures')
 
-                # Assert
-                if ($commandResult.Output -match 'Persistence strategy.*is not yet supported|not.*supported.*persistence') {
+                # Assert - check for specific error patterns first, then handle other cases
+                if ($commandResult.Output -match 'AuthorizationFailure|Access denied|403.*not authorized') {
+                    # Azure authorization error - expected in CI when GitHub runner doesn't have proper RBAC roles
+                    Write-Warning "Azure authorization failure detected - this is expected when GitHub runner lacks Storage Blob Data Contributor role"
+                    Write-Host "AuthorizationFailure indicates the Azure Blob storage configuration is working, but RBAC permissions need to be configured" -ForegroundColor Yellow
+                    $commandResult.ExitCode | Should -Not -Be 0 -Because 'Authorization failure should result in non-zero exit code'
+                    $commandResult.Output | Should -Match 'AuthorizationFailure|Access denied|403.*not authorized' -Because 'Should provide clear authorization error message'
+                } elseif ($commandResult.Output -match 'Persistence strategy.*is not yet supported|not.*supported.*persistence') {
                     # Handle unsupported persistence strategies gracefully - dry-run may still fail
                     $commandResult.ExitCode | Should -Not -Be 0 -Because 'Unsupported persistence strategy should result in non-zero exit code'
                     Write-Warning "Persistence strategy '$($script:PersistenceStrategy)' is not yet supported for generate-vectors command"
@@ -632,8 +653,14 @@ Describe 'GenAI Database Explorer Console Application' {
                 # Act
                 $commandResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('generate-vectors', 'table', '--project', $script:AiProjectPath, '--schema', 'dbo', '--name', 'Customer', '--dry-run')
 
-                # Assert
-                if ($commandResult.Output -match 'Persistence strategy.*is not yet supported|not.*supported.*persistence') {
+                # Assert - check for specific error patterns first, then handle other cases
+                if ($commandResult.Output -match 'AuthorizationFailure|Access denied|403.*not authorized') {
+                    # Azure authorization error - expected in CI when GitHub runner doesn't have proper RBAC roles
+                    Write-Warning "Azure authorization failure detected - this is expected when GitHub runner lacks Storage Blob Data Contributor role"
+                    Write-Host "AuthorizationFailure indicates the Azure Blob storage configuration is working, but RBAC permissions need to be configured" -ForegroundColor Yellow
+                    $commandResult.ExitCode | Should -Not -Be 0 -Because 'Authorization failure should result in non-zero exit code'
+                    $commandResult.Output | Should -Match 'AuthorizationFailure|Access denied|403.*not authorized' -Because 'Should provide clear authorization error message'
+                } elseif ($commandResult.Output -match 'Persistence strategy.*is not yet supported|not.*supported.*persistence') {
                     # Handle unsupported persistence strategies gracefully - dry-run may still fail
                     $commandResult.ExitCode | Should -Not -Be 0 -Because 'Unsupported persistence strategy should result in non-zero exit code'
                     Write-Warning "Persistence strategy '$($script:PersistenceStrategy)' is not yet supported for generate-vectors command"
@@ -770,8 +797,14 @@ Describe 'GenAI Database Explorer Console Application' {
                     # Act
                     $commandResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('show-object', 'table', '--project', $script:DisplayProjectPath, '--schemaName', 'dbo')
 
-                    # Assert
-                    if ($commandResult.Output -match 'Persistence strategy.*is not yet supported|not.*supported.*persistence') {
+                    # Assert - check for specific error patterns first, then handle other cases
+                    if ($commandResult.Output -match 'AuthorizationFailure|Access denied|403.*not authorized') {
+                        # Azure authorization error - expected in CI when GitHub runner doesn't have proper RBAC roles
+                        Write-Warning "Azure authorization failure detected - this is expected when GitHub runner lacks Storage Blob Data Contributor role"
+                        Write-Host "AuthorizationFailure indicates the Azure Blob storage configuration is working, but RBAC permissions need to be configured" -ForegroundColor Yellow
+                        $commandResult.ExitCode | Should -Not -Be 0 -Because 'Authorization failure should result in non-zero exit code'
+                        $commandResult.Output | Should -Match 'AuthorizationFailure|Access denied|403.*not authorized' -Because 'Should provide clear authorization error message'
+                    } elseif ($commandResult.Output -match 'Persistence strategy.*is not yet supported|not.*supported.*persistence') {
                         # Handle unsupported persistence strategies gracefully
                         $commandResult.ExitCode | Should -Not -Be 0 -Because 'Unsupported persistence strategy should result in non-zero exit code'
                         Write-Warning "Persistence strategy '$($script:PersistenceStrategy)' is not yet supported for show-object command"
@@ -791,8 +824,14 @@ Describe 'GenAI Database Explorer Console Application' {
                     # Act
                     $commandResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('show-object', 'table', '--project', $script:DisplayProjectPath, '--schemaName', 'dbo', '--name', 'Customer')
 
-                    # Assert
-                    if ($commandResult.Output -match 'Persistence strategy.*is not yet supported|not.*supported.*persistence') {
+                    # Assert - check for specific error patterns first, then handle other cases
+                    if ($commandResult.Output -match 'AuthorizationFailure|Access denied|403.*not authorized') {
+                        # Azure authorization error - expected in CI when GitHub runner doesn't have proper RBAC roles
+                        Write-Warning "Azure authorization failure detected - this is expected when GitHub runner lacks Storage Blob Data Contributor role"
+                        Write-Host "AuthorizationFailure indicates the Azure Blob storage configuration is working, but RBAC permissions need to be configured" -ForegroundColor Yellow
+                        $commandResult.ExitCode | Should -Not -Be 0 -Because 'Authorization failure should result in non-zero exit code'
+                        $commandResult.Output | Should -Match 'AuthorizationFailure|Access denied|403.*not authorized' -Because 'Should provide clear authorization error message'
+                    } elseif ($commandResult.Output -match 'Persistence strategy.*is not yet supported|not.*supported.*persistence') {
                         # Handle unsupported persistence strategies gracefully
                         $commandResult.ExitCode | Should -Not -Be 0 -Because 'Unsupported persistence strategy should result in non-zero exit code'
                         Write-Warning "Persistence strategy '$($script:PersistenceStrategy)' is not yet supported for show-object command"
@@ -812,8 +851,14 @@ Describe 'GenAI Database Explorer Console Application' {
                     # Act
                     $commandResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('export-model', '--project', $script:DisplayProjectPath, '--outputFileName', $exportPath, '--fileType', 'markdown')
 
-                    # Assert
-                    if ($commandResult.Output -match 'Persistence strategy.*is not yet supported|not.*supported.*persistence') {
+                    # Assert - check for specific error patterns first, then handle other cases
+                    if ($commandResult.Output -match 'AuthorizationFailure|Access denied|403.*not authorized') {
+                        # Azure authorization error - expected in CI when GitHub runner doesn't have proper RBAC roles
+                        Write-Warning "Azure authorization failure detected - this is expected when GitHub runner lacks Storage Blob Data Contributor role"
+                        Write-Host "AuthorizationFailure indicates the Azure Blob storage configuration is working, but RBAC permissions need to be configured" -ForegroundColor Yellow
+                        $commandResult.ExitCode | Should -Not -Be 0 -Because 'Authorization failure should result in non-zero exit code'
+                        $commandResult.Output | Should -Match 'AuthorizationFailure|Access denied|403.*not authorized' -Because 'Should provide clear authorization error message'
+                    } elseif ($commandResult.Output -match 'Persistence strategy.*is not yet supported|not.*supported.*persistence') {
                         # Handle unsupported persistence strategies gracefully
                         $commandResult.ExitCode | Should -Not -Be 0 -Because 'Unsupported persistence strategy should result in non-zero exit code'
                         Write-Warning "Persistence strategy '$($script:PersistenceStrategy)' is not yet supported for export-model command"
@@ -839,8 +884,14 @@ Describe 'GenAI Database Explorer Console Application' {
                     # Act
                     $commandResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('export-model', '--project', $script:DisplayProjectPath, '--outputFileName', $exportPath, '--fileType', 'markdown', '--splitFiles')
 
-                    # Assert
-                    if ($commandResult.Output -match 'Persistence strategy.*is not yet supported|not.*supported.*persistence') {
+                    # Assert - check for specific error patterns first, then handle other cases
+                    if ($commandResult.Output -match 'AuthorizationFailure|Access denied|403.*not authorized') {
+                        # Azure authorization error - expected in CI when GitHub runner doesn't have proper RBAC roles
+                        Write-Warning "Azure authorization failure detected - this is expected when GitHub runner lacks Storage Blob Data Contributor role"
+                        Write-Host "AuthorizationFailure indicates the Azure Blob storage configuration is working, but RBAC permissions need to be configured" -ForegroundColor Yellow
+                        $commandResult.ExitCode | Should -Not -Be 0 -Because 'Authorization failure should result in non-zero exit code'
+                        $commandResult.Output | Should -Match 'AuthorizationFailure|Access denied|403.*not authorized' -Because 'Should provide clear authorization error message'
+                    } elseif ($commandResult.Output -match 'Persistence strategy.*is not yet supported|not.*supported.*persistence') {
                         # Handle unsupported persistence strategies gracefully
                         $commandResult.ExitCode | Should -Not -Be 0 -Because 'Unsupported persistence strategy should result in non-zero exit code'
                         Write-Warning "Persistence strategy '$($script:PersistenceStrategy)' is not yet supported for export-model command"
