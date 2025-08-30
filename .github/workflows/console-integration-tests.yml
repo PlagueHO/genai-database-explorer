@@ -130,7 +130,7 @@ jobs:
             Write-Host "Input AZURE_AI_FOUNDRY_NAME: '${{ inputs.AZURE_AI_FOUNDRY_NAME }}'" -ForegroundColor Yellow
             Write-Host "Persistence strategy: '$env:PERSISTENCE_STRATEGY'" -ForegroundColor Yellow
             if ($env:PERSISTENCE_STRATEGY -eq 'AzureBlob') {
-              Write-Host "Blob endpoint: $env:AZURE_STORAGE_ACCOUNT_ENDPOINT, container: $env:AZURE_STORAGE_CONTAINER, prefix: $env:AZURE_STORAGE_BLOB_PREFIX" -ForegroundColor Yellow
+              Write-Host "Blob endpoint: $env:SemanticModelRepository__AzureBlobStorage__AccountEndpoint, container: $env:SemanticModelRepository__AzureBlobStorage__ContainerName, prefix: $env:SemanticModelRepository__AzureBlobStorage__BlobPrefix" -ForegroundColor Yellow
             }
             if ($env:PERSISTENCE_STRATEGY -match 'CosmosDb') {
               Write-Host "Cosmos DB endpoint: $env:AZURE_COSMOS_DB_ACCOUNT_ENDPOINT, db: $env:AZURE_COSMOS_DB_DATABASE_NAME, models: $env:AZURE_COSMOS_DB_MODELS_CONTAINER, entities: $env:AZURE_COSMOS_DB_ENTITIES_CONTAINER" -ForegroundColor Yellow
@@ -195,9 +195,9 @@ jobs:
           CONSOLE_APP_PATH: ./publish/GenAIDBExplorer.Console
           PERSISTENCE_STRATEGY: ${{ matrix.persistence }}
           # Optional envs for strategies
-          AZURE_STORAGE_ACCOUNT_ENDPOINT: ${{ env.AZURE_STORAGE_ACCOUNT_ENDPOINT }}
-          AZURE_STORAGE_CONTAINER: ${{ env.AZURE_STORAGE_CONTAINER }}
-          AZURE_STORAGE_BLOB_PREFIX: ${{ env.AZURE_STORAGE_BLOB_PREFIX }}
+          SemanticModelRepository__AzureBlobStorage__AccountEndpoint: ${{ env.SemanticModelRepository__AzureBlobStorage__AccountEndpoint }}
+          SemanticModelRepository__AzureBlobStorage__ContainerName: ${{ env.SemanticModelRepository__AzureBlobStorage__ContainerName }}
+          SemanticModelRepository__AzureBlobStorage__BlobPrefix: ${{ env.SemanticModelRepository__AzureBlobStorage__BlobPrefix }}
           AZURE_COSMOS_DB_ACCOUNT_ENDPOINT: ${{ env.AZURE_COSMOS_DB_ACCOUNT_ENDPOINT }}
           AZURE_COSMOS_DB_DATABASE_NAME: ${{ env.AZURE_COSMOS_DB_DATABASE_NAME }}
           AZURE_COSMOS_DB_MODELS_CONTAINER: ${{ env.AZURE_COSMOS_DB_MODELS_CONTAINER }}

@@ -108,10 +108,11 @@ function Set-AzureStorageForTests {
             Write-Host "Container name: $ContainerName"
             Write-Host "Blob prefix: $blobPrefix"
             
-            # Export environment variables for GitHub Actions
-            "AZURE_STORAGE_ACCOUNT_ENDPOINT=$endpoint" | Out-File -FilePath $env:GITHUB_ENV -Append
-            "AZURE_STORAGE_CONTAINER=$ContainerName" | Out-File -FilePath $env:GITHUB_ENV -Append
-            "AZURE_STORAGE_BLOB_PREFIX=$blobPrefix" | Out-File -FilePath $env:GITHUB_ENV -Append
+            # Export environment variables for GitHub Actions using .NET configuration naming convention
+            # .NET uses double underscores (__) for nested configuration sections
+            "SemanticModelRepository__AzureBlobStorage__AccountEndpoint=$endpoint" | Out-File -FilePath $env:GITHUB_ENV -Append
+            "SemanticModelRepository__AzureBlobStorage__ContainerName=$ContainerName" | Out-File -FilePath $env:GITHUB_ENV -Append
+            "SemanticModelRepository__AzureBlobStorage__BlobPrefix=$blobPrefix" | Out-File -FilePath $env:GITHUB_ENV -Append
             
             Write-Verbose "Successfully configured Azure Storage for tests"
         }

@@ -93,9 +93,9 @@ Describe 'GenAI Database Explorer Console Application' {
                 SQL_CONNECTION_STRING = $env:SQL_CONNECTION_STRING
                 AZURE_OPENAI_ENDPOINT = $env:AZURE_OPENAI_ENDPOINT
                 AZURE_OPENAI_API_KEY = $env:AZURE_OPENAI_API_KEY
-                AZURE_STORAGE_ACCOUNT_ENDPOINT = $env:AZURE_STORAGE_ACCOUNT_ENDPOINT
-                AZURE_STORAGE_CONTAINER = $env:AZURE_STORAGE_CONTAINER
-                AZURE_STORAGE_BLOB_PREFIX = $env:AZURE_STORAGE_BLOB_PREFIX
+                AZURE_STORAGE_ACCOUNT_ENDPOINT = $env:SemanticModelRepository__AzureBlobStorage__AccountEndpoint
+                AZURE_STORAGE_CONTAINER = $env:SemanticModelRepository__AzureBlobStorage__ContainerName
+                AZURE_STORAGE_BLOB_PREFIX = $env:SemanticModelRepository__AzureBlobStorage__BlobPrefix
                 AZURE_COSMOS_DB_ACCOUNT_ENDPOINT = $env:AZURE_COSMOS_DB_ACCOUNT_ENDPOINT
                 AZURE_COSMOS_DB_DATABASE_NAME = $env:AZURE_COSMOS_DB_DATABASE_NAME
                 AZURE_COSMOS_DB_MODELS_CONTAINER = $env:AZURE_COSMOS_DB_MODELS_CONTAINER
