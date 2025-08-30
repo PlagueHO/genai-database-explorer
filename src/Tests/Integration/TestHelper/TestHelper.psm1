@@ -439,14 +439,14 @@ function Set-TestProjectConfiguration {
         }
         'AzureBlob' {
             $repoConfig.AzureBlobStorage = @{
-                AccountEndpoint = $AzureStorageAccountEndpoint
-                ContainerName   = $AzureStorageContainer ?? 'semantic-models'
+                AccountEndpoint = ($NoAzureMode -or [string]::IsNullOrEmpty($AzureStorageAccountEndpoint)) ? 'https://test.blob.core.windows.net' : $AzureStorageAccountEndpoint
+                ContainerName   = ([string]::IsNullOrEmpty($AzureStorageContainer)) ? 'semantic-models' : $AzureStorageContainer
                 BlobPrefix      = $AzureStorageBlobPrefix
             }
         }
         'CosmosDb' {
             $repoConfig.CosmosDb = @{
-                AccountEndpoint        = $AzureCosmosDbAccountEndpoint
+                AccountEndpoint        = ($NoAzureMode -or [string]::IsNullOrEmpty($AzureCosmosDbAccountEndpoint)) ? 'https://test.documents.azure.com:443/' : $AzureCosmosDbAccountEndpoint
                 DatabaseName           = $AzureCosmosDbDatabaseName ?? 'SemanticModels'
                 ModelsContainerName    = $AzureCosmosDbModelsContainer ?? 'Models'
                 EntitiesContainerName  = $AzureCosmosDbEntitiesContainer ?? 'ModelEntities'

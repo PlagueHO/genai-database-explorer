@@ -441,18 +441,105 @@ public class SemanticModelProviderTests
     }
 
     [TestMethod]
-    public async Task LoadSemanticModelAsync_WithAzureBlobStrategy_ShouldThrowNotSupportedException()
+    public async Task LoadSemanticModelAsync_WithAzureBlobStrategy_ShouldLoadFromAzureBlobStorage()
     {
         // Arrange
         var projectSettings = _mockProject.Object.Settings;
         projectSettings.SemanticModel.PersistenceStrategy = "AzureBlob";
+        projectSettings.SemanticModelRepository!.AzureBlobStorage = new AzureBlobStorageConfiguration
+        {
+            AccountEndpoint = "https://test.blob.core.windows.net",
+            ContainerName = "test-models",
+            BlobPrefix = "test",
+            OperationTimeoutSeconds = 600,
+            MaxConcurrentOperations = 8
+        };
+
+        var expectedSemanticModel = new SemanticModel("TestDatabase", "test-connection", "Test description");
+        var logicalModelPath = new DirectoryInfo("TestDatabase"); // This is what the method creates internally
+
+        _mockSemanticModelRepository.Setup(r => r.LoadModelAsync(
+            It.Is<DirectoryInfo>(d => d.Name == "TestDatabase"),
+            It.IsAny<SemanticModelRepositoryOptions>()))
+            .ReturnsAsync(expectedSemanticModel);
+
+        // Act
+        var result = await _semanticModelProvider.LoadSemanticModelAsync();
+
+        // Assert
+        result.Should().Be(expectedSemanticModel);
+        _mockSemanticModelRepository.Verify(
+            r => r.LoadModelAsync(
+                It.Is<DirectoryInfo>(d => d.Name == "TestDatabase"),
+                It.Is<SemanticModelRepositoryOptions>(o => o.StrategyName == "AzureBlob")),
+            Times.Once);
+    }
+
+    [TestMethod]
+    public async Task LoadSemanticModelAsync_WithAzureBlobButNoAccountEndpoint_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        var projectSettings = _mockProject.Object.Settings;
+        projectSettings.SemanticModel.PersistenceStrategy = "AzureBlob";
+        projectSettings.SemanticModelRepository!.AzureBlobStorage = new AzureBlobStorageConfiguration
+        {
+            AccountEndpoint = "", // Missing endpoint
+            ContainerName = "test-models"
+        };
 
         // Act & Assert
-        var exception = await Assert.ThrowsExactlyAsync<NotSupportedException>(
+        var exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
             () => _semanticModelProvider.LoadSemanticModelAsync());
 
-        exception.Message.Should().Contain("AzureBlob");
-        exception.Message.Should().Contain("not yet supported");
+        exception.Message.Should().Contain("AzureBlob persistence strategy is configured");
+        exception.Message.Should().Contain("no AccountEndpoint is specified");
+    }
+
+    [TestMethod]
+    public async Task LoadSemanticModelAsync_WithAzureBlobButNoContainerName_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        var projectSettings = _mockProject.Object.Settings;
+        projectSettings.SemanticModel.PersistenceStrategy = "AzureBlob";
+        projectSettings.SemanticModelRepository!.AzureBlobStorage = new AzureBlobStorageConfiguration
+        {
+            AccountEndpoint = "https://test.blob.core.windows.net",
+            ContainerName = "" // Missing container name
+        };
+
+        // Act & Assert
+        var exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => _semanticModelProvider.LoadSemanticModelAsync());
+
+        exception.Message.Should().Contain("AzureBlob persistence strategy is configured");
+        exception.Message.Should().Contain("no ContainerName is specified");
+    }
+
+    [TestMethod]
+    public async Task LoadSemanticModelAsync_WithAzureBlobRepositoryFailure_ShouldFallbackToEmptyModel()
+    {
+        // Arrange
+        var projectSettings = _mockProject.Object.Settings;
+        projectSettings.SemanticModel.PersistenceStrategy = "AzureBlob";
+        projectSettings.SemanticModelRepository!.AzureBlobStorage = new AzureBlobStorageConfiguration
+        {
+            AccountEndpoint = "https://test.blob.core.windows.net",
+            ContainerName = "test-models"
+        };
+
+        _mockSemanticModelRepository.Setup(r => r.LoadModelAsync(It.IsAny<DirectoryInfo>(), It.IsAny<SemanticModelRepositoryOptions>()))
+            .ThrowsAsync(new InvalidOperationException("Azure Blob repository failed"));
+
+        // Act
+        var result = await _semanticModelProvider.LoadSemanticModelAsync();
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Name.Should().Be("TestDatabase");
+        result.Tables.Should().BeEmpty();
+        result.Views.Should().BeEmpty();
+        result.StoredProcedures.Should().BeEmpty();
+        _mockSemanticModelRepository.Verify(r => r.LoadModelAsync(It.IsAny<DirectoryInfo>(), It.IsAny<SemanticModelRepositoryOptions>()), Times.Once);
     }
 
     [TestMethod]

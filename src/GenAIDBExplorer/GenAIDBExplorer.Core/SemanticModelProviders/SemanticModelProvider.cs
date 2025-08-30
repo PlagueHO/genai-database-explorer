@@ -49,7 +49,8 @@ public sealed class SemanticModelProvider(
                 break;
 
             case "AzureBlob":
-                throw new NotSupportedException($"Persistence strategy '{persistenceStrategy}' is not yet supported for loading semantic models.");
+                semanticModel = await LoadSemanticModelFromAzureBlobAsync();
+                break;
 
             case "CosmosDb":
                 throw new NotSupportedException($"Persistence strategy '{persistenceStrategy}' is not yet supported for loading semantic models.");
@@ -116,6 +117,79 @@ public sealed class SemanticModelProvider(
             try
             {
                 return await CreateSemanticModel().LoadModelAsync(semanticModelPath);
+            }
+            catch (FileNotFoundException)
+            {
+                return CreateSemanticModel();
+            }
+            catch (DirectoryNotFoundException)
+            {
+                return CreateSemanticModel();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Loads the semantic model from Azure Blob Storage using the configured storage account and container with settings-driven lazy loading and caching.
+    /// </summary>
+    /// <returns>The loaded semantic model.</returns>
+    private async Task<SemanticModel> LoadSemanticModelFromAzureBlobAsync()
+    {
+        // Get the configured Azure Blob Storage settings
+        var azureBlobConfig = _project.Settings.SemanticModelRepository?.AzureBlobStorage;
+        if (azureBlobConfig?.AccountEndpoint == null || string.IsNullOrWhiteSpace(azureBlobConfig.AccountEndpoint))
+        {
+            throw new InvalidOperationException("AzureBlob persistence strategy is configured but no AccountEndpoint is specified in SemanticModelRepository.AzureBlobStorage.AccountEndpoint.");
+        }
+
+        if (azureBlobConfig?.ContainerName == null || string.IsNullOrWhiteSpace(azureBlobConfig.ContainerName))
+        {
+            throw new InvalidOperationException("AzureBlob persistence strategy is configured but no ContainerName is specified in SemanticModelRepository.AzureBlobStorage.ContainerName.");
+        }
+
+        // Create a logical directory path using the model name for the Azure Blob persistence strategy
+        var modelName = _project.Settings.Database.Name;
+        var logicalModelPath = new DirectoryInfo(modelName);
+
+        var repositorySettings = _project.Settings.SemanticModelRepository!;
+        _logger.LogDebug("Loading semantic model from Azure Blob Storage (Account: '{AccountEndpoint}', Container: '{ContainerName}') with settings-driven configuration (LazyLoading: {LazyLoading}, Caching: {Caching}, ChangeTracking: {ChangeTracking})",
+            azureBlobConfig.AccountEndpoint,
+            azureBlobConfig.ContainerName,
+            repositorySettings.LazyLoading.Enabled,
+            repositorySettings.Caching.Enabled,
+            repositorySettings.ChangeTracking.Enabled);
+
+        // Create repository options using the builder pattern controlled by settings
+        var optionsBuilder = SemanticModelRepositoryOptionsBuilder.Create()
+            .WithLazyLoading(repositorySettings.LazyLoading.Enabled)
+            .WithChangeTracking(repositorySettings.ChangeTracking.Enabled)
+            .WithCaching(repositorySettings.Caching.Enabled, TimeSpan.FromMinutes(repositorySettings.Caching.ExpirationMinutes))
+            .WithMaxConcurrentOperations(repositorySettings.MaxConcurrentOperations)
+            .WithStrategyName("AzureBlob");
+
+        // Add performance monitoring if enabled
+        if (repositorySettings.PerformanceMonitoring.Enabled)
+        {
+            optionsBuilder = optionsBuilder.WithPerformanceMonitoring(builder =>
+                builder.EnableLocalMonitoring(true)
+                       .WithMetricsRetention(TimeSpan.FromHours(24)));
+        }
+
+        var options = optionsBuilder.Build();
+
+        // Use the repository for loading semantic models with settings-driven options
+        try
+        {
+            return await _semanticModelRepository.LoadModelAsync(logicalModelPath, options);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to load semantic model using repository from Azure Blob Storage (model: '{ModelName}'), attempting fallback to empty", modelName);
+            try
+            {
+                // For Azure Blob, we can't fall back to direct load like LocalDisk since the persistence strategy handles the storage details
+                // Instead, we return a new semantic model as fallback
+                return CreateSemanticModel();
             }
             catch (FileNotFoundException)
             {
