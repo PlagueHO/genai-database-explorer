@@ -52,7 +52,7 @@ Each persistence strategy has its own dedicated configuration section under `Sem
         "LocalDisk": {
             "Directory": "SemanticModel"
         },
-        "AzureBlobStorage": {
+        "AzureBlob": {
             "AccountEndpoint": "https://mystorageaccount.blob.core.windows.net",
             "ContainerName": "semantic-models"
         },

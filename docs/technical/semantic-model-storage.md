@@ -358,8 +358,8 @@ Storage strategy is configured through dependency injection and can be changed w
 
 ```json
 {
-  "PersistenceStrategy": "AzureBlobStorage",
-  "AzureBlobStorage": {
+  "PersistenceStrategy": "AzureBlob",
+  "AzureBlob": {
     "AccountEndpoint": "https://account.blob.core.windows.net/",
     "ContainerName": "semantic-models"
   },

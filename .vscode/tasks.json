@@ -92,7 +92,7 @@
 
 		// Testing Tasks
 		{
-			"label": "test-dotnet-unit",
+			"label": "dotnet-test-unit",
 			"icon": {
 				"id": "beaker"
 			},
@@ -216,7 +216,7 @@
 				"--",
 				"init-project",
 				"--project",
-				"d:/temp"
+				"D:/genaidbexp-temp/adventureworks"
 			],
 			"options": {
 				"cwd": "${workspaceFolder}/src/GenAIDBExplorer"
@@ -237,7 +237,7 @@
 				"--",
 				"extract-model",
 				"--project",
-				"d:/temp",
+				"D:/genaidbexp-temp/adventureworks",
 				"--skipTables",
 				"--skipViews",
 				"--skipStoredProcedures"
@@ -261,9 +261,9 @@
 				"--",
 				"data-dictionary",
 				"--project",
-				"d:/temp",
+				"D:/genaidbexp-temp/adventureworks",
 				"--sourcePathPattern",
-				"d:/temp/dict/*.json",
+				"D:/genaidbexp-temp/adventureworks/dict/*.json",
 				"--objectType",
 				"table",
 				"--schemaName",
@@ -291,7 +291,7 @@
 				"--",
 				"enrich-model",
 				"--project",
-				"d:/temp",
+				"D:/genaidbexp-temp/adventureworks",
 				"--skipTables",
 				"--skipViews",
 				"--skipStoredProcedures",
@@ -323,7 +323,7 @@
 				"show-object",
 				"table",
 				"--project",
-				"d:/temp",
+				"D:/genaidbexp-temp/adventureworks",
 				"--schemaName",
 				"dbo",
 				"--name",
@@ -348,7 +348,7 @@
 				"--",
 				"query-model",
 				"--project",
-				"d:/temp"
+				"D:/genaidbexp-temp/adventureworks"
 			],
 			"options": {
 				"cwd": "${workspaceFolder}/src/GenAIDBExplorer"
@@ -369,9 +369,9 @@
 				"--",
 				"export-model",
 				"--project",
-				"d:/temp",
+				"D:/genaidbexp-temp/adventureworks",
 				"--outputPath",
-				"d:/temp/exported_model.md",
+				"D:/genaidbexp-temp/adventureworks/exported_model.md",
 				"--fileType",
 				"markdown",
 				"--splitFiles"

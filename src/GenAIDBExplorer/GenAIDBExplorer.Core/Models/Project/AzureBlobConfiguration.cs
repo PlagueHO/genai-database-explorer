@@ -35,14 +35,14 @@ public sealed class ConditionalUrlAttribute : ValidationAttribute
 }
 
 /// <summary>
-/// Configuration options for Azure Blob Storage persistence strategy.
+/// Configuration options for Azure Blob persistence strategy.
 /// </summary>
-public sealed class AzureBlobStorageConfiguration
+public sealed class AzureBlobConfiguration
 {
     /// <summary>
-    /// Configuration section name for Azure Blob Storage settings.
+    /// Configuration section name for Azure Blob settings.
     /// </summary>
-    public const string SectionName = "SemanticModelRepository:AzureBlobStorage";
+    public const string SectionName = "SemanticModelRepository:AzureBlob";
 
     /// <summary>
     /// Gets or sets the Azure Storage account endpoint URI.

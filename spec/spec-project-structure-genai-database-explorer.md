@@ -50,7 +50,7 @@ This specification establishes the standard project structure, configuration man
 - **REQ-009**: Sensitive settings (API keys) MUST support Azure Key Vault integration
 - **REQ-010**: Settings versioning MUST be tracked and validated for compatibility
 - **REQ-016**: SemanticModel section MUST support persistence strategy selection (LocalDisk, AzureBlob, Cosmos)
-- **REQ-017**: Configuration MUST include strategy-specific settings sections for AzureBlobStorage and CosmosDb
+- **REQ-017**: Configuration MUST include strategy-specific settings sections for AzureBlob and CosmosDb
 - **REQ-018**: Each persistence strategy MUST have appropriate validation attributes for required fields
 - **REQ-019**: Azure-based strategies MUST support DefaultAzureCredential and connection string authentication
 
@@ -138,7 +138,7 @@ public class SemanticModelRepositorySettings
     public const string PropertyName = "SemanticModelRepository";
     
     public LocalDiskConfiguration? LocalDisk { get; set; }
-    public AzureBlobStorageConfiguration? AzureBlobStorage { get; set; }
+    public AzureBlobConfiguration? AzureBlob { get; set; }
     public CosmosDbConfiguration? CosmosDb { get; set; }
     
     public LazyLoadingConfiguration LazyLoading { get; set; } = new();
@@ -157,7 +157,7 @@ public class LocalDiskConfiguration
     public string Directory { get; set; } = "SemanticModel";
 }
 
-public class AzureBlobStorageConfiguration
+public class AzureBlobConfiguration
 {
     [Required, Url]
     public required string AccountEndpoint { get; set; }
@@ -275,7 +275,7 @@ public enum CosmosConsistencyLevel
         "LocalDisk": {
             "Directory": "SemanticModel"
         },
-        "AzureBlobStorage": {
+        "AzureBlob": {
             "AccountEndpoint": "https://mystorageaccount.blob.core.windows.net",
             "ContainerName": "semantic-models",
             "BlobPrefix": "",
@@ -344,9 +344,9 @@ public enum CosmosConsistencyLevel
 - **AC-007**: Given a command handler execution, When dependencies are resolved, Then all required services are available through constructor injection
 - **AC-008**: Given lazy loading requirements, When expensive services are registered, Then instantiation is deferred until actual usage
 - **AC-009**: Given SemanticModel section with PersistenceStrategy "LocalDisk", When project configuration is loaded, Then LocalDiskPersistenceStrategy is selected and LocalDisk.Directory setting is applied
-- **AC-010**: Given SemanticModel section with PersistenceStrategy "AzureBlob", When project configuration is loaded, Then AzureBlobPersistenceStrategy is selected and AzureBlobStorage settings are validated
+- **AC-010**: Given SemanticModel section with PersistenceStrategy "AzureBlob", When project configuration is loaded, Then AzureBlobPersistenceStrategy is selected and AzureBlob settings are validated
 - **AC-011**: Given SemanticModel section with PersistenceStrategy "CosmosDb", When project configuration is loaded, Then CosmosPersistenceStrategy is selected and CosmosDb settings are validated
-- **AC-012**: Given missing AzureBlobStorage configuration, When PersistenceStrategy is "AzureBlob", Then configuration validation fails with descriptive error message
+- **AC-012**: Given missing AzureBlob configuration, When PersistenceStrategy is "AzureBlob", Then configuration validation fails with descriptive error message
 - **AC-013**: Given missing CosmosDb configuration, When PersistenceStrategy is "CosmosDb", Then configuration validation fails with descriptive error message
 - **AC-014**: Given invalid Azure endpoints or container names, When configuration validation occurs, Then DataAnnotation validation reports specific field errors
 - **AC-015**: Given production Azure deployment, When DefaultAzureCredential is used, Then authentication succeeds without requiring connection strings in configuration
@@ -481,7 +481,7 @@ services.Configure<DatabaseSettings>(configuration.GetSection(DatabaseSettings.P
 services.Configure<OpenAIServiceSettings>(configuration.GetSection(OpenAIServiceSettings.PropertyName));
 services.Configure<SemanticModelSettings>(configuration.GetSection(SemanticModelSettings.PropertyName));
 services.Configure<LocalDiskConfiguration>(configuration.GetSection("SemanticModelRepository:LocalDisk"));
-services.Configure<AzureBlobStorageConfiguration>(configuration.GetSection("SemanticModelRepository:AzureBlobStorage"));
+services.Configure<AzureBlobConfiguration>(configuration.GetSection("SemanticModelRepository:AzureBlob"));
 services.Configure<CosmosDbConfiguration>(configuration.GetSection("SemanticModelRepository:CosmosDb"));
 ```
 
@@ -512,7 +512,7 @@ services.Configure<CosmosDbConfiguration>(configuration.GetSection("SemanticMode
         "MaxDegreeOfParallelism": 4
     },
     "SemanticModelRepository": {
-        "AzureBlobStorage": {
+        "AzureBlob": {
             "AccountEndpoint": "https://mystorageaccount.blob.core.windows.net",
             "ContainerName": "semantic-models",
             "BlobPrefix": "models",
@@ -576,7 +576,7 @@ project.InitializeProjectDirectory(new DirectoryInfo(@"C:\NonEmptyFolder"));
 {
     "SemanticModel": {
         "PersistenceStrategy": "AzureBlob"
-        // Missing AzureBlobStorage configuration - should fail validation
+        // Missing AzureBlob configuration - should fail validation
     }
 }
 ```
@@ -612,7 +612,7 @@ var localStrategy = factory.GetStrategy(); // Defaults to LocalDisk
 - File paths in settings must be accessible and writable
 - Version compatibility must be verified between settings schema and application
 - SemanticModel PersistenceStrategy must be one of: LocalDisk, AzureBlob, Cosmos
-- When PersistenceStrategy is "AzureBlob", AzureBlobStorage configuration section must be present and valid
+- When PersistenceStrategy is "AzureBlob", AzureBlob configuration section must be present and valid
 - When PersistenceStrategy is "CosmosDb", CosmosDb configuration section must be present and valid
 - Azure endpoints must be valid URLs with appropriate domain patterns
 - Container and database names must meet Azure naming requirements

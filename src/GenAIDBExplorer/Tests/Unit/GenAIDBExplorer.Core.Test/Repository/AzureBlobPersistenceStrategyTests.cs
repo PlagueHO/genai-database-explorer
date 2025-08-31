@@ -27,7 +27,7 @@ namespace GenAIDBExplorer.Core.Test.Repository
         public async Task SaveBlobAsync_RetriesOnTransientFailure()
         {
             // Arrange
-            var config = Options.Create(new GenAIDBExplorer.Core.Models.Project.AzureBlobStorageConfiguration
+            var config = Options.Create(new GenAIDBExplorer.Core.Models.Project.AzureBlobConfiguration
             {
                 AccountEndpoint = "https://example.blob.core.windows.net/",
                 ContainerName = "testcontainer",
@@ -99,7 +99,7 @@ namespace GenAIDBExplorer.Core.Test.Repository
         public async Task LoadEntityAsync_UnwrapsEnvelopeAndLoadsEntity()
         {
             // Arrange
-            var config = Options.Create(new GenAIDBExplorer.Core.Models.Project.AzureBlobStorageConfiguration
+            var config = Options.Create(new GenAIDBExplorer.Core.Models.Project.AzureBlobConfiguration
             {
                 AccountEndpoint = "https://example.blob.core.windows.net/",
                 ContainerName = "testcontainer",
@@ -143,7 +143,7 @@ namespace GenAIDBExplorer.Core.Test.Repository
         public async Task LoadEntityAsync_RetriesOnTransientDownloadFailure()
         {
             // Arrange
-            var config = Options.Create(new GenAIDBExplorer.Core.Models.Project.AzureBlobStorageConfiguration
+            var config = Options.Create(new GenAIDBExplorer.Core.Models.Project.AzureBlobConfiguration
             {
                 AccountEndpoint = "https://example.blob.core.windows.net/",
                 ContainerName = "testcontainer",
@@ -198,7 +198,7 @@ namespace GenAIDBExplorer.Core.Test.Repository
         public void InitializeBlobServiceClient_UsesDefaultCredential_AndFactoryHooks()
         {
             // Arrange
-            var config = Options.Create(new GenAIDBExplorer.Core.Models.Project.AzureBlobStorageConfiguration
+            var config = Options.Create(new GenAIDBExplorer.Core.Models.Project.AzureBlobConfiguration
             {
                 AccountEndpoint = "https://example.blob.core.windows.net/",
                 ContainerName = "testcontainer",
@@ -231,7 +231,7 @@ namespace GenAIDBExplorer.Core.Test.Repository
     // Minimal derived strategy for tests to override blob client retrieval and expose factory hooks
     internal class TestAzureBlobPersistenceStrategy : AzureBlobPersistenceStrategy
     {
-        public TestAzureBlobPersistenceStrategy(IOptions<GenAIDBExplorer.Core.Models.Project.AzureBlobStorageConfiguration> configuration, ILogger<AzureBlobPersistenceStrategy> logger, ISecureJsonSerializer secureJsonSerializer)
+        public TestAzureBlobPersistenceStrategy(IOptions<GenAIDBExplorer.Core.Models.Project.AzureBlobConfiguration> configuration, ILogger<AzureBlobPersistenceStrategy> logger, ISecureJsonSerializer secureJsonSerializer)
             : base(configuration, logger, secureJsonSerializer, null, skipInitialization: true)
         {
         }
@@ -280,7 +280,7 @@ namespace GenAIDBExplorer.Core.Test.Repository
         public async Task LoadEntityContentAsync_DownloadsOnlyRequestedBlob_AndUnwrapsEnvelope()
         {
             // Arrange
-            var config = Options.Create(new GenAIDBExplorer.Core.Models.Project.AzureBlobStorageConfiguration
+            var config = Options.Create(new GenAIDBExplorer.Core.Models.Project.AzureBlobConfiguration
             {
                 AccountEndpoint = "https://example.blob.core.windows.net/",
                 ContainerName = "testcontainer",
@@ -322,7 +322,7 @@ namespace GenAIDBExplorer.Core.Test.Repository
         public async Task DeleteBlobAsync_RetriesOnTransientFailure()
         {
             // Arrange
-            var config = Options.Create(new GenAIDBExplorer.Core.Models.Project.AzureBlobStorageConfiguration
+            var config = Options.Create(new GenAIDBExplorer.Core.Models.Project.AzureBlobConfiguration
             {
                 AccountEndpoint = "https://example.blob.core.windows.net/",
                 ContainerName = "testcontainer",
@@ -362,7 +362,7 @@ namespace GenAIDBExplorer.Core.Test.Repository
         public async Task ExistsAsync_ReturnsTrueWhenModelExists()
         {
             // Arrange
-            var config = Options.Create(new GenAIDBExplorer.Core.Models.Project.AzureBlobStorageConfiguration
+            var config = Options.Create(new GenAIDBExplorer.Core.Models.Project.AzureBlobConfiguration
             {
                 AccountEndpoint = "https://example.blob.core.windows.net/",
                 ContainerName = "testcontainer",
@@ -404,7 +404,7 @@ namespace GenAIDBExplorer.Core.Test.Repository
         public async Task ListModelsAsync_ParsesModelNames()
         {
             // Arrange
-            var config = Options.Create(new GenAIDBExplorer.Core.Models.Project.AzureBlobStorageConfiguration
+            var config = Options.Create(new GenAIDBExplorer.Core.Models.Project.AzureBlobConfiguration
             {
                 AccountEndpoint = "https://example.blob.core.windows.net/",
                 ContainerName = "testcontainer",
@@ -472,7 +472,7 @@ namespace GenAIDBExplorer.Core.Test.Repository
         public int DownloadCount { get; private set; }
         public string? LastDownloadedBlobName { get; private set; }
 
-        public TestAzureBlobPersistenceStrategyWithCounters(IOptions<GenAIDBExplorer.Core.Models.Project.AzureBlobStorageConfiguration> configuration, ILogger<AzureBlobPersistenceStrategy> logger, ISecureJsonSerializer secureJsonSerializer)
+        public TestAzureBlobPersistenceStrategyWithCounters(IOptions<GenAIDBExplorer.Core.Models.Project.AzureBlobConfiguration> configuration, ILogger<AzureBlobPersistenceStrategy> logger, ISecureJsonSerializer secureJsonSerializer)
             : base(configuration, logger, secureJsonSerializer)
         {
         }

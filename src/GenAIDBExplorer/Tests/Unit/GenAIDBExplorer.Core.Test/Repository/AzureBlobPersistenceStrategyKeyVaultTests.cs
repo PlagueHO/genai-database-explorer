@@ -38,7 +38,7 @@ namespace GenAIDBExplorer.Core.Test.Repository
 
         private sealed class TestStrategyWithKv : AzureBlobPersistenceStrategy
         {
-            public TestStrategyWithKv(IOptions<AzureBlobStorageConfiguration> cfg, ILogger<AzureBlobPersistenceStrategy> logger, ISecureJsonSerializer serializer, KeyVaultConfigurationProvider kv)
+            public TestStrategyWithKv(IOptions<AzureBlobConfiguration> cfg, ILogger<AzureBlobPersistenceStrategy> logger, ISecureJsonSerializer serializer, KeyVaultConfigurationProvider kv)
                 : base(cfg, logger, serializer, kv, skipInitialization: true)
             {
             }
@@ -67,7 +67,7 @@ namespace GenAIDBExplorer.Core.Test.Repository
         public async Task LoadModelAsync_RefreshesClients_WhenKeyVaultProvidesConnectionString()
         {
             // Arrange
-            var cfg = Options.Create(new AzureBlobStorageConfiguration
+            var cfg = Options.Create(new AzureBlobConfiguration
             {
                 AccountEndpoint = "https://example.blob.core.windows.net/",
                 ContainerName = "testcontainer",

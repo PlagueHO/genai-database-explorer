@@ -19,9 +19,9 @@ public class SemanticModelRepositorySettings
     public LocalDiskConfiguration? LocalDisk { get; set; }
 
     /// <summary>
-    /// Gets or sets the configuration for Azure Blob Storage persistence strategy.
+    /// Gets or sets the configuration for Azure Blob persistence strategy.
     /// </summary>
-    public AzureBlobStorageConfiguration? AzureBlobStorage { get; set; }
+    public AzureBlobConfiguration? AzureBlob { get; set; }
 
     /// <summary>
     /// Gets or sets the configuration for Azure Cosmos DB persistence strategy.

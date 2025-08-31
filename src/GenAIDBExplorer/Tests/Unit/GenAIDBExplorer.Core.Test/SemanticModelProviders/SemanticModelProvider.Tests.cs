@@ -355,12 +355,12 @@ public class SemanticModelProviderTests
     }
 
     [TestMethod]
-    public async Task LoadSemanticModelAsync_WithAzureBlobStrategy_ShouldLoadFromAzureBlobStorage()
+    public async Task LoadSemanticModelAsync_WithAzureBlobStrategy_ShouldLoadFromAzureBlob()
     {
         // Arrange
         var projectSettings = _mockProject.Object.Settings;
         projectSettings.SemanticModel.PersistenceStrategy = "AzureBlob";
-        projectSettings.SemanticModelRepository!.AzureBlobStorage = new AzureBlobStorageConfiguration
+        projectSettings.SemanticModelRepository!.AzureBlob = new AzureBlobConfiguration
         {
             AccountEndpoint = "https://test.blob.core.windows.net",
             ContainerName = "test-models",
@@ -395,7 +395,7 @@ public class SemanticModelProviderTests
         // Arrange
         var projectSettings = _mockProject.Object.Settings;
         projectSettings.SemanticModel.PersistenceStrategy = "AzureBlob";
-        projectSettings.SemanticModelRepository!.AzureBlobStorage = new AzureBlobStorageConfiguration
+        projectSettings.SemanticModelRepository!.AzureBlob = new AzureBlobConfiguration
         {
             AccountEndpoint = "", // Missing endpoint
             ContainerName = "test-models"
@@ -415,7 +415,7 @@ public class SemanticModelProviderTests
         // Arrange
         var projectSettings = _mockProject.Object.Settings;
         projectSettings.SemanticModel.PersistenceStrategy = "AzureBlob";
-        projectSettings.SemanticModelRepository!.AzureBlobStorage = new AzureBlobStorageConfiguration
+        projectSettings.SemanticModelRepository!.AzureBlob = new AzureBlobConfiguration
         {
             AccountEndpoint = "https://test.blob.core.windows.net",
             ContainerName = "" // Missing container name
@@ -435,7 +435,7 @@ public class SemanticModelProviderTests
         // Arrange
         var projectSettings = _mockProject.Object.Settings;
         projectSettings.SemanticModel.PersistenceStrategy = "AzureBlob";
-        projectSettings.SemanticModelRepository!.AzureBlobStorage = new AzureBlobStorageConfiguration
+        projectSettings.SemanticModelRepository!.AzureBlob = new AzureBlobConfiguration
         {
             AccountEndpoint = "https://test.blob.core.windows.net",
             ContainerName = "test-models"

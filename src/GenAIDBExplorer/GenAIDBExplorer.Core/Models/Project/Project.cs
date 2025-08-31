@@ -174,12 +174,12 @@ public class Project(
                 break;
 
             case "azureblob":
-                if (Settings.SemanticModelRepository.AzureBlobStorage == null)
+                if (Settings.SemanticModelRepository.AzureBlob == null)
                 {
-                    throw new ValidationException("AzureBlobStorage configuration is required when PersistenceStrategy is 'AzureBlob'.");
+                    throw new ValidationException("AzureBlob configuration is required when PersistenceStrategy is 'AzureBlob'.");
                 }
-                var azureBlobContext = new ValidationContext(Settings.SemanticModelRepository.AzureBlobStorage);
-                Validator.ValidateObject(Settings.SemanticModelRepository.AzureBlobStorage, azureBlobContext, validateAllProperties: true);
+                var azureBlobContext = new ValidationContext(Settings.SemanticModelRepository.AzureBlob);
+                Validator.ValidateObject(Settings.SemanticModelRepository.AzureBlob, azureBlobContext, validateAllProperties: true);
                 break;
 
             case "cosmosdb":

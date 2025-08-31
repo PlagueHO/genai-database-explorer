@@ -135,16 +135,16 @@ public sealed class SemanticModelProvider(
     /// <returns>The loaded semantic model.</returns>
     private async Task<SemanticModel> LoadSemanticModelFromAzureBlobAsync()
     {
-        // Get the configured Azure Blob Storage settings
-        var azureBlobConfig = _project.Settings.SemanticModelRepository?.AzureBlobStorage;
+        // Get the configured Azure Blob settings
+        var azureBlobConfig = _project.Settings.SemanticModelRepository?.AzureBlob;
         if (azureBlobConfig?.AccountEndpoint == null || string.IsNullOrWhiteSpace(azureBlobConfig.AccountEndpoint))
         {
-            throw new InvalidOperationException("AzureBlob persistence strategy is configured but no AccountEndpoint is specified in SemanticModelRepository.AzureBlobStorage.AccountEndpoint.");
+            throw new InvalidOperationException("AzureBlob persistence strategy is configured but no AccountEndpoint is specified in SemanticModelRepository.AzureBlob.AccountEndpoint.");
         }
 
         if (azureBlobConfig?.ContainerName == null || string.IsNullOrWhiteSpace(azureBlobConfig.ContainerName))
         {
-            throw new InvalidOperationException("AzureBlob persistence strategy is configured but no ContainerName is specified in SemanticModelRepository.AzureBlobStorage.ContainerName.");
+            throw new InvalidOperationException("AzureBlob persistence strategy is configured but no ContainerName is specified in SemanticModelRepository.AzureBlob.ContainerName.");
         }
 
         // Create a logical directory path using the model name for the Azure Blob persistence strategy

@@ -438,7 +438,7 @@ function Set-TestProjectConfiguration {
             }
         }
         'AzureBlob' {
-            $repoConfig.AzureBlobStorage = @{
+            $repoConfig.AzureBlob = @{
                 AccountEndpoint = ($NoAzureMode -or [string]::IsNullOrEmpty($AzureStorageAccountEndpoint)) ? 'https://test.blob.core.windows.net' : $AzureStorageAccountEndpoint
                 ContainerName   = ([string]::IsNullOrEmpty($AzureStorageContainer)) ? 'semantic-models' : $AzureStorageContainer
                 BlobPrefix      = $AzureStorageBlobPrefix

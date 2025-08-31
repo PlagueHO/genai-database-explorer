@@ -66,7 +66,7 @@ public class ProjectSettingsIntegrationTests
                     "LocalDisk": {
                         "Directory": "TestSemanticModel"
                     },
-                    "AzureBlobStorage": {
+                    "AzureBlob": {
                         "AccountEndpoint": "https://test.blob.core.windows.net",
                         "ContainerName": "test-models",
                         "BlobPrefix": "test",
@@ -122,13 +122,13 @@ public class ProjectSettingsIntegrationTests
         settings.SemanticModelRepository.LocalDisk.Should().NotBeNull();
         settings.SemanticModelRepository.LocalDisk!.Directory.Should().Be("TestSemanticModel");
 
-        // Verify AzureBlobStorage configuration
-        settings.SemanticModelRepository.AzureBlobStorage.Should().NotBeNull();
-        settings.SemanticModelRepository.AzureBlobStorage!.AccountEndpoint.Should().Be("https://test.blob.core.windows.net");
-        settings.SemanticModelRepository.AzureBlobStorage.ContainerName.Should().Be("test-models");
-        settings.SemanticModelRepository.AzureBlobStorage.BlobPrefix.Should().Be("test");
-        settings.SemanticModelRepository.AzureBlobStorage.OperationTimeoutSeconds.Should().Be(600);
-        settings.SemanticModelRepository.AzureBlobStorage.MaxConcurrentOperations.Should().Be(8);
+        // Verify AzureBlob configuration
+        settings.SemanticModelRepository.AzureBlob.Should().NotBeNull();
+        settings.SemanticModelRepository.AzureBlob!.AccountEndpoint.Should().Be("https://test.blob.core.windows.net");
+        settings.SemanticModelRepository.AzureBlob.ContainerName.Should().Be("test-models");
+        settings.SemanticModelRepository.AzureBlob.BlobPrefix.Should().Be("test");
+        settings.SemanticModelRepository.AzureBlob.OperationTimeoutSeconds.Should().Be(600);
+        settings.SemanticModelRepository.AzureBlob.MaxConcurrentOperations.Should().Be(8);
 
         // Verify CosmosDb configuration
         settings.SemanticModelRepository.CosmosDb.Should().NotBeNull();
@@ -188,7 +188,7 @@ public class ProjectSettingsIntegrationTests
         // Act & Assert
         FluentActions.Invoking(() => _project.LoadProjectConfiguration(_testDirectory))
             .Should().Throw<ValidationException>()
-            .WithMessage("*AzureBlobStorage configuration is required when PersistenceStrategy is 'AzureBlob'*");
+            .WithMessage("*AzureBlob configuration is required when PersistenceStrategy is 'AzureBlob'*");
     }
 
     [TestMethod]

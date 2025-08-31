@@ -6,16 +6,16 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace GenAIDBExplorer.Core.Test.Models.Project;
 
 /// <summary>
-/// Unit tests for <see cref="AzureBlobStorageConfiguration"/> validation.
+/// Unit tests for <see cref="AzureBlobConfiguration"/> validation.
 /// </summary>
 [TestClass]
-public class AzureBlobStorageConfigurationTests
+public class AzureBlobConfigurationTests
 {
     [TestMethod]
     public void CustomerManagedKeyUrl_EmptyString_ShouldPassValidation()
     {
         // Arrange
-        var config = new AzureBlobStorageConfiguration
+        var config = new AzureBlobConfiguration
         {
             AccountEndpoint = "https://test.blob.core.windows.net",
             CustomerManagedKeyUrl = ""
@@ -35,7 +35,7 @@ public class AzureBlobStorageConfigurationTests
     public void CustomerManagedKeyUrl_NullValue_ShouldPassValidation()
     {
         // Arrange
-        var config = new AzureBlobStorageConfiguration
+        var config = new AzureBlobConfiguration
         {
             AccountEndpoint = "https://test.blob.core.windows.net",
             CustomerManagedKeyUrl = null
@@ -55,7 +55,7 @@ public class AzureBlobStorageConfigurationTests
     public void CustomerManagedKeyUrl_ValidUrl_ShouldPassValidation()
     {
         // Arrange
-        var config = new AzureBlobStorageConfiguration
+        var config = new AzureBlobConfiguration
         {
             AccountEndpoint = "https://test.blob.core.windows.net",
             CustomerManagedKeyUrl = "https://keyvault.vault.azure.net/keys/mykey/version"
@@ -75,7 +75,7 @@ public class AzureBlobStorageConfigurationTests
     public void CustomerManagedKeyUrl_InvalidUrl_ShouldFailValidation()
     {
         // Arrange
-        var config = new AzureBlobStorageConfiguration
+        var config = new AzureBlobConfiguration
         {
             AccountEndpoint = "https://test.blob.core.windows.net",
             CustomerManagedKeyUrl = "invalid-url"

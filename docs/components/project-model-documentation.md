@@ -93,7 +93,7 @@ flowchart TD
 
     subgraph "Repository Strategies"
         LocalDisk[LocalDiskConfiguration]
-    AzureBlob[AzureBlobStorageConfiguration]
+    AzureBlob[AzureBlobConfiguration]
         CosmosDb[CosmosDbConfiguration]
         
         RepositorySettings --> LocalDisk
@@ -146,7 +146,7 @@ classDiagram
 
         class SemanticModelRepositorySettings {
             +LocalDisk
-            +AzureBlobStorage
+            +AzureBlob
             +CosmosDb
             +LazyLoading
             +Caching
@@ -244,7 +244,7 @@ switch (persistenceStrategy?.ToLowerInvariant())
         var localConfig = project.Settings.SemanticModelRepository.LocalDisk;
         break;
     case "azureblob":
-        var blobConfig = project.Settings.SemanticModelRepository.AzureBlobStorage;
+        var blobConfig = project.Settings.SemanticModelRepository.AzureBlob;
         break;
     case "cosmosdb":
         var cosmosConfig = project.Settings.SemanticModelRepository.CosmosDb;

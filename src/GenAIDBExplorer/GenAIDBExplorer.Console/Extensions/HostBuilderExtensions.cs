@@ -87,8 +87,8 @@ public static class HostBuilderExtensions
     private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
         // Configure Azure persistence strategy options
-        services.Configure<AzureBlobStorageConfiguration>(
-            configuration.GetSection(AzureBlobStorageConfiguration.SectionName));
+        services.Configure<AzureBlobConfiguration>(
+            configuration.GetSection(AzureBlobConfiguration.SectionName));
         services.Configure<CosmosDbConfiguration>(
             configuration.GetSection(CosmosDbConfiguration.SectionName));
         services.Configure<LocalDiskConfiguration>(

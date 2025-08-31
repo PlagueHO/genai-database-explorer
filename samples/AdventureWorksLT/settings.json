@@ -31,8 +31,8 @@
     "LocalDisk": {
       "Directory": "SemanticModel" // Directory path for storing semantic model files
     },
-    // Configuration for Azure Blob Storage persistence strategy
-    "AzureBlobStorage": {
+    // Configuration for Azure Blob persistence strategy
+    "AzureBlob": {
       "AccountEndpoint": "https://<Set your Azure Storage account endpoint>.blob.core.windows.net",
       "ContainerName": "semantic-models",
       "BlobPrefix": "", // Optional prefix for organizing models

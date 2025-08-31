@@ -60,7 +60,7 @@ namespace GenAIDBExplorer.Core.Repository
     {
         private BlobServiceClient? _blobServiceClient;
         private BlobContainerClient? _containerClient;
-        private readonly AzureBlobStorageConfiguration _configuration;
+        private readonly AzureBlobConfiguration _configuration;
         private readonly ILogger<AzureBlobPersistenceStrategy> _logger;
         private readonly SemaphoreSlim _concurrencySemaphore;
         private readonly SemaphoreSlim _clientRefreshSemaphore = new SemaphoreSlim(1, 1);
@@ -76,7 +76,7 @@ namespace GenAIDBExplorer.Core.Repository
         /// <param name="keyVaultProvider">Optional Azure Key Vault configuration provider for secure credential management.</param>
         /// <exception cref="ArgumentException">Thrown when configuration is invalid.</exception>
         public AzureBlobPersistenceStrategy(
-            IOptions<AzureBlobStorageConfiguration> configuration,
+            IOptions<AzureBlobConfiguration> configuration,
             ILogger<AzureBlobPersistenceStrategy> logger,
             ISecureJsonSerializer secureJsonSerializer,
             KeyVaultConfigurationProvider? keyVaultProvider = null,
