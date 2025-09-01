@@ -91,6 +91,7 @@ Describe 'GenAI Database Explorer Console Application' {
             # Collect environment variables into a hashtable
             $environmentVars = @{
                 SQL_CONNECTION_STRING = $env:SQL_CONNECTION_STRING
+                DATABASE_SCHEMA = $env:DATABASE_SCHEMA
                 AZURE_OPENAI_ENDPOINT = $env:AZURE_OPENAI_ENDPOINT
                 AZURE_OPENAI_API_KEY = $env:AZURE_OPENAI_API_KEY
                 AZURE_STORAGE_ACCOUNT_ENDPOINT = $env:SemanticModelRepository__AzureBlob__AccountEndpoint
@@ -359,6 +360,7 @@ Describe 'GenAI Database Explorer Console Application' {
             $dbConfig = @{
                 ProjectPath = $script:DbProjectPath
                 ConnectionString = $script:TestEnv.SQL_CONNECTION_STRING
+                DatabaseSchema = $script:TestEnv.DATABASE_SCHEMA
                 AzureOpenAIEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
                 AzureOpenAIApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
                 AzureStorageAccountEndpoint = $script:TestEnv.AZURE_STORAGE_ACCOUNT_ENDPOINT
@@ -554,6 +556,7 @@ Describe 'GenAI Database Explorer Console Application' {
             $aiConfig = @{
                 ProjectPath = $script:AiProjectPath
                 ConnectionString = $script:TestEnv.SQL_CONNECTION_STRING
+                DatabaseSchema = $script:TestEnv.DATABASE_SCHEMA
                 AzureOpenAIEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
                 AzureOpenAIApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
                 AzureStorageAccountEndpoint = $script:TestEnv.AZURE_STORAGE_ACCOUNT_ENDPOINT
@@ -770,6 +773,7 @@ Describe 'GenAI Database Explorer Console Application' {
             $displayConfig = @{
                 ProjectPath = $script:DisplayProjectPath
                 ConnectionString = $script:TestEnv.SQL_CONNECTION_STRING
+                DatabaseSchema = $script:TestEnv.DATABASE_SCHEMA
                 AzureOpenAIEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
                 AzureOpenAIApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
                 AzureStorageAccountEndpoint = $script:TestEnv.AZURE_STORAGE_ACCOUNT_ENDPOINT

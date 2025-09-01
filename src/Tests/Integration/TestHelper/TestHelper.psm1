@@ -330,6 +330,9 @@ function Set-ProjectSettings {
     .PARAMETER AzureCosmosDbEntitiesContainer
         The Cosmos DB entities container name (optional, defaults to 'ModelEntities').
 
+    .PARAMETER DatabaseSchema
+        The database schema to use for filtering database objects (optional, if not provided will get all schemas).
+
     .OUTPUTS
         This function does not return output but creates a settings.json file in the project directory.
 
@@ -352,6 +355,9 @@ function Set-TestProjectConfiguration {
 
         [Parameter()]
         [string]$ConnectionString = 'Server=dummy;Database=TestDB;Trusted_Connection=true;',
+
+        [Parameter()]
+        [string]$DatabaseSchema = 'SalesLT',
 
         [Parameter()]
         [string]$AzureOpenAIEndpoint,
@@ -405,6 +411,11 @@ function Set-TestProjectConfiguration {
     $dbConfig = @{
         Name = $databaseName
         ConnectionString = $normalizedConnectionString
+    }
+
+    # Add Schema if provided
+    if (-not [string]::IsNullOrEmpty($DatabaseSchema)) {
+        $dbConfig.Schema = $DatabaseSchema
     }
 
     # Build OpenAI service configuration

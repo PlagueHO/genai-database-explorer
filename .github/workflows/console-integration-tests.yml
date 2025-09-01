@@ -194,6 +194,7 @@ jobs:
           AZURE_OPENAI_API_KEY: ${{ env.AZURE_OPENAI_API_KEY }}
           CONSOLE_APP_PATH: ./publish/GenAIDBExplorer.Console
           PERSISTENCE_STRATEGY: ${{ matrix.persistence }}
+          DATABASE_SCHEMA: "SalesLT"
           # Optional envs for strategies
           SemanticModelRepository__AzureBlob__AccountEndpoint: ${{ env.SemanticModelRepository__AzureBlob__AccountEndpoint }}
           SemanticModelRepository__AzureBlob__ContainerName: ${{ env.SemanticModelRepository__AzureBlob__ContainerName }}
