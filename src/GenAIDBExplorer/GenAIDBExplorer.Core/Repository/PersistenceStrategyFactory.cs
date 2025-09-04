@@ -31,9 +31,9 @@ namespace GenAIDBExplorer.Core.Repository
             {
                 strategy = name.ToLowerInvariant() switch
                 {
-                    "localdisk" => (ISemanticModelPersistenceStrategy)(_serviceProvider.GetService(typeof(ILocalDiskPersistenceStrategy)) ?? throw new InvalidOperationException("LocalDiskPersistenceStrategy service not registered")),
-                    "azureblob" => (ISemanticModelPersistenceStrategy)(_serviceProvider.GetService(typeof(IAzureBlobPersistenceStrategy)) ?? throw new InvalidOperationException("AzureBlobPersistenceStrategy service not registered")),
-                    "cosmosdb" => (ISemanticModelPersistenceStrategy)(_serviceProvider.GetService(typeof(ICosmosDbPersistenceStrategy)) ?? throw new InvalidOperationException("CosmosDbPersistenceStrategy service not registered")),
+                    "localdisk" => _serviceProvider.GetRequiredService<ILocalDiskPersistenceStrategy>(),
+                    "azureblob" => _serviceProvider.GetRequiredService<IAzureBlobPersistenceStrategy>(),
+                    "cosmosdb" => _serviceProvider.GetRequiredService<ICosmosDbPersistenceStrategy>(),
                     _ => throw new ArgumentException($"Persistence strategy '{name}' is not supported.", nameof(strategyName))
                 };
 

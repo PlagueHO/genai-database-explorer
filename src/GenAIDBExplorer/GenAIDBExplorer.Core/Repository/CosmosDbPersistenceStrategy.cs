@@ -13,7 +13,7 @@ using GenAIDBExplorer.Core.Repository.Security;
 using GenAIDBExplorer.Core.Security;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+
 
 namespace GenAIDBExplorer.Core.Repository
 {
@@ -76,12 +76,12 @@ namespace GenAIDBExplorer.Core.Repository
         /// <param name="keyVaultProvider">Optional Azure Key Vault configuration provider for secure credential management.</param>
         /// <exception cref="ArgumentException">Thrown when configuration is invalid.</exception>
         public CosmosDbPersistenceStrategy(
-            IOptions<CosmosDbConfiguration> configuration,
+            CosmosDbConfiguration configuration,
             ILogger<CosmosDbPersistenceStrategy> logger,
             ISecureJsonSerializer secureJsonSerializer,
             KeyVaultConfigurationProvider? keyVaultProvider = null)
         {
-            _configuration = configuration?.Value ?? throw new ArgumentNullException(nameof(configuration));
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _secureJsonSerializer = secureJsonSerializer ?? throw new ArgumentNullException(nameof(secureJsonSerializer));
             _keyVaultProvider = keyVaultProvider;

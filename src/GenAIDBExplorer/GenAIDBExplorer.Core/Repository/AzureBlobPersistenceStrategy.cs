@@ -16,7 +16,7 @@ using GenAIDBExplorer.Core.Repository.DTO;
 using GenAIDBExplorer.Core.Repository.Mappers;
 using GenAIDBExplorer.Core.Security;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+
 
 namespace GenAIDBExplorer.Core.Repository
 {
@@ -76,13 +76,13 @@ namespace GenAIDBExplorer.Core.Repository
         /// <param name="keyVaultProvider">Optional Azure Key Vault configuration provider for secure credential management.</param>
         /// <exception cref="ArgumentException">Thrown when configuration is invalid.</exception>
         public AzureBlobPersistenceStrategy(
-            IOptions<AzureBlobConfiguration> configuration,
+            AzureBlobConfiguration configuration,
             ILogger<AzureBlobPersistenceStrategy> logger,
             ISecureJsonSerializer secureJsonSerializer,
             KeyVaultConfigurationProvider? keyVaultProvider = null,
             bool skipInitialization = false)
         {
-            _configuration = configuration?.Value ?? throw new ArgumentNullException(nameof(configuration));
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _secureJsonSerializer = secureJsonSerializer ?? throw new ArgumentNullException(nameof(secureJsonSerializer));
             _keyVaultProvider = keyVaultProvider;

@@ -209,8 +209,42 @@ public static class HostBuilderExtensions
 
         // Register persistence strategies
         services.AddSingleton<ILocalDiskPersistenceStrategy, LocalDiskPersistenceStrategy>();
-        services.AddSingleton<IAzureBlobPersistenceStrategy, AzureBlobPersistenceStrategy>();
-        services.AddSingleton<ICosmosDbPersistenceStrategy, CosmosDbPersistenceStrategy>();
+        
+        // Register AzureBlobPersistenceStrategy using a factory that gets configuration from IProject
+        services.AddSingleton<IAzureBlobPersistenceStrategy>(serviceProvider =>
+        {
+            var project = serviceProvider.GetRequiredService<IProject>();
+            var logger = serviceProvider.GetRequiredService<ILogger<AzureBlobPersistenceStrategy>>();
+            var secureJsonSerializer = serviceProvider.GetRequiredService<ISecureJsonSerializer>();
+            var keyVaultProvider = serviceProvider.GetService<KeyVaultConfigurationProvider>();
+            
+            // Get Azure Blob configuration from project settings
+            var azureBlobConfig = project.Settings.SemanticModelRepository?.AzureBlob;
+            if (azureBlobConfig == null)
+            {
+                throw new InvalidOperationException("AzureBlob configuration is required when using AzureBlobPersistenceStrategy. Ensure SemanticModelRepository.AzureBlob is configured in project settings.json.");
+            }
+            
+            return new AzureBlobPersistenceStrategy(azureBlobConfig, logger, secureJsonSerializer, keyVaultProvider);
+        });
+        
+        // Register CosmosDbPersistenceStrategy using a factory that gets configuration from IProject
+        services.AddSingleton<ICosmosDbPersistenceStrategy>(serviceProvider =>
+        {
+            var project = serviceProvider.GetRequiredService<IProject>();
+            var logger = serviceProvider.GetRequiredService<ILogger<CosmosDbPersistenceStrategy>>();
+            var secureJsonSerializer = serviceProvider.GetRequiredService<ISecureJsonSerializer>();
+            var keyVaultProvider = serviceProvider.GetService<KeyVaultConfigurationProvider>();
+            
+            // Get Cosmos DB configuration from project settings
+            var cosmosDbConfig = project.Settings.SemanticModelRepository?.CosmosDb;
+            if (cosmosDbConfig == null)
+            {
+                throw new InvalidOperationException("CosmosDb configuration is required when using CosmosDbPersistenceStrategy. Ensure SemanticModelRepository.CosmosDb is configured in project settings.json.");
+            }
+            
+            return new CosmosDbPersistenceStrategy(cosmosDbConfig, logger, secureJsonSerializer, keyVaultProvider);
+        });
 
         // Register performance monitoring services (basic implementation, extensible for OpenTelemetry)
         services.AddSingleton<IPerformanceMonitor, PerformanceMonitor>();
