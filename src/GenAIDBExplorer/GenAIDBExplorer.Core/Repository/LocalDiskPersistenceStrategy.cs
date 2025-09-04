@@ -72,9 +72,6 @@ namespace GenAIDBExplorer.Core.Repository
                     // - Prepares for envelope format { data, embedding } when embeddings are available.
                     await RewriteFilesWithSecureSerializerAsync(semanticModel, tempPath);
 
-                    // Generate index file
-                    await GenerateIndexFileAsync(semanticModel, tempPath);
-
                     // Ensure target directory exists
                     Directory.CreateDirectory(validatedPath.FullName);
 
@@ -526,51 +523,6 @@ namespace GenAIDBExplorer.Core.Repository
             {
                 _concurrencyLock.Release();
             }
-        }
-
-        private async Task GenerateIndexFileAsync(SemanticModel semanticModel, DirectoryInfo modelPath)
-        {
-            var index = new
-            {
-                Name = semanticModel.Name,
-                Source = semanticModel.Source,
-                Description = semanticModel.Description,
-                GeneratedAt = DateTime.UtcNow,
-                Structure = new
-                {
-                    Tables = semanticModel.Tables.Select(t => new
-                    {
-                        Schema = t.Schema,
-                        Name = t.Name,
-                        RelativePath = Path.Combine("tables", EntityNameSanitizer.CreateSafeFileName(t.Schema, t.Name))
-                    }),
-                    Views = semanticModel.Views.Select(v => new
-                    {
-                        Schema = v.Schema,
-                        Name = v.Name,
-                        RelativePath = Path.Combine("views", EntityNameSanitizer.CreateSafeFileName(v.Schema, v.Name))
-                    }),
-                    StoredProcedures = semanticModel.StoredProcedures.Select(sp => new
-                    {
-                        Schema = sp.Schema,
-                        Name = sp.Name,
-                        RelativePath = Path.Combine("storedprocedures", EntityNameSanitizer.CreateSafeFileName(sp.Schema, sp.Name))
-                    })
-                }
-            };
-
-            var jsonOptions = new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            };
-
-            var indexJson = await _secureJsonSerializer.SerializeAsync(index, jsonOptions);
-            var indexPath = Path.Combine(modelPath.FullName, "index.json");
-
-            await File.WriteAllTextAsync(indexPath, indexJson, Encoding.UTF8);
-
-            _logger.LogDebug("Generated index file at '{IndexPath}'", indexPath);
         }
 
         /// <summary>

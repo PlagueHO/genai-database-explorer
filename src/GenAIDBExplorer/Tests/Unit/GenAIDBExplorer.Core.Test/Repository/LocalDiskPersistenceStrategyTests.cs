@@ -167,7 +167,6 @@ public class LocalDiskPersistenceStrategyTests
         // Assert
         modelPath.Exists.Should().BeTrue();
         File.Exists(Path.Combine(modelPath.FullName, "semanticmodel.json")).Should().BeTrue();
-        File.Exists(Path.Combine(modelPath.FullName, "index.json")).Should().BeTrue();
         Directory.Exists(Path.Combine(modelPath.FullName, "tables")).Should().BeTrue();
         Directory.Exists(Path.Combine(modelPath.FullName, "views")).Should().BeTrue();
         Directory.Exists(Path.Combine(modelPath.FullName, "storedprocedures")).Should().BeTrue();
@@ -357,30 +356,6 @@ public class LocalDiskPersistenceStrategyTests
         await _strategy!.Invoking(s => s.DeleteModelAsync(modelPath))
             .Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("*does not contain a semantic model*");
-    }
-
-    [TestMethod]
-    public async Task SaveModelAsync_GeneratesIndexFile_WithCorrectStructure()
-    {
-        // Arrange
-        var modelPath = new DirectoryInfo(Path.Combine(_testDirectory!.FullName, "TestModel"));
-
-        // Act
-        await _strategy!.SaveModelAsync(_testModel!, modelPath);
-
-        // Assert
-        var indexPath = Path.Combine(modelPath.FullName, "index.json");
-        File.Exists(indexPath).Should().BeTrue();
-
-        var indexContent = await File.ReadAllTextAsync(indexPath);
-        indexContent.Should().Contain("TestModel");
-        indexContent.Should().Contain("TestSource");
-        indexContent.Should().Contain("tables");
-        indexContent.Should().Contain("views");
-        indexContent.Should().Contain("storedProcedures");
-        indexContent.Should().Contain("TestTable");
-        indexContent.Should().Contain("TestView");
-        indexContent.Should().Contain("TestProcedure");
     }
 
     [TestMethod]
