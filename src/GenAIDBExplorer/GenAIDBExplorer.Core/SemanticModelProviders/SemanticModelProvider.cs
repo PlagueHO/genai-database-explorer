@@ -148,8 +148,9 @@ public sealed class SemanticModelProvider(
         }
 
         // Create a logical directory path using the model name for the Azure Blob persistence strategy
+        // Use an absolute path to avoid path resolution issues in PathValidator
         var modelName = _project.Settings.Database.Name;
-        var logicalModelPath = new DirectoryInfo(modelName);
+        var logicalModelPath = new DirectoryInfo(Path.Combine(Path.GetTempPath(), "GenAIDBExplorer-AzureBlob", modelName));
 
         var repositorySettings = _project.Settings.SemanticModelRepository!;
         _logger.LogDebug("Loading semantic model from Azure Blob Storage (Account: '{AccountEndpoint}', Container: '{ContainerName}') with settings-driven configuration (LazyLoading: {LazyLoading}, Caching: {Caching}, ChangeTracking: {ChangeTracking})",

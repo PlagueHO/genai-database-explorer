@@ -164,7 +164,10 @@ public class SemanticDescriptionProvider(
     {
         var processResult = new SemanticProcessResult();
 
-        await Parallel.ForEachAsync(semanticModel.Tables, GetParallelismOptions(), async (table, cancellationToken) =>
+        // Use GetTablesAsync() to support lazy loading
+        var tables = await semanticModel.GetTablesAsync();
+
+        await Parallel.ForEachAsync(tables, GetParallelismOptions(), async (table, cancellationToken) =>
         {
             var result = await UpdateTableSemanticDescriptionAsync(semanticModel, table).ConfigureAwait(false);
             processResult.AddRange(result);
@@ -219,7 +222,10 @@ public class SemanticDescriptionProvider(
     {
         var processResult = new SemanticProcessResult();
 
-        await Parallel.ForEachAsync(semanticModel.Views, GetParallelismOptions(), async (view, cancellationToken) =>
+        // Use GetViewsAsync() to support lazy loading
+        var views = await semanticModel.GetViewsAsync();
+
+        await Parallel.ForEachAsync(views, GetParallelismOptions(), async (view, cancellationToken) =>
         {
             var result = await UpdateViewSemanticDescriptionAsync(semanticModel, view).ConfigureAwait(false);
             processResult.AddRange(result);
@@ -273,7 +279,10 @@ public class SemanticDescriptionProvider(
     {
         var processResult = new SemanticProcessResult();
 
-        await Parallel.ForEachAsync(semanticModel.StoredProcedures, GetParallelismOptions(), async (storedProcedure, cancellationToken) =>
+        // Use GetStoredProceduresAsync() to support lazy loading
+        var storedProcedures = await semanticModel.GetStoredProceduresAsync();
+
+        await Parallel.ForEachAsync(storedProcedures, GetParallelismOptions(), async (storedProcedure, cancellationToken) =>
         {
             var result = await UpdateStoredProcedureSemanticDescriptionAsync(semanticModel, storedProcedure).ConfigureAwait(false);
             processResult.AddRange(result);

@@ -166,7 +166,8 @@ public sealed class SemanticModel(
         var tablesFolderPath = new DirectoryInfo(Path.Combine(modelPath.FullName, "tables"));
         Directory.CreateDirectory(tablesFolderPath.FullName);
 
-        foreach (var table in Tables)
+        var tables = await GetTablesAsync();
+        foreach (var table in tables)
         {
             await table.SaveModelAsync(tablesFolderPath);
         }
@@ -175,7 +176,8 @@ public sealed class SemanticModel(
         var viewsFolderPath = new DirectoryInfo(Path.Combine(modelPath.FullName, "views"));
         Directory.CreateDirectory(viewsFolderPath.FullName);
 
-        foreach (var view in Views)
+        var views = await GetViewsAsync();
+        foreach (var view in views)
         {
             await view.SaveModelAsync(viewsFolderPath);
         }
@@ -184,7 +186,8 @@ public sealed class SemanticModel(
         var storedProceduresFolderPath = new DirectoryInfo(Path.Combine(modelPath.FullName, "storedprocedures"));
         Directory.CreateDirectory(storedProceduresFolderPath.FullName);
 
-        foreach (var storedProcedure in StoredProcedures)
+        var storedProcedures = await GetStoredProceduresAsync();
+        foreach (var storedProcedure in storedProcedures)
         {
             await storedProcedure.SaveModelAsync(storedProceduresFolderPath);
         }
@@ -355,11 +358,6 @@ public sealed class SemanticModel(
                 // Load only the table metadata, then lazy load individual table details
                 var tablesFolderPath = new DirectoryInfo(Path.Combine(modelPath.FullName, "tables"));
                 var folderExists = Directory.Exists(tablesFolderPath.FullName);
-                // If the folder doesn't exist, return empty collection per expectations
-                if (!folderExists)
-                {
-                    return new List<SemanticModelTable>();
-                }
 
                 var tables = new List<SemanticModelTable>();
                 foreach (var table in capturedTables)
@@ -406,10 +404,11 @@ public sealed class SemanticModel(
                 // Load view metadata and details on demand
                 var viewsFolderPath = new DirectoryInfo(Path.Combine(modelPath.FullName, "views"));
                 var folderExists = Directory.Exists(viewsFolderPath.FullName);
-                // If the folder doesn't exist, return empty collection per expectations
+
+                // If the directory doesn't exist, return empty collection
                 if (!folderExists)
                 {
-                    return new List<SemanticModelView>();
+                    return [];
                 }
 
                 var views = new List<SemanticModelView>();
@@ -454,10 +453,11 @@ public sealed class SemanticModel(
                 // Load stored procedure metadata and details on demand
                 var storedProceduresFolderPath = new DirectoryInfo(Path.Combine(modelPath.FullName, "storedprocedures"));
                 var folderExists = Directory.Exists(storedProceduresFolderPath.FullName);
-                // If the folder doesn't exist, return empty collection per expectations
+
+                // If the directory doesn't exist, return empty collection
                 if (!folderExists)
                 {
-                    return new List<SemanticModelStoredProcedure>();
+                    return [];
                 }
 
                 var storedProcedures = new List<SemanticModelStoredProcedure>();

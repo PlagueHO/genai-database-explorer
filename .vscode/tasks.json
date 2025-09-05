@@ -291,17 +291,7 @@
 				"--",
 				"enrich-model",
 				"--project",
-				"D:/genaidbexp-temp/adventureworks",
-				"--skipTables",
-				"--skipViews",
-				"--skipStoredProcedures",
-				"--objectType",
-				"table",
-				"--schemaName",
-				"dbo",
-				"--objectName",
-				"tblItemSellingLimit",
-				"--show"
+				"D:/genaidbexp-temp/adventureworks"
 			],
 			"options": {
 				"cwd": "${workspaceFolder}/src/GenAIDBExplorer"
@@ -325,9 +315,9 @@
 				"--project",
 				"D:/genaidbexp-temp/adventureworks",
 				"--schemaName",
-				"dbo",
+				"SalesLT",
 				"--name",
-				"tblItemSellingLimit"
+				"Product"
 			],
 			"options": {
 				"cwd": "${workspaceFolder}/src/GenAIDBExplorer"

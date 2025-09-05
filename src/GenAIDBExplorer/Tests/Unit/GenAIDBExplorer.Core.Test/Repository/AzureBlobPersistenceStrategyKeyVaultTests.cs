@@ -38,7 +38,7 @@ namespace GenAIDBExplorer.Core.Test.Repository
 
         private sealed class TestStrategyWithKv : AzureBlobPersistenceStrategy
         {
-            public TestStrategyWithKv(IOptions<AzureBlobConfiguration> cfg, ILogger<AzureBlobPersistenceStrategy> logger, ISecureJsonSerializer serializer, KeyVaultConfigurationProvider kv)
+            public TestStrategyWithKv(AzureBlobConfiguration cfg, ILogger<AzureBlobPersistenceStrategy> logger, ISecureJsonSerializer serializer, KeyVaultConfigurationProvider kv)
                 : base(cfg, logger, serializer, kv, skipInitialization: true)
             {
             }
@@ -105,7 +105,7 @@ namespace GenAIDBExplorer.Core.Test.Repository
             containerMock.Setup(c => c.GetBlobClient(It.Is<string>(n => n.EndsWith("semanticmodel.json"))))
                          .Returns(mainBlobMock.Object);
 
-            var strategy = new TestStrategyWithKv(cfg, NullLogger<AzureBlobPersistenceStrategy>.Instance, serializer.Object, kvProvider)
+            var strategy = new TestStrategyWithKv(cfg.Value, NullLogger<AzureBlobPersistenceStrategy>.Instance, serializer.Object, kvProvider)
             {
                 OnCreateServiceFromConn = (cs, opts) => { createdFromConn++; return serviceFromConn.Object; },
                 OnCreateServiceFromUri = (u, cred, opts) => { createdFromUri++; return new BlobServiceClient(u, cred, opts); },

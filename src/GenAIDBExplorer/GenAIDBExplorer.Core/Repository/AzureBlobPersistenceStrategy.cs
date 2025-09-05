@@ -58,6 +58,16 @@ namespace GenAIDBExplorer.Core.Repository
     /// </remarks>
     public class AzureBlobPersistenceStrategy : IAzureBlobPersistenceStrategy
     {
+        #region Constants
+
+        private const int MaxRetries = 3;
+        private const int InitialRetryDelayMs = 1000;
+        private const int RetryDelayMultiplier = 2;
+        private const int MaxConcurrentOperations = 10;
+        private const string DefaultModelsPrefix = "models/";
+
+        #endregion
+
         private BlobServiceClient? _blobServiceClient;
         private BlobContainerClient? _containerClient;
         private readonly AzureBlobConfiguration _configuration;
@@ -133,12 +143,34 @@ namespace GenAIDBExplorer.Core.Repository
                 var credential = CreateDefaultCredential();
                 var serviceClient = CreateBlobServiceClient(new Uri(_configuration.AccountEndpoint), credential, clientOptions);
                 var containerClient = CreateBlobContainerClient(serviceClient, _configuration.ContainerName);
-                _logger.LogDebug("Initialized BlobServiceClient using DefaultAzureCredential");
+
+                _logger.LogInformation("Initialized BlobServiceClient using DefaultAzureCredential for endpoint {AccountEndpoint}", _configuration.AccountEndpoint);
+
+                // Test the authentication by attempting to get container properties
+                try
+                {
+                    var properties = containerClient.GetProperties();
+                    _logger.LogDebug("Successfully authenticated to Azure Blob Storage container '{ContainerName}'", _configuration.ContainerName);
+                }
+                catch (Azure.RequestFailedException authEx) when (authEx.Status == 401)
+                {
+                    _logger.LogError(authEx,
+                        "Authentication failed for Azure Blob Storage. This may indicate:" +
+                        "\n1. Azure CLI/PowerShell signed in to different tenant than storage account" +
+                        "\n2. Visual Studio/VS Code signed in to different tenant" +
+                        "\n3. Multiple credential sources providing conflicting tokens" +
+                        "\nStorage Account: {AccountEndpoint}" +
+                        "\nContainer: {ContainerName}" +
+                        "\nError Code: {ErrorCode}",
+                        _configuration.AccountEndpoint, _configuration.ContainerName, authEx.ErrorCode);
+                    throw;
+                }
+
                 return (serviceClient, containerClient);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Critical failure during BlobServiceClient initialization");
+                _logger.LogError(ex, "Critical failure during BlobServiceClient initialization for endpoint {AccountEndpoint}", _configuration.AccountEndpoint);
                 throw;
             }
         }
@@ -160,7 +192,24 @@ namespace GenAIDBExplorer.Core.Repository
         /// <summary>
         /// Factory hook: create DefaultAzureCredential (or custom TokenCredential in tests).
         /// </summary>
-        protected virtual TokenCredential CreateDefaultCredential() => new DefaultAzureCredential();
+        protected virtual TokenCredential CreateDefaultCredential()
+        {
+            var options = new DefaultAzureCredentialOptions
+            {
+                // Force to only use Azure CLI credential to avoid tenant conflicts
+                ExcludeInteractiveBrowserCredential = true,
+                ExcludeAzureCliCredential = false,          // Keep this enabled
+                ExcludeManagedIdentityCredential = true,
+                ExcludeVisualStudioCredential = true,       // Disable - may have different tenant
+                ExcludeVisualStudioCodeCredential = true,   // Disable - may have different tenant
+                ExcludeAzurePowerShellCredential = true,    // Disable - may have different tenant
+                ExcludeEnvironmentCredential = true         // Disable - may have different tenant
+            };
+
+            var credential = new DefaultAzureCredential(options);
+            _logger.LogDebug("Created DefaultAzureCredential restricted to Azure CLI only to avoid tenant conflicts");
+            return credential;
+        }
 
         /// <summary>
         /// Factory hook: create BlobServiceClient from endpoint + credential.
@@ -279,9 +328,7 @@ namespace GenAIDBExplorer.Core.Repository
             if (modelPath == null)
                 throw new ArgumentNullException(nameof(modelPath));
 
-            // Enhanced input validation for security
             ValidateInputSecurity(semanticModel, modelPath);
-
             var modelName = EntityNameSanitizer.SanitizeEntityName(modelPath.Name);
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
@@ -289,51 +336,9 @@ namespace GenAIDBExplorer.Core.Repository
 
             try
             {
-                // Attempt to refresh clients if Key Vault provided a connection string at runtime
-                await RefreshBlobClientsIfNeededAsync().ConfigureAwait(false);
-                // Ensure container exists
-                await EnsureContainerExistsAsync();
-
+                await PrepareForSaveAsync();
                 var blobPrefix = GetBlobPrefix(modelName);
-                var concurrentTasks = new List<Task>();
-
-                // Save main semantic model document (no embedding)
-                var mainModelTask = SaveBlobAsync($"{blobPrefix}/semanticmodel.json", semanticModel, useEntityConverters: true);
-                concurrentTasks.Add(mainModelTask);
-
-                // Save tables concurrently
-                foreach (var table in semanticModel.Tables)
-                {
-                    var tableName = EntityNameSanitizer.SanitizeEntityName(table.Name);
-                    // Wrap with envelope only if embedding exists (Phase 2: none by default)
-                    object tablePersisted = new LocalBlobEntityMapper().ToPersistedEntity(table, null);
-                    var tableTask = SaveBlobAsync($"{blobPrefix}/tables/{tableName}.json", tablePersisted, useEntityConverters: false);
-                    concurrentTasks.Add(tableTask);
-                }
-
-                // Save views concurrently
-                foreach (var view in semanticModel.Views)
-                {
-                    var viewName = EntityNameSanitizer.SanitizeEntityName(view.Name);
-                    object viewPersisted = new LocalBlobEntityMapper().ToPersistedEntity(view, null);
-                    var viewTask = SaveBlobAsync($"{blobPrefix}/views/{viewName}.json", viewPersisted, useEntityConverters: false);
-                    concurrentTasks.Add(viewTask);
-                }
-
-                // Save stored procedures concurrently
-                foreach (var storedProcedure in semanticModel.StoredProcedures)
-                {
-                    var procedureName = EntityNameSanitizer.SanitizeEntityName(storedProcedure.Name);
-                    object spPersisted = new LocalBlobEntityMapper().ToPersistedEntity(storedProcedure, null);
-                    var procedureTask = SaveBlobAsync($"{blobPrefix}/storedprocedures/{procedureName}.json", spPersisted, useEntityConverters: false);
-                    concurrentTasks.Add(procedureTask);
-                }
-
-                // Wait for all saves to complete
-                await Task.WhenAll(concurrentTasks);
-
-                // Create index blob with model metadata and entity listing
-                await CreateIndexBlobAsync(blobPrefix, semanticModel);
+                await SaveSemanticModelConcurrentlyAsync(semanticModel, blobPrefix);
 
                 stopwatch.Stop();
                 _logger.LogInformation("Successfully saved semantic model {ModelName} to Azure Blob Storage in {ElapsedMs}ms",
@@ -360,6 +365,63 @@ namespace GenAIDBExplorer.Core.Repository
         }
 
         /// <summary>
+        /// Prepares the environment for saving by refreshing clients and ensuring container exists.
+        /// </summary>
+        private async Task PrepareForSaveAsync()
+        {
+            await RefreshBlobClientsIfNeededAsync().ConfigureAwait(false);
+            await EnsureContainerExistsAsync();
+        }
+
+        /// <summary>
+        /// Saves all components of the semantic model concurrently.
+        /// </summary>
+        /// <param name="semanticModel">The semantic model to save.</param>
+        /// <param name="blobPrefix">The blob prefix for the model.</param>
+        private async Task SaveSemanticModelConcurrentlyAsync(SemanticModel semanticModel, string blobPrefix)
+        {
+            var concurrentTasks = new List<Task>();
+
+            // Save main semantic model document
+            var mainModelTask = SaveBlobAsync($"{blobPrefix}/semanticmodel.json", semanticModel, useEntityConverters: true);
+            concurrentTasks.Add(mainModelTask);
+
+            // Save entities concurrently
+            AddEntitySaveTasks(concurrentTasks, semanticModel.Tables, blobPrefix, "tables");
+            AddEntitySaveTasks(concurrentTasks, semanticModel.Views, blobPrefix, "views");
+            AddEntitySaveTasks(concurrentTasks, semanticModel.StoredProcedures, blobPrefix, "storedprocedures");
+
+            await Task.WhenAll(concurrentTasks);
+        }
+
+        /// <summary>
+        /// Adds save tasks for a collection of entities.
+        /// </summary>
+        /// <typeparam name="T">The entity type.</typeparam>
+        /// <param name="tasks">The task collection to add to.</param>
+        /// <param name="entities">The entities to save.</param>
+        /// <param name="blobPrefix">The blob prefix for the model.</param>
+        /// <param name="entityType">The entity type folder name.</param>
+        private void AddEntitySaveTasks<T>(List<Task> tasks, IEnumerable<T> entities, string blobPrefix, string entityType) where T : class
+        {
+            foreach (var entity in entities)
+            {
+                // Extract schema and name properties dynamically
+                var schemaProperty = typeof(T).GetProperty("Schema");
+                var nameProperty = typeof(T).GetProperty("Name");
+
+                if (schemaProperty?.GetValue(entity) is string schema &&
+                    nameProperty?.GetValue(entity) is string name)
+                {
+                    var sanitizedName = EntityNameSanitizer.SanitizeEntityName(name);
+                    object persistedEntity = new LocalBlobEntityMapper().ToPersistedEntity(entity, null);
+                    var saveTask = SaveBlobAsync($"{blobPrefix}/{entityType}/{schema}.{sanitizedName}.json", persistedEntity, useEntityConverters: false);
+                    tasks.Add(saveTask);
+                }
+            }
+        }
+
+        /// <summary>
         /// Loads the semantic model from Azure Blob Storage.
         /// </summary>
         /// <param name="modelPath">The logical path (model name) - used as blob prefix.</param>
@@ -372,9 +434,7 @@ namespace GenAIDBExplorer.Core.Repository
             if (modelPath == null)
                 throw new ArgumentNullException(nameof(modelPath));
 
-            // Enhanced input validation
             EntityNameSanitizer.ValidateInputSecurity(modelPath.Name, nameof(modelPath));
-
             var modelName = EntityNameSanitizer.SanitizeEntityName(modelPath.Name);
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
@@ -382,177 +442,11 @@ namespace GenAIDBExplorer.Core.Repository
 
             try
             {
-                // Attempt to refresh clients if Key Vault provided a connection string at runtime
                 await RefreshBlobClientsIfNeededAsync().ConfigureAwait(false);
                 var blobPrefix = GetBlobPrefix(modelName);
-                var mainModelBlobName = $"{blobPrefix}/semanticmodel.json";
 
-                // Load main semantic model document
-                if (_containerClient == null) throw new InvalidOperationException("Container client not initialized");
-                var mainModelBlob = _containerClient.GetBlobClient(mainModelBlobName);
-
-                if (!await mainModelBlob.ExistsAsync())
-                {
-                    throw new FileNotFoundException($"Semantic model '{modelName}' not found in Azure Blob Storage.", mainModelBlobName);
-                }
-
-                // Download and deserialize main model using secure JSON serializer
-                var response = await DownloadContentAsync(mainModelBlob, CancellationToken.None);
-                var jsonContent = response.Value.Content.ToString();
-
-                // Use secure JSON serializer for enhanced security
-                var semanticModel = await _secureJsonSerializer.DeserializeAsync<SemanticModel>(jsonContent)
-                    ?? throw new InvalidOperationException($"Failed to deserialize semantic model '{modelName}'.");
-
-                _logger.LogInformation("Successfully loaded semantic model '{ModelName}' from Azure Blob Storage using secure JSON deserializer", modelName);
-
-                // Load entities concurrently
-                var loadTasks = new List<Task>();
-
-                // Load tables
-                foreach (var table in semanticModel.Tables)
-                {
-                    var tableName = EntityNameSanitizer.SanitizeEntityName(table.Name);
-                    var loadTask = LoadEntityAsync($"{blobPrefix}/tables/{tableName}.json", async jsonContent =>
-                    {
-                        // For blob storage, we need to create a temporary directory approach
-                        // This is a workaround since the entities expect DirectoryInfo
-                        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-                        Directory.CreateDirectory(tempDir);
-                        try
-                        {
-                            var filePath = Path.Combine(tempDir, $"{tableName}.json");
-
-                            // Support envelope { data, embedding } by detecting a top-level "data" property
-                            if (jsonContent.TrimStart().StartsWith("{", StringComparison.Ordinal))
-                            {
-                                try
-                                {
-                                    using var doc = System.Text.Json.JsonDocument.Parse(jsonContent);
-                                    if (doc.RootElement.TryGetProperty("data", out var dataProp))
-                                    {
-                                        var raw = dataProp.GetRawText();
-                                        await File.WriteAllTextAsync(filePath, raw);
-                                    }
-                                    else
-                                    {
-                                        await File.WriteAllTextAsync(filePath, jsonContent);
-                                    }
-                                }
-                                catch
-                                {
-                                    await File.WriteAllTextAsync(filePath, jsonContent);
-                                }
-                            }
-                            else
-                            {
-                                await File.WriteAllTextAsync(filePath, jsonContent);
-                            }
-                            await table.LoadModelAsync(new DirectoryInfo(tempDir));
-                        }
-                        finally
-                        {
-                            if (Directory.Exists(tempDir))
-                                Directory.Delete(tempDir, true);
-                        }
-                    });
-                    loadTasks.Add(loadTask);
-                }
-
-                // Load views
-                foreach (var view in semanticModel.Views)
-                {
-                    var viewName = EntityNameSanitizer.SanitizeEntityName(view.Name);
-                    var loadTask = LoadEntityAsync($"{blobPrefix}/views/{viewName}.json", async jsonContent =>
-                    {
-                        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-                        Directory.CreateDirectory(tempDir);
-                        try
-                        {
-                            var filePath = Path.Combine(tempDir, $"{viewName}.json");
-                            if (jsonContent.TrimStart().StartsWith("{", StringComparison.Ordinal))
-                            {
-                                try
-                                {
-                                    using var doc = System.Text.Json.JsonDocument.Parse(jsonContent);
-                                    if (doc.RootElement.TryGetProperty("data", out var dataProp))
-                                    {
-                                        var raw = dataProp.GetRawText();
-                                        await File.WriteAllTextAsync(filePath, raw);
-                                    }
-                                    else
-                                    {
-                                        await File.WriteAllTextAsync(filePath, jsonContent);
-                                    }
-                                }
-                                catch
-                                {
-                                    await File.WriteAllTextAsync(filePath, jsonContent);
-                                }
-                            }
-                            else
-                            {
-                                await File.WriteAllTextAsync(filePath, jsonContent);
-                            }
-                            await view.LoadModelAsync(new DirectoryInfo(tempDir));
-                        }
-                        finally
-                        {
-                            if (Directory.Exists(tempDir))
-                                Directory.Delete(tempDir, true);
-                        }
-                    });
-                    loadTasks.Add(loadTask);
-                }
-
-                // Load stored procedures
-                foreach (var storedProcedure in semanticModel.StoredProcedures)
-                {
-                    var procedureName = EntityNameSanitizer.SanitizeEntityName(storedProcedure.Name);
-                    var loadTask = LoadEntityAsync($"{blobPrefix}/storedprocedures/{procedureName}.json", async jsonContent =>
-                    {
-                        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-                        Directory.CreateDirectory(tempDir);
-                        try
-                        {
-                            var filePath = Path.Combine(tempDir, $"{procedureName}.json");
-                            if (jsonContent.TrimStart().StartsWith("{", StringComparison.Ordinal))
-                            {
-                                try
-                                {
-                                    using var doc = System.Text.Json.JsonDocument.Parse(jsonContent);
-                                    if (doc.RootElement.TryGetProperty("data", out var dataProp))
-                                    {
-                                        var raw = dataProp.GetRawText();
-                                        await File.WriteAllTextAsync(filePath, raw);
-                                    }
-                                    else
-                                    {
-                                        await File.WriteAllTextAsync(filePath, jsonContent);
-                                    }
-                                }
-                                catch
-                                {
-                                    await File.WriteAllTextAsync(filePath, jsonContent);
-                                }
-                            }
-                            else
-                            {
-                                await File.WriteAllTextAsync(filePath, jsonContent);
-                            }
-                            await storedProcedure.LoadModelAsync(new DirectoryInfo(tempDir));
-                        }
-                        finally
-                        {
-                            if (Directory.Exists(tempDir))
-                                Directory.Delete(tempDir, true);
-                        }
-                    });
-                    loadTasks.Add(loadTask);
-                }
-
-                // Wait for all loads to complete
-                await Task.WhenAll(loadTasks);
+                var semanticModel = await LoadMainSemanticModelAsync(blobPrefix, modelName);
+                await LoadAllEntitiesConcurrentlyAsync(semanticModel, blobPrefix);
 
                 stopwatch.Stop();
                 _logger.LogInformation("Successfully loaded semantic model {ModelName} from Azure Blob Storage in {ElapsedMs}ms",
@@ -576,6 +470,71 @@ namespace GenAIDBExplorer.Core.Repository
                 _logger.LogError(ex, "Failed to load semantic model {ModelName} from Azure Blob Storage after {ElapsedMs}ms",
                     modelName, stopwatch.ElapsedMilliseconds);
                 throw new InvalidOperationException($"Failed to load semantic model '{modelName}' from Azure Blob Storage: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Loads the main semantic model document from blob storage.
+        /// </summary>
+        /// <param name="blobPrefix">The blob prefix for the model.</param>
+        /// <param name="modelName">The model name for logging.</param>
+        /// <returns>The loaded semantic model.</returns>
+        private async Task<SemanticModel> LoadMainSemanticModelAsync(string blobPrefix, string modelName)
+        {
+            var mainModelBlobName = $"{blobPrefix}/semanticmodel.json";
+
+            if (_containerClient == null)
+                throw new InvalidOperationException("Container client not initialized");
+
+            var mainModelBlob = _containerClient.GetBlobClient(mainModelBlobName);
+
+            if (!await mainModelBlob.ExistsAsync())
+            {
+                throw new FileNotFoundException($"Semantic model '{modelName}' not found in Azure Blob Storage.", mainModelBlobName);
+            }
+
+            var response = await DownloadContentAsync(mainModelBlob, CancellationToken.None);
+            var jsonContent = response.Value.Content.ToString();
+
+            var semanticModel = await _secureJsonSerializer.DeserializeAsync<SemanticModel>(jsonContent)
+                ?? throw new InvalidOperationException($"Failed to deserialize semantic model '{modelName}'.");
+
+            _logger.LogInformation("Successfully loaded semantic model '{ModelName}' from Azure Blob Storage using secure JSON deserializer", modelName);
+
+            return semanticModel;
+        }
+
+        /// <summary>
+        /// Loads all entities (tables, views, stored procedures) concurrently.
+        /// </summary>
+        /// <param name="semanticModel">The semantic model containing the entities to load.</param>
+        /// <param name="blobPrefix">The blob prefix for the model.</param>
+        private async Task LoadAllEntitiesConcurrentlyAsync(SemanticModel semanticModel, string blobPrefix)
+        {
+            var loadTasks = new List<Task>();
+
+            // Load all entity types concurrently
+            AddEntityLoadTasks(loadTasks, semanticModel.Tables, blobPrefix, "tables");
+            AddEntityLoadTasks(loadTasks, semanticModel.Views, blobPrefix, "views");
+            AddEntityLoadTasks(loadTasks, semanticModel.StoredProcedures, blobPrefix, "storedprocedures");
+
+            await Task.WhenAll(loadTasks);
+        }
+
+        /// <summary>
+        /// Adds load tasks for a collection of entities.
+        /// </summary>
+        /// <typeparam name="T">The entity type.</typeparam>
+        /// <param name="tasks">The task collection to add to.</param>
+        /// <param name="entities">The entities to load.</param>
+        /// <param name="blobPrefix">The blob prefix for the model.</param>
+        /// <param name="entityType">The entity type folder name.</param>
+        private void AddEntityLoadTasks<T>(List<Task> tasks, IEnumerable<T> entities, string blobPrefix, string entityType) where T : class
+        {
+            foreach (var entity in entities)
+            {
+                var loadTask = LoadEntityFromBlobAsync(entity, blobPrefix, entityType);
+                tasks.Add(loadTask);
             }
         }
 
@@ -632,8 +591,8 @@ namespace GenAIDBExplorer.Core.Repository
                 await RefreshBlobClientsIfNeededAsync().ConfigureAwait(false);
                 var modelNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 var prefix = string.IsNullOrWhiteSpace(_configuration.BlobPrefix)
-                    ? "models/"
-                    : $"{_configuration.BlobPrefix.TrimEnd('/')}/models/";
+                    ? DefaultModelsPrefix
+                    : $"{_configuration.BlobPrefix.TrimEnd('/')}/{DefaultModelsPrefix}";
 
                 if (_containerClient == null) throw new InvalidOperationException("Container client not initialized");
                 await foreach (var blobItem in _containerClient.GetBlobsAsync(prefix: prefix))
@@ -752,8 +711,8 @@ namespace GenAIDBExplorer.Core.Repository
             var sanitizedModelName = EntityNameSanitizer.SanitizeEntityName(modelName);
 
             return string.IsNullOrWhiteSpace(_configuration.BlobPrefix)
-                ? $"models/{sanitizedModelName}"
-                : $"{_configuration.BlobPrefix.TrimEnd('/')}/models/{sanitizedModelName}";
+                ? $"{DefaultModelsPrefix}{sanitizedModelName}"
+                : $"{_configuration.BlobPrefix.TrimEnd('/')}/{DefaultModelsPrefix}{sanitizedModelName}";
         }
 
         /// <summary>
@@ -790,25 +749,13 @@ namespace GenAIDBExplorer.Core.Repository
                     return;
                 }
 
-                // Retry with exponential backoff for transient failures
-                var maxRetries = 3;
-                var delay = TimeSpan.FromSeconds(1);
-                for (int attempt = 1; attempt <= maxRetries; attempt++)
+                // Upload blob with retry logic
+                await ExecuteWithRetryAsync(async () =>
                 {
-                    try
-                    {
-                        await blobClient.UploadAsync(content, overwrite: true).ConfigureAwait(false);
-                        _logger.LogDebug("Saved blob {BlobName} ({Size} bytes) using secure JSON serializer",
-                            blobName, content.ToArray().Length);
-                        break;
-                    }
-                    catch (RequestFailedException rfe) when (IsTransientRequestFailure(rfe) && attempt < maxRetries)
-                    {
-                        _logger.LogWarning(rfe, "Transient failure uploading blob {BlobName}, attempt {Attempt}. Retrying in {Delay}ms", blobName, attempt, delay.TotalMilliseconds);
-                        await Task.Delay(delay).ConfigureAwait(false);
-                        delay = TimeSpan.FromMilliseconds(delay.TotalMilliseconds * 2);
-                    }
-                }
+                    await blobClient.UploadAsync(content, overwrite: true).ConfigureAwait(false);
+                    _logger.LogDebug("Saved blob {BlobName} ({Size} bytes) using secure JSON serializer",
+                        blobName, content.ToArray().Length);
+                }, $"UploadBlob:{blobName}");
             }
             catch (RequestFailedException ex)
             {
@@ -831,32 +778,20 @@ namespace GenAIDBExplorer.Core.Repository
             {
                 var blobClient = GetBlobClient(blobName);
 
-                // Retry for transient failures when downloading
-                var maxRetries = 3;
-                var delay = TimeSpan.FromSeconds(1);
-                for (int attempt = 1; attempt <= maxRetries; attempt++)
+                // Download blob with retry logic
+                await ExecuteWithRetryAsync(async () =>
                 {
-                    try
+                    var response = await DownloadContentAsync(blobClient, CancellationToken.None).ConfigureAwait(false);
+                    if (response == null || response.Value.Content == null)
                     {
-                        var response = await DownloadContentAsync(blobClient, CancellationToken.None).ConfigureAwait(false);
-                        if (response == null || response.Value.Content == null)
-                        {
-                            _logger.LogWarning("DownloadContentAsync returned no content for {BlobName}", blobName);
-                            break;
-                        }
+                        _logger.LogWarning("DownloadContentAsync returned no content for {BlobName}", blobName);
+                        return;
+                    }
 
-                        var jsonContent = response.Value.Content.ToString();
-                        await loadFromJsonFunc(jsonContent).ConfigureAwait(false);
-                        _logger.LogDebug("Loaded entity from blob {BlobName}", blobName);
-                        break;
-                    }
-                    catch (RequestFailedException rfe) when (IsTransientRequestFailure(rfe) && attempt < maxRetries)
-                    {
-                        _logger.LogWarning(rfe, "Transient failure downloading blob {BlobName}, attempt {Attempt}. Retrying in {Delay}ms", blobName, attempt, delay.TotalMilliseconds);
-                        await Task.Delay(delay).ConfigureAwait(false);
-                        delay = TimeSpan.FromMilliseconds(delay.TotalMilliseconds * 2);
-                    }
-                }
+                    var jsonContent = response.Value.Content.ToString();
+                    await loadFromJsonFunc(jsonContent).ConfigureAwait(false);
+                    _logger.LogDebug("Loaded entity from blob {BlobName}", blobName);
+                }, $"DownloadBlob:{blobName}");
             }
             catch (RequestFailedException ex)
             {
@@ -879,28 +814,6 @@ namespace GenAIDBExplorer.Core.Repository
             => blobClient.DownloadContentAsync(cancellationToken);
 
         /// <summary>
-        /// Creates an index blob with model metadata and entity listing for fast discovery.
-        /// </summary>
-        private async Task CreateIndexBlobAsync(string blobPrefix, SemanticModel semanticModel)
-        {
-            var index = new
-            {
-                ModelName = semanticModel.Name,
-                Source = semanticModel.Source,
-                Description = semanticModel.Description,
-                CreatedAt = DateTimeOffset.UtcNow,
-                TablesCount = semanticModel.Tables.Count,
-                ViewsCount = semanticModel.Views.Count,
-                StoredProceduresCount = semanticModel.StoredProcedures.Count,
-                Tables = semanticModel.Tables.Select(t => new { t.Name, t.Schema, RelativePath = $"tables/{EntityNameSanitizer.SanitizeEntityName(t.Name)}.json" }),
-                Views = semanticModel.Views.Select(v => new { v.Name, v.Schema, RelativePath = $"views/{EntityNameSanitizer.SanitizeEntityName(v.Name)}.json" }),
-                StoredProcedures = semanticModel.StoredProcedures.Select(sp => new { sp.Name, sp.Schema, RelativePath = $"storedprocedures/{EntityNameSanitizer.SanitizeEntityName(sp.Name)}.json" })
-            };
-
-            await SaveBlobAsync($"{blobPrefix}/index.json", index, useEntityConverters: false);
-        }
-
-        /// <summary>
         /// Deletes a single blob with proper error handling.
         /// </summary>
         private async Task DeleteBlobAsync(BlobClient blobClient, string blobName)
@@ -908,23 +821,12 @@ namespace GenAIDBExplorer.Core.Repository
             await _concurrencySemaphore.WaitAsync();
             try
             {
-                var maxRetries = 3;
-                var delay = TimeSpan.FromSeconds(1);
-                for (int attempt = 1; attempt <= maxRetries; attempt++)
+                // Delete blob with retry logic
+                await ExecuteWithRetryAsync(async () =>
                 {
-                    try
-                    {
-                        await blobClient.DeleteIfExistsAsync().ConfigureAwait(false);
-                        _logger.LogDebug("Deleted blob {BlobName}", blobName);
-                        break;
-                    }
-                    catch (RequestFailedException rfe) when (IsTransientRequestFailure(rfe) && attempt < maxRetries)
-                    {
-                        _logger.LogWarning(rfe, "Transient failure deleting blob {BlobName}, attempt {Attempt}. Retrying in {Delay}ms", blobName, attempt, delay.TotalMilliseconds);
-                        await Task.Delay(delay).ConfigureAwait(false);
-                        delay = TimeSpan.FromMilliseconds(delay.TotalMilliseconds * 2);
-                    }
-                }
+                    await blobClient.DeleteIfExistsAsync().ConfigureAwait(false);
+                    _logger.LogDebug("Deleted blob {BlobName}", blobName);
+                }, $"DeleteBlob:{blobName}");
             }
             catch (RequestFailedException ex)
             {
@@ -951,6 +853,151 @@ namespace GenAIDBExplorer.Core.Repository
         {
             // Treat common transient status codes as retryable
             return rfe.Status == 408 || rfe.Status == 429 || (rfe.Status >= 500 && rfe.Status < 600);
+        }
+
+        /// <summary>
+        /// Extracts the JSON data from an envelope format { data, embedding } or returns the original JSON if no envelope is detected.
+        /// </summary>
+        /// <param name="jsonContent">The JSON content to process.</param>
+        /// <returns>The extracted JSON data or the original content if no envelope is found.</returns>
+        private static string ExtractJsonFromEnvelope(string jsonContent)
+        {
+            if (string.IsNullOrWhiteSpace(jsonContent) || !jsonContent.TrimStart().StartsWith("{", StringComparison.Ordinal))
+            {
+                return jsonContent;
+            }
+
+            try
+            {
+                using var doc = System.Text.Json.JsonDocument.Parse(jsonContent);
+                if (doc.RootElement.TryGetProperty("data", out var dataProp))
+                {
+                    return dataProp.GetRawText();
+                }
+            }
+            catch
+            {
+                // If parsing fails, return original content
+            }
+
+            return jsonContent;
+        }
+
+        /// <summary>
+        /// Writes JSON content to a file, extracting it from an envelope if present.
+        /// </summary>
+        /// <param name="filePath">The file path to write to.</param>
+        /// <param name="jsonContent">The JSON content (possibly in envelope format).</param>
+        /// <returns>A task representing the asynchronous write operation.</returns>
+        private static async Task WriteJsonContentToFileAsync(string filePath, string jsonContent)
+        {
+            var extractedContent = ExtractJsonFromEnvelope(jsonContent);
+            await File.WriteAllTextAsync(filePath, extractedContent);
+        }
+
+        /// <summary>
+        /// Executes an async operation with exponential backoff retry for transient failures.
+        /// </summary>
+        /// <param name="operation">The operation to execute.</param>
+        /// <param name="operationName">The name of the operation for logging purposes.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        private async Task ExecuteWithRetryAsync(Func<Task> operation, string operationName)
+        {
+            var delay = TimeSpan.FromMilliseconds(InitialRetryDelayMs);
+            for (int attempt = 1; attempt <= MaxRetries; attempt++)
+            {
+                try
+                {
+                    await operation().ConfigureAwait(false);
+                    return;
+                }
+                catch (RequestFailedException rfe) when (IsTransientRequestFailure(rfe) && attempt < MaxRetries)
+                {
+                    _logger.LogWarning(rfe, "Transient failure in {Operation}, attempt {Attempt}. Retrying in {Delay}ms",
+                        operationName, attempt, delay.TotalMilliseconds);
+                    await Task.Delay(delay).ConfigureAwait(false);
+                    delay = TimeSpan.FromMilliseconds(delay.TotalMilliseconds * RetryDelayMultiplier);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Executes an async operation with return value and exponential backoff retry for transient failures.
+        /// </summary>
+        /// <typeparam name="T">The return type of the operation.</typeparam>
+        /// <param name="operation">The operation to execute.</param>
+        /// <param name="operationName">The name of the operation for logging purposes.</param>
+        /// <returns>A task representing the asynchronous operation with result.</returns>
+        private async Task<T> ExecuteWithRetryAsync<T>(Func<Task<T>> operation, string operationName)
+        {
+            var delay = TimeSpan.FromMilliseconds(InitialRetryDelayMs);
+            for (int attempt = 1; attempt <= MaxRetries; attempt++)
+            {
+                try
+                {
+                    return await operation().ConfigureAwait(false);
+                }
+                catch (RequestFailedException rfe) when (IsTransientRequestFailure(rfe) && attempt < MaxRetries)
+                {
+                    _logger.LogWarning(rfe, "Transient failure in {Operation}, attempt {Attempt}. Retrying in {Delay}ms",
+                        operationName, attempt, delay.TotalMilliseconds);
+                    await Task.Delay(delay).ConfigureAwait(false);
+                    delay = TimeSpan.FromMilliseconds(delay.TotalMilliseconds * RetryDelayMultiplier);
+                }
+            }
+
+            // This line should never be reached due to the throw in the last attempt
+            throw new InvalidOperationException($"All retry attempts for {operationName} failed.");
+        }
+
+        /// <summary>
+        /// Loads an entity (table, view, or stored procedure) from blob storage using a temporary directory approach.
+        /// </summary>
+        /// <typeparam name="T">The entity type that implements ILoadModelAsync.</typeparam>
+        /// <param name="entity">The entity to load into.</param>
+        /// <param name="blobPrefix">The blob prefix for the model.</param>
+        /// <param name="entityType">The entity type folder name (e.g., "tables", "views", "storedprocedures").</param>
+        /// <returns>A task representing the loading operation.</returns>
+        private Task LoadEntityFromBlobAsync<T>(T entity, string blobPrefix, string entityType) where T : class
+        {
+            // Extract schema and name properties dynamically
+            var schemaProperty = typeof(T).GetProperty("Schema");
+            var nameProperty = typeof(T).GetProperty("Name");
+            var loadModelMethod = typeof(T).GetMethod("LoadModelAsync");
+
+            if (schemaProperty == null || nameProperty == null || loadModelMethod == null)
+            {
+                throw new InvalidOperationException($"Entity type {typeof(T).Name} does not have required Schema, Name properties or LoadModelAsync method.");
+            }
+
+            var schema = schemaProperty.GetValue(entity)?.ToString() ?? string.Empty;
+            var name = nameProperty.GetValue(entity)?.ToString() ?? string.Empty;
+            var sanitizedName = EntityNameSanitizer.SanitizeEntityName(name);
+
+            return LoadEntityAsync($"{blobPrefix}/{entityType}/{schema}.{sanitizedName}.json", async jsonContent =>
+            {
+                // Create temporary directory for entity loading
+                var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+                Directory.CreateDirectory(tempDir);
+                try
+                {
+                    // Use schema-qualified name for consistency
+                    var filePath = Path.Combine(tempDir, $"{schema}.{sanitizedName}.json");
+                    await WriteJsonContentToFileAsync(filePath, jsonContent);
+
+                    // Invoke LoadModelAsync using reflection
+                    var task = (Task?)loadModelMethod.Invoke(entity, new object[] { new DirectoryInfo(tempDir) });
+                    if (task != null)
+                    {
+                        await task;
+                    }
+                }
+                finally
+                {
+                    if (Directory.Exists(tempDir))
+                        Directory.Delete(tempDir, true);
+                }
+            });
         }
 
         #endregion
@@ -991,21 +1038,7 @@ namespace GenAIDBExplorer.Core.Repository
                 }
 
                 var json = response.Value.Content.ToString();
-                // Try unwrap envelope
-                try
-                {
-                    using var doc = System.Text.Json.JsonDocument.Parse(json);
-                    if (doc.RootElement.ValueKind == System.Text.Json.JsonValueKind.Object && doc.RootElement.TryGetProperty("data", out var dataProp))
-                    {
-                        return dataProp.GetRawText();
-                    }
-                }
-                catch
-                {
-                    // ignore parse errors and return raw content
-                }
-
-                return json;
+                return ExtractJsonFromEnvelope(json);
             }
             catch (RequestFailedException ex) when (IsTransientRequestFailure(ex))
             {
