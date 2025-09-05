@@ -29,7 +29,7 @@
     "SemanticModelRepository": {
         // Configuration for LocalDisk persistence strategy
         "LocalDisk": {
-            "Directory": "SemanticModel" // Directory path for storing semantic model files
+            "Directory": "semantic-model" // Directory path for storing semantic model files
         },
         // Configuration for Azure Blob persistence strategy
         "AzureBlob": {
