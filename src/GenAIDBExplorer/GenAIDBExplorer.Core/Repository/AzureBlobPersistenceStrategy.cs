@@ -391,8 +391,11 @@ namespace GenAIDBExplorer.Core.Repository
 
             var concurrentTasks = new List<Task>();
 
-            // Save main semantic model document
-            var mainModelTask = SaveBlobAsync($"{blobPrefix}/semanticmodel.json", semanticModel, useEntityConverters: true);
+            // Create a copy of the semantic model with sensitive information redacted for persistence
+            var sanitizedSemanticModel = CreateSanitizedSemanticModelForPersistence(semanticModel, tables, views, storedProcedures);
+
+            // Save main semantic model document with sanitized version
+            var mainModelTask = SaveBlobAsync($"{blobPrefix}/semanticmodel.json", sanitizedSemanticModel, useEntityConverters: true);
             concurrentTasks.Add(mainModelTask);
 
             // Save entities concurrently
@@ -401,6 +404,38 @@ namespace GenAIDBExplorer.Core.Repository
             AddEntitySaveTasks(concurrentTasks, storedProcedures, blobPrefix, "storedprocedures");
 
             await Task.WhenAll(concurrentTasks);
+        }
+
+        /// <summary>
+        /// Creates a copy of the semantic model with sensitive information redacted for safe persistence.
+        /// </summary>
+        /// <param name="originalModel">The original semantic model.</param>
+        /// <param name="tables">The tables collection from the original model.</param>
+        /// <param name="views">The views collection from the original model.</param>
+        /// <param name="storedProcedures">The stored procedures collection from the original model.</param>
+        /// <returns>A copy of the semantic model with sensitive information redacted.</returns>
+        private static SemanticModel CreateSanitizedSemanticModelForPersistence(
+            SemanticModel originalModel,
+            IEnumerable<SemanticModelTable> tables,
+            IEnumerable<SemanticModelView> views,
+            IEnumerable<SemanticModelStoredProcedure> storedProcedures)
+        {
+            // Create a new semantic model with redacted connection string
+            var redactedSource = ConnectionStringRedactor.RedactSensitiveInformation(originalModel.Source);
+
+            // Create a copy of the semantic model with the redacted source
+            var sanitizedModel = new SemanticModel(
+                originalModel.Name,
+                redactedSource,
+                originalModel.Description
+            );
+
+            // Copy the collections to the sanitized model so they are included in JSON serialization
+            sanitizedModel.Tables.AddRange(tables);
+            sanitizedModel.Views.AddRange(views);
+            sanitizedModel.StoredProcedures.AddRange(storedProcedures);
+
+            return sanitizedModel;
         }
 
         /// <summary>
@@ -526,16 +561,21 @@ namespace GenAIDBExplorer.Core.Repository
         /// <param name="blobPrefix">The blob prefix for the model.</param>
         private async Task LoadAllEntitiesConcurrentlyAsync(SemanticModel semanticModel, string blobPrefix)
         {
+            // Get collections using async methods to support lazy loading
+            var tables = await semanticModel.GetTablesAsync();
+            var views = await semanticModel.GetViewsAsync();
+            var storedProcedures = await semanticModel.GetStoredProceduresAsync();
+
             // Log entity counts for debugging
             _logger.LogInformation("Loading entities for semantic model: {TableCount} tables, {ViewCount} views, {StoredProcedureCount} stored procedures",
-                semanticModel.Tables.Count, semanticModel.Views.Count, semanticModel.StoredProcedures.Count);
+                tables.Count(), views.Count(), storedProcedures.Count());
 
             var loadTasks = new List<Task>();
 
             // Load all entity types concurrently
-            AddEntityLoadTasks(loadTasks, semanticModel.Tables, blobPrefix, "tables");
-            AddEntityLoadTasks(loadTasks, semanticModel.Views, blobPrefix, "views");
-            AddEntityLoadTasks(loadTasks, semanticModel.StoredProcedures, blobPrefix, "storedprocedures");
+            AddEntityLoadTasks(loadTasks, tables, blobPrefix, "tables");
+            AddEntityLoadTasks(loadTasks, views, blobPrefix, "views");
+            AddEntityLoadTasks(loadTasks, storedProcedures, blobPrefix, "storedprocedures");
 
             _logger.LogInformation("Created {TaskCount} entity load tasks", loadTasks.Count);
 
