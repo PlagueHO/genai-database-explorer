@@ -299,6 +299,27 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
+			"label": "cli-generate-vectors-temp",
+			"icon": {
+				"id": "symbol-numeric"
+			},
+			"type": "process",
+			"command": "dotnet",
+			"args": [
+				"run",
+				"--project",
+				"GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj",
+				"--",
+				"generate-vectors",
+				"--project",
+				"D:/genaidbexp-temp/adventureworks"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/src/GenAIDBExplorer"
+			},
+			"problemMatcher": "$msCompile"
+		},
+		{
 			"label": "cli-show-object-temp",
 			"icon": {
 				"id": "eye"

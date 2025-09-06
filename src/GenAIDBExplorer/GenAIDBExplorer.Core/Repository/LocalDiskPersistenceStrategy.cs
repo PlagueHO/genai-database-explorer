@@ -116,22 +116,27 @@ namespace GenAIDBExplorer.Core.Repository
 
             _logger.LogDebug("MaterializeLazyLoadedDataAsync completed for model: {ModelName}", semanticModel.Name);
 
-            // Re-write semantic model using helper
+            // Get collections using async methods to support lazy loading
+            var tables = await semanticModel.GetTablesAsync();
+            var views = await semanticModel.GetViewsAsync();
+            var storedProcedures = await semanticModel.GetStoredProceduresAsync();
+
+            // Create a copy of the semantic model with sensitive information redacted for persistence
+            var sanitizedSemanticModel = CreateSanitizedSemanticModelForPersistence(semanticModel, tables, views, storedProcedures);
+
+            // Re-write semantic model using helper with sanitized version
             var semanticModelFileManager = new SemanticModelFileManager(_secureJsonSerializer, _logger);
-            await semanticModelFileManager.SaveSemanticModelAsync(semanticModel, tempPath);
+            await semanticModelFileManager.SaveSemanticModelAsync(sanitizedSemanticModel, tempPath);
 
             // Re-write entities using helper
             var entityFileManager = new EntityFileManager(_secureJsonSerializer, _logger);
 
-            var tables = await semanticModel.GetTablesAsync();
             await entityFileManager.SaveEntitiesAsync(tables, tempPath, LocalDiskPersistenceConstants.Folders.Tables,
                 table => $"{table.Schema}.{table.Name}.json");
 
-            var views = await semanticModel.GetViewsAsync();
             await entityFileManager.SaveEntitiesAsync(views, tempPath, LocalDiskPersistenceConstants.Folders.Views,
                 view => $"{view.Schema}.{view.Name}.json");
 
-            var storedProcedures = await semanticModel.GetStoredProceduresAsync();
             await entityFileManager.SaveEntitiesAsync(storedProcedures, tempPath, LocalDiskPersistenceConstants.Folders.StoredProcedures,
                 sp => $"{sp.Schema}.{sp.Name}.json");
         }
@@ -565,6 +570,38 @@ namespace GenAIDBExplorer.Core.Repository
         }
 
         /// <summary>
+        /// Creates a copy of the semantic model with sensitive information redacted for safe persistence.
+        /// </summary>
+        /// <param name="originalModel">The original semantic model.</param>
+        /// <param name="tables">The tables collection from the original model.</param>
+        /// <param name="views">The views collection from the original model.</param>
+        /// <param name="storedProcedures">The stored procedures collection from the original model.</param>
+        /// <returns>A copy of the semantic model with sensitive information redacted.</returns>
+        private static SemanticModel CreateSanitizedSemanticModelForPersistence(
+            SemanticModel originalModel,
+            IEnumerable<SemanticModelTable> tables,
+            IEnumerable<SemanticModelView> views,
+            IEnumerable<SemanticModelStoredProcedure> storedProcedures)
+        {
+            // Create a new semantic model with redacted connection string
+            var redactedSource = ConnectionStringRedactor.RedactSensitiveInformation(originalModel.Source);
+
+            // Create a copy of the semantic model with the redacted source
+            var sanitizedModel = new SemanticModel(
+                originalModel.Name,
+                redactedSource,
+                originalModel.Description
+            );
+
+            // Copy the collections to the sanitized model so they are included in JSON serialization
+            sanitizedModel.Tables.AddRange(tables);
+            sanitizedModel.Views.AddRange(views);
+            sanitizedModel.StoredProcedures.AddRange(storedProcedures);
+
+            return sanitizedModel;
+        }
+
+        /// <summary>
         /// Moves the contents of one directory to another atomically.
         /// </summary>
         private async Task MoveDirectoryContentsAsync(DirectoryInfo source, DirectoryInfo destination)
@@ -580,6 +617,76 @@ namespace GenAIDBExplorer.Core.Repository
                     File.Move(file.FullName, destPath, true);
                 }
             });
+        }
+
+        /// <summary>
+        /// Checks if a vector exists for the specified entity with the given content hash.
+        /// For LocalDisk strategy, this checks the local file system for existing vector envelopes.
+        /// </summary>
+        public async Task<string?> CheckVectorExistsAsync(string entityType, string schemaName, string entityName,
+            string contentHash, DirectoryInfo modelPath, CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(entityType);
+            ArgumentNullException.ThrowIfNull(schemaName);
+            ArgumentNullException.ThrowIfNull(entityName);
+            ArgumentNullException.ThrowIfNull(contentHash);
+            ArgumentNullException.ThrowIfNull(modelPath);
+
+            // Build the expected file path using the same logic as VectorGenerationService
+            var folderName = entityType.ToLowerInvariant(); // e.g., "tables", "views"
+            var fileName = $"{schemaName}.{entityName}.json";
+
+            // Primary path: use semantic-model directory
+            var semanticModelDir = new DirectoryInfo(Path.Combine(modelPath.FullName, "semantic-model"));
+            var entityFile = new FileInfo(Path.Combine(semanticModelDir.FullName, folderName, fileName));
+
+            // Fallback paths for backward compatibility (matching VectorGenerationService logic)
+            if (!entityFile.Exists)
+            {
+                var alt1 = new FileInfo(Path.Combine(modelPath.FullName, "semantic-model", folderName, fileName));
+                var alt2 = new FileInfo(Path.Combine(modelPath.FullName, "SemanticModel", folderName, fileName));
+                if (alt1.Exists) entityFile = alt1;
+                else if (alt2.Exists) entityFile = alt2;
+            }
+
+            // If no file exists, return null
+            if (!entityFile.Exists)
+            {
+                return null;
+            }
+
+            try
+            {
+                // Read and parse the file to extract contentHash
+                var json = await File.ReadAllTextAsync(entityFile.FullName, cancellationToken).ConfigureAwait(false);
+
+                // Try fast regex capture first (same as VectorGenerationService)
+                var regex = new System.Text.RegularExpressions.Regex(
+                    "\"contentHash\"\\s*:\\s*\"([^\"]+)\"",
+                    System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                var match = regex.Match(json);
+
+                if (match.Success)
+                {
+                    var existingHash = match.Groups[1].Value;
+                    return string.Equals(existingHash?.Trim(), contentHash?.Trim(), StringComparison.OrdinalIgnoreCase)
+                        ? existingHash
+                        : null;
+                }
+
+                // Fallback: deserialize and extract from DTO
+                var envelope = await _secureJsonSerializer.DeserializeAsync<PersistedEntityDto>(json).ConfigureAwait(false);
+                var embeddingHash = envelope?.Embedding?.Metadata?.ContentHash;
+
+                return string.Equals(embeddingHash?.Trim(), contentHash?.Trim(), StringComparison.OrdinalIgnoreCase)
+                    ? embeddingHash
+                    : null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "Failed to read vector envelope for {EntityType} {Schema}.{Name}", entityType, schemaName, entityName);
+                return null;
+            }
         }
     }
 }

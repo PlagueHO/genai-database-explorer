@@ -9,6 +9,7 @@ using GenAIDBExplorer.Core.SemanticVectors.Orchestration;
 using GenAIDBExplorer.Core.SemanticVectors.Search;
 using Microsoft.SemanticKernel.Connectors.InMemory;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 
 namespace GenAIDBExplorer.Core.Test.VectorEmbedding.E2E;
 
@@ -69,6 +70,11 @@ public class InMemoryE2ETests
             var serializer = new GenAIDBExplorer.Core.Repository.Security.SecureJsonSerializer(
                 new Moq.Mock<Microsoft.Extensions.Logging.ILogger<GenAIDBExplorer.Core.Repository.Security.SecureJsonSerializer>>()
                     .Object);
+            var repository = new Mock<GenAIDBExplorer.Core.Repository.ISemanticModelRepository>();
+            repository.Setup(r => r.CheckVectorExistsAsync(
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), 
+                It.IsAny<DirectoryInfo>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((string?)null); // Return null to indicate no existing vector (force generation)
             var logger = new Moq.Mock<Microsoft.Extensions.Logging.ILogger<VectorGenerationService>>();
             var perf = new GenAIDBExplorer.Core.Repository.Performance.PerformanceMonitor(
                 new Moq.Mock<Microsoft.Extensions.Logging.ILogger<GenAIDBExplorer.Core.Repository.Performance.PerformanceMonitor>>()
@@ -81,6 +87,7 @@ public class InMemoryE2ETests
                 keyBuilder,
                 writer,
                 serializer,
+                repository.Object,
                 logger.Object,
                 perf
             );

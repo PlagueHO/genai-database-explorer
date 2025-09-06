@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Net;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -818,6 +819,79 @@ namespace GenAIDBExplorer.Core.Repository
         }
 
         #endregion
+
+        /// <summary>
+        /// Checks if a vector exists for the specified entity with the given content hash.
+        /// For CosmosDB strategy, this queries the entity document for existing vector metadata.
+        /// </summary>
+        public async Task<string?> CheckVectorExistsAsync(string entityType, string schemaName, string entityName,
+            string contentHash, DirectoryInfo modelPath, CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(entityType);
+            ArgumentNullException.ThrowIfNull(schemaName);
+            ArgumentNullException.ThrowIfNull(entityName);
+            ArgumentNullException.ThrowIfNull(contentHash);
+            ArgumentNullException.ThrowIfNull(modelPath);
+
+            // Input validation for security
+            EntityNameSanitizer.ValidateInputSecurity(entityType, nameof(entityType));
+            EntityNameSanitizer.ValidateInputSecurity(schemaName, nameof(schemaName));
+            EntityNameSanitizer.ValidateInputSecurity(entityName, nameof(entityName));
+
+            try
+            {
+                // Use the _entitiesContainer field that's already initialized
+                var container = _entitiesContainer;
+
+                // Build document ID using same pattern as CosmosDB persistence
+                var modelName = modelPath.Name;
+                var documentId = $"{modelName}_{entityType}_{schemaName}.{entityName}";
+
+                // Query for the specific document with vector metadata
+                var query = "SELECT c.embedding.contentHash FROM c WHERE c.id = @id";
+                var queryDefinition = new QueryDefinition(query)
+                    .WithParameter("@id", documentId);
+
+                using var iterator = container.GetItemQueryIterator<dynamic>(queryDefinition);
+
+                if (iterator.HasMoreResults)
+                {
+                    var response = await iterator.ReadNextAsync(cancellationToken).ConfigureAwait(false);
+                    var item = response.FirstOrDefault();
+
+                    if (item != null)
+                    {
+                        // Extract contentHash from the nested embedding metadata
+                        string? existingHash = null;
+                        try
+                        {
+                            existingHash = item.contentHash?.ToString();
+                        }
+                        catch
+                        {
+                            // Handle case where embedding or contentHash doesn't exist
+                        }
+
+                        return string.Equals(existingHash?.Trim(), contentHash?.Trim(), StringComparison.OrdinalIgnoreCase)
+                            ? existingHash
+                            : null;
+                    }
+                }
+
+                return null;
+            }
+            catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+            {
+                // Document doesn't exist
+                _logger.LogDebug("Vector document not found for {EntityType} {Schema}.{Name}", entityType, schemaName, entityName);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "Failed to check vector existence for {EntityType} {Schema}.{Name}", entityType, schemaName, entityName);
+                return null;
+            }
+        }
 
         #region IDisposable Implementation
 

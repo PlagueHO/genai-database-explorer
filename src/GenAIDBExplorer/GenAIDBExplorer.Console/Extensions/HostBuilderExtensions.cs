@@ -175,6 +175,7 @@ public static class HostBuilderExtensions
                     sp.GetRequiredService<IEntityKeyBuilder>(),
                     sp.GetRequiredService<IVectorIndexWriter>(),
                     sp.GetRequiredService<ISecureJsonSerializer>(),
+                    sp.GetRequiredService<ISemanticModelRepository>(),
                     sp.GetRequiredService<ILogger<VectorGenerationService>>(),
                     sp.GetRequiredService<IPerformanceMonitor>()
                 );

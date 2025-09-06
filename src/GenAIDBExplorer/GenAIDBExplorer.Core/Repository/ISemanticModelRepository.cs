@@ -32,5 +32,21 @@ namespace GenAIDBExplorer.Core.Repository
         /// <param name="modelPath">The path to load the model from.</param>
         /// <param name="options">Immutable options configuration created via the builder pattern.</param>
         Task<SemanticModel> LoadModelAsync(DirectoryInfo modelPath, SemanticModelRepositoryOptions options);
+
+        /// <summary>
+        /// Checks if a vector exists for the specified entity with the given content hash.
+        /// This enables persistence-strategy-aware vector existence checking for idempotent operations.
+        /// </summary>
+        /// <param name="entityType">The type of entity (e.g., "tables", "views").</param>
+        /// <param name="schemaName">The schema name of the entity.</param>
+        /// <param name="entityName">The name of the entity.</param>
+        /// <param name="contentHash">The content hash to check for existing vectors.</param>
+        /// <param name="modelPath">The project path for LocalDisk strategy context.</param>
+        /// <param name="strategyName">Optional strategy name override.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>The existing content hash if found, null if not found or doesn't match.</returns>
+        Task<string?> CheckVectorExistsAsync(string entityType, string schemaName, string entityName,
+            string contentHash, DirectoryInfo modelPath, string? strategyName = null,
+            CancellationToken cancellationToken = default);
     }
 }

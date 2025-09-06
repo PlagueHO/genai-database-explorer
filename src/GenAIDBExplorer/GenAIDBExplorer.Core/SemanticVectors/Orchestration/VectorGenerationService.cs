@@ -32,6 +32,7 @@ public sealed class VectorGenerationService : IVectorGenerationService
     private readonly IEntityKeyBuilder _keyBuilder;
     private readonly IVectorIndexWriter _indexWriter;
     private readonly ISecureJsonSerializer _secureJsonSerializer;
+    private readonly ISemanticModelRepository _repository;
     private readonly ILogger<VectorGenerationService> _logger;
     private readonly IPerformanceMonitor _performanceMonitor;
 
@@ -45,6 +46,7 @@ public sealed class VectorGenerationService : IVectorGenerationService
     /// <param name="keyBuilder">The entity key builder.</param>
     /// <param name="indexWriter">The vector index writer.</param>
     /// <param name="secureJsonSerializer">The secure JSON serializer.</param>
+    /// <param name="repository">The semantic model repository.</param>
     /// <param name="logger">The logger instance.</param>
     /// <param name="performanceMonitor">The performance monitor.</param>
     public VectorGenerationService(
@@ -55,6 +57,7 @@ public sealed class VectorGenerationService : IVectorGenerationService
         IEntityKeyBuilder keyBuilder,
         IVectorIndexWriter indexWriter,
         ISecureJsonSerializer secureJsonSerializer,
+        ISemanticModelRepository repository,
         ILogger<VectorGenerationService> logger,
         IPerformanceMonitor performanceMonitor
     )
@@ -66,6 +69,7 @@ public sealed class VectorGenerationService : IVectorGenerationService
         _keyBuilder = keyBuilder;
         _indexWriter = indexWriter;
         _secureJsonSerializer = secureJsonSerializer;
+        _repository = repository;
         _logger = logger;
         _performanceMonitor = performanceMonitor;
     }
@@ -112,110 +116,20 @@ public sealed class VectorGenerationService : IVectorGenerationService
             var contentHash = _keyBuilder.BuildContentHash(content);
             var id = _keyBuilder.BuildKey(model.Name, entity.GetType().Name, entity.Schema, entity.Name);
 
-            // Determine file path based on entity type
-            var folderName = entity switch
+            // Determine entity type string for repository lookup
+            var entityType = entity switch
             {
                 SemanticModelTable => "tables",
                 SemanticModelView => "views",
                 SemanticModelStoredProcedure => "storedprocedures",
                 _ => null
             };
-            if (folderName is null) return;
+            if (entityType is null) return;
 
-            var entityDir = new DirectoryInfo(Path.Combine(modelRoot.FullName, folderName));
-            Directory.CreateDirectory(entityDir.FullName);
-            var fileName = $"{entity.Schema}.{entity.Name}.json";
-            var entityFile = new FileInfo(Path.Combine(entityDir.FullName, fileName));
-
-            // If the expected file isn't at the configured root, probe common alternate roots
-            // to ensure we detect prior persisted envelopes regardless of directory casing.
-            if (!entityFile.Exists)
-            {
-                var alt1 = new FileInfo(Path.Combine(projectPath.FullName, "semantic-model", folderName, fileName));
-                var alt2 = new FileInfo(Path.Combine(projectPath.FullName, "SemanticModel", folderName, fileName));
-                if (alt1.Exists) entityFile = alt1;
-                else if (alt2.Exists) entityFile = alt2;
-            }
-
-            // Read existing envelope if present to check metadata hash
-            string? existingHash = null;
-            if (entityFile.Exists)
-            {
-                try
-                {
-                    // Use a robust read to avoid transient sharing violations on Windows (e.g., AV/indexers)
-                    var raw = await ReadAllTextRobustAsync(entityFile.FullName, cancellationToken).ConfigureAwait(false);
-
-                    // Ultra-fast path: if not overwriting and the raw JSON already contains the same contentHash,
-                    // short-circuit and skip without any further parsing. This avoids any flakiness due to
-                    // parser differences and guarantees idempotent behavior.
-                    if (!options.Overwrite && !string.IsNullOrEmpty(contentHash))
-                    {
-                        if (raw.IndexOf("\"contentHash\"", StringComparison.OrdinalIgnoreCase) >= 0 &&
-                            raw.IndexOf(contentHash, StringComparison.OrdinalIgnoreCase) >= 0)
-                        {
-                            _logger.LogInformation("Skipping unchanged entity {Schema}.{Name}", entity.Schema, entity.Name);
-                            return;
-                        }
-                    }
-
-                    // Primary: fast regex capture for contentHash value regardless of object shape
-                    var capture = Regex.Match(raw, "\"contentHash\"\\s*:\\s*\"([^\"]+)\"", RegexOptions.IgnoreCase);
-                    if (capture.Success)
-                    {
-                        existingHash = capture.Groups[1].Value;
-                    }
-
-                    // Secondary: deserialize using secure serializer and inspect typed DTO
-                    if (string.IsNullOrEmpty(existingHash))
-                    {
-                        try
-                        {
-                            var envelope = await _secureJsonSerializer.DeserializeAsync<PersistedEntityDto>(raw).ConfigureAwait(false);
-                            existingHash = envelope?.Embedding?.Metadata?.ContentHash;
-                        }
-                        catch
-                        {
-                            // Ignore and fall back to manual parsing
-                        }
-                    }
-
-                    if (string.IsNullOrEmpty(existingHash))
-                    {
-                        using var doc = JsonDocument.Parse(raw);
-                        if (doc.RootElement.ValueKind == System.Text.Json.JsonValueKind.Object)
-                        {
-                            // Primary path: embedding -> metadata -> contentHash (case-insensitive)
-                            if (TryGetPropertyIgnoreCase(doc.RootElement, "embedding", out var emb) &&
-                                TryGetPropertyIgnoreCase(emb, "metadata", out var md) &&
-                                TryGetPropertyIgnoreCase(md, "contentHash", out var ch))
-                            {
-                                existingHash = ch.GetString();
-                            }
-                            // Fallback path: metadata -> contentHash at root (case-insensitive)
-                            else if (TryGetPropertyIgnoreCase(doc.RootElement, "metadata", out var md2) &&
-                                     TryGetPropertyIgnoreCase(md2, "contentHash", out var ch2))
-                            {
-                                existingHash = ch2.GetString();
-                            }
-                            // Recursive fallback: find any property named contentHash
-                            else if (FindStringPropertyRecursive(doc.RootElement, "contentHash", out var foundHash))
-                            {
-                                existingHash = foundHash;
-                            }
-                            // Last resort: if the raw contains the newly computed hash anywhere, assume match
-                            else if (!string.IsNullOrEmpty(contentHash) && raw.IndexOf(contentHash, StringComparison.OrdinalIgnoreCase) >= 0)
-                            {
-                                existingHash = contentHash;
-                            }
-                        }
-                    }
-                }
-                catch
-                {
-                    // ignore corrupted envelope; treat as overwrite
-                }
-            }
+            // Use repository pattern for persistence-strategy-aware vector existence checking
+            var existingHash = await _repository.CheckVectorExistsAsync(
+                entityType, entity.Schema, entity.Name, contentHash, projectPath,
+                _projectSettings.SemanticModel?.PersistenceStrategy, cancellationToken).ConfigureAwait(false);
 
             if (!options.Overwrite && string.Equals(existingHash?.Trim(), contentHash?.Trim(), StringComparison.OrdinalIgnoreCase))
             {
@@ -229,24 +143,9 @@ public sealed class VectorGenerationService : IVectorGenerationService
             {
                 _logger.LogInformation("Overwriting unchanged entity {Schema}.{Name}", entity.Schema, entity.Name);
 
-                // For LocalDisk/AzureBlob strategies, touch the file to update timestamp
-                if ((string.Equals(repoStrategy, "LocalDisk", StringComparison.OrdinalIgnoreCase) ||
-                     string.Equals(repoStrategy, "AzureBlob", StringComparison.OrdinalIgnoreCase)) &&
-                    entityFile.Exists)
-                {
-                    try
-                    {
-                        // Force timestamp update to ensure overwrite semantics are honored
-                        File.SetLastWriteTimeUtc(entityFile.FullName, DateTime.UtcNow);
-                        processed++;
-                        return;
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogDebug(ex, "Failed to update envelope timestamp for unchanged {Schema}.{Name}", entity.Schema, entity.Name);
-                        // Continue with full regeneration as fallback
-                    }
-                }
+                // TODO: With repository pattern, timestamp updates should be handled by the persistence strategy
+                processed++;
+                return;
             }
 
             if (options.DryRun)
@@ -262,25 +161,16 @@ public sealed class VectorGenerationService : IVectorGenerationService
             {
                 _logger.LogWarning("Embedding generation returned empty vector for {Schema}.{Name}", entity.Schema, entity.Name);
                 perf.MarkAsFailed("Empty vector");
-                // Honor overwrite semantics by touching the existing envelope when present
-                // so that downstream processes can detect the attempted regeneration.
-                if (options.Overwrite && entityFile.Exists)
-                {
-                    try
-                    {
-                        File.SetLastWriteTimeUtc(entityFile.FullName, DateTime.UtcNow);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogDebug(ex, "Failed to touch envelope timestamp for {Schema}.{Name}", entity.Schema, entity.Name);
-                    }
-                }
+                // TODO: With repository pattern, timestamp updates should be handled by the persistence strategy
                 return;
             }
 
             // Persist envelope for Local/Blob strategies per Phase 2
             if (string.Equals(repoStrategy, "LocalDisk", StringComparison.OrdinalIgnoreCase) || string.Equals(repoStrategy, "AzureBlob", StringComparison.OrdinalIgnoreCase))
             {
+                // TODO: With repository pattern, vector persistence should be handled by the repository
+                // Currently keeping the original LocalDisk file writing logic for backward compatibility
+                // This should be refactored to use repository.SaveVectorAsync() or similar method
                 var mapper = new LocalBlobEntityMapper();
                 var payload = new EmbeddingPayload
                 {
@@ -297,10 +187,18 @@ public sealed class VectorGenerationService : IVectorGenerationService
                 };
                 var envelope = mapper.ToPersistedEntity(entity, payload);
                 var json = await _secureJsonSerializer.SerializeAsync(envelope, new JsonSerializerOptions { WriteIndented = true }).ConfigureAwait(false);
+
+                // For now, recreate the file path logic until we have full repository integration
+                var folderName = entityType;
+                var fileName = $"{entity.Schema}.{entity.Name}.json";
+                var tempModelRoot = new DirectoryInfo(Path.Combine(projectPath.FullName, _projectSettings.SemanticModelRepository?.LocalDisk?.Directory ?? "semantic-model"));
+                var entityDir = new DirectoryInfo(Path.Combine(tempModelRoot.FullName, folderName));
+                Directory.CreateDirectory(entityDir.FullName);
+                var entityFile = new FileInfo(Path.Combine(entityDir.FullName, fileName));
+
                 await File.WriteAllTextAsync(entityFile.FullName, json, cancellationToken).ConfigureAwait(false);
 
-                // Explicitly update timestamp after file write to ensure overwrite is reflected in filesystem,
-                // particularly important when content might be identical but overwrite was requested
+                // Explicitly update timestamp after file write to ensure overwrite is reflected in filesystem
                 if (options.Overwrite)
                 {
                     try

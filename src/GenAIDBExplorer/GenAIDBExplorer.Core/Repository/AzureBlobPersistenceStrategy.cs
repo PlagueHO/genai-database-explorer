@@ -1182,6 +1182,77 @@ namespace GenAIDBExplorer.Core.Repository
 
         #endregion
 
+        /// <summary>
+        /// Checks if a vector exists for the specified entity with the given content hash.
+        /// For AzureBlob strategy, this queries Azure Blob Storage for existing vector envelopes.
+        /// </summary>
+        public async Task<string?> CheckVectorExistsAsync(string entityType, string schemaName, string entityName,
+            string contentHash, DirectoryInfo modelPath, CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(entityType);
+            ArgumentNullException.ThrowIfNull(schemaName);
+            ArgumentNullException.ThrowIfNull(entityName);
+            ArgumentNullException.ThrowIfNull(contentHash);
+            ArgumentNullException.ThrowIfNull(modelPath);
+
+            // Input validation for security
+            EntityNameSanitizer.ValidateInputSecurity(entityType, nameof(entityType));
+            EntityNameSanitizer.ValidateInputSecurity(schemaName, nameof(schemaName));
+            EntityNameSanitizer.ValidateInputSecurity(entityName, nameof(entityName));
+
+            // Build blob name using same logic as Azure Blob storage structure
+            var folderName = entityType.ToLowerInvariant(); // e.g., "tables", "views"
+            var fileName = $"{schemaName}.{entityName}.json";
+            var blobName = $"{_configuration.BlobPrefix ?? "models"}/{modelPath.Name}/{folderName}/{fileName}";
+
+            try
+            {
+                // Get the blob client and check if it exists
+                var blobClient = GetBlobClient(blobName);
+                var response = await blobClient.DownloadContentAsync(cancellationToken).ConfigureAwait(false);
+
+                if (response?.Value?.Content == null)
+                {
+                    return null;
+                }
+
+                var json = response.Value.Content.ToString();
+
+                // Try fast regex capture first (same as LocalDisk implementation)
+                var regex = new System.Text.RegularExpressions.Regex(
+                    "\"contentHash\"\\s*:\\s*\"([^\"]+)\"",
+                    System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                var match = regex.Match(json);
+
+                if (match.Success)
+                {
+                    var existingHash = match.Groups[1].Value;
+                    return string.Equals(existingHash?.Trim(), contentHash?.Trim(), StringComparison.OrdinalIgnoreCase)
+                        ? existingHash
+                        : null;
+                }
+
+                // Fallback: deserialize and extract from DTO
+                var envelope = await _secureJsonSerializer.DeserializeAsync<PersistedEntityDto>(json).ConfigureAwait(false);
+                var embeddingHash = envelope?.Embedding?.Metadata?.ContentHash;
+
+                return string.Equals(embeddingHash?.Trim(), contentHash?.Trim(), StringComparison.OrdinalIgnoreCase)
+                    ? embeddingHash
+                    : null;
+            }
+            catch (RequestFailedException ex) when (ex.Status == 404)
+            {
+                // Blob doesn't exist
+                _logger.LogDebug("Vector blob not found for {EntityType} {Schema}.{Name}", entityType, schemaName, entityName);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "Failed to read vector blob for {EntityType} {Schema}.{Name}", entityType, schemaName, entityName);
+                return null;
+            }
+        }
+
         #region IDisposable Implementation
 
         /// <summary>

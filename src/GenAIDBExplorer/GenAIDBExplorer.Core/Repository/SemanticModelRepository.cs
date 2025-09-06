@@ -345,6 +345,24 @@ namespace GenAIDBExplorer.Core.Repository
         }
 
         /// <summary>
+        /// Checks if a vector exists for the specified entity with the given content hash.
+        /// This method delegates to the appropriate persistence strategy for strategy-aware checking.
+        /// </summary>
+        public async Task<string?> CheckVectorExistsAsync(string entityType, string schemaName, string entityName,
+            string contentHash, DirectoryInfo modelPath, string? strategyName = null,
+            CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(entityType);
+            ArgumentNullException.ThrowIfNull(schemaName);
+            ArgumentNullException.ThrowIfNull(entityName);
+            ArgumentNullException.ThrowIfNull(contentHash);
+            ArgumentNullException.ThrowIfNull(modelPath);
+
+            var strategy = _strategyFactory.GetStrategy(strategyName);
+            return await strategy.CheckVectorExistsAsync(entityType, schemaName, entityName, contentHash, modelPath, cancellationToken);
+        }
+
+        /// <summary>
         /// Disposes the repository and releases all resources.
         /// </summary>
         public void Dispose()

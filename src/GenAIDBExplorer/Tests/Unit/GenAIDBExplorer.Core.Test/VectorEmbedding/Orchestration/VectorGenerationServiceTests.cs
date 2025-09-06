@@ -2,6 +2,7 @@ using System.Text.Json;
 using FluentAssertions;
 using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.Models.SemanticModel;
+using GenAIDBExplorer.Core.Repository;
 using GenAIDBExplorer.Core.Repository.Security;
 using GenAIDBExplorer.Core.SemanticVectors.Embeddings;
 using GenAIDBExplorer.Core.SemanticVectors.Indexing;
@@ -60,6 +61,11 @@ public class VectorGenerationServiceTests
             key.Setup(k => k.BuildKey(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns("id");
             var writer = new Mock<IVectorIndexWriter>();
             var serializer = new SecureJsonSerializer(new Moq.Mock<Microsoft.Extensions.Logging.ILogger<SecureJsonSerializer>>().Object);
+            var repository = new Mock<ISemanticModelRepository>();
+            repository.Setup(r => r.CheckVectorExistsAsync(
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), 
+                It.IsAny<DirectoryInfo>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync("hash"); // Return matching hash to trigger skip behavior
             var logger = new Moq.Mock<Microsoft.Extensions.Logging.ILogger<VectorGenerationService>>();
             var perf = new GenAIDBExplorer.Core.Repository.Performance.PerformanceMonitor(
                 new Moq.Mock<Microsoft.Extensions.Logging.ILogger<GenAIDBExplorer.Core.Repository.Performance.PerformanceMonitor>>()
@@ -72,6 +78,7 @@ public class VectorGenerationServiceTests
                 key.Object,
                 writer.Object,
                 serializer,
+                repository.Object,
                 logger.Object,
                 perf
             );
