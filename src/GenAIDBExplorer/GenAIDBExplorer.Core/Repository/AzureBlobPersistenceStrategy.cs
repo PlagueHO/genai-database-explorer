@@ -380,6 +380,15 @@ namespace GenAIDBExplorer.Core.Repository
         /// <param name="blobPrefix">The blob prefix for the model.</param>
         private async Task SaveSemanticModelConcurrentlyAsync(SemanticModel semanticModel, string blobPrefix)
         {
+            // Get collections using async methods to support lazy loading
+            var tables = await semanticModel.GetTablesAsync();
+            var views = await semanticModel.GetViewsAsync();
+            var storedProcedures = await semanticModel.GetStoredProceduresAsync();
+
+            // Log entity counts for debugging
+            _logger.LogInformation("Saving semantic model with {TableCount} tables, {ViewCount} views, and {StoredProcedureCount} stored procedures",
+                tables.Count(), views.Count(), storedProcedures.Count());
+
             var concurrentTasks = new List<Task>();
 
             // Save main semantic model document
@@ -387,9 +396,9 @@ namespace GenAIDBExplorer.Core.Repository
             concurrentTasks.Add(mainModelTask);
 
             // Save entities concurrently
-            AddEntitySaveTasks(concurrentTasks, semanticModel.Tables, blobPrefix, "tables");
-            AddEntitySaveTasks(concurrentTasks, semanticModel.Views, blobPrefix, "views");
-            AddEntitySaveTasks(concurrentTasks, semanticModel.StoredProcedures, blobPrefix, "storedprocedures");
+            AddEntitySaveTasks(concurrentTasks, tables, blobPrefix, "tables");
+            AddEntitySaveTasks(concurrentTasks, views, blobPrefix, "views");
+            AddEntitySaveTasks(concurrentTasks, storedProcedures, blobPrefix, "storedprocedures");
 
             await Task.WhenAll(concurrentTasks);
         }
@@ -496,7 +505,13 @@ namespace GenAIDBExplorer.Core.Repository
             var response = await DownloadContentAsync(mainModelBlob, CancellationToken.None);
             var jsonContent = response.Value.Content.ToString();
 
-            var semanticModel = await _secureJsonSerializer.DeserializeAsync<SemanticModel>(jsonContent)
+            // Create JSON serializer options with entity converters for proper deserialization
+            var jsonOptions = new JsonSerializerOptions { WriteIndented = true };
+            jsonOptions.Converters.Add(new Models.SemanticModel.JsonConverters.SemanticModelTableJsonConverter());
+            jsonOptions.Converters.Add(new Models.SemanticModel.JsonConverters.SemanticModelViewJsonConverter());
+            jsonOptions.Converters.Add(new Models.SemanticModel.JsonConverters.SemanticModelStoredProcedureJsonConverter());
+
+            var semanticModel = await _secureJsonSerializer.DeserializeAsync<SemanticModel>(jsonContent, jsonOptions)
                 ?? throw new InvalidOperationException($"Failed to deserialize semantic model '{modelName}'.");
 
             _logger.LogInformation("Successfully loaded semantic model '{ModelName}' from Azure Blob Storage using secure JSON deserializer", modelName);
@@ -511,6 +526,10 @@ namespace GenAIDBExplorer.Core.Repository
         /// <param name="blobPrefix">The blob prefix for the model.</param>
         private async Task LoadAllEntitiesConcurrentlyAsync(SemanticModel semanticModel, string blobPrefix)
         {
+            // Log entity counts for debugging
+            _logger.LogInformation("Loading entities for semantic model: {TableCount} tables, {ViewCount} views, {StoredProcedureCount} stored procedures",
+                semanticModel.Tables.Count, semanticModel.Views.Count, semanticModel.StoredProcedures.Count);
+
             var loadTasks = new List<Task>();
 
             // Load all entity types concurrently
@@ -518,7 +537,11 @@ namespace GenAIDBExplorer.Core.Repository
             AddEntityLoadTasks(loadTasks, semanticModel.Views, blobPrefix, "views");
             AddEntityLoadTasks(loadTasks, semanticModel.StoredProcedures, blobPrefix, "storedprocedures");
 
+            _logger.LogInformation("Created {TaskCount} entity load tasks", loadTasks.Count);
+
             await Task.WhenAll(loadTasks);
+
+            _logger.LogInformation("Completed loading all entity details");
         }
 
         /// <summary>
@@ -531,11 +554,15 @@ namespace GenAIDBExplorer.Core.Repository
         /// <param name="entityType">The entity type folder name.</param>
         private void AddEntityLoadTasks<T>(List<Task> tasks, IEnumerable<T> entities, string blobPrefix, string entityType) where T : class
         {
+            int entityCount = 0;
             foreach (var entity in entities)
             {
+                entityCount++;
                 var loadTask = LoadEntityFromBlobAsync(entity, blobPrefix, entityType);
                 tasks.Add(loadTask);
             }
+
+            _logger.LogInformation("Added {EntityCount} {EntityType} load tasks", entityCount, entityType);
         }
 
         /// <summary>
