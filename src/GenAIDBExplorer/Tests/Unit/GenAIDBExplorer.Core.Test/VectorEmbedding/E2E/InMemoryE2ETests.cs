@@ -72,7 +72,7 @@ public class InMemoryE2ETests
                     .Object);
             var repository = new Mock<GenAIDBExplorer.Core.Repository.ISemanticModelRepository>();
             repository.Setup(r => r.CheckVectorExistsAsync(
-                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), 
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<DirectoryInfo>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((string?)null); // Return null to indicate no existing vector (force generation)
             var logger = new Moq.Mock<Microsoft.Extensions.Logging.ILogger<VectorGenerationService>>();

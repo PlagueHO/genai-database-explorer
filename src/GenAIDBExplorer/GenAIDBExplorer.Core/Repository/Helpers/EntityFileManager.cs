@@ -163,13 +163,34 @@ internal class EntityFileManager
             using var doc = JsonDocument.Parse(jsonContent);
             if (doc.RootElement.ValueKind == JsonValueKind.Object)
             {
-                // Case-insensitive lookup for "data" property to support varied serializers
+                // Check if this is a versioned envelope format (has both "version" and "data" properties)
+                bool hasVersion = false;
+                bool hasData = false;
+                JsonElement dataElement = default;
+
                 foreach (var prop in doc.RootElement.EnumerateObject())
                 {
-                    if (string.Equals(prop.Name, "data", StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals(prop.Name, "version", StringComparison.OrdinalIgnoreCase))
                     {
-                        return prop.Value.GetRawText();
+                        hasVersion = true;
                     }
+                    else if (string.Equals(prop.Name, "data", StringComparison.OrdinalIgnoreCase))
+                    {
+                        hasData = true;
+                        dataElement = prop.Value;
+                    }
+                }
+
+                // If both version and data are present, this is the new envelope format
+                if (hasVersion && hasData)
+                {
+                    return dataElement.GetRawText();
+                }
+
+                // Fallback: look for just "data" property (legacy envelope without version)
+                if (hasData)
+                {
+                    return dataElement.GetRawText();
                 }
             }
         }
@@ -177,6 +198,8 @@ internal class EntityFileManager
         {
             // Fallback to pass-through on any parse error
         }
+
+        // If no envelope detected, pass through as-is (legacy direct entity format)
         return jsonContent;
     }
 }

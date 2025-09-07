@@ -10,16 +10,12 @@ public sealed class LocalBlobEntityMapper : IStorageEntityMapper
 {
     public object ToPersistedEntity(object entity, EmbeddingPayload? embedding)
     {
-        if (embedding == null)
-        {
-            return entity;
-        }
-
-        // Create a typed envelope: { data: entity, embedding: { vector, metadata } }
+        // Always return the new versioned envelope schema format
         return new PersistedEntityDto
         {
+            Version = 1,
             Data = entity,
-            Embedding = embedding
+            Embedding = embedding // Can be null - that's OK
         };
     }
 

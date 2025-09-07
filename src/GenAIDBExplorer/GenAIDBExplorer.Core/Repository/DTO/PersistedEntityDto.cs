@@ -35,9 +35,16 @@ public sealed class EmbeddingPayload
 /// <summary>
 /// Envelope persisted for Local/Blob strategies combining entity data with optional embedding.
 /// Using object for Data preserves serializer compatibility with existing domain converters.
+/// Includes version information for schema evolution.
 /// </summary>
 public sealed class PersistedEntityDto
 {
+    /// <summary>
+    /// Schema version for this persisted entity format.
+    /// Version 1: Original envelope format with data + optional embedding.
+    /// </summary>
+    [JsonPropertyName("version")] public int Version { get; set; } = 1;
+
     [JsonPropertyName("data")] public object? Data { get; set; }
 
     [JsonPropertyName("embedding")] public EmbeddingPayload? Embedding { get; set; }

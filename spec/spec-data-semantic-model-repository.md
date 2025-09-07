@@ -308,6 +308,54 @@ Documents (each with hierarchical partition key):
 }
 ```
 
+#### Semantic Entity Schema
+
+**All persistence strategies use a unified semantic entity schema** for individual entity documents (tables, views, stored procedures). This schema includes versioning support for future evolution.
+
+**Schema Version 1 (Current):**
+
+```json
+{
+  "version": 1,
+  "data": {
+    // The actual entity data (table, view, or stored procedure definition)
+    "Schema": "SalesLT",
+    "Name": "Address",
+    "Description": "Customer address information",
+    "SemanticDescription": "AI-generated semantic description...",
+    "Columns": [...],
+    "Details": "Additional details...",
+    "AdditionalInformation": "..."
+  },
+  "embedding": {
+    // Optional embedding information - present only when vectors are generated
+    "vector": [0.1234, 0.5678, ...],  // Float array of embedding values
+    "metadata": {
+      "modelId": "Embeddings",
+      "dimensions": 1536,
+      "contentHash": "abc123...",
+      "generatedAt": "2025-09-07T10:30:00Z",
+      "serviceId": "Embeddings",
+      "version": "1"
+    }
+  }
+}
+```
+
+**Legacy Schema Support (Backward Compatibility):**
+
+The system supports two legacy formats for backward compatibility:
+
+1. **Legacy Direct Format** (no envelope): Entity data stored directly as JSON without version or embedding wrapper
+2. **Legacy Envelope Format** (without version): `{ "data": {...}, "embedding": {...} }` without version field
+
+**Schema Evolution Rules:**
+
+- New schema versions will increment the `version` field
+- All loaders must support reading previous versions
+- All savers use the current version schema
+- Version field is mandatory for new schemas (version 1+)
+
 ## 5. Acceptance Criteria
 
 - **AC-001**: Given a semantic model, When SaveModelAsync is called with Local Disk strategy, Then model persists to hierarchical file structure with separate entity files and index document
@@ -330,6 +378,8 @@ Documents (each with hierarchical partition key):
 - **AC-018**: Given performance monitoring integration, When enabled, Then implementation follows the requirements and acceptance criteria defined in the [OpenTelemetry Application Monitoring Specification](./spec-monitoring-azure-application-insights-opentelemetry.md)
 - **AC-019**: Given OpenTelemetry services are not configured, When repository operations are performed, Then full functionality is maintained with zero performance degradation and no errors or warnings related to telemetry
 - **AC-020**: Given .NET Aspire environment variables are configured, When EnableAspireCompatibility is true, Then telemetry is automatically sent to the configured OTLP endpoint without additional configuration
+- **AC-021**: Given any semantic model entity, When SaveModelAsync is called, Then entity is persisted using the current versioned schema format (version 1) regardless of whether embeddings are present
+- **AC-022**: Given legacy format entities (direct or envelope without version), When LoadModelAsync is called, Then entities are successfully loaded with backward compatibility
 
 ## 6. Test Automation Strategy
 

@@ -63,7 +63,7 @@ public class VectorGenerationServiceTests
             var serializer = new SecureJsonSerializer(new Moq.Mock<Microsoft.Extensions.Logging.ILogger<SecureJsonSerializer>>().Object);
             var repository = new Mock<ISemanticModelRepository>();
             repository.Setup(r => r.CheckVectorExistsAsync(
-                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), 
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<DirectoryInfo>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync("hash"); // Return matching hash to trigger skip behavior
             var logger = new Moq.Mock<Microsoft.Extensions.Logging.ILogger<VectorGenerationService>>();
