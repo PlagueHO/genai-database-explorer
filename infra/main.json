@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.34.44.8038",
-      "templateHash": "16804268061953530500"
+      "templateHash": "14161008959562204063"
     }
   },
   "parameters": {
@@ -94,11 +94,11 @@
         "description": "Whether to enable public network access to Azure resources."
       }
     },
-    "sqlServerClientIpAddress": {
+    "clientIpAddress": {
       "type": "string",
       "defaultValue": "",
       "metadata": {
-        "description": "IP address to allow access to the SQL Server. If not provided, no firewall rule will be created."
+        "description": "Client IP address to allow access to Azure resources (SQL Server, Storage Account). If not provided, no client-specific access rules will be created."
       }
     }
   },
@@ -10411,7 +10411,7 @@
               }
             ]
           },
-          "firewallRules": "[if(not(empty(parameters('sqlServerClientIpAddress'))), createObject('value', createArray(createObject('name', 'AllowClientIP', 'startIpAddress', parameters('sqlServerClientIpAddress'), 'endIpAddress', parameters('sqlServerClientIpAddress')))), createObject('value', createArray()))]",
+          "firewallRules": "[if(not(empty(parameters('clientIpAddress'))), createObject('value', createArray(createObject('name', 'AllowClientIP', 'startIpAddress', parameters('clientIpAddress'), 'endIpAddress', parameters('clientIpAddress')))), createObject('value', createArray()))]",
           "managedIdentities": {
             "value": {
               "systemAssigned": true
@@ -21284,6 +21284,7 @@
             "value": false
           },
           "publicNetworkAccess": "[if(parameters('enablePublicNetworkAccess'), createObject('value', 'Enabled'), createObject('value', 'Disabled'))]",
+          "networkAcls": "[if(not(empty(parameters('clientIpAddress'))), createObject('value', createObject('defaultAction', 'Deny', 'ipRules', createArray(createObject('value', parameters('clientIpAddress'), 'action', 'Allow')), 'bypass', 'AzureServices')), createObject('value', null()))]",
           "blobServices": {
             "value": {
               "containers": [
@@ -29627,9 +29628,9 @@
       "type": "string",
       "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('sql-server-deployment-{0}', variables('resourceToken'))), '2022-09-01').outputs.fullyQualifiedDomainName.value]"
     },
-    "SQL_SERVER_CLIENT_IP_ADDRESS": {
+    "CLIENT_IP_ADDRESS": {
       "type": "string",
-      "value": "[parameters('sqlServerClientIpAddress')]"
+      "value": "[parameters('clientIpAddress')]"
     },
     "COSMOS_DB_ACCOUNT_NAME": {
       "type": "string",

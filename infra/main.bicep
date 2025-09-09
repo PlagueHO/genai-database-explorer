@@ -51,8 +51,8 @@ param storageAccountDeploy bool = false
 @sys.description('Whether to enable public network access to Azure resources.')
 param enablePublicNetworkAccess bool = true
 
-@sys.description('IP address to allow access to the SQL Server. If not provided, no firewall rule will be created.')
-param sqlServerClientIpAddress string = ''
+@sys.description('Client IP address to allow access to Azure resources (SQL Server, Storage Account). If not provided, no client-specific access rules will be created.')
+param clientIpAddress string = ''
 
 var abbrs = loadJsonContent('./abbreviations.json')
 var openAiModels = loadJsonContent('./azure-openai-models.json')
@@ -277,11 +277,11 @@ module sqlServer 'br/public:avm/res/sql/server:0.20.2' = {
         isLedgerOn: false
       }
     ]
-    firewallRules: !empty(sqlServerClientIpAddress) ? [
+    firewallRules: !empty(clientIpAddress) ? [
       {
         name: 'AllowClientIP'
-        startIpAddress: sqlServerClientIpAddress
-        endIpAddress: sqlServerClientIpAddress
+        startIpAddress: clientIpAddress
+        endIpAddress: clientIpAddress
       }
     ] : []
     managedIdentities: {
@@ -405,6 +405,16 @@ module storageAccount 'br/public:avm/res/storage/storage-account:0.26.2' = if (s
     allowBlobPublicAccess: true
     allowSharedKeyAccess: false // This will force EntraID Auth
     publicNetworkAccess: enablePublicNetworkAccess ? 'Enabled' : 'Disabled'
+    networkAcls: !empty(clientIpAddress) ? {
+      defaultAction: 'Deny'
+      ipRules: [
+        {
+          value: clientIpAddress
+          action: 'Allow'
+        }
+      ]
+      bypass: 'AzureServices'
+    } : null
     blobServices: {
       containers: [
         {
@@ -518,7 +528,9 @@ output SQL_SERVER_NAME string = sqlServer.outputs.name
 output SQL_SERVER_RESOURCE_ID string = sqlServer.outputs.resourceId
 output SQL_SERVER_ADMIN_USERNAME string = sqlServerUsername
 output SQL_DATABASE_ENDPOINT string = sqlServer.outputs.fullyQualifiedDomainName
-output SQL_SERVER_CLIENT_IP_ADDRESS string = sqlServerClientIpAddress
+
+// Output the Client IP Address
+output CLIENT_IP_ADDRESS string = clientIpAddress
 
 // Output the Cosmos DB resources
 output COSMOS_DB_ACCOUNT_NAME string = cosmosDbAccountNameOut

@@ -53,11 +53,19 @@ public sealed class SqlConnectionProvider(
             // This internally uses DefaultAzureCredential and supports managed identity, Visual Studio, Azure CLI, etc.
             var connectionStringBuilder = new SqlConnectionStringBuilder(connectionString);
 
-            // Remove any existing authentication-related properties that conflict with Azure AD
-            connectionStringBuilder.Remove("User ID");
-            connectionStringBuilder.Remove("Password");
-            connectionStringBuilder.Remove("Integrated Security");
-            connectionStringBuilder.Remove("Trusted_Connection");
+            // Clear any existing authentication-related properties that conflict with Azure AD
+            // Setting these to empty string or false ensures they are properly cleared
+            connectionStringBuilder.UserID = string.Empty;
+            connectionStringBuilder.Password = string.Empty;
+            connectionStringBuilder.IntegratedSecurity = false;
+
+            // Also remove alternative property names that might be present
+            if (connectionStringBuilder.ContainsKey("User Id"))
+                connectionStringBuilder.Remove("User Id");
+            if (connectionStringBuilder.ContainsKey("Pwd"))
+                connectionStringBuilder.Remove("Pwd");
+            if (connectionStringBuilder.ContainsKey("Trusted_Connection"))
+                connectionStringBuilder.Remove("Trusted_Connection");
 
             // Set the Authentication property to use Active Directory Default
             connectionStringBuilder.Authentication = SqlAuthenticationMethod.ActiveDirectoryDefault;

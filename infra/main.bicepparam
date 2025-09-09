@@ -25,5 +25,5 @@ param storageAccountDeploy = bool(readEnvironmentVariable('STORAGE_ACCOUNT_DEPLO
 // Network access parameter
 param enablePublicNetworkAccess = bool(readEnvironmentVariable('ENABLE_PUBLIC_NETWORK_ACCESS', 'true'))
 
-// Client IP address parameter for SQL Server firewall rule
-param sqlServerClientIpAddress = readEnvironmentVariable('SQL_SERVER_CLIENT_IP_ADDRESS', '')
+// Client IP address parameter for Azure resource access (SQL Server and Storage Account)
+param clientIpAddress = readEnvironmentVariable('CLIENT_IP_ADDRESS', '')
