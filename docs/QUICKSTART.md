@@ -211,6 +211,7 @@ Edit the `settings.json` file in the project directory to set the desired config
         "Name": "<The name of your project>",
         "Description": "<An optional description of the purpose of the database that helps ground the semantic descriptions>", // This helps ground the AI on the context of the database.
         "ConnectionString": "Server=MyServer;Database=MyDatabase;User Id=<SQL username>;Password=<SQL password>;TrustServerCertificate=True;MultipleActiveResultSets=True;",
+        "AuthenticationType": "SqlAuthentication", // Authentication type: "SqlAuthentication" (default) or "EntraIdAuthentication" (for managed identity/Entra ID)
         "Schema": "dbo",
         // ... other parameters
   },
@@ -263,6 +264,44 @@ Edit the `settings.json` file in the project directory to set the desired config
     }
 }
 ```
+
+## Database authentication options
+
+The GenAI Database Explorer supports two authentication methods for connecting to SQL Server and Azure SQL Database:
+
+### SQL Authentication (Default)
+
+Uses traditional username and password authentication. This is the default setting and works with both on-premises SQL Server and Azure SQL Database.
+
+```json
+{
+    "Database": {
+        "ConnectionString": "Server=MyServer;Database=MyDatabase;User Id=myuser;Password=mypassword;TrustServerCertificate=True;MultipleActiveResultSets=True;",
+        "AuthenticationType": "SqlAuthentication"
+    }
+}
+```
+
+### Microsoft Entra ID Authentication (Managed Identity)
+
+Uses Microsoft Entra ID (formerly Azure AD) authentication with managed identity. This is recommended for applications running in Azure and provides better security by eliminating the need to store passwords. Uses the "Active Directory Default" authentication mode internally, which supports DefaultAzureCredential and multiple authentication methods.
+
+```json
+{
+    "Database": {
+        "ConnectionString": "Server=myserver.database.windows.net;Database=MyDatabase;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;MultipleActiveResultSets=True;",
+        "AuthenticationType": "EntraIdAuthentication"
+    }
+}
+```
+
+**Important notes for Entra ID authentication:**
+
+- The connection string should **not** include username/password when using Entra ID authentication
+- The application will automatically add `Authentication=Active Directory Default` to the connection string
+- The application must be running in an environment with Azure credentials available (Azure VM with managed identity, Azure App Service, local development with Azure CLI, etc.)
+- The Entra ID identity must have appropriate permissions to access the target database
+- Uses SqlClient's built-in "Active Directory Default" authentication which internally uses DefaultAzureCredential and automatically tries multiple authentication methods in order: Environment variables, Managed Identity, Visual Studio/Azure CLI, Interactive browser
 
 ## Extract the database schema
 

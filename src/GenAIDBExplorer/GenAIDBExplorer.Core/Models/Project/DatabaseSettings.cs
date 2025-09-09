@@ -27,6 +27,11 @@ public class DatabaseSettings
     public string ConnectionString { get; set; } = string.Empty;
 
     /// <summary>
+    /// The authentication type to use when connecting to the database.
+    /// </summary>
+    public DatabaseAuthenticationType AuthenticationType { get; set; } = DatabaseAuthenticationType.SqlAuthentication;
+
+    /// <summary>
     /// The list of schemas to extract from the database. If not specified, all schemas will be queried.
     /// </summary>
     public string? Schema { get; set; }

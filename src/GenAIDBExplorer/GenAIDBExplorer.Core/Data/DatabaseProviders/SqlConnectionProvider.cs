@@ -26,7 +26,11 @@ public sealed class SqlConnectionProvider(
     /// </summary>
     /// <returns>A <see cref="SqlConnection"/> instance in the "Open" state.</returns>
     /// <remarks>
-    /// This method retrieves the connection string from the project settings and attempts to open a SQL connection. It logs the connection attempt and any errors that occur.
+    /// This method retrieves the connection string from the project settings and attempts to open a SQL connection. 
+    /// It supports both SQL authentication (username/password) and Azure Active Directory authentication (managed identity/Entra ID).
+    /// For Azure AD authentication, it modifies the connection string to use the "Active Directory Default" authentication mode,
+    /// which internally uses DefaultAzureCredential and supports managed identity, Visual Studio, Azure CLI, and other credential sources.
+    /// It logs the connection attempt and any errors that occur.
     /// Connection pooling enabled by default makes re-establishing connections relatively efficient.
     /// </remarks>
     /// <exception cref="InvalidDataException">Thrown if the connection string is missing.</exception>
@@ -35,10 +39,36 @@ public sealed class SqlConnectionProvider(
     public async Task<SqlConnection> ConnectAsync()
     {
         var connectionString = _project.Settings.Database.ConnectionString;
+        var authenticationType = _project.Settings.Database.AuthenticationType;
 
         if (string.IsNullOrWhiteSpace(connectionString))
         {
             throw new InvalidDataException("Missing database connection string.");
+        }
+
+        // Modify connection string for Azure AD authentication
+        if (authenticationType == DatabaseAuthenticationType.EntraIdAuthentication)
+        {
+            // Use SqlClient's built-in "Active Directory Default" authentication mode
+            // This internally uses DefaultAzureCredential and supports managed identity, Visual Studio, Azure CLI, etc.
+            var connectionStringBuilder = new SqlConnectionStringBuilder(connectionString);
+            
+            // Remove any existing authentication-related properties that conflict with Azure AD
+            connectionStringBuilder.Remove("User ID");
+            connectionStringBuilder.Remove("Password");
+            connectionStringBuilder.Remove("Integrated Security");
+            connectionStringBuilder.Remove("Trusted_Connection");
+            
+            // Set the Authentication property to use Active Directory Default
+            connectionStringBuilder.Authentication = SqlAuthenticationMethod.ActiveDirectoryDefault;
+            
+            connectionString = connectionStringBuilder.ConnectionString;
+            _logger.LogInformation("Using Microsoft Entra ID Default authentication (supports managed identity, Visual Studio, Azure CLI, etc.).");
+        }
+        else
+        {
+            // Default to SQL authentication (username/password from connection string)
+            _logger.LogInformation("Using SQL authentication from connection string.");
         }
 
         var connection = new SqlConnection(connectionString);

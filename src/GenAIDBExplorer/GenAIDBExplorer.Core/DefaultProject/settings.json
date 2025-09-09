@@ -4,6 +4,7 @@
         "Name": "AdventureWorksLT", // Display name of the database/project used across outputs
         "Description": "Product, sales, and customer data for the AdventureWorks company.", // This helps ground the AI on the context of the database.
         "ConnectionString": "Server=.;Database=AdventureWorksLT;Trusted_Connection=True;MultipleActiveResultSets=True;", // SQL Server connection string used to extract schema
+        "AuthenticationType": "SqlAuthentication", // Authentication type: "SqlAuthentication" (default) or "EntraIdAuthentication" (for managed identity/Entra ID)
         "Schema": "dbo", // If omitted will get all schemas.
         "MaxDegreeOfParallelism": 10, // Number of parallel SQL tasks to run.
         "NotUsedTables": [ // Array of regex's to set NotUsed flag on tables in the database

@@ -46,6 +46,29 @@ namespace GenAIDBExplorer.Core.Tests.Data.DatabaseProviders
         }
 
         [TestMethod]
+        public void DatabaseSettings_DefaultAuthenticationType_ShouldBeSqlAuthentication()
+        {
+            // Arrange & Act
+            var databaseSettings = new DatabaseSettings();
+
+            // Assert
+            databaseSettings.AuthenticationType.Should().Be(DatabaseAuthenticationType.SqlAuthentication);
+        }
+
+        [TestMethod]
+        public void DatabaseSettings_AuthenticationType_ShouldBeSettable()
+        {
+            // Arrange
+            var databaseSettings = new DatabaseSettings();
+
+            // Act
+            databaseSettings.AuthenticationType = DatabaseAuthenticationType.EntraIdAuthentication;
+
+            // Assert
+            databaseSettings.AuthenticationType.Should().Be(DatabaseAuthenticationType.EntraIdAuthentication);
+        }
+
+        [TestMethod]
         public async Task ConnectAsync_WhenGeneralExceptionOccurs_ShouldThrowException()
         {
             // Arrange
