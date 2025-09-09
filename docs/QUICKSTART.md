@@ -16,6 +16,178 @@ The general steps to using the GenAI Database Explorer are as follows:
 
 The GenAI CLI is a command-line tool that provides various commands for working with the GenAI Database Explorer. To install the GenAI CLI, follow the instructions in the [installation guide](../INSTALLATION.md).
 
+## Deploy Azure Infrastructure (Optional)
+
+The GenAI Database Explorer can optionally deploy supporting Azure infrastructure to provide cloud-based services for enhanced capabilities:
+
+| Azure Service | Purpose | Required? | Notes |
+|---------------|---------|-----------|-------|
+| **Azure SQL Database** | Sample database (AdventureWorksLT) for experimentation | Optional | Provides a database to extract a semantic model from without needing your own database |
+| **Azure OpenAI Service** (AI Foundry) | Semantic enrichment and natural language querying | Required | Required to enrich the semantic model and perform natural language queries |
+| **Vector storage services** (Azure AI Search or Cosmos DB) | Semantic search capabilities | Optional | If not deployed, the tool can use in-memory or local disk storage for vectors, but this is not suitable for larger databases |
+| **Azure Storage Account** | Cloud storage for semantic models | Optional | Alternative to storing semantic models locally |
+
+While the GenAI CLI can work entirely with local storage and external AI services, deploying the Azure infrastructure provides:
+
+- A complete end-to-end environment for testing
+- Scalable cloud storage for semantic models
+- Integrated vector search capabilities
+- Sample database with realistic data structure
+
+### Deploy with Azure Developer CLI
+
+This solution accelerator supports deployment using the [Azure Developer CLI](https://learn.microsoft.com/azure/developer/azure-developer-cli/overview).
+
+#### Prerequisites
+
+Before you begin, ensure you have the following prerequisites in place:
+
+1. An active Azure subscription - [Create a free account](https://azure.microsoft.com/free/) if you don't have one.
+2. [Azure Developer CLI (azd)](https://aka.ms/install-azd) Install or update to the latest version.
+3. **Windows Only:** [PowerShell](https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-windows) of the latest version. Ensure that PowerShell executable `pwsh.exe` is added to the `PATH` variable.
+
+#### If you have not cloned this repository
+
+1. Download the [Azure Developer CLI](https://learn.microsoft.com/azure/developer/azure-developer-cli/overview)
+2. Clone and initialize this repository:
+
+   ```bash
+   azd init -t PlagueHO/genai-database-explorer
+   ```
+
+3. Authenticate the Azure Developer CLI:
+
+   ```bash
+   azd auth login
+   ```
+
+4. (Optional) Configure deployment options using environment variables (see [Configuration Options](#configuration-options) below):
+
+   ```bash
+   azd env set ENABLE_PUBLIC_NETWORK_ACCESS true
+   azd env set COSMOS_DB_DEPLOY true
+   azd env set AZURE_AI_SEARCH_DEPLOY true
+   ```
+
+5. Deploy the infrastructure:
+
+   ```bash
+   azd up
+   ```
+
+#### If you have already cloned this repository
+
+1. Download the [Azure Developer CLI](https://learn.microsoft.com/azure/developer/azure-developer-cli/overview)
+2. Navigate to the repository root directory:
+
+   ```bash
+   cd genai-database-explorer
+   ```
+
+3. Authenticate the Azure Developer CLI:
+
+   ```bash
+   azd auth login
+   ```
+
+4. (Optional) Configure deployment options using environment variables (see [Configuration Options](#configuration-options) below):
+
+   ```bash
+   azd env set ENABLE_PUBLIC_NETWORK_ACCESS true
+   azd env set STORAGE_ACCOUNT_DEPLOY true
+   ```
+
+5. Deploy the infrastructure:
+
+   ```bash
+   azd up
+   ```
+
+### Configuration Options
+
+You can customize the deployment by setting environment variables before running `azd up`. Use the `azd env set` command to configure options:
+
+```bash
+azd env set VARIABLE_NAME value
+```
+
+#### Core Infrastructure Options
+
+| Environment Variable | Description | Default | Example |
+|---------------------|-------------|---------|---------|
+| `AZURE_ENV_NAME` | Name of the environment (used for resource naming) | `azdtemp` | `genaidbexp-dev` |
+| `AZURE_LOCATION` | Azure region for deployment | `EastUS2` | `West US 2` |
+| `AZURE_PRINCIPAL_ID` | Object ID of user/service principal for access | Current CLI user | `00000000-0000-0000-0000-000000000000` |
+
+#### Network Access Configuration
+
+| Environment Variable | Description | Default | Example |
+|---------------------|-------------|---------|---------|
+| `ENABLE_PUBLIC_NETWORK_ACCESS` | Enable public internet access to all resources | `true` | `false` |
+
+> **Important:** When `ENABLE_PUBLIC_NETWORK_ACCESS` is set to `false`, resources will only be accessible through private networking. This provides enhanced security but requires VPN or Azure Bastion for access.
+
+#### Optional Service Deployment
+
+| Environment Variable | Description | Default | Example |
+|---------------------|-------------|---------|---------|
+| `AZURE_AI_SEARCH_DEPLOY` | Deploy Azure AI Search for vector indexing | `false` | `true` |
+| `COSMOS_DB_DEPLOY` | Deploy Cosmos DB for semantic model storage | `false` | `true` |
+| `STORAGE_ACCOUNT_DEPLOY` | Deploy Azure Storage Account for blob storage | `false` | `true` |
+
+#### Database Configuration
+
+| Environment Variable | Description | Default | Example |
+|---------------------|-------------|---------|---------|
+| `SQL_SERVER_USERNAME` | SQL Server administrator username | `sqladmin` | `dbadmin` |
+| `SQL_SERVER_PASSWORD` | SQL Server administrator password | *Required* | `ComplexP@ssw0rd!` |
+
+#### Example Configuration Commands
+
+```bash
+# Deploy with private networking (recommended for production)
+azd env set ENABLE_PUBLIC_NETWORK_ACCESS false
+azd env set AZURE_AI_SEARCH_DEPLOY true
+azd env set COSMOS_DB_DEPLOY true
+
+# Deploy with public access (recommended for development/testing)
+azd env set ENABLE_PUBLIC_NETWORK_ACCESS true
+azd env set STORAGE_ACCOUNT_DEPLOY true
+azd env set SQL_SERVER_PASSWORD "YourSecurePassword123!"
+
+# Deploy minimal infrastructure (AI services only)
+azd env set AZURE_AI_SEARCH_DEPLOY false
+azd env set COSMOS_DB_DEPLOY false
+azd env set STORAGE_ACCOUNT_DEPLOY false
+```
+
+### Accessing Deployed Resources
+
+After deployment completes, `azd up` will output connection information for the deployed resources:
+
+- **Azure AI Foundry Endpoint**: Use this for AI service configuration
+- **SQL Server Connection**: Use this for database connectivity
+- **Storage Account/Cosmos DB**: Use these for semantic model persistence
+- **AI Search Service**: Use this for vector indexing capabilities
+
+Update your project's `settings.json` file with the deployment outputs to connect your local GenAI CLI to the deployed Azure resources.
+
+### Deleting the Deployment
+
+To remove all deployed Azure resources:
+
+```bash
+azd down
+```
+
+To force deletion and purge soft-deleted resources:
+
+```bash
+azd down --force --purge
+```
+
+> **Warning:** This will permanently delete all resources and data. Ensure you have backed up any important data before running this command.
+
 ## Create a new project
 
 To create a new GenAI Database Explorer project, use the `init-project` command. This command initializes a new project directory with the necessary structure and configuration files.

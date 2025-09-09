@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.34.44.8038",
-      "templateHash": "469135917546470981"
+      "templateHash": "1285217969624005800"
     }
   },
   "parameters": {
@@ -85,6 +85,13 @@
       "defaultValue": false,
       "metadata": {
         "description": "Whether to deploy Storage Account."
+      }
+    },
+    "enablePublicNetworkAccess": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Whether to enable public network access to Azure resources."
       }
     }
   },
@@ -4627,6 +4634,7 @@
               "systemAssigned": true
             }
           },
+          "publicNetworkAccess": "[if(parameters('enablePublicNetworkAccess'), createObject('value', 'Enabled'), createObject('value', 'Disabled'))]",
           "sku": {
             "value": "S0"
           },
@@ -10401,9 +10409,7 @@
               "systemAssigned": true
             }
           },
-          "publicNetworkAccess": {
-            "value": "Enabled"
-          },
+          "publicNetworkAccess": "[if(parameters('enablePublicNetworkAccess'), createObject('value', 'Enabled'), createObject('value', 'Disabled'))]",
           "tags": {
             "value": "[variables('tags')]"
           },
@@ -17144,6 +17150,11 @@
               "systemAssigned": true
             }
           },
+          "networkRestrictions": {
+            "value": {
+              "publicNetworkAccess": "[if(parameters('enablePublicNetworkAccess'), 'Enabled', 'Disabled')]"
+            }
+          },
           "tags": {
             "value": "[variables('tags')]"
           },
@@ -21261,6 +21272,10 @@
           "allowBlobPublicAccess": {
             "value": true
           },
+          "allowSharedKeyAccess": {
+            "value": false
+          },
+          "publicNetworkAccess": "[if(parameters('enablePublicNetworkAccess'), createObject('value', 'Enabled'), createObject('value', 'Disabled'))]",
           "blobServices": {
             "value": {
               "containers": [
@@ -27211,9 +27226,7 @@
               "systemAssigned": true
             }
           },
-          "publicNetworkAccess": {
-            "value": "Enabled"
-          },
+          "publicNetworkAccess": "[if(parameters('enablePublicNetworkAccess'), createObject('value', 'Enabled'), createObject('value', 'Disabled'))]",
           "semanticSearch": {
             "value": "standard"
           },

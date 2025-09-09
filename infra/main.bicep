@@ -48,6 +48,9 @@ param cosmosDbDeploy bool = false
 @sys.description('Whether to deploy Storage Account.')
 param storageAccountDeploy bool = false
 
+@sys.description('Whether to enable public network access to Azure resources.')
+param enablePublicNetworkAccess bool = true
+
 var abbrs = loadJsonContent('./abbreviations.json')
 var openAiModels = loadJsonContent('./azure-openai-models.json')
 
@@ -156,6 +159,7 @@ module aiFoundryService './cognitive-services/accounts/main.bicep' = {
     managedIdentities: {
       systemAssigned: true
     }
+    publicNetworkAccess: enablePublicNetworkAccess ? 'Enabled' : 'Disabled'
     sku: 'S0'
     deployments: openAiModelDeployments
     tags: tags
@@ -273,7 +277,7 @@ module sqlServer 'br/public:avm/res/sql/server:0.20.2' = {
     managedIdentities: {
       systemAssigned: true
     }
-    publicNetworkAccess: 'Enabled'
+    publicNetworkAccess: enablePublicNetworkAccess ? 'Enabled' : 'Disabled'
     tags: tags
     roleAssignments: [
       {
@@ -335,6 +339,9 @@ module cosmosDbAccount 'br/public:avm/res/document-db/database-account:0.15.1' =
     managedIdentities: {
       systemAssigned: true
     }
+    networkRestrictions: {
+      publicNetworkAccess: enablePublicNetworkAccess ? 'Enabled' : 'Disabled'
+    }
     tags: tags
     roleAssignments: [
       {
@@ -387,6 +394,7 @@ module storageAccount 'br/public:avm/res/storage/storage-account:0.26.2' = if (s
     accessTier: 'Hot'
     allowBlobPublicAccess: true
     allowSharedKeyAccess: false // This will force EntraID Auth
+    publicNetworkAccess: enablePublicNetworkAccess ? 'Enabled' : 'Disabled'
     blobServices: {
       containers: [
         {
@@ -454,7 +462,7 @@ module aiSearchService 'br/public:avm/res/search/search-service:0.11.1' = if (az
     managedIdentities: {
       systemAssigned: true
     }
-    publicNetworkAccess: 'Enabled'
+    publicNetworkAccess: enablePublicNetworkAccess ? 'Enabled' : 'Disabled'
     semanticSearch: 'standard'
     tags: tags
     roleAssignments: [

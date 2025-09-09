@@ -21,3 +21,6 @@ param cosmosDbDeploy = bool(readEnvironmentVariable('COSMOS_DB_DEPLOY', 'false')
 
 // Storage Account parameter
 param storageAccountDeploy = bool(readEnvironmentVariable('STORAGE_ACCOUNT_DEPLOY', 'false'))
+
+// Network access parameter
+param enablePublicNetworkAccess = bool(readEnvironmentVariable('ENABLE_PUBLIC_NETWORK_ACCESS', 'true'))
