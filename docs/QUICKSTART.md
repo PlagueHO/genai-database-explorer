@@ -141,6 +141,9 @@ azd env set VARIABLE_NAME value
 |---------------------|-------------|---------|---------|
 | `SQL_SERVER_USERNAME` | SQL Server administrator username | `sqladmin` | `dbadmin` |
 | `SQL_SERVER_PASSWORD` | SQL Server administrator password | *Required* | `ComplexP@ssw0rd!` |
+| `SQL_SERVER_CLIENT_IP_ADDRESS` | IP address to allow access to SQL Server | *None* | `123.45.67.89` |
+
+> **Note:** The `SQL_SERVER_CLIENT_IP_ADDRESS` parameter creates a firewall rule that allows the specified IP address to connect to the Azure SQL Server. This is useful for development scenarios where you need to connect from your local machine or a specific server. If not provided, no client-specific firewall rule will be created.
 
 #### Example Configuration Commands
 
@@ -150,15 +153,22 @@ azd env set ENABLE_PUBLIC_NETWORK_ACCESS false
 azd env set AZURE_AI_SEARCH_DEPLOY true
 azd env set COSMOS_DB_DEPLOY true
 
-# Deploy with public access (recommended for development/testing)
+# Deploy with public access and client IP allowlist (recommended for development/testing)
 azd env set ENABLE_PUBLIC_NETWORK_ACCESS true
 azd env set STORAGE_ACCOUNT_DEPLOY true
 azd env set SQL_SERVER_PASSWORD "YourSecurePassword123!"
+azd env set SQL_SERVER_CLIENT_IP_ADDRESS "123.45.67.89"
 
 # Deploy minimal infrastructure (AI services only)
 azd env set AZURE_AI_SEARCH_DEPLOY false
 azd env set COSMOS_DB_DEPLOY false
 azd env set STORAGE_ACCOUNT_DEPLOY false
+
+# Automatically detect and allow your current public IP to access the Azure SQL Database (Linux/macOS)
+azd env set SQL_SERVER_CLIENT_IP_ADDRESS $(curl -s https://ipinfo.io/ip)
+
+# Automatically detect and allow your current public IP to access the Azure SQL Database (PowerShell)
+azd env set SQL_SERVER_CLIENT_IP_ADDRESS (Invoke-RestMethod -Uri "https://ipinfo.io/ip" -UseBasicParsing).Trim()
 ```
 
 ### Accessing Deployed Resources

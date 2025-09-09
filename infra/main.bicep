@@ -51,6 +51,9 @@ param storageAccountDeploy bool = false
 @sys.description('Whether to enable public network access to Azure resources.')
 param enablePublicNetworkAccess bool = true
 
+@sys.description('IP address to allow access to the SQL Server. If not provided, no firewall rule will be created.')
+param sqlServerClientIpAddress string = ''
+
 var abbrs = loadJsonContent('./abbreviations.json')
 var openAiModels = loadJsonContent('./azure-openai-models.json')
 
@@ -274,6 +277,13 @@ module sqlServer 'br/public:avm/res/sql/server:0.20.2' = {
         isLedgerOn: false
       }
     ]
+    firewallRules: !empty(sqlServerClientIpAddress) ? [
+      {
+        name: 'AllowClientIP'
+        startIpAddress: sqlServerClientIpAddress
+        endIpAddress: sqlServerClientIpAddress
+      }
+    ] : []
     managedIdentities: {
       systemAssigned: true
     }
@@ -508,7 +518,7 @@ output SQL_SERVER_NAME string = sqlServer.outputs.name
 output SQL_SERVER_RESOURCE_ID string = sqlServer.outputs.resourceId
 output SQL_SERVER_ADMIN_USERNAME string = sqlServerUsername
 output SQL_DATABASE_ENDPOINT string = sqlServer.outputs.fullyQualifiedDomainName
-
+output SQL_SERVER_CLIENT_IP_ADDRESS string = sqlServerClientIpAddress
 
 // Output the Cosmos DB resources
 output COSMOS_DB_ACCOUNT_NAME string = cosmosDbAccountNameOut

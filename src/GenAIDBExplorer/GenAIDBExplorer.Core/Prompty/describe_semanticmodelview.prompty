@@ -134,13 +134,13 @@ The view is likely used to display product information in different languages, a
 
 user:
 # Database Containing View
-{{project.description}}
+{{project_description}}
 
 # View Structure (YAML)
-{{entity.structure}}
+{{entity_structure}}
 
 # Sample Data
-{{entity.data}}
+{{entity_data}}
 
 # Related Tables
 

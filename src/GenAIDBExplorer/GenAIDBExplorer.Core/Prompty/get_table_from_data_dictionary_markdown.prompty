@@ -13,4 +13,4 @@ Some columns may be marked as NOT USED, either through the description or column
 
 user:
 # Data Dictionary Table
-{{entity.markdown}}
+{{entity_markdown}}

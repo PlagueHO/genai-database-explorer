@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.34.44.8038",
-      "templateHash": "1285217969624005800"
+      "templateHash": "16804268061953530500"
     }
   },
   "parameters": {
@@ -92,6 +92,13 @@
       "defaultValue": true,
       "metadata": {
         "description": "Whether to enable public network access to Azure resources."
+      }
+    },
+    "sqlServerClientIpAddress": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "IP address to allow access to the SQL Server. If not provided, no firewall rule will be created."
       }
     }
   },
@@ -10404,6 +10411,7 @@
               }
             ]
           },
+          "firewallRules": "[if(not(empty(parameters('sqlServerClientIpAddress'))), createObject('value', createArray(createObject('name', 'AllowClientIP', 'startIpAddress', parameters('sqlServerClientIpAddress'), 'endIpAddress', parameters('sqlServerClientIpAddress')))), createObject('value', createArray()))]",
           "managedIdentities": {
             "value": {
               "systemAssigned": true
@@ -29618,6 +29626,10 @@
     "SQL_DATABASE_ENDPOINT": {
       "type": "string",
       "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('sql-server-deployment-{0}', variables('resourceToken'))), '2022-09-01').outputs.fullyQualifiedDomainName.value]"
+    },
+    "SQL_SERVER_CLIENT_IP_ADDRESS": {
+      "type": "string",
+      "value": "[parameters('sqlServerClientIpAddress')]"
     },
     "COSMOS_DB_ACCOUNT_NAME": {
       "type": "string",

@@ -97,20 +97,6 @@ public class SemanticDescriptionProvider(
 
             var sampleDataSerialized = SerializeSampleData(sampleData);
 
-            var projectInfo = new
-            {
-                description = _project.Settings.Database.Description
-            };
-
-            var entityInfo = new
-            {
-                structure = entity.ToYaml(),
-                data = sampleDataSerialized,
-                definition = (entity as SemanticModelStoredProcedure)?.Definition,
-                parameters = (entity as SemanticModelStoredProcedure)?.Parameters
-            };
-
-
             var promptExecutionSettings = new PromptExecutionSettings
             {
 #pragma warning disable SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
@@ -118,15 +104,31 @@ public class SemanticDescriptionProvider(
 #pragma warning restore SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
             };
 
+            // Pass individual properties instead of complex objects to avoid Liquid template encoding issues
             var arguments = new KernelArguments(promptExecutionSettings)
             {
-                { "entity", entityInfo },
-                { "project", projectInfo }
+                { "entity_structure", entity.ToYaml() },
+                { "entity_data", sampleDataSerialized },
+                { "project_description", _project.Settings.Database.Description }
             };
+
+            // Add stored procedure specific fields if applicable
+            if (entity is SemanticModelStoredProcedure sp)
+            {
+                arguments.Add("entity_definition", sp.Definition);
+                arguments.Add("entity_parameters", sp.Parameters);
+            }
 
             if (relatedTables.Any())
             {
-                arguments.Add("tables", relatedTables);
+                // Serialize tables collection to simple format that Liquid can handle
+                var serializedTables = relatedTables.Select(table => new
+                {
+                    schema = table.Schema,
+                    name = table.Name,
+                    semanticdescription = table.SemanticDescription
+                }).ToArray();
+                arguments.Add("tables", serializedTables);
             }
 
             var promptyFilename = $"describe_{entityType.ToLower()}.prompty";
@@ -356,13 +358,9 @@ public class SemanticDescriptionProvider(
 #pragma warning restore SKEXP0010 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
         };
 
-        var viewInfo = new
-        {
-            definition = view.Definition
-        };
         var arguments = new KernelArguments(promptExecutionSettings)
         {
-            { "entity", viewInfo }
+            { "entity_definition", view.Definition }
         };
 
         var result = await semanticKernel.InvokeAsync(function, arguments);
@@ -411,13 +409,9 @@ public class SemanticDescriptionProvider(
 #pragma warning restore SKEXP0010 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
         };
 
-        var storedProcedureInfo = new
-        {
-            definition = storedProcedure.Definition
-        };
         var arguments = new KernelArguments(promptExecutionSettings)
         {
-            { "entity", storedProcedureInfo }
+            { "entity_definition", storedProcedure.Definition }
         };
 
         var result = await semanticKernel.InvokeAsync(function, arguments);

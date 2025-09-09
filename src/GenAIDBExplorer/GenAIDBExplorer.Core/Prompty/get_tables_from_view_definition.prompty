@@ -11,4 +11,4 @@ You are a AI SQL database assistant that extracts a list of tables from a T-SQL 
 
 user:
 # View Definition (T-SQL)
-{{entity.definition}}
+{{entity_definition}}

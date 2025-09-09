@@ -116,10 +116,10 @@ It has a composite primary key of `CustomerID` and `AddressID` columns.
 
 user:
 # Database Purpose
-{{project.description}}
+{{project_description}}
 
 # Table Structure (YAML)
-{{entity.structure}}
+{{entity_structure}}
 
 # Sample Data
-{{entity.data}}
+{{entity_data}}

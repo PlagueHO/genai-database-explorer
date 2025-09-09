@@ -161,13 +161,13 @@ The `[SalesLT].[GetCustomerAddresses]` stored procedure retrieves customer addre
 
 user:
 # Database Purpose
-{{project.description}}
+{{project_description}}
 
 # Stored Procedure Definition (T-SQL)
-{{entity.definition}}
+{{entity_definition}}
 
 # Stored Procedure Parameters
-{{entity.parameters}}
+{{entity_parameters}}
 
 # Used Tables
 {% for table in tables %}

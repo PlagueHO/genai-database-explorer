@@ -142,11 +142,6 @@ public class DataDictionaryProvider(
         var function = semanticKernel.CreateFunctionFromPromptyFile(promptyFilename);
 #pragma warning restore SKEXP0040 // Experimental API
 
-        var entityInfo = new
-        {
-            markdown = markdownContent
-        };
-
         // Set up prompt execution settings
         var promptExecutionSettings = new OpenAIPromptExecutionSettings
         {
@@ -161,7 +156,7 @@ public class DataDictionaryProvider(
         // Prepare arguments
         var arguments = new KernelArguments(promptExecutionSettings)
         {
-            { "entity", entityInfo }
+            { "entity_markdown", markdownContent }
         };
 
         // Invoke the function

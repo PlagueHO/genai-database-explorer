@@ -52,16 +52,16 @@ public sealed class SqlConnectionProvider(
             // Use SqlClient's built-in "Active Directory Default" authentication mode
             // This internally uses DefaultAzureCredential and supports managed identity, Visual Studio, Azure CLI, etc.
             var connectionStringBuilder = new SqlConnectionStringBuilder(connectionString);
-            
+
             // Remove any existing authentication-related properties that conflict with Azure AD
             connectionStringBuilder.Remove("User ID");
             connectionStringBuilder.Remove("Password");
             connectionStringBuilder.Remove("Integrated Security");
             connectionStringBuilder.Remove("Trusted_Connection");
-            
+
             // Set the Authentication property to use Active Directory Default
             connectionStringBuilder.Authentication = SqlAuthenticationMethod.ActiveDirectoryDefault;
-            
+
             connectionString = connectionStringBuilder.ConnectionString;
             _logger.LogInformation("Using Microsoft Entra ID Default authentication (supports managed identity, Visual Studio, Azure CLI, etc.).");
         }
