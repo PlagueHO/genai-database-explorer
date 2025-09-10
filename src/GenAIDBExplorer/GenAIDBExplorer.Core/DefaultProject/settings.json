@@ -77,9 +77,11 @@
     "OpenAIService": {
         "Default": {
             "ServiceType": "AzureOpenAI", // AzureOpenAI, OpenAI
+            "AzureAuthenticationType": "EntraIdAuthentication", // Authentication method for Azure OpenAI: "EntraIdAuthentication" (default, uses managed identity/DefaultAzureCredential) or "ApiKey" (traditional API key)
             // "OpenAIKey": "<Set your OpenAI API key>"
-            "AzureOpenAIKey": "<Set your Azure OpenAI API key>", // Azure OpenAI key. If not provided, will attempt using Azure Default Credential
+            "AzureOpenAIKey": "<Set your Azure OpenAI API key>", // Azure OpenAI key. Only required when AzureAuthenticationType is "ApiKey". When using "EntraIdAuthentication", this can be omitted
             "AzureOpenAIEndpoint": "https://<Set your Azure OpenAI endpoint>.cognitiveservices.azure.com/" // Azure OpenAI endpoint
+            // "TenantId": "<AzureTenantId>" // Optional: Azure tenant ID for DefaultAzureCredential. Use when resource is in different tenant than default
             // "AzureOpenAIAppId": "" // Azure OpenAI App Id
         },
         "ChatCompletion": {

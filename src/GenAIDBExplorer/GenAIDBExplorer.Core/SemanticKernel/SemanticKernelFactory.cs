@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Embeddings;
+using Azure.Identity;
 
 namespace GenAIDBExplorer.Core.SemanticKernel;
 
@@ -66,17 +67,42 @@ public class SemanticKernelFactory(
         {
             var deploymentId = chatCompletionSettings.AzureOpenAIDeploymentId ?? throw new InvalidOperationException("AzureOpenAI deployment ID is required");
             var endpoint = defaultSettings.AzureOpenAIEndpoint ?? throw new InvalidOperationException("AzureOpenAI endpoint is required");
-            var apiKey = defaultSettings.AzureOpenAIKey ?? throw new InvalidOperationException("AzureOpenAI API key is required");
 
             _logger.LogDebug("Adding Azure OpenAI chat completion service - ServiceId: {ServiceId}, DeploymentId: {DeploymentId}, Endpoint: {Endpoint}",
                 serviceId, deploymentId, endpoint);
 
-            kernelBuilder.AddAzureOpenAIChatCompletion(
-                deploymentName: deploymentId,
-                endpoint: endpoint,
-                apiKey: apiKey,
-                serviceId: serviceId
-            );
+            if (defaultSettings.AzureAuthenticationType == AzureOpenAIAuthenticationType.EntraIdAuthentication)
+            {
+                // Use DefaultAzureCredential for Entra ID authentication
+                var credential = !string.IsNullOrWhiteSpace(defaultSettings.TenantId)
+                    ? new DefaultAzureCredential(new DefaultAzureCredentialOptions { TenantId = defaultSettings.TenantId })
+                    : new DefaultAzureCredential();
+
+                var tenantInfo = !string.IsNullOrWhiteSpace(defaultSettings.TenantId)
+                    ? $" for tenant {defaultSettings.TenantId}"
+                    : string.Empty;
+                _logger.LogInformation("Using Microsoft Entra ID Default authentication for Azure OpenAI{TenantInfo} (supports managed identity, Visual Studio, Azure CLI, etc.).", tenantInfo);
+
+                kernelBuilder.AddAzureOpenAIChatCompletion(
+                    deploymentName: deploymentId,
+                    endpoint: endpoint,
+                    credential,
+                    serviceId: serviceId
+                );
+            }
+            else
+            {
+                // Use API key authentication
+                var apiKey = defaultSettings.AzureOpenAIKey ?? throw new InvalidOperationException("AzureOpenAI API key is required when using ApiKey authentication");
+                _logger.LogInformation("Using API key authentication for Azure OpenAI.");
+
+                kernelBuilder.AddAzureOpenAIChatCompletion(
+                    deploymentName: deploymentId,
+                    endpoint: endpoint,
+                    apiKey: apiKey,
+                    serviceId: serviceId
+                );
+            }
 
             _logger.LogDebug("Successfully added Azure OpenAI chat completion service: {ServiceId}", serviceId);
         }
@@ -114,20 +140,50 @@ public class SemanticKernelFactory(
         {
             var deploymentId = embeddingSettings.AzureOpenAIDeploymentId;
             var endpoint = defaultSettings.AzureOpenAIEndpoint;
-            var apiKey = defaultSettings.AzureOpenAIKey;
 
-            if (string.IsNullOrWhiteSpace(deploymentId) || string.IsNullOrWhiteSpace(endpoint) || string.IsNullOrWhiteSpace(apiKey))
+            if (string.IsNullOrWhiteSpace(deploymentId) || string.IsNullOrWhiteSpace(endpoint))
             {
                 _logger.LogWarning("Skipping Azure OpenAI embedding registration due to missing configuration. DeploymentId present: {HasDeployment}, Endpoint present: {HasEndpoint}",
                     !string.IsNullOrWhiteSpace(deploymentId), !string.IsNullOrWhiteSpace(endpoint));
                 return; // Do not throw during tests or when embeddings are not configured
             }
 
-            kernelBuilder.AddAzureOpenAIEmbeddingGenerator(
-                deploymentName: deploymentId,
-                endpoint: endpoint,
-                apiKey: apiKey,
-                serviceId: serviceId);
+            if (defaultSettings.AzureAuthenticationType == AzureOpenAIAuthenticationType.EntraIdAuthentication)
+            {
+                // Use DefaultAzureCredential for Entra ID authentication
+                var credential = !string.IsNullOrWhiteSpace(defaultSettings.TenantId)
+                    ? new DefaultAzureCredential(new DefaultAzureCredentialOptions { TenantId = defaultSettings.TenantId })
+                    : new DefaultAzureCredential();
+
+                var tenantInfo = !string.IsNullOrWhiteSpace(defaultSettings.TenantId)
+                    ? $" for tenant {defaultSettings.TenantId}"
+                    : string.Empty;
+                _logger.LogInformation("Using Microsoft Entra ID Default authentication for Azure OpenAI embeddings{TenantInfo} (supports managed identity, Visual Studio, Azure CLI, etc.).", tenantInfo);
+
+                kernelBuilder.AddAzureOpenAIEmbeddingGenerator(
+                    deploymentName: deploymentId,
+                    endpoint: endpoint,
+                    credential,
+                    serviceId: serviceId);
+            }
+            else
+            {
+                // Use API key authentication
+                var apiKey = defaultSettings.AzureOpenAIKey;
+                if (string.IsNullOrWhiteSpace(apiKey))
+                {
+                    _logger.LogWarning("Skipping Azure OpenAI embedding registration due to missing API key when using ApiKey authentication");
+                    return;
+                }
+
+                _logger.LogInformation("Using API key authentication for Azure OpenAI embeddings.");
+
+                kernelBuilder.AddAzureOpenAIEmbeddingGenerator(
+                    deploymentName: deploymentId,
+                    endpoint: endpoint,
+                    apiKey: apiKey,
+                    serviceId: serviceId);
+            }
         }
         else
         {

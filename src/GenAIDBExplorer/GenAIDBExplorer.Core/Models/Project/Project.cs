@@ -251,6 +251,16 @@ public class Project(
             {
                 throw new ValidationException("Embedding.AzureOpenAIDeploymentId is required when using Azure OpenAI service.");
             }
+
+            // Validate authentication-specific requirements for Azure OpenAI
+            if (openAISettings.AzureAuthenticationType == AzureOpenAIAuthenticationType.ApiKey)
+            {
+                if (string.IsNullOrWhiteSpace(openAISettings.AzureOpenAIKey))
+                {
+                    throw new ValidationException("AzureOpenAIKey is required when using ApiKey authentication with Azure OpenAI service.");
+                }
+            }
+            // Note: For EntraIdAuthentication, no additional API key validation is needed
         }
 
         // Validate model IDs are provided when using OpenAI

@@ -68,6 +68,7 @@ flowchart TD
         VectorIndexSettings[VectorIndexSettings]
         RepositorySettings[SemanticModelRepositorySettings]
         DataDictionarySettings[DataDictionarySettings]
+        AzureAuthenticationType[AzureOpenAIAuthenticationType]
         
         ProjectSettings --> DatabaseSettings
         ProjectSettings --> OpenAISettings
@@ -75,6 +76,7 @@ flowchart TD
         ProjectSettings --> VectorIndexSettings
         ProjectSettings --> RepositorySettings
         ProjectSettings --> DataDictionarySettings
+        OpenAISettings --> AzureAuthenticationType
     end
 
     subgraph "External Dependencies"
@@ -198,7 +200,7 @@ classDiagram
 
 - **IMP-003**:
   - **ValidatePersistenceStrategyConfiguration**: Enforces presence of specific sub-config based on SemanticModel.PersistenceStrategy (LocalDisk, AzureBlob, Cosmos)
-  - **ValidateOpenAIConfiguration**: Checks endpoint URL, HTTPS, Azure domain, and required deployment/model IDs depending on ServiceType (AzureOpenAI vs OpenAI)
+  - **ValidateOpenAIConfiguration**: Checks endpoint URL, HTTPS, Azure domain, required deployment/model IDs depending on ServiceType (AzureOpenAI vs OpenAI), and authentication-specific requirements (API key only required when using ApiKey authentication). TenantId is optional for EntraIdAuthentication to support multi-tenant scenarios
   - **Configuration Binding**: Uses Microsoft.Extensions.Configuration for strongly-typed binding
 
 ### Performance Characteristics
@@ -236,6 +238,30 @@ var openAIConfig = project.Settings.OpenAIService;
 var chatCompletionSettings = openAIConfig.ChatCompletion;
 var embeddingSettings = openAIConfig.Embedding;
 
+// Access authentication configuration for Azure OpenAI
+var authType = openAIConfig.Default.AzureAuthenticationType;
+var tenantId = openAIConfig.Default.TenantId; // Optional tenant ID for multi-tenant scenarios
+
+switch (authType)
+{
+    case AzureOpenAIAuthenticationType.EntraIdAuthentication:
+        // Using managed identity/DefaultAzureCredential - no API key needed
+        if (!string.IsNullOrWhiteSpace(tenantId))
+        {
+            logger.LogInformation("Using Entra ID authentication for Azure OpenAI with tenant {TenantId}", tenantId);
+        }
+        else
+        {
+            logger.LogInformation("Using Entra ID authentication for Azure OpenAI with default tenant");
+        }
+        break;
+    case AzureOpenAIAuthenticationType.ApiKey:
+        // Using traditional API key authentication
+        var apiKey = openAIConfig.Default.AzureOpenAIKey;
+        logger.LogInformation("Using API key authentication for Azure OpenAI");
+        break;
+}
+
 // Access persistence strategy
 var persistenceStrategy = project.Settings.SemanticModel.PersistenceStrategy;
 switch (persistenceStrategy?.ToLowerInvariant())
@@ -255,8 +281,10 @@ switch (persistenceStrategy?.ToLowerInvariant())
 ### Best Practices
 
 - **USE-001**: Keep settings.json checked in per sample but secure secrets externally
-- **USE-002**: Prefer Managed Identity for Azure resources; avoid embedding keys
+- **USE-002**: Prefer Managed Identity (EntraIdAuthentication) for Azure resources; avoid embedding API keys in configuration files
 - **USE-003**: Validate early during app start; fail fast on invalid configuration
+- **USE-004**: Use ApiKey authentication type only for development or when managed identity is not available
+- **USE-005**: Specify TenantId when using EntraIdAuthentication and the Azure OpenAI resource is in a different tenant than your default credentials
 
 ## 6. Quality Attributes
 
@@ -303,6 +331,8 @@ switch (persistenceStrategy?.ToLowerInvariant())
   - **Invalid PersistenceStrategy** → ValidationException with allowed values
   - **AzureOpenAIEndpoint invalid/HTTP** → ValidationException  
   - **Missing deployment/model IDs** for chosen ServiceType → ValidationException
+  - **Missing AzureOpenAIKey when using ApiKey authentication** → ValidationException with message about required API key
+  - **Tenant mismatch when using EntraIdAuthentication** → HTTP 400 error "Token tenant does not match resource tenant" - specify correct TenantId in configuration
   - **Empty/non-existent project directory** → DirectoryNotFoundException or InvalidOperationException
 
 ### Related Documentation
@@ -316,3 +346,5 @@ switch (persistenceStrategy?.ToLowerInvariant())
   - Added VectorIndex settings for embeddings and hybrid search
   - Enhanced validation for OpenAI service configurations
   - Added support for multiple persistence strategies (LocalDisk, AzureBlob, Cosmos)
+  - Added AzureOpenAIAuthenticationType enum for authentication method selection (EntraIdAuthentication/ApiKey)
+  - Added TenantId setting for resolving multi-tenant authentication scenarios with DefaultAzureCredential
