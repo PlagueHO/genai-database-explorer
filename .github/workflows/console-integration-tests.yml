@@ -65,7 +65,7 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: Download Console App Artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: console-app-published
           path: ./publish
@@ -224,7 +224,7 @@ jobs:
 
       - name: Upload Integration Test Artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: console-integration-test-results-${{ matrix.persistence }}
           path: |

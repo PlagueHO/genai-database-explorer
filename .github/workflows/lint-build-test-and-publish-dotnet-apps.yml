@@ -51,7 +51,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ matrix.project }}-test-results
           path: '**/TestResults/*.trx'
@@ -85,7 +85,7 @@ jobs:
         run: chmod +x ./publish/GenAIDBExplorer.Console
 
       - name: Upload Console Application Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: console-app-published
           path: ./publish/
