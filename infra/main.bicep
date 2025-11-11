@@ -89,7 +89,7 @@ var openAiModelDeployments = openAiModels
 //   consumed by the app if needed.
 
 // The application resources that are deployed into the application resource group
-module rg 'br/public:avm/res/resources/resource-group:0.4.1' = {
+module rg 'br/public:avm/res/resources/resource-group:0.4.2' = {
   name: 'resource-group-deployment-${resourceToken}'
   params: {
     name: resourceGroupName
@@ -113,7 +113,7 @@ module logAnalyticsWorkspace 'br/public:avm/res/operational-insights/workspace:0
 
 }
 
-module applicationInsights 'br/public:avm/res/insights/component:0.6.0' = {
+module applicationInsights 'br/public:avm/res/insights/component:0.7.0' = {
   name: 'application-insights-deployment-${resourceToken}'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [
@@ -238,7 +238,7 @@ module aiFoundryRoleAssignments './core/security/role_aifoundry.bicep' = {
 var sqlAdminPrincipalType = principalIdType == 'ServicePrincipal' ? 'Application' : (principalIdType == 'User' ? 'User' : 'Application')
 
 // --------- SQL DATABASE ---------
-module sqlServer 'br/public:avm/res/sql/server:0.20.2' = {
+module sqlServer 'br/public:avm/res/sql/server:0.20.3' = {
   name: 'sql-server-deployment-${resourceToken}'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [
@@ -305,7 +305,7 @@ module sqlServer 'br/public:avm/res/sql/server:0.20.2' = {
 }
 
 // --------- COSMOS DB ---------
-module cosmosDbAccount 'br/public:avm/res/document-db/database-account:0.15.1' = if (cosmosDbDeploy) {
+module cosmosDbAccount 'br/public:avm/res/document-db/database-account:0.18.0' = if (cosmosDbDeploy) {
   name: 'cosmos-db-account-deployment-${resourceToken}'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [
@@ -390,7 +390,7 @@ module cosmosDbDataPlaneRoleAssignments './core/security/role_cosmosdb.bicep' = 
 }
 
 // --------- STORAGE ACCOUNT ---------
-module storageAccount 'br/public:avm/res/storage/storage-account:0.26.2' = if (storageAccountDeploy) {
+module storageAccount 'br/public:avm/res/storage/storage-account:0.29.0' = if (storageAccountDeploy) {
   name: 'storage-account-deployment-${resourceToken}'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [
