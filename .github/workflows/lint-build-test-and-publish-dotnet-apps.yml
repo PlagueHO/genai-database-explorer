@@ -49,13 +49,6 @@ jobs:
             echo "No tests found for ${{ matrix.project }}"
           fi
 
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v5
-        with:
-          name: ${{ matrix.project }}-test-results
-          path: '**/TestResults/*.trx'
-
   publish-console-app:
     name: Publish Console Application
     runs-on: ubuntu-latest
