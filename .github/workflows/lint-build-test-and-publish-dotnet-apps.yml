@@ -44,7 +44,7 @@ jobs:
       - name: Run tests
         run: |
           if [ -d "src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test" ]; then
-            dotnet test src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test --configuration ${{ inputs.build_configuration }} --no-restore --logger trx
+            dotnet test src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test --configuration ${{ inputs.build_configuration }} --no-restore
           else
             echo "No tests found for ${{ matrix.project }}"
           fi
