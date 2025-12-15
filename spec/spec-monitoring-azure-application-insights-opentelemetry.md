@@ -17,7 +17,7 @@ This specification defines comprehensive monitoring and observability for GenAI 
 
 **Audience**: Developers, DevOps engineers, architects, SRE teams.
 
-**Assumptions**: .NET 9, OpenTelemetry .NET SDK, dependency injection patterns, optional cloud services.
+**Assumptions**: .NET 10, OpenTelemetry .NET SDK, dependency injection patterns, optional cloud services.
 
 ## 2. Definitions
 
@@ -55,7 +55,7 @@ This specification defines comprehensive monitoring and observability for GenAI 
 
 ### Constraints & Guidelines
 
-- **.NET 9 compatibility** required for all OpenTelemetry components
+- **.NET 10 compatibility** required for all OpenTelemetry components
 - **OpenTelemetry .NET SDK** as the foundation for all telemetry collection
 - **Vendor-neutral approach** with support for multiple export destinations
 - **Follow OpenTelemetry semantic conventions** for consistent telemetry naming and structure

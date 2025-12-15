@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -14,7 +14,7 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.1" />
     <PackageReference Include="Microsoft.Extensions.VectorData.Abstractions" Version="9.7.0" />
-    <PackageReference Include="System.CommandLine" Version="2.0.0" />
+    <PackageReference Include="System.CommandLine" Version="2.0.1" />
   </ItemGroup>
 
   <ItemGroup>

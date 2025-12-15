@@ -17,7 +17,7 @@ This specification establishes the standard project structure, configuration man
 
 **Assumptions**:
 
-- Target runtime is .NET 9 with C# 12+ language features
+- Target runtime is .NET 10 with C# 12+ language features
 - Projects follow Microsoft dependency injection patterns
 - Configuration uses JSON-based settings with strong typing
 - Azure deployment scenarios are primary focus
@@ -425,7 +425,7 @@ The GenAI Database Explorer is designed to democratize database exploration and 
 
 ### Infrastructure Dependencies
 
-- **INF-001**: .NET 9 Runtime - Target platform with modern C# language support
+- **INF-001**: .NET 10 Runtime - Target platform with modern C# language support
 - **INF-002**: File System Access - Local storage for development and file-based persistence
 - **INF-003**: Network Connectivity - Internet access for Azure services and AI model APIs
 

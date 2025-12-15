@@ -76,4 +76,4 @@ else
 fi
 
 echo "✅ DevContainer setup completed successfully!"
-echo "🚀 Ready for .NET 9 + C# 14 development with Azure tooling"
+echo "🚀 Ready for .NET 10 + C# 14 development with Azure tooling"

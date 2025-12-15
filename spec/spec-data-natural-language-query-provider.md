@@ -388,7 +388,7 @@ private async Task<QuestionResult> ProcessWithPromptyAsync(string question, stri
 
 ### Technology Platform Dependencies
 
-- **PLT-001**: .NET 9 - Target runtime with modern C# features
+- **PLT-001**: .NET 10 - Target runtime with modern C# features
 - **PLT-002**: Microsoft.SemanticKernel - AI orchestration and prompt execution
 - **PLT-003**: System.Data.Common - Database connectivity for query execution
 

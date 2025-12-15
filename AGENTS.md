@@ -1,6 +1,6 @@
 # AGENTS.md
 
-This is a .NET 9 solution that uses Generative AI to help users explore and query relational databases. It creates a **semantic model** from database schemas, enriches it with AI-generated descriptions, and enables natural language querying.
+This is a .NET 10 solution that uses Generative AI to help users explore and query relational databases. It creates a **semantic model** from database schemas, enriches it with AI-generated descriptions, and enables natural language querying.
 
 ## Setup commands
 
@@ -80,7 +80,7 @@ dotnet run --project src/GenAIDBExplorer/GenAIDBExplorer.Console/ -- export-mode
 
 ## Code style
 
-- Target .NET 9 with C# 11 features (async/await, records, pattern matching)
+- Target .NET 10 with C# 11 features (async/await, records, pattern matching)
 - Follow SOLID, DRY, CleanCode principles; meaningful, self-documenting names
 - PascalCase for types/methods; camelCase for parameters/locals
 - Dependency Injection via `HostBuilderExtensions` and `IOptions<T>`

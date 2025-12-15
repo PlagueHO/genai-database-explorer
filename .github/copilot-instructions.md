@@ -1,6 +1,6 @@
 # Instructions for AI Agents in this Repository
 
-This is a .NET 9 solution that uses Generative AI to help users explore and query relational databases. It creates a **semantic model** from database schemas, enriches it with AI-generated descriptions, and enables natural language querying.
+This is a .NET 10 solution that uses Generative AI to help users explore and query relational databases. It creates a **semantic model** from database schemas, enriches it with AI-generated descriptions, and enables natural language querying.
 
 ## Core Architecture & Data Flow
 
@@ -98,7 +98,7 @@ samples/AdventureWorksLT/
 ## Style & Conventions
 
 - Ensure new/changed code is indented correctly
-- Target .NET 9 with C# 11 features (async/await, records, pattern matching)
+- Target .NET 10 with C# 11 features (async/await, records, pattern matching)
 - Follow SOLID, DRY, CleanCode; meaningful, self-documenting names
 - PascalCase for types/methods; camelCase for parameters/locals
 - Dependency Injection via `HostBuilderExtensions` and `IOptions<T>`
