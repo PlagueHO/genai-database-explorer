@@ -31,7 +31,7 @@ Scope:
 
 Audience: Developers, architects, AI engineers working on GenAI Database Explorer.
 
-Assumptions: .NET 9, C# 11+, DI, async/await, existing project settings and DI patterns, Semantic Kernel usage per repository conventions.
+Assumptions: .NET 10, C# 11+, DI, async/await, existing project settings and DI patterns, Semantic Kernel usage per repository conventions.
 
 ## 2. Definitions
 
@@ -313,7 +313,7 @@ public enum VectorIndexProvider
 
 ### Technology Platform Dependencies
 
-- PLT-001: .NET 9; Microsoft.SemanticKernel; Microsoft.Extensions.VectorData.Abstractions.
+- PLT-001: .NET 10; Microsoft.SemanticKernel; Microsoft.Extensions.VectorData.Abstractions.
 - PLT-002: Microsoft.SemanticKernel.Connectors.InMemory for in-memory vector store support (prefer DI: services.AddInMemoryVectorStore()).
 
 ### Compliance Dependencies

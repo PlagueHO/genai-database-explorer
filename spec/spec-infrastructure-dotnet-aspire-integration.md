@@ -21,7 +21,7 @@ This specification defines requirements and implementation steps for adding .NET
 
 **Assumptions**:
 
-- Target runtime is .NET 9
+- Target runtime is .NET 10
 - Solution consists primarily of a console application and core library
 - Telemetry requirements include both local development visibility and cloud production monitoring
 - Application will be deployable to Azure with Application Insights integration
@@ -329,7 +329,7 @@ The console application structure presents unique challenges for .NET Aspire int
 
 ### Technology Platform Dependencies
 
-- **PLT-001**: .NET 9.0 Runtime - Required for execution of application
+- **PLT-001**: .NET 10.0 Runtime - Required for execution of application
 - **PLT-002**: Docker - Required for local development with .NET Aspire dashboard
 
 ### Core Dependencies

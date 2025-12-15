@@ -195,7 +195,7 @@ Describe 'GenAI Database Explorer Console Application' {
         $consoleAppPath = if ($env:CONSOLE_APP_PATH -and -not [string]::IsNullOrEmpty($env:CONSOLE_APP_PATH)) {
             $env:CONSOLE_APP_PATH
         } else {
-            "./src/GenAIDBExplorer/GenAIDBExplorer.Console/bin/Debug/net9.0/GenAIDBExplorer.Console.exe"
+            "./src/GenAIDBExplorer/GenAIDBExplorer.Console/bin/Debug/net10.0/GenAIDBExplorer.Console.exe"
         }
 
         # Use the $TestDrive Pester 5 variable as the root test drive folder because we're testing .NET apps

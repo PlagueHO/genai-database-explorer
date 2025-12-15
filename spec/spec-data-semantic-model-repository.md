@@ -17,7 +17,7 @@ Repository pattern implementation for persisting AI-consumable semantic models e
 
 **Audience**: Software developers, architects, AI engineers.
 
-**Assumptions**: .NET 9, dependency injection, async patterns, JSON serialization.
+**Assumptions**: .NET 10, dependency injection, async patterns, JSON serialization.
 
 ## 2. Definitions
 
@@ -71,7 +71,7 @@ Repository pattern implementation for persisting AI-consumable semantic models e
 
 ### Constraints
 
-- **CON-001**: .NET 9 compatibility
+- **CON-001**: .NET 10 compatibility
 - **CON-002**: UTF-8 encoding for file operations
 - **CON-003**: Human-readable JSON formatting
 - **CON-004**: Data storage format backward compatibility (existing semantic model files must remain loadable)

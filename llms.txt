@@ -1,6 +1,6 @@
 # Generative AI Database Explorer
 
-> A .NET 9 application that uses Generative AI to help users explore and query relational databases by generating detailed semantic models and enabling natural language database interactions.
+> A .NET 10 application that uses Generative AI to help users explore and query relational databases by generating detailed semantic models and enabling natural language database interactions.
 
 This project generates semantic models from database schemas, enriches them with AI-powered insights, and provides both CLI and planned web interfaces for database exploration through natural language queries.
 

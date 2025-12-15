@@ -322,7 +322,7 @@ The application follows fail-fast principles with meaningful error messages. All
 
 ### Infrastructure Dependencies
 
-- **INF-001**: .NET 9 Runtime - Target framework for application execution
+- **INF-001**: .NET 10 Runtime - Target framework for application execution
 - **INF-002**: File System Access - Project file management and configuration storage
 - **INF-003**: Network Connectivity - Database and AI service communication
 
