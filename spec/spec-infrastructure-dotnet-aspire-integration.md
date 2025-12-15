@@ -90,7 +90,7 @@ This specification defines requirements and implementation steps for adding .NET
 ```text
 src/
   GenAIDBExplorer/
-    GenAIDBExplorer.sln
+    GenAIDBExplorer.slnx
     GenAIDBExplorer.AppHost/            # NEW: Orchestration project
       GenAIDBExplorer.AppHost.csproj
       Program.cs

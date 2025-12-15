@@ -11,7 +11,7 @@
 			"type": "process",
 			"args": [
 				"build",
-				"GenAIDBExplorer.sln",
+				"GenAIDBExplorer.slnx",
 				"/property:GenerateFullPaths=true",
 				"/consoleloggerparameters:NoSummary"
 			],
@@ -51,7 +51,7 @@
 			"type": "process",
 			"args": [
 				"publish",
-				"GenAIDBExplorer.sln",
+				"GenAIDBExplorer.slnx",
 				"/property:GenerateFullPaths=true",
 				"/consoleloggerparameters:NoSummary"
 			],
@@ -70,7 +70,7 @@
 			"command": "dotnet",
 			"args": [
 				"clean",
-				"src/GenAIDBExplorer/GenAIDBExplorer.sln"
+				"src/GenAIDBExplorer/GenAIDBExplorer.slnx"
 			],
 			"group": "build"
 		},
@@ -101,7 +101,7 @@
 			"args": [
 				"test",
 				"--solution",
-				"GenAIDBExplorer.sln",
+				"GenAIDBExplorer.slnx",
 				"--no-build"
 			],
 			"options": {
@@ -152,7 +152,7 @@
 			"type": "process",
 			"args": [
 				"format",
-				"GenAIDBExplorer.sln",
+				"GenAIDBExplorer.slnx",
 				"--verify-no-changes",
 				"--severity",
 				"error"
@@ -175,7 +175,7 @@
 			"type": "process",
 			"args": [
 				"format",
-				"GenAIDBExplorer.sln"
+				"GenAIDBExplorer.slnx"
 			],
 			"options": {
 				"cwd": "${workspaceFolder}/src/GenAIDBExplorer"
@@ -192,7 +192,7 @@
 			"type": "process",
 			"args": [
 				"format",
-				"GenAIDBExplorer.sln",
+				"GenAIDBExplorer.slnx",
 				"whitespace"
 			],
 			"options": {

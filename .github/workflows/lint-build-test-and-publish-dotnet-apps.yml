@@ -33,7 +33,7 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore src/GenAIDBExplorer/GenAIDBExplorer.sln
+        run: dotnet restore src/GenAIDBExplorer/GenAIDBExplorer.slnx
 
       - name: Lint with dotnet format
         run: dotnet format src/GenAIDBExplorer/${{ matrix.project }} --verify-no-changes --severity error
@@ -63,7 +63,7 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore src/GenAIDBExplorer/GenAIDBExplorer.sln
+        run: dotnet restore src/GenAIDBExplorer/GenAIDBExplorer.slnx
 
       - name: Publish Console Application
         run: |

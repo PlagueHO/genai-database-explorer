@@ -6,7 +6,7 @@ This is a .NET 9 solution that uses Generative AI to help users explore and quer
 
 ```bash
 # Build the solution
-dotnet build src/GenAIDBExplorer/GenAIDBExplorer.sln
+dotnet build src/GenAIDBExplorer/GenAIDBExplorer.slnx
 
 # Watch mode for development
 dotnet watch run --project src/GenAIDBExplorer/GenAIDBExplorer.Console/
@@ -18,7 +18,7 @@ dotnet test
 pwsh -Command "New-Item -ItemType Directory -Path './test-results' -Force | Out-Null; & ./.github/scripts/Invoke-IntegrationTests.ps1"
 
 # Format code
-dotnet format src/GenAIDBExplorer/GenAIDBExplorer.sln
+dotnet format src/GenAIDBExplorer/GenAIDBExplorer.slnx
 ```
 
 ## Project structure

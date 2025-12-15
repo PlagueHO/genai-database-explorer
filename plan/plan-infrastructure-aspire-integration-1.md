@@ -159,7 +159,7 @@ This implementation plan outlines the phased approach to integrate .NET Aspire s
 - **FILE-011**: src/GenAIDBExplorer/GenAIDBExplorer.Core/Health/HealthCheckExtensions.cs - Health check extensions
 - **FILE-012**: src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.ServiceDefaults.Test/ServiceDefaultsTests.cs - Tests for ServiceDefaults
 - **FILE-013**: src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/Telemetry/TelemetryServiceTests.cs - Tests for telemetry services
-- **FILE-014**: src/GenAIDBExplorer/GenAIDBExplorer.sln - Updated solution file with new projects
+- **FILE-014**: src/GenAIDBExplorer/GenAIDBExplorer.slnx - Updated solution file with new projects
 - **FILE-015**: docs/MONITORING.md - New documentation for telemetry and monitoring
 
 ## 6. Testing

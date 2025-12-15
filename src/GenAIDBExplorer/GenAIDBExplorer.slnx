@@ -1,0 +1,51 @@
+<Solution>
+  <Folder Name="/.github/">
+    <File Path="../../.github/copilot-instructions.md" />
+  </Folder>
+  <Folder Name="/.github/ISSUE_TEMPLATE/">
+    <File Path="../../.github/ISSUE_TEMPLATE/bug_report.yml" />
+    <File Path="../../.github/ISSUE_TEMPLATE/chore_request.yml" />
+    <File Path="../../.github/ISSUE_TEMPLATE/feature_request.yml" />
+  </Folder>
+  <Folder Name="/.github/workflows/">
+    <File Path="../../.github/workflows/build-applications.yml" />
+    <File Path="../../.github/workflows/build-arm-templates.yml" />
+    <File Path="../../.github/workflows/continuous-deployment.yml" />
+    <File Path="../../.github/workflows/continuous-integration.yml" />
+    <File Path="../../.github/workflows/deploy-infrastructure.yml" />
+    <File Path="../../.github/workflows/publish-release.yml" />
+    <File Path="../../.github/workflows/set-build-variables.yml" />
+    <File Path="../../.github/workflows/test-run-unit-tests.yml" />
+    <File Path="../../.github/workflows/validate-infrastructure.yml" />
+  </Folder>
+  <Folder Name="/docs/">
+    <File Path="../../docs/INSTALLATION.md" />
+    <File Path="../../docs/QUICKSTART.md" />
+    <File Path="../../README.md" />
+  </Folder>
+  <Folder Name="/docs/gaidbexp/">
+    <File Path="../../docs/gaidbexp/README.md" />
+  </Folder>
+  <Folder Name="/infra/" />
+  <Folder Name="/infra/bicep/">
+    <File Path="../../infra/bicepconfig.json" />
+    <File Path="../../infra/main.bicep" />
+  </Folder>
+  <Folder Name="/infra/bicep/modules/">
+    <File Path="../../infra/modules/aiSearch.bicep" />
+    <File Path="../../infra/modules/monitoring.bicep" />
+    <File Path="../../infra/modules/openAiService.bicep" />
+    <File Path="../../infra/modules/roleAssignment.bicep" />
+    <File Path="../../infra/modules/sqlDatabase.bicep" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".mcp.json" />
+  </Folder>
+  <Folder Name="/Tests/" />
+  <Folder Name="/Tests/Unit/">
+    <Project Path="Tests/Unit/GenAIDBExplorer.Console.Test/GenAIDBExplorer.Console.Test.csproj" />
+    <Project Path="Tests/Unit/GenAIDBExplorer.Core.Test/GenAIDBExplorer.Core.Test.csproj" />
+  </Folder>
+  <Project Path="GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj" />
+  <Project Path="GenAIDBExplorer.Core/GenAIDBExplorer.Core.csproj" />
+</Solution>
