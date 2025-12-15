@@ -215,6 +215,7 @@ All services MUST be registered via `HostBuilderExtensions.ConfigureHost()` for 
 ### Runtime Guidance
 
 For day-to-day development guidance beyond constitutional rules, refer to:
+
 - **AGENTS.md** for agent-specific development patterns and commands
 - **.github/copilot-instructions.md** for Copilot-specific integration patterns
 - **docs/** directory for component-specific technical guidance

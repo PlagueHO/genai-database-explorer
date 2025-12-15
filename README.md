@@ -87,14 +87,3 @@ TBC
 [license-url]: https://github.com/PlagueHO/genai-database-explorer/blob/master/LICENSE
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?logo=linkedin&colorB=555
 [linkedin-url]: https://www.linkedin.com/in/dscottraynsford
-
-[openai.com]: https://img.shields.io/badge/OpenAI-5A5AFF?style=for-the-badge&logo=openai&logoColor=white
-[openai-url]: https://openai.com/
-[azure.com]: https://img.shields.io/badge/Microsoft_Azure-0078D4?style=for-the-badge&logo=microsoft-azure&logoColor=white
-[azure-url]: https://azure.microsoft.com
-[dotnet.microsoft.com]: https://img.shields.io/badge/.NET-512BD4?style=for-the-badge&logo=dotnet&logoColor=white
-[dotnet-url]: https://dotnet.microsoft.com
-[python.org]: https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white
-[python-url]: https://www.python.org
-[learn-sk]: https://img.shields.io/badge/Semantic%20Kernel-5E5E5E?style=for-the-badge&logo=microsoft
-[sk-url]: https://learn.microsoft.com/en-us/semantic-kernel/

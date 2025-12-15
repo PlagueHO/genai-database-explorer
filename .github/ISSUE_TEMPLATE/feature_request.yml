@@ -9,10 +9,14 @@ body:
       label: Area
       description: Which part of the solution does this enhancement relate to?
       options:
+        - Console Application (CLI)
+        - Core Library
         - Infrastructure (Bicep/infra)
-        - Application Services (API, Functions, etc.)
-        - UI (Web app, Portal, etc.)
         - Documentation
+        - GitHub Actions / CI/CD
+        - Testing
+        - Dependency Management
+        - Code Quality / Refactoring
         - Other
     validations:
       required: true
