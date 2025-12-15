@@ -23,7 +23,7 @@ The GenAI Database Explorer can optionally deploy supporting Azure infrastructur
 | Azure Service | Purpose | Required? | Notes |
 |---------------|---------|-----------|-------|
 | **Azure SQL Database** | Sample database (AdventureWorksLT) for experimentation | Optional | Provides a database to extract a semantic model from without needing your own database |
-| **Azure OpenAI Service** (AI Foundry) | Semantic enrichment and natural language querying | Required | Required to enrich the semantic model and perform natural language queries |
+| **Azure OpenAI Service** (Microsoft Foundry) | Semantic enrichment and natural language querying | Required | Required to enrich the semantic model and perform natural language queries |
 | **Vector storage services** (Azure AI Search or Cosmos DB) | Semantic search capabilities | Optional | If not deployed, the tool can use in-memory or local disk storage for vectors, but this is not suitable for larger databases |
 | **Azure Storage Account** | Cloud storage for semantic models | Optional | Alternative to storing semantic models locally |
 
@@ -175,7 +175,7 @@ azd env set CLIENT_IP_ADDRESS (Invoke-RestMethod -Uri "https://ipinfo.io/ip" -Us
 
 After deployment completes, `azd up` will output connection information for the deployed resources:
 
-- **Azure AI Foundry Endpoint**: Use this for AI service configuration
+- **Microsoft Foundry Endpoint**: Use this for AI service configuration
 - **SQL Server Connection**: Use this for database connectivity
 - **Storage Account/Cosmos DB**: Use these for semantic model persistence
 - **AI Search Service**: Use this for vector indexing capabilities

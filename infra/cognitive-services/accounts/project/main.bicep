@@ -1,7 +1,7 @@
 metadata name = 'Cognitive Services Project'
 metadata description = '''
 This module deploys a Project within a Cognitive Services account.
-It allows for the creation of a AI Foundry Project with optional managed identities and role assignments.
+It allows for the creation of a Foundry Project with optional managed identities and role assignments.
 '''
 
 @sys.description('Required. The name of the parent Cognitive Services account.')
@@ -13,7 +13,7 @@ param name string
 @sys.description('Required. The location for the Foundry Project.')
 param location string
 
-import { diagnosticSettingFullType } from 'br/public:avm/utl/types/avm-common-types:0.5.1'
+import { diagnosticSettingFullType } from 'br/public:avm/utl/types/avm-common-types:0.6.1'
 @sys.description('Optional. The diagnostic settings of the service.')
 param diagnosticSettings diagnosticSettingFullType[]?
 
@@ -21,11 +21,11 @@ param diagnosticSettings diagnosticSettingFullType[]?
 @sys.description('Optional. Resource tags for the Foundry Project.')
 param tags object?
 
-import { managedIdentityAllType } from 'br/public:avm/utl/types/avm-common-types:0.5.1'
+import { managedIdentityAllType } from 'br/public:avm/utl/types/avm-common-types:0.6.1'
 @sys.description('Optional. The managed identity definition for this resource.')
 param managedIdentities managedIdentityAllType?
 
-import { roleAssignmentType } from 'br/public:avm/utl/types/avm-common-types:0.5.1'
+import { roleAssignmentType } from 'br/public:avm/utl/types/avm-common-types:0.6.0'
 @sys.description('Optional. Role assignments to apply to the Foundry Project.')
 param roleAssignments roleAssignmentType[]?
 
@@ -36,7 +36,7 @@ param displayName string
 param description string = ''
 
 import { connectionType } from '../connection/main.bicep'
-@sys.description('Optional. Connections to create in the AI Foundry Project.')
+@sys.description('Optional. Connections to create in the Foundry Project.')
 param connections connectionType[] = []
 
 
@@ -205,11 +205,11 @@ var formattedRoleAssignments = [
   })
 ]
 
-resource parentAccount 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' existing = {
+resource parentAccount 'Microsoft.CognitiveServices/accounts@2025-10-01-preview' existing = {
   name: accountName
 }
 
-resource project 'Microsoft.CognitiveServices/accounts/projects@2025-04-01-preview' = {
+resource project 'Microsoft.CognitiveServices/accounts/projects@2025-10-01-preview' = {
   parent: parentAccount
   name: name
   location: location
@@ -221,7 +221,7 @@ resource project 'Microsoft.CognitiveServices/accounts/projects@2025-04-01-previ
   }
 }
 
-resource project_connections 'Microsoft.CognitiveServices/accounts/projects/connections@2025-04-01-preview' = [
+resource project_connections 'Microsoft.CognitiveServices/accounts/projects/connections@2025-10-01-preview' = [
   for (connection, index) in (connections ?? []): {
     parent: project
     name: connection.name

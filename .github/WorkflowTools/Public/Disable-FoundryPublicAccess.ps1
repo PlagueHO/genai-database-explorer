@@ -8,11 +8,11 @@
     .PARAMETER ResourceGroupName
     The Azure resource group containing the Microsoft Foundry account.
 
-    .PARAMETER AIFoundryName
+    .PARAMETER FoundryName
     The Microsoft Foundry (Cognitive Services) account name.
 
     .EXAMPLE
-    Disable-AIFoundryPublicAccess.ps1 -ResourceGroupName 'rg-test' -AIFoundryName 'aif-123'
+    Disable-FoundryPublicAccess.ps1 -ResourceGroupName 'rg-test' -FoundryName 'aif-123'
 
     .OUTPUTS
     None. Modifies network access settings on the specified Microsoft Foundry account.
@@ -20,7 +20,7 @@
     .NOTES
     Intended for CI usage. Uses Write-Host for progress messages and Write-Verbose for detailed output. Mutating operations are guarded by ShouldProcess.
 #>
-function Disable-AIFoundryPublicAccess {
+function Disable-FoundryPublicAccess {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param(
         [Parameter(Mandatory)]
@@ -29,7 +29,7 @@ function Disable-AIFoundryPublicAccess {
         
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [string]$AIFoundryName
+        [string]$FoundryName
     )
 
     begin {
@@ -86,8 +86,8 @@ function Disable-AIFoundryPublicAccess {
 
     process {
         try {
-            Write-Host "Checking current network configuration for Microsoft Foundry service: $AIFoundryName"
-            $account = Get-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $AIFoundryName -ErrorAction Stop
+            Write-Host "Checking current network configuration for Microsoft Foundry service: $FoundryName"
+            $account = Get-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $FoundryName -ErrorAction Stop
             
             # Display current state using safe property access
             $currPublicNetworkAccess = Get-AccountProperty $account 'PublicNetworkAccess' '<not set>'
@@ -96,25 +96,25 @@ function Disable-AIFoundryPublicAccess {
             Write-Host "Current network ACLs default action: $currDefaultAction"
 
             # Update network access with retry
-            $target = "Microsoft Foundry '$AIFoundryName' in resource group '$ResourceGroupName'"
+            $target = "Microsoft Foundry '$FoundryName' in resource group '$ResourceGroupName'"
             Invoke-WithRetry -OperationName "Network access update" -ScriptBlock {
                 if ($PSCmdlet.ShouldProcess($target, "Disable public network access and set DefaultAction=Deny")) {
                     # Disable public network access at the account level
-                    Set-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $AIFoundryName -PublicNetworkAccess "Disabled" -Force -ErrorAction Stop
+                    Set-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $FoundryName -PublicNetworkAccess "Disabled" -Force -ErrorAction Stop
 
                     # Use the dedicated network rule cmdlet if available, otherwise fallback to account-level setting
                     if (Get-Command -Name Update-AzCognitiveServicesAccountNetworkRuleSet -ErrorAction SilentlyContinue) {
-                        Update-AzCognitiveServicesAccountNetworkRuleSet -ResourceGroupName $ResourceGroupName -Name $AIFoundryName -DefaultAction Deny -ErrorAction Stop
+                        Update-AzCognitiveServicesAccountNetworkRuleSet -ResourceGroupName $ResourceGroupName -Name $FoundryName -DefaultAction Deny -ErrorAction Stop
                     } else {
                         Write-Verbose "Update-AzCognitiveServicesAccountNetworkRuleSet not available; using account-level NetworkRuleSet"
                         $networkRuleSet = @{ DefaultAction = 'Deny' }
-                        Set-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $AIFoundryName -NetworkRuleSet $networkRuleSet -Force -ErrorAction Stop
+                        Set-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $FoundryName -NetworkRuleSet $networkRuleSet -Force -ErrorAction Stop
                     }
                 }
             }
 
             # Verify the changes
-            $updatedAccount = Get-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $AIFoundryName
+            $updatedAccount = Get-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $FoundryName
             $updatedPublicNetworkAccess = Get-AccountProperty $updatedAccount 'PublicNetworkAccess' '<not set>'
             $updatedDefaultAction = Get-AccountProperty $updatedAccount 'NetworkAcls.DefaultAction' '<not set>'
             

@@ -1,10 +1,9 @@
-
 metadata name = 'Cognitive Services'
 metadata description = '''
 This module deploys a Cognitive Service account.
-This is a temporary module for deploying Azure AI Foundry Cognitive Services accounts.
+This is a temporary module for deploying Azure Foundry Cognitive Services accounts.
 It is intended to be replaced by the Azure Verified Module (AVM) for Microsoft.CognitiveServices accounts
-once it supports AI Foundry V2 (projects, connections etc)
+once it supports Foundry V2 (projects, connections etc)
 https://github.com/Azure/bicep-registry-modules/issues/5390
 '''
 
@@ -106,7 +105,7 @@ param apiProperties object?
 @description('Optional. Allow only Azure AD authentication. Should be enabled for security reasons.')
 param disableLocalAuth bool = true
 
-import { customerManagedKeyType } from 'br/public:avm/utl/types/avm-common-types:0.5.1'
+import { customerManagedKeyType } from 'br/public:avm/utl/types/avm-common-types:0.6.0'
 @description('Optional. The customer managed key definition.')
 param customerManagedKey customerManagedKeyType?
 
@@ -126,7 +125,7 @@ param restrictOutboundNetworkAccess bool = true
 @description('Optional. The storage accounts for this resource.')
 param userOwnedStorage array?
 
-import { managedIdentityAllType } from 'br/public:avm/utl/types/avm-common-types:0.5.1'
+import { managedIdentityAllType } from 'br/public:avm/utl/types/avm-common-types:0.6.0'
 @description('Optional. The managed identity definition for this resource.')
 param managedIdentities managedIdentityAllType?
 
@@ -139,7 +138,7 @@ param deployments deploymentType[]?
 @description('Optional. Key vault reference and secret settings for the module\'s secrets export.')
 param secretsExportConfiguration secretsExportConfigurationType?
 
-@description('Optional. Enable/Disable project management feature for AI Foundry.')
+@description('Optional. Enable/Disable project management feature for Foundry.')
 param allowProjectManagement bool?
 
 @description('Optional. The Projects to create in the Cognitive Services account.')
@@ -148,6 +147,12 @@ param projects projectType[]?
 import { connectionType } from 'connection/main.bicep'
 @sys.description('Optional. Connections to create in the Cognitive Services account.')
 param connections connectionType[] = []
+
+@sys.description('Optional. The flag to disable stored completions. When true, Azure OpenAI will not store prompts and completions for content filtering and abuse monitoring.')
+param storedCompletionsDisabled bool?
+
+@sys.description('Optional. Specifies the default project (by project name) that is targeted when data plane endpoints are called without a project parameter. Only applicable when allowProjectManagement is true.')
+param defaultProject string?
 
 var enableReferencedModulesTelemetry = false
 
@@ -349,7 +354,7 @@ resource cMKUserAssignedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentiti
   )
 }
 
-resource cognitiveService 'Microsoft.CognitiveServices/accounts@2025-06-01' = {
+resource cognitiveService 'Microsoft.CognitiveServices/accounts@2025-10-01-preview' = {
   name: name
   kind: kind
   identity: identity ?? { type: 'None' }
@@ -394,11 +399,13 @@ resource cognitiveService 'Microsoft.CognitiveServices/accounts@2025-06-01' = {
     restrictOutboundNetworkAccess: restrictOutboundNetworkAccess
     userOwnedStorage: userOwnedStorage
     dynamicThrottlingEnabled: dynamicThrottlingEnabled
+    storedCompletionsDisabled: storedCompletionsDisabled
+    defaultProject: defaultProject
   }
 }
 
 @batchSize(1)
-resource cognitiveService_deployments 'Microsoft.CognitiveServices/accounts/deployments@2025-06-01' = [
+resource cognitiveService_deployments 'Microsoft.CognitiveServices/accounts/deployments@2025-10-01-preview' = [
   for (deployment, index) in (deployments ?? []): {
     parent: cognitiveService
     name: deployment.?name ?? '${name}-deployments'
@@ -457,6 +464,7 @@ resource cognitiveService_diagnosticSettings 'Microsoft.Insights/diagnosticSetti
   }
 ]
 
+@batchSize(1)
 module cognitiveService_privateEndpoints 'br/public:avm/res/network/private-endpoint:0.11.0' = [
   for (privateEndpoint, index) in (privateEndpoints ?? []): {
     name: take('${uniqueString(deployment().name, location)}-cognitiveService-PrivateEndpoint-${index}', 64)
@@ -533,9 +541,14 @@ module cognitiveService_projects './project/main.bicep' = [
   }
 ]
 
+@batchSize(1)
 module cognitiveServices_connections 'connection/main.bicep' = [
   for connection in connections: {
-    name: '${cognitiveService.name}-${connection.name}-connection'
+    name: '${take('${cognitiveService.name}-${connection.name}', 60)}-con'
+    dependsOn: [
+      cognitiveService_deployments
+      cognitiveService_projects
+    ]
     params: {
       accountName: cognitiveService.name
       name: connection.name
@@ -561,7 +574,7 @@ resource cognitiveService_roleAssignments 'Microsoft.Authorization/roleAssignmen
       description: roleAssignment.?description
       principalType: roleAssignment.?principalType
       condition: roleAssignment.?condition
-      conditionVersion: !empty(roleAssignment.?condition) ? (roleAssignment.?conditionVersion ?? '2.0') : null // Must only be set if condtion is set
+      conditionVersion: !empty(roleAssignment.?condition) ? (roleAssignment.?conditionVersion ?? '2.0') : null // Must only be set if condition is set
       delegatedManagedIdentityResourceId: roleAssignment.?delegatedManagedIdentityResourceId
     }
     scope: cognitiveService
@@ -619,13 +632,13 @@ output systemAssignedMIPrincipalId string? = cognitiveService.?identity.?princip
 @description('The location the resource was deployed into.')
 output location string = cognitiveService.location
 
-import { secretsOutputType } from 'br/public:avm/utl/types/avm-common-types:0.5.1'
+import { secretsOutputType } from 'br/public:avm/utl/types/avm-common-types:0.6.0'
 @description('A hashtable of references to the secrets exported to the provided Key Vault. The key of each reference is each secret\'s name.')
 output exportedSecrets secretsOutputType = (secretsExportConfiguration != null)
   ? toObject(secretsExport.outputs.secretsSet, secret => last(split(secret.secretResourceId, '/')), secret => secret)
   : {}
 
-@description('The private endpoints of the congitive services account.')
+@description('The private endpoints of the cognitive services account.')
 output privateEndpoints privateEndpointOutputType[] = [
   for (pe, index) in (privateEndpoints ?? []): {
     name: cognitiveService_privateEndpoints[index].outputs.name
@@ -636,7 +649,7 @@ output privateEndpoints privateEndpointOutputType[] = [
   }
 ]
 
-@description('The AI Foundry Projects created in the Cognitive Services account.')
+@description('The Foundry Projects created in the Cognitive Services account.')
 output projects projectOutputType[] = [
   for (project, index) in (projects ?? []): {
     name: cognitiveService_projects[index].outputs.projectResourceName
@@ -754,7 +767,7 @@ type secretsExportConfigurationType = {
 }
 
 @sys.export()
-@sys.description('Defines the properties for an Azure AI Foundry Project.')
+@sys.description('Defines the properties for an Azure Foundry Project.')
 type projectType = {
   @sys.description('The unique name of the Foundry Project. This corresponds to the "name" property of the Microsoft.CognitiveServices/accounts/projects resource.')
   name: string
@@ -763,7 +776,7 @@ type projectType = {
   location: string
 
   @sys.description('Properties of Foundry Project project. This corresponds to the "properties" object of the Microsoft.CognitiveServices/accounts/projects resource.')
-  properties: aiFoundryProjectPropertiesType
+  properties: foundryProjectPropertiesType
 
   @sys.description('Identity for the resource. This corresponds to the "identity" property of the Microsoft.CognitiveServices/accounts/projects resource.')
   identity: managedIdentityAllType?
@@ -775,8 +788,8 @@ type projectType = {
   tags: object?
 }
 
-@sys.description('Defines the nested properties for an Azure AI Foundry Project, corresponding to the "properties" object of the Microsoft.CognitiveServices/accounts/projects resource.')
-type aiFoundryProjectPropertiesType = {
+@sys.description('Defines the nested properties for an Azure Foundry Project, corresponding to the "properties" object of the Microsoft.CognitiveServices/accounts/projects resource.')
+type foundryProjectPropertiesType = {
   @sys.description('The display name for the Foundry Project. This corresponds to the "displayName" property within the "properties" of the Microsoft.CognitiveServices/accounts/projects resource.')
   displayName: string
 

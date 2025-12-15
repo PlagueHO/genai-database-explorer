@@ -55,16 +55,16 @@ on:
         description: "The Azure AI Search service resource ID"
         value: ${{ jobs.provision-infrastructure.outputs.AZURE_AI_SEARCH_ID }}
       AZURE_AI_FOUNDRY_NAME:
-        description: "The Azure AI Foundry service name"
+        description: "The Microsoft Foundry service name"
         value: ${{ jobs.provision-infrastructure.outputs.AZURE_AI_FOUNDRY_NAME }}
       AZURE_AI_FOUNDRY_ID:
-        description: "The Azure AI Foundry service resource ID"
+        description: "The Microsoft Foundry service resource ID"
         value: ${{ jobs.provision-infrastructure.outputs.AZURE_AI_FOUNDRY_ID }}
       AZURE_AI_FOUNDRY_ENDPOINT:
-        description: "The Azure AI Foundry service endpoint"
+        description: "The Microsoft Foundry service endpoint"
         value: ${{ jobs.provision-infrastructure.outputs.AZURE_AI_FOUNDRY_ENDPOINT }}
       AZURE_AI_FOUNDRY_RESOURCE_ID:
-        description: "The Azure AI Foundry service resource ID"
+        description: "The Microsoft Foundry service resource ID"
         value: ${{ jobs.provision-infrastructure.outputs.AZURE_AI_FOUNDRY_RESOURCE_ID }}
       SQL_SERVER_NAME:
         description: "The SQL Server name"

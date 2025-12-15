@@ -8,7 +8,7 @@
     .PARAMETER ResourceGroupName
     The resource group containing the Microsoft Foundry account.
 
-    .PARAMETER AIFoundryName
+    .PARAMETER FoundryName
     Optional explicit account name. If omitted, derives from the environment or SQL server naming pattern.
 
     .PARAMETER SqlServerName
@@ -18,10 +18,10 @@
     Maximum retries when fetching the key.
 
     .EXAMPLE
-    Get-AIFoundryApiKey.ps1 -ResourceGroupName 'rg-test' -AIFoundryName 'aif-123'
+    Get-FoundryApiKey.ps1 -ResourceGroupName 'rg-test' -FoundryName 'aif-123'
 
     .EXAMPLE
-    Get-AIFoundryApiKey.ps1 -ResourceGroupName 'rg-test' -SqlServerName 'sql-123'
+    Get-FoundryApiKey.ps1 -ResourceGroupName 'rg-test' -SqlServerName 'sql-123'
 
     .OUTPUTS
     None. Exports AZURE_OPENAI_API_KEY to $env:GITHUB_ENV.
@@ -29,7 +29,7 @@
     .NOTES
     This script retries with exponential backoff when key retrieval fails.
 #>
-function Get-AIFoundryApiKey {
+function Get-FoundryApiKey {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
@@ -37,7 +37,7 @@ function Get-AIFoundryApiKey {
         [string]$ResourceGroupName,
         
         [Parameter()]
-        [string]$AIFoundryName,
+        [string]$FoundryName,
         
         [Parameter()]
         [string]$SqlServerName,
@@ -58,8 +58,8 @@ function Get-AIFoundryApiKey {
         try {
             # Resolve Microsoft Foundry name
             $resolvedFoundryName = $null
-            if (-not [string]::IsNullOrEmpty($AIFoundryName)) {
-                $resolvedFoundryName = $AIFoundryName
+            if (-not [string]::IsNullOrEmpty($FoundryName)) {
+                $resolvedFoundryName = $FoundryName
                 Write-Host "Using provided Microsoft Foundry service name: $resolvedFoundryName"
             } elseif (-not [string]::IsNullOrEmpty($env:AI_FOUNDRY_NAME)) {
                 $resolvedFoundryName = $env:AI_FOUNDRY_NAME

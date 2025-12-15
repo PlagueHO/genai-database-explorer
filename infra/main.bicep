@@ -55,7 +55,7 @@ param enablePublicNetworkAccess bool = true
 param clientIpAddress string = ''
 
 var abbrs = loadJsonContent('./abbreviations.json')
-var openAiModels = loadJsonContent('./azure-openai-models.json')
+var modelDeployments = loadJsonContent('./model-deployments.json')
 
 // tags that should be applied to all resources.
 var tags = {
@@ -69,14 +69,11 @@ var resourceToken = toLower(uniqueString(subscription().id, environmentName, loc
 
 var logAnalyticsWorkspaceName = '${abbrs.operationalInsightsWorkspaces}${environmentName}'
 var applicationInsightsName = '${abbrs.insightsComponents}${environmentName}'
-var aiFoundryName = '${abbrs.aiFoundryAccounts}${environmentName}'
-var aiFoundryCustomSubDomainName = toLower(replace(environmentName, '-', ''))
+var foundryName = '${abbrs.aiFoundryAccounts}${environmentName}'
+var foundryCustomSubDomainName = toLower(replace(environmentName, '-', ''))
 var aiSearchName = '${abbrs.aiSearchSearchServices}${environmentName}'
 var cosmosDbAccountName = '${abbrs.cosmosDBAccounts}${environmentName}'
 var storageAccountName = '${abbrs.storageStorageAccounts}${toLower(replace(environmentName, '-', ''))}'
-
-// Use the OpenAI models directly from JSON - they're already in the correct format for the AVM module
-var openAiModelDeployments = openAiModels
 
 // NOTE (Vector Index Guidance):
 // - When azureAiSearchDeploy = true, the application can target Azure AI Search as the vector index provider
@@ -89,7 +86,7 @@ var openAiModelDeployments = openAiModels
 //   consumed by the app if needed.
 
 // The application resources that are deployed into the application resource group
-module rg 'br/public:avm/res/resources/resource-group:0.4.2' = {
+module rg 'br/public:avm/res/resources/resource-group:0.4.3' = {
   name: 'resource-group-deployment-${resourceToken}'
   params: {
     name: resourceGroupName
@@ -99,7 +96,7 @@ module rg 'br/public:avm/res/resources/resource-group:0.4.2' = {
 }
 
 // --------- MONITORING RESOURCES ---------
-module logAnalyticsWorkspace 'br/public:avm/res/operational-insights/workspace:0.12.0' = {
+module logAnalyticsWorkspace 'br/public:avm/res/operational-insights/workspace:0.14.2' = {
   name: 'log-analytics-workspace-deployment-${resourceToken}'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [
@@ -113,7 +110,7 @@ module logAnalyticsWorkspace 'br/public:avm/res/operational-insights/workspace:0
 
 }
 
-module applicationInsights 'br/public:avm/res/insights/component:0.7.0' = {
+module applicationInsights 'br/public:avm/res/insights/component:0.7.1' = {
   name: 'application-insights-deployment-${resourceToken}'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [
@@ -127,18 +124,18 @@ module applicationInsights 'br/public:avm/res/insights/component:0.7.0' = {
   }
 }
 
-// --------- AI FOUNDRY ---------
-module aiFoundryService './cognitive-services/accounts/main.bicep' = {
-  name: 'ai-foundry-service-deployment-${resourceToken}'
+// --------- MICROSOFT FOUNDRY ---------
+module foundryService './cognitive-services/accounts/main.bicep' = {
+  name: 'microsoft-foundry-service-deployment-${resourceToken}'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [
     rg
   ]
   params: {
-    name: aiFoundryName
+    name: foundryName
     kind: 'AIServices'
     location: location
-    customSubDomainName: aiFoundryCustomSubDomainName
+    customSubDomainName: foundryCustomSubDomainName
     disableLocalAuth: false
     allowProjectManagement: true
     diagnosticSettings: [
@@ -164,7 +161,7 @@ module aiFoundryService './cognitive-services/accounts/main.bicep' = {
     }
     publicNetworkAccess: enablePublicNetworkAccess ? 'Enabled' : 'Disabled'
     sku: 'S0'
-    deployments: openAiModelDeployments
+    deployments: modelDeployments
     tags: tags
   }
 }
@@ -192,7 +189,7 @@ var storageAccountBlobEndpointOut = storageAccountDeploy ? storageAccount.output
 // Add role assignments for AI Services using the role_aiservice.bicep module
 // This needs to be done after the AI Services account is created to avoid circular dependencies
 // between the AI Services account and the AI Search service.
-var aiFoundryRoleAssignmentsArray = [
+var foundryRoleAssignmentsArray = [
   // search–specific roles only when search is present
   ...(azureAiSearchDeploy ? [
     {
@@ -221,16 +218,16 @@ var aiFoundryRoleAssignmentsArray = [
   ] : [])
 ]
 
-module aiFoundryRoleAssignments './core/security/role_aifoundry.bicep' = {
-  name: 'ai-foundry-role-assignments-${resourceToken}'
+module foundryRoleAssignments './core/security/role_foundry.bicep' = {
+  name: 'microsoft-foundry-role-assignments-${resourceToken}'
   scope: az.resourceGroup(resourceGroupName)
   dependsOn: [
     rg
-    aiFoundryService
+    foundryService
   ]
   params: {
-    azureAiFoundryName: aiFoundryName
-    roleAssignments: aiFoundryRoleAssignmentsArray
+    foundryName: foundryName
+    roleAssignments: foundryRoleAssignmentsArray
   }
 }
 
@@ -238,7 +235,7 @@ module aiFoundryRoleAssignments './core/security/role_aifoundry.bicep' = {
 var sqlAdminPrincipalType = principalIdType == 'ServicePrincipal' ? 'Application' : (principalIdType == 'User' ? 'User' : 'Application')
 
 // --------- SQL DATABASE ---------
-module sqlServer 'br/public:avm/res/sql/server:0.20.3' = {
+module sqlServer 'br/public:avm/res/sql/server:0.21.1' = {
   name: 'sql-server-deployment-${resourceToken}'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [
@@ -390,7 +387,7 @@ module cosmosDbDataPlaneRoleAssignments './core/security/role_cosmosdb.bicep' = 
 }
 
 // --------- STORAGE ACCOUNT ---------
-module storageAccount 'br/public:avm/res/storage/storage-account:0.29.0' = if (storageAccountDeploy) {
+module storageAccount 'br/public:avm/res/storage/storage-account:0.30.0' = if (storageAccountDeploy) {
   name: 'storage-account-deployment-${resourceToken}'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [
@@ -450,7 +447,7 @@ module storageAccount 'br/public:avm/res/storage/storage-account:0.29.0' = if (s
 }
 
 // --------- AI SEARCH (OPTIONAL) ---------
-module aiSearchService 'br/public:avm/res/search/search-service:0.11.1' = if (azureAiSearchDeploy) {
+module aiSearchService 'br/public:avm/res/search/search-service:0.12.0' = if (azureAiSearchDeploy) {
   name: 'ai-search-service-deployment-${resourceToken}'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [
@@ -517,11 +514,11 @@ output AZURE_AI_SEARCH_NAME string = aiSearchServiceName
 output AZURE_AI_SEARCH_ID   string = aiSearchServiceResourceId
 // Map these outputs to app/project configuration for vector index setup when using Azure AI Search.
 
-// Output the AI Foundry resources
-output AZURE_AI_FOUNDRY_NAME string = aiFoundryService.outputs.name
-output AZURE_AI_FOUNDRY_ID string = aiFoundryService.outputs.resourceId
-output AZURE_AI_FOUNDRY_ENDPOINT string = aiFoundryService.outputs.endpoint
-output AZURE_AI_FOUNDRY_RESOURCE_ID string = aiFoundryService.outputs.resourceId
+// Output the Microsoft Foundry resources
+output AZURE_AI_FOUNDRY_NAME string = foundryService.outputs.name
+output AZURE_AI_FOUNDRY_ID string = foundryService.outputs.resourceId
+output AZURE_AI_FOUNDRY_ENDPOINT string = foundryService.outputs.endpoint
+output AZURE_AI_FOUNDRY_RESOURCE_ID string = foundryService.outputs.resourceId
 
 // Output the SQL Server resources
 output SQL_SERVER_NAME string = sqlServer.outputs.name

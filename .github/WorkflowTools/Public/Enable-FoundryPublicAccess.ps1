@@ -9,7 +9,7 @@
     .PARAMETER ResourceGroupName
     The Azure resource group containing the Microsoft Foundry account.
 
-    .PARAMETER AIFoundryName
+    .PARAMETER FoundryName
     Optional explicit Microsoft Foundry account name. If omitted, the name is derived from the SQL server name pattern.
 
     .PARAMETER SqlServerName
@@ -28,10 +28,10 @@
     Maximum seconds for initial random delay to reduce matrix contention.
 
     .EXAMPLE
-    Enable-AIFoundryPublicAccess.ps1 -ResourceGroupName rg-demo -AIFoundryName aif-demo-123
+    Enable-FoundryPublicAccess.ps1 -ResourceGroupName rg-demo -FoundryName aif-demo-123
 
     .EXAMPLE
-    Enable-AIFoundryPublicAccess.ps1 -ResourceGroupName rg-demo -SqlServerName sql-demo-123
+    Enable-FoundryPublicAccess.ps1 -ResourceGroupName rg-demo -SqlServerName sql-demo-123
 
     .OUTPUTS
     None. Exports environment variables AI_FOUNDRY_NAME and AZURE_OPENAI_ENDPOINT.
@@ -39,7 +39,7 @@
     .NOTES
     Intended for CI usage. Uses Write-Host for progress messages and Write-Verbose for detailed output. Mutating operations are guarded by ShouldProcess.
 #>
-function Enable-AIFoundryPublicAccess {
+function Enable-FoundryPublicAccess {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param(
         [Parameter(Mandatory)]
@@ -47,7 +47,7 @@ function Enable-AIFoundryPublicAccess {
         [string]$ResourceGroupName,
 
         [Parameter()]
-        [string]$AIFoundryName,
+        [string]$FoundryName,
 
         [Parameter()]
         [string]$SqlServerName,
@@ -156,9 +156,9 @@ function Enable-AIFoundryPublicAccess {
     process {
         try {
             # Determine Foundry name
-            $resolvedFoundryName = if (-not [string]::IsNullOrEmpty($AIFoundryName)) {
-                Write-Host "Using provided Microsoft Foundry service name: $AIFoundryName"
-                $AIFoundryName
+            $resolvedFoundryName = if (-not [string]::IsNullOrEmpty($FoundryName)) {
+                Write-Host "Using provided Microsoft Foundry service name: $FoundryName"
+                $FoundryName
             } elseif ($SqlServerName -match '^sql-(.+)$') {
                 $envSuffix = $matches[1]
                 $computedName = "aif-$envSuffix"
