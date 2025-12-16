@@ -42,7 +42,7 @@ jobs:
       - lint-build-test-and-publish-dotnet-apps
     uses: ./.github/workflows/validate-infrastructure.yml
     with:
-      ENVIRONMENT: Test
+      ENVIRONMENT: test
       BUILD_VERSION: ${{ needs.set-build-variables.outputs.BUILD_VERSION }}
       AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
       AZURE_ENV_NAME: ${{ format('gaidbexp-{0}', github.run_id) }}
@@ -60,7 +60,7 @@ jobs:
       - validate-infrastructure
     uses: ./.github/workflows/e2e-test.yml
     with:
-      ENVIRONMENT: Test
+      ENVIRONMENT: test
       BUILD_VERSION: ${{ needs.set-build-variables.outputs.BUILD_VERSION }}
       AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
       AZURE_ENV_NAME: ${{ format('gaidbexp-{0}', github.run_id) }}
