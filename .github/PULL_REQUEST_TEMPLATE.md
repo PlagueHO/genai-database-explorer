@@ -3,10 +3,14 @@
 <!--
 Please check all that apply:
 -->
+- [ ] Console Application (CLI)
+- [ ] Core Library
 - [ ] Infrastructure (Bicep/infra)
-- [ ] Sample Data
-- [ ] Sample Apps (e.g., data_generator, create_ai_search_index)
 - [ ] Documentation
+- [ ] GitHub Actions / CI/CD
+- [ ] Testing
+- [ ] Dependency Management
+- [ ] Code Quality / Refactoring
 - [ ] Other
 
 ## Description
