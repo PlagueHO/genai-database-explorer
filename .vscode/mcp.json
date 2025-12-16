@@ -22,9 +22,14 @@
             "type": "stdio",
             "env": {}
         },
-        "agent-framework Docs": {
+        "agent-framework-docs": {
             "url": "https://gitmcp.io/microsoft/agent-framework",
             "type": "sse"
-        }
+        },
+        "microsoft-foundry": { 
+            "type": "http", 
+            "url": "https://mcp.ai.azure.com" 
+        
+        } 
     }
 }
