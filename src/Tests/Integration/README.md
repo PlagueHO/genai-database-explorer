@@ -148,16 +148,16 @@ Tests specific to local file system persistence:
    - Verify dictionary files read from local file system
    - Test `--sourcePathPattern`, `--schemaName`, `--name`, `--show` options
 
-3. **Vector Generation**
+3. **AI Enrichment**
+   - `enrich-model` - Add AI-generated descriptions
+   - Verify enriched model saved to local disk
+   - Validate model file updated in place
+
+4. **Vector Generation**
    - `generate-vectors --dryRun` - Test vector generation planning
    - `generate-vectors table` - Generate and persist vectors for specific object
    - Verify `SemanticModel/Vectors/` directory created on disk
    - Test `--overwrite` option
-
-4. **AI Enrichment**
-   - `enrich-model` - Add AI-generated descriptions
-   - Verify enriched model saved to local disk
-   - Validate model file updated in place
 
 5. **Model Display**
    - `show-object table` - Display table information from local model
@@ -178,13 +178,13 @@ Tests specific to Azure Blob Storage persistence:
    - Verify model accessible via blob storage APIs
    - Test with configured blob prefix
 
-2. **Vector Generation**
-   - `generate-vectors --dryRun` - Test planning with blob storage
-   - Verify vectors can be persisted to separate blobs
-
-3. **AI Enrichment**
+2. **AI Enrichment**
    - `enrich-model` - Enrich and update in blob storage
    - Verify model updated in Azure Blob Storage
+
+3. **Vector Generation**
+   - `generate-vectors --dryRun` - Test planning with blob storage
+   - Verify vectors can be persisted to separate blobs
 
 4. **Model Display**
    - `show-object table` - Display from blob storage model
@@ -207,14 +207,14 @@ Tests specific to Azure Cosmos DB document persistence:
    - Verify model document created in Models container
    - Test dual-container architecture
 
-2. **Vector Generation**
+2. **AI Enrichment**
+   - `enrich-model` - Enrich and update Cosmos DB document
+   - Verify model document updated in Models container
+
+3. **Vector Generation**
    - `generate-vectors --dryRun` - Test planning with Cosmos DB
    - `generate-vectors table` - Persist vectors to Entities container
    - Verify separation between model and entity documents
-
-3. **AI Enrichment**
-   - `enrich-model` - Enrich and update Cosmos DB document
-   - Verify model document updated in Models container
 
 4. **Model Display**
    - `show-object table` - Display from Cosmos DB model
@@ -235,7 +235,7 @@ For each strategy, the workflow runs tests in **chronological order** to simulat
 
 ```
 1. Initialize Project → 2. Extract Model → 3. Apply Dictionaries → 
-4. Generate Vectors → 5. Enrich with AI → 6. Display Objects → 7. Export Model
+4. Enrich with AI → 5. Generate Vectors → 6. Display Objects → 7. Export Model
 ```
 
 Tests use **incremental state** where later tests depend on earlier operations succeeding. If extraction fails, subsequent tests are marked as **Skipped** or **Inconclusive** rather than failing.

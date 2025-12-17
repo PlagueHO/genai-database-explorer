@@ -238,36 +238,6 @@ Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
                 }
             }
         }
-
-        Context 'generate-vectors command' {
-            It 'Should run dry-run generate-vectors with Azure Blob Storage' {
-                if (-not $script:ExtractSucceeded) {
-                    Set-ItResult -Skipped -Because 'Extract-model did not succeed, no model available for vector generation'
-                    return
-                }
-
-                $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
-                    'generate-vectors',
-                    '--project', $script:DbProjectPath,
-                    '--dryRun'
-                )
-                
-                $outputText = $result.Output -join "`n"
-                
-                if ($outputText -match 'No semantic model found|not found|Model not found') {
-                    Set-ItResult -Inconclusive -Because 'Model not available in blob storage'
-                } elseif ($outputText -match 'AuthorizationFailure|Access denied|403.*not authorized') {
-                    Set-ItResult -Inconclusive -Because 'Storage access not authorized'
-                } elseif ($outputText -match 'not yet supported|not.*supported.*persistence') {
-                    Set-ItResult -Inconclusive -Because 'Vector generation not yet supported for AzureBlob'
-                } elseif ($result.ExitCode -eq 0) {
-                    $result.ExitCode | Should -Be 0 -Because 'Dry-run should succeed with AzureBlob'
-                } else {
-                    Write-Warning "generate-vectors output: $outputText"
-                    Set-ItResult -Inconclusive -Because "Vector generation failed with unclear error (exit code: $($result.ExitCode))"
-                }
-            }
-        }
     }
 
     Context 'AI Operations with Azure Blob Storage' {
@@ -309,6 +279,31 @@ Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
                     Set-ItResult -Inconclusive -Because 'Enrich-model not yet supported for AzureBlob'
                 } elseif ($result.ExitCode -eq 0) {
                     $result.ExitCode | Should -Be 0 -Because 'Enrich should succeed with AzureBlob'
+                }
+            }
+        }
+
+        Context 'generate-vectors command' {
+            It 'Should run dry-run generate-vectors with Azure Blob Storage' {
+                $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
+                    'generate-vectors',
+                    '--project', $script:AiProjectPath,
+                    '--dryRun'
+                )
+                
+                $outputText = $result.Output -join "`n"
+                
+                if ($outputText -match 'No semantic model found|not found|Model not found') {
+                    Set-ItResult -Inconclusive -Because 'Model not available in blob storage'
+                } elseif ($outputText -match 'AuthorizationFailure|Access denied|403.*not authorized') {
+                    Set-ItResult -Inconclusive -Because 'Storage access not authorized'
+                } elseif ($outputText -match 'not yet supported|not.*supported.*persistence') {
+                    Set-ItResult -Inconclusive -Because 'Vector generation not yet supported for AzureBlob'
+                } elseif ($result.ExitCode -eq 0) {
+                    $result.ExitCode | Should -Be 0 -Because 'Dry-run should succeed with AzureBlob'
+                } else {
+                    Write-Warning "generate-vectors output: $outputText"
+                    Set-ItResult -Inconclusive -Because "Vector generation failed with unclear error (exit code: $($result.ExitCode))"
                 }
             }
         }

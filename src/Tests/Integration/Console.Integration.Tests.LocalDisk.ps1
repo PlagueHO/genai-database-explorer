@@ -281,51 +281,6 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                 }
             }
         }
-
-        Context 'generate-vectors command' {
-            It 'Should run dry-run generate-vectors without errors' {
-                $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
-                    'generate-vectors',
-                    '--project', $script:DbProjectPath,
-                    '--dryRun'
-                )
-                
-                $outputText = $result.Output -join "`n"
-                
-                if ($outputText -match 'No semantic model found|not found|AuthorizationFailure') {
-                    Set-ItResult -Inconclusive -Because 'Model not available or access denied'
-                } else {
-                    $result.ExitCode | Should -Be 0 -Because 'Dry-run should succeed'
-                }
-            }
-
-            It 'Should persist vector envelopes to local file system' {
-                if (-not $script:ExtractSucceeded) {
-                    Set-ItResult -Skipped -Because 'Extract did not succeed'
-                    return
-                }
-
-                # Generate vectors for a specific object
-                $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
-                    'generate-vectors',
-                    'table',
-                    '--project', $script:DbProjectPath,
-                    '--schemaName', 'SalesLT',
-                    '--name', 'Product',
-                    '--overwrite'
-                )
-                
-                $outputText = $result.Output -join "`n"
-                
-                if ($result.ExitCode -eq 0) {
-                    # Verify vector envelope file was created on local disk
-                    $vectorsPath = Join-Path -Path $script:DbProjectPath -ChildPath 'SemanticModel' -AdditionalChildPath 'Vectors'
-                    Test-Path -Path $vectorsPath | Should -BeTrue -Because 'Vectors directory should exist on local disk'
-                } else {
-                    Set-ItResult -Inconclusive -Because "Vector generation not available: $outputText"
-                }
-            }
-        }
     }
 
     Context 'AI Operations' {
@@ -368,6 +323,46 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                         $modelPath = Join-Path -Path $script:AiProjectPath -ChildPath 'SemanticModel' -AdditionalChildPath 'semanticmodel.json'
                         Test-Path -Path $modelPath | Should -BeTrue -Because 'Enriched model should exist on local disk'
                     }
+                }
+            }
+        }
+
+        Context 'generate-vectors command' {
+            It 'Should run dry-run generate-vectors without errors' {
+                $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
+                    'generate-vectors',
+                    '--project', $script:AiProjectPath,
+                    '--dryRun'
+                )
+                
+                $outputText = $result.Output -join "`n"
+                
+                if ($outputText -match 'No semantic model found|not found|AuthorizationFailure') {
+                    Set-ItResult -Inconclusive -Because 'Model not available or access denied'
+                } else {
+                    $result.ExitCode | Should -Be 0 -Because 'Dry-run should succeed'
+                }
+            }
+
+            It 'Should persist vector envelopes to local file system' {
+                # Generate vectors for a specific object
+                $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
+                    'generate-vectors',
+                    'table',
+                    '--project', $script:AiProjectPath,
+                    '--schemaName', 'SalesLT',
+                    '--name', 'Product',
+                    '--overwrite'
+                )
+                
+                $outputText = $result.Output -join "`n"
+                
+                if ($result.ExitCode -eq 0) {
+                    # Verify vector envelope file was created on local disk
+                    $vectorsPath = Join-Path -Path $script:AiProjectPath -ChildPath 'SemanticModel' -AdditionalChildPath 'Vectors'
+                    Test-Path -Path $vectorsPath | Should -BeTrue -Because 'Vectors directory should exist on local disk'
+                } else {
+                    Set-ItResult -Inconclusive -Because "Vector generation not available: $outputText"
                 }
             }
         }

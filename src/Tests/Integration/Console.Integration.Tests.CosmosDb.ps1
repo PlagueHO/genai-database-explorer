@@ -242,63 +242,6 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
                 }
             }
         }
-
-        Context 'generate-vectors command' {
-            It 'Should run dry-run generate-vectors with Cosmos DB' {
-                if (-not $script:ExtractSucceeded) {
-                    Set-ItResult -Skipped -Because 'Extract-model did not succeed, no model available for vector generation'
-                    return
-                }
-
-                $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
-                    'generate-vectors',
-                    '--project', $script:DbProjectPath,
-                    '--dryRun'
-                )
-                
-                $outputText = $result.Output -join "`n"
-                
-                if ($outputText -match 'No semantic model found|not found|Model not found') {
-                    Set-ItResult -Inconclusive -Because 'Model not available in Cosmos DB'
-                } elseif ($outputText -match 'AuthorizationFailure|Access denied|403.*not authorized') {
-                    Set-ItResult -Inconclusive -Because 'Cosmos DB access not authorized'
-                } elseif ($outputText -match 'not yet supported|not.*supported.*persistence') {
-                    Set-ItResult -Inconclusive -Because 'Vector generation not yet supported for CosmosDb'
-                } elseif ($result.ExitCode -eq 0) {
-                    $result.ExitCode | Should -Be 0 -Because 'Dry-run should succeed with CosmosDb'
-                } else {
-                    Write-Warning "generate-vectors output: $outputText"
-                    Set-ItResult -Inconclusive -Because "Vector generation failed with unclear error (exit code: $($result.ExitCode))"
-                }
-            }
-
-            It 'Should persist vectors to Cosmos DB entities container' {
-                if (-not $script:ExtractSucceeded) {
-                    Set-ItResult -Skipped -Because 'Extract did not succeed'
-                    return
-                }
-
-                # Generate vectors for a specific object
-                $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
-                    'generate-vectors',
-                    'table',
-                    '--project', $script:DbProjectPath,
-                    '--schemaName', 'SalesLT',
-                    '--name', 'Product',
-                    '--overwrite'
-                )
-                
-                $outputText = $result.Output -join "`n"
-                
-                if ($result.ExitCode -eq 0) {
-                    $result.ExitCode | Should -Be 0 -Because 'Vectors should persist to Cosmos DB'
-                } elseif ($outputText -match 'not yet supported|not.*supported.*persistence') {
-                    Set-ItResult -Inconclusive -Because 'Vector persistence to CosmosDb not yet implemented'
-                } else {
-                    Set-ItResult -Inconclusive -Because "Vector generation not available: $outputText"
-                }
-            }
-        }
     }
 
     Context 'AI Operations with Cosmos DB' {
@@ -341,6 +284,53 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
                     Set-ItResult -Inconclusive -Because 'Enrich-model not yet supported for CosmosDb'
                 } elseif ($result.ExitCode -eq 0) {
                     $result.ExitCode | Should -Be 0 -Because 'Enrich should succeed with CosmosDb'
+                }
+            }
+        }
+
+        Context 'generate-vectors command' {
+            It 'Should run dry-run generate-vectors with Cosmos DB' {
+                $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
+                    'generate-vectors',
+                    '--project', $script:AiProjectPath,
+                    '--dryRun'
+                )
+                
+                $outputText = $result.Output -join "`n"
+                
+                if ($outputText -match 'No semantic model found|not found|Model not found') {
+                    Set-ItResult -Inconclusive -Because 'Model not available in Cosmos DB'
+                } elseif ($outputText -match 'AuthorizationFailure|Access denied|403.*not authorized') {
+                    Set-ItResult -Inconclusive -Because 'Cosmos DB access not authorized'
+                } elseif ($outputText -match 'not yet supported|not.*supported.*persistence') {
+                    Set-ItResult -Inconclusive -Because 'Vector generation not yet supported for CosmosDb'
+                } elseif ($result.ExitCode -eq 0) {
+                    $result.ExitCode | Should -Be 0 -Because 'Dry-run should succeed with CosmosDb'
+                } else {
+                    Write-Warning "generate-vectors output: $outputText"
+                    Set-ItResult -Inconclusive -Because "Vector generation failed with unclear error (exit code: $($result.ExitCode))"
+                }
+            }
+
+            It 'Should persist vectors to Cosmos DB entities container' {
+                # Generate vectors for a specific object
+                $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
+                    'generate-vectors',
+                    'table',
+                    '--project', $script:AiProjectPath,
+                    '--schemaName', 'SalesLT',
+                    '--name', 'Product',
+                    '--overwrite'
+                )
+                
+                $outputText = $result.Output -join "`n"
+                
+                if ($result.ExitCode -eq 0) {
+                    $result.ExitCode | Should -Be 0 -Because 'Vectors should persist to Cosmos DB'
+                } elseif ($outputText -match 'not yet supported|not.*supported.*persistence') {
+                    Set-ItResult -Inconclusive -Because 'Vector persistence to CosmosDb not yet implemented'
+                } else {
+                    Set-ItResult -Inconclusive -Because "Vector generation not available: $outputText"
                 }
             }
         }
