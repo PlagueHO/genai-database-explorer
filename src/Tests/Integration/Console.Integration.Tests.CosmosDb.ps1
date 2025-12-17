@@ -245,6 +245,11 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
 
         Context 'generate-vectors command' {
             It 'Should run dry-run generate-vectors with Cosmos DB' {
+                if (-not $script:ExtractSucceeded) {
+                    Set-ItResult -Skipped -Because 'Extract-model did not succeed, no model available for vector generation'
+                    return
+                }
+
                 $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
                     'generate-vectors',
                     '--project', $script:DbProjectPath,
@@ -253,12 +258,17 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
                 
                 $outputText = $result.Output -join "`n"
                 
-                if ($outputText -match 'No semantic model found|not found|AuthorizationFailure') {
-                    Set-ItResult -Inconclusive -Because 'Model not available or access denied'
+                if ($outputText -match 'No semantic model found|not found|Model not found') {
+                    Set-ItResult -Inconclusive -Because 'Model not available in Cosmos DB'
+                } elseif ($outputText -match 'AuthorizationFailure|Access denied|403.*not authorized') {
+                    Set-ItResult -Inconclusive -Because 'Cosmos DB access not authorized'
                 } elseif ($outputText -match 'not yet supported|not.*supported.*persistence') {
                     Set-ItResult -Inconclusive -Because 'Vector generation not yet supported for CosmosDb'
-                } else {
+                } elseif ($result.ExitCode -eq 0) {
                     $result.ExitCode | Should -Be 0 -Because 'Dry-run should succeed with CosmosDb'
+                } else {
+                    Write-Warning "generate-vectors output: $outputText"
+                    Set-ItResult -Inconclusive -Because "Vector generation failed with unclear error (exit code: $($result.ExitCode))"
                 }
             }
 

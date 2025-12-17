@@ -261,8 +261,8 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                         'data-dictionary',
                         'table',
                         '--project', $script:DbProjectPath,
-                        '--sourcePathPattern', "$script:DictPath/*.json",
-                        '--schemaName', 'SalesLT',
+                        '--source-path', "$script:DictPath/*.json",
+                        '--schema', 'SalesLT',
                         '--name', 'Product',
                         '--show'
                     )
