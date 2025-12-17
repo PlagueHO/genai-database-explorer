@@ -59,6 +59,7 @@ applyTo: "**/*.cs"
 - Use specific exception types rather than generic `Exception`
 - Implement proper exception filtering with `when` clauses
 - Use `ThrowHelper` patterns for commonly thrown exceptions
+- Avoid catch-and-rethrow patterns; let framework error handlers manage exceptions unless implementing specific recovery logic
 
 ## Performance Optimizations
 
