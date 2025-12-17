@@ -137,7 +137,14 @@ namespace GenAIDBExplorer.Core.Repository
                     RequestTimeout = TimeSpan.FromSeconds(_configuration.OperationTimeoutSeconds),
                     MaxRetryAttemptsOnRateLimitedRequests = _configuration.MaxRetryAttempts,
                     MaxRetryWaitTimeOnRateLimitedRequests = TimeSpan.FromSeconds(30),
-                    ConsistencyLevel = MapConsistencyLevel(_configuration.ConsistencyLevel)
+                    ConsistencyLevel = MapConsistencyLevel(_configuration.ConsistencyLevel),
+                    // Use System.Text.Json for serialization instead of Newtonsoft.Json
+                    // Note: Newtonsoft.Json is still required as a dependency for SDK internal operations
+                    UseSystemTextJsonSerializerWithOptions = new JsonSerializerOptions
+                    {
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+                    }
                 };
 
                 CosmosClient cosmosClient;

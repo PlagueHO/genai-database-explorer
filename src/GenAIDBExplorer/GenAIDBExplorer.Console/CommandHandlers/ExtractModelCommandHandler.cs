@@ -74,7 +74,25 @@ public class ExtractModelCommandHandler(
 
             var handler = host.Services.GetRequiredService<ExtractModelCommandHandler>();
             var options = new ExtractModelCommandHandlerOptions(projectPath, skipTables, skipViews, skipStoredProcedures);
-            await handler.HandleAsync(options);
+
+            try
+            {
+                await handler.HandleAsync(options);
+            }
+            catch (Azure.RequestFailedException ex) when (ex.Status == 403)
+            {
+                // Authorization failure - log error and exit with non-zero code
+                System.Console.Error.WriteLine($"AuthorizationFailure: {ex.Message}");
+                System.Console.Error.WriteLine("This request is not authorized to perform this operation.");
+                System.Console.Error.WriteLine("This may indicate missing 'Storage Blob Data Contributor' role assignment for the configured Azure storage.");
+                Environment.Exit(1);
+            }
+            catch (Exception ex)
+            {
+                // Other failures - log and exit
+                System.Console.Error.WriteLine($"Error: {ex.Message}");
+                Environment.Exit(1);
+            }
         });
 
         return extractModelCommand;
