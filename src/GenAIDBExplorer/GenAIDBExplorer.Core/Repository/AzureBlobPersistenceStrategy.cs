@@ -122,6 +122,15 @@ namespace GenAIDBExplorer.Core.Repository
                         "endpoint {AccountEndpoint} and container {ContainerName}",
                         _configuration.AccountEndpoint, _configuration.ContainerName);
                 }
+                catch (Azure.RequestFailedException authEx) when (authEx.Status == 403)
+                {
+                    // Log authorization failures without stack trace for cleaner error messages in CI/CD
+                    _logger.LogError("Authorization failure accessing Azure Blob Storage: {ErrorCode}. " +
+                        "Endpoint: {AccountEndpoint}. " +
+                        "This may indicate missing 'Storage Blob Data Contributor' role assignment.",
+                        authEx.ErrorCode, _configuration.AccountEndpoint);
+                    throw;
+                }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Failed to initialize Azure Blob Storage client with enhanced security features, " +
@@ -167,6 +176,15 @@ namespace GenAIDBExplorer.Core.Repository
                 }
 
                 return (serviceClient, containerClient);
+            }
+            catch (Azure.RequestFailedException authEx) when (authEx.Status == 403)
+            {
+                // Log authorization failures without stack trace for cleaner error messages
+                _logger.LogError("Authorization failure during BlobServiceClient initialization: {ErrorCode}. " +
+                    "Endpoint: {AccountEndpoint}. " +
+                    "Verify that the identity has 'Storage Blob Data Contributor' role assigned.",
+                    authEx.ErrorCode, _configuration.AccountEndpoint);
+                throw;
             }
             catch (Exception ex)
             {
