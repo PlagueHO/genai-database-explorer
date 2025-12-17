@@ -256,10 +256,14 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                 }
 
                 It 'Should apply data dictionary from local file system' {
+                    # Note: data-dictionary command requires a subcommand (table/view/etc)
                     $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
                         'data-dictionary',
+                        'table',
                         '--project', $script:DbProjectPath,
                         '--sourcePathPattern', "$script:DictPath/*.json",
+                        '--schemaName', 'SalesLT',
+                        '--name', 'Product',
                         '--show'
                     )
                     
@@ -267,8 +271,12 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                     
                     if ($result.ExitCode -eq 0) {
                         $result.ExitCode | Should -Be 0
+                    } elseif ($outputText -match 'No semantic model found|not found|Model not found') {
+                        Set-ItResult -Inconclusive -Because 'Model not available - extract may have been skipped'
                     } else {
-                        $outputText | Should -Match 'No semantic model found|not found' -Because 'Should indicate model not found if extract was skipped'
+                        # Command syntax or other error
+                        Write-Warning "data-dictionary output: $outputText"
+                        $result.ExitCode | Should -Be 0 -Because 'data-dictionary command should succeed or indicate model not found'
                     }
                 }
             }

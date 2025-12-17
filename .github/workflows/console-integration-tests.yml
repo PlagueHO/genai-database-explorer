@@ -232,14 +232,14 @@ jobs:
             
             if (Test-Path './test-results/common/integration-tests.xml') {
                 Write-Host "Checking Common test results..." -ForegroundColor Cyan
-                Test-IntegrationTestResults -TestResultsPath './test-results/common/integration-tests.xml' -OutputVariable 'common-results-valid' -ShowPreview
-                $commonValid = $env:common-results-valid -eq 'true'
+                Test-IntegrationTestResults -TestResultsPath './test-results/common/integration-tests.xml' -OutputVariable 'common_results_valid' -ShowPreview
+                $commonValid = $env:common_results_valid -eq 'true'
             }
             
             if (Test-Path './test-results/strategy/integration-tests.xml') {
                 Write-Host "Checking ${{ matrix.persistence }} strategy test results..." -ForegroundColor Cyan
-                Test-IntegrationTestResults -TestResultsPath './test-results/strategy/integration-tests.xml' -OutputVariable 'strategy-results-valid' -ShowPreview
-                $strategyValid = $env:strategy-results-valid -eq 'true'
+                Test-IntegrationTestResults -TestResultsPath './test-results/strategy/integration-tests.xml' -OutputVariable 'strategy_results_valid' -ShowPreview
+                $strategyValid = $env:strategy_results_valid -eq 'true'
             }
             
             # Set overall validity
