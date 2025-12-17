@@ -40,8 +40,8 @@ internal static class Program
 
         try
         {
-            await rootCommand.Parse(args).InvokeAsync();
-            return 0;
+            var exitCode = await rootCommand.Parse(args).InvokeAsync();
+            return exitCode;
         }
         catch (Exception ex)
         {

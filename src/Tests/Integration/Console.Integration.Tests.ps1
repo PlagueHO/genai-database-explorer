@@ -390,29 +390,42 @@ Describe 'GenAI Database Explorer Console Application' {
                 # Act
                 $commandResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $script:DbProjectPath)
 
+                # Convert output to single string for consistent pattern matching
+                $outputText = if ($commandResult.Output -is [array]) {
+                    $commandResult.Output -join "`n"
+                } else {
+                    $commandResult.Output
+                }
+
                 # Assert - check exit code first, then validate appropriate behavior
                 if ($commandResult.ExitCode -eq 0) {
                     # Success case - should not have stack traces or unhandled authorization failures
-                    $commandResult.Output | Should -Not -Match 'Exception.*at.*' -Because 'Successful run should not print stack traces'
+                    $outputText | Should -Not -Match 'Exception.*at.*' -Because 'Successful run should not print stack traces'
                     # Note: Authorization warnings may appear but shouldn't prevent successful operation
                     $script:ExtractSucceeded = $true
                     Write-Host "Extract-model command succeeded" -ForegroundColor Green
-                } elseif ($commandResult.Output -match 'AuthorizationFailure|Access denied|403.*not authorized') {
+                } elseif ($outputText -match 'AuthorizationFailure|Access denied|403.*not authorized') {
                     # Azure authorization error - expected in CI when GitHub runner doesn't have proper RBAC roles
                     Write-Warning "Azure authorization failure detected - this is expected when GitHub runner lacks Storage Blob Data Contributor role"
                     Write-Host "AuthorizationFailure indicates the Azure Blob storage configuration is working, but RBAC permissions need to be configured" -ForegroundColor Yellow
                     $commandResult.ExitCode | Should -Not -Be 0 -Because 'Authorization failure should result in non-zero exit code'
-                    $commandResult.Output | Should -Match 'AuthorizationFailure|Access denied|403.*not authorized' -Because 'Should provide clear authorization error message'
-                } elseif ($commandResult.Output -match 'Persistence strategy.*is not yet supported|not.*supported.*persistence') {
+                    $outputText | Should -Match 'AuthorizationFailure|Access denied|403.*not authorized' -Because 'Should provide clear authorization error message'
+                } elseif ($outputText -match 'Persistence strategy.*is not yet supported|not.*supported.*persistence') {
                     # Handle unsupported persistence strategies gracefully
                     $commandResult.ExitCode | Should -Not -Be 0 -Because 'Unsupported persistence strategy should result in non-zero exit code'
                     Write-Warning "Persistence strategy '$($script:PersistenceStrategy)' is not yet supported for extract-model command"
-                } elseif ($commandResult.Output -match 'network-related.*error|connection.*error|server.*not.*found|authentication.*fail|timeout') {
+                } elseif ($outputText -match 'network-related.*error|connection.*error|server.*not.*found|authentication.*fail|timeout') {
                     # Network/connection error case - should provide meaningful error message
-                    $commandResult.Output | Should -Match 'network-related.*error|connection.*error|server.*not.*found|authentication.*fail|timeout' -Because 'Should provide meaningful error message for connection issues'
+                    $outputText | Should -Match 'network-related.*error|connection.*error|server.*not.*found|authentication.*fail|timeout' -Because 'Should provide meaningful error message for connection issues'
+                } elseif ($commandResult.ExitCode -ne 0) {
+                    # Unexpected failure - output diagnostics and fail with clear message
+                    Write-Warning "Unexpected failure with exit code $($commandResult.ExitCode)"
+                    Write-Host "Command output:" -ForegroundColor Yellow
+                    Write-Host $outputText
+                    $commandResult.ExitCode | Should -Be 0 -Because "Command should either succeed or fail with a recognized error pattern. Unexpected failure occurred."
                 } else {
-                    # Any other failure - should not show stack traces
-                    $commandResult.Output | Should -Not -Match 'Exception.*at.*' -Because 'Should not show stack traces on handled failures'
+                    # Any other case - should not show stack traces
+                    $outputText | Should -Not -Match 'Exception.*at.*' -Because 'Should not show stack traces on handled failures'
                 }
             }
 

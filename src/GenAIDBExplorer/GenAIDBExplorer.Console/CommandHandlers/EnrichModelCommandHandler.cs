@@ -94,23 +94,31 @@ public class EnrichModelCommandHandler(
 
         tableCommand.SetAction(async (parseResult) =>
         {
-            var projectPath = parseResult.GetValue(projectPathOption)!;
-            var schemaName = parseResult.GetValue(schemaNameOption);
-            var name = parseResult.GetValue(nameOption);
-            var show = parseResult.GetValue(showOption);
+            try
+            {
+                var projectPath = parseResult.GetValue(projectPathOption)!;
+                var schemaName = parseResult.GetValue(schemaNameOption);
+                var name = parseResult.GetValue(nameOption);
+                var show = parseResult.GetValue(showOption);
 
-            var handler = host.Services.GetRequiredService<EnrichModelCommandHandler>();
-            var options = new EnrichModelCommandHandlerOptions(
-                projectPath,
-                skipTables: false,
-                skipViews: true,
-                skipStoredProcedures: true,
-                objectType: "table",
-                schemaName,
-                objectName: name,
-                show: show
-            );
-            await handler.HandleAsync(options);
+                var handler = host.Services.GetRequiredService<EnrichModelCommandHandler>();
+                var options = new EnrichModelCommandHandlerOptions(
+                    projectPath,
+                    skipTables: false,
+                    skipViews: true,
+                    skipStoredProcedures: true,
+                    objectType: "table",
+                    schemaName,
+                    objectName: name,
+                    show: show
+                );
+                await handler.HandleAsync(options);
+            }
+            catch (Exception ex)
+            {
+                System.Console.Error.WriteLine($"Error: {ex.Message}");
+                throw;
+            }
         });
 
         var viewCommand = new Command("view", "Enrich a specific view.");
@@ -121,23 +129,31 @@ public class EnrichModelCommandHandler(
 
         viewCommand.SetAction(async (parseResult) =>
         {
-            var projectPath = parseResult.GetValue(projectPathOption)!;
-            var schemaName = parseResult.GetValue(schemaNameOption);
-            var name = parseResult.GetValue(nameOption);
-            var show = parseResult.GetValue(showOption);
+            try
+            {
+                var projectPath = parseResult.GetValue(projectPathOption)!;
+                var schemaName = parseResult.GetValue(schemaNameOption);
+                var name = parseResult.GetValue(nameOption);
+                var show = parseResult.GetValue(showOption);
 
-            var handler = host.Services.GetRequiredService<EnrichModelCommandHandler>();
-            var options = new EnrichModelCommandHandlerOptions(
-                projectPath,
-                skipTables: true,
-                skipViews: false,
-                skipStoredProcedures: true,
-                objectType: "view",
-                schemaName,
-                objectName: name,
-                show: show
-            );
-            await handler.HandleAsync(options);
+                var handler = host.Services.GetRequiredService<EnrichModelCommandHandler>();
+                var options = new EnrichModelCommandHandlerOptions(
+                    projectPath,
+                    skipTables: true,
+                    skipViews: false,
+                    skipStoredProcedures: true,
+                    objectType: "view",
+                    schemaName,
+                    objectName: name,
+                    show: show
+                );
+                await handler.HandleAsync(options);
+            }
+            catch (Exception ex)
+            {
+                System.Console.Error.WriteLine($"Error: {ex.Message}");
+                throw;
+            }
         });
 
         var storedProcedureCommand = new Command("storedprocedure", "Enrich a specific stored procedure.");
@@ -148,23 +164,31 @@ public class EnrichModelCommandHandler(
 
         storedProcedureCommand.SetAction(async (parseResult) =>
         {
-            var projectPath = parseResult.GetValue(projectPathOption)!;
-            var schemaName = parseResult.GetValue(schemaNameOption);
-            var name = parseResult.GetValue(nameOption);
-            var show = parseResult.GetValue(showOption);
+            try
+            {
+                var projectPath = parseResult.GetValue(projectPathOption)!;
+                var schemaName = parseResult.GetValue(schemaNameOption);
+                var name = parseResult.GetValue(nameOption);
+                var show = parseResult.GetValue(showOption);
 
-            var handler = host.Services.GetRequiredService<EnrichModelCommandHandler>();
-            var options = new EnrichModelCommandHandlerOptions(
-                projectPath,
-                skipTables: true,
-                skipViews: true,
-                skipStoredProcedures: false,
-                objectType: "storedprocedure",
-                schemaName,
-                objectName: name,
-                show: show
-            );
-            await handler.HandleAsync(options);
+                var handler = host.Services.GetRequiredService<EnrichModelCommandHandler>();
+                var options = new EnrichModelCommandHandlerOptions(
+                    projectPath,
+                    skipTables: true,
+                    skipViews: true,
+                    skipStoredProcedures: false,
+                    objectType: "storedprocedure",
+                    schemaName,
+                    objectName: name,
+                    show: show
+                );
+                await handler.HandleAsync(options);
+            }
+            catch (Exception ex)
+            {
+                System.Console.Error.WriteLine($"Error: {ex.Message}");
+                throw;
+            }
         });
 
         // Add subcommands to the 'enrich-model' command
@@ -175,14 +199,22 @@ public class EnrichModelCommandHandler(
         // Set default handler if no subcommand is provided
         enrichModelCommand.SetAction(async (parseResult) =>
         {
-            var projectPath = parseResult.GetValue(projectPathOption)!;
-            var skipTables = parseResult.GetValue(skipTablesOption);
-            var skipViews = parseResult.GetValue(skipViewsOption);
-            var skipStoredProcedures = parseResult.GetValue(skipStoredProceduresOption);
+            try
+            {
+                var projectPath = parseResult.GetValue(projectPathOption)!;
+                var skipTables = parseResult.GetValue(skipTablesOption);
+                var skipViews = parseResult.GetValue(skipViewsOption);
+                var skipStoredProcedures = parseResult.GetValue(skipStoredProceduresOption);
 
-            var handler = host.Services.GetRequiredService<EnrichModelCommandHandler>();
-            var options = new EnrichModelCommandHandlerOptions(projectPath, skipTables, skipViews, skipStoredProcedures);
-            await handler.HandleAsync(options);
+                var handler = host.Services.GetRequiredService<EnrichModelCommandHandler>();
+                var options = new EnrichModelCommandHandlerOptions(projectPath, skipTables, skipViews, skipStoredProcedures);
+                await handler.HandleAsync(options);
+            }
+            catch (Exception ex)
+            {
+                System.Console.Error.WriteLine($"Error: {ex.Message}");
+                throw;
+            }
         });
 
         return enrichModelCommand;

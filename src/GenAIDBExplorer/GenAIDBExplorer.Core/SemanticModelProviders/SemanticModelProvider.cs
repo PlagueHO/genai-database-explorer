@@ -1,4 +1,5 @@
-﻿using GenAIDBExplorer.Core.Models.Project;
+﻿using Azure;
+using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.Models.SemanticModel;
 using GenAIDBExplorer.Core.Repository;
 using Microsoft.Extensions.Logging;
@@ -111,6 +112,19 @@ public sealed class SemanticModelProvider(
         {
             return await _semanticModelRepository.LoadModelAsync(semanticModelPath, options);
         }
+        catch (RequestFailedException ex) when (ex.Status == 403 || ex.Status == 401)
+        {
+            // Authorization failures should be propagated, not swallowed
+            _logger.LogError(ex, "Authorization failure while loading semantic model from '{SemanticModelPath}'. Status: {Status}, ErrorCode: {ErrorCode}",
+                semanticModelPath.FullName, ex.Status, ex.ErrorCode);
+            throw;
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            // File system authorization failures should also be propagated
+            _logger.LogError(ex, "Access denied while loading semantic model from '{SemanticModelPath}'", semanticModelPath.FullName);
+            throw;
+        }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to load semantic model using repository from '{SemanticModelPath}', attempting direct load or fallback to empty", semanticModelPath.FullName);
@@ -182,6 +196,19 @@ public sealed class SemanticModelProvider(
         try
         {
             return await _semanticModelRepository.LoadModelAsync(logicalModelPath, options);
+        }
+        catch (RequestFailedException ex) when (ex.Status == 403 || ex.Status == 401)
+        {
+            // Authorization failures should be propagated, not swallowed
+            _logger.LogError(ex, "Authorization failure while loading semantic model from Azure Blob Storage (model: '{ModelName}'). Status: {Status}, ErrorCode: {ErrorCode}",
+                modelName, ex.Status, ex.ErrorCode);
+            throw;
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            // File system authorization failures should also be propagated
+            _logger.LogError(ex, "Access denied while loading semantic model from Azure Blob Storage (model: '{ModelName}')", modelName);
+            throw;
         }
         catch (Exception ex)
         {
