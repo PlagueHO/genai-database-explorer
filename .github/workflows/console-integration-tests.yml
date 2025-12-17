@@ -47,7 +47,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        persistence: [LocalDisk, AzureBlob, CosmosDb]
+        include:
+          - persistence: LocalDisk
+            test-file: Console.Integration.Tests.LocalDisk.ps1
+          - persistence: AzureBlob
+            test-file: Console.Integration.Tests.AzureBlob.ps1
+          - persistence: CosmosDb
+            test-file: Console.Integration.Tests.CosmosDb.ps1
     runs-on: ubuntu-latest
     environment: ${{ inputs.ENVIRONMENT }}
     permissions:
@@ -181,13 +187,20 @@ jobs:
             }
             Write-Host "===================================" -ForegroundColor Magenta
 
-            # Run integration tests using extracted PowerShell script
-            Write-Host "Starting console integration tests..." -ForegroundColor Green
+            # Run integration tests using strategy-specific test file
+            Write-Host "Starting console integration tests for ${{ matrix.persistence }} strategy..." -ForegroundColor Green
             Write-Host "SQL Server: ${{ inputs.SQL_SERVER_NAME }}" -ForegroundColor Yellow
             Write-Host "Microsoft Foundry Endpoint: ${{ inputs.AZURE_AI_FOUNDRY_ENDPOINT }}" -ForegroundColor Yellow
+            Write-Host "Test File: ${{ matrix.test-file }}" -ForegroundColor Cyan
             
             Import-Module ./.github/WorkflowTools/WorkflowTools.psd1 -Force
-            Invoke-IntegrationTests -TestResultsPath './test-results' -TestScriptPath './src/Tests/Integration/Console.Integration.Tests.ps1'
+            
+            # Run both Common tests and strategy-specific tests
+            Write-Host "`nRunning Common tests (universal for all strategies)..." -ForegroundColor Magenta
+            Invoke-IntegrationTests -TestResultsPath './test-results/common' -TestScriptPath './src/Tests/Integration/Console.Integration.Tests.Common.ps1'
+            
+            Write-Host "`nRunning ${{ matrix.persistence }}-specific tests..." -ForegroundColor Magenta
+            Invoke-IntegrationTests -TestResultsPath './test-results/strategy' -TestScriptPath "./src/Tests/Integration/${{ matrix.test-file }}"
         env:
           SQL_CONNECTION_STRING: "Server=${{ inputs.SQL_SERVER_NAME }}.database.windows.net;Database=AdventureWorksLT;User Id=${{ secrets.SQL_SERVER_USERNAME }};Password=${{ secrets.SQL_SERVER_PASSWORD }};Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
           AZURE_OPENAI_ENDPOINT: ${{ inputs.AZURE_AI_FOUNDRY_ENDPOINT || env.AZURE_OPENAI_ENDPOINT }}
@@ -212,15 +225,36 @@ jobs:
           azPSVersion: "latest"
           inlineScript: |
             Import-Module ./.github/WorkflowTools/WorkflowTools.psd1 -Force
-            Test-IntegrationTestResults -TestResultsPath './test-results/integration-tests.xml' -OutputVariable 'test-results-valid' -ShowPreview
+            
+            # Check both common and strategy-specific test results
+            $commonValid = $false
+            $strategyValid = $false
+            
+            if (Test-Path './test-results/common/integration-tests.xml') {
+                Write-Host "Checking Common test results..." -ForegroundColor Cyan
+                Test-IntegrationTestResults -TestResultsPath './test-results/common/integration-tests.xml' -OutputVariable 'common-results-valid' -ShowPreview
+                $commonValid = $env:common-results-valid -eq 'true'
+            }
+            
+            if (Test-Path './test-results/strategy/integration-tests.xml') {
+                Write-Host "Checking ${{ matrix.persistence }} strategy test results..." -ForegroundColor Cyan
+                Test-IntegrationTestResults -TestResultsPath './test-results/strategy/integration-tests.xml' -OutputVariable 'strategy-results-valid' -ShowPreview
+                $strategyValid = $env:strategy-results-valid -eq 'true'
+            }
+            
+            # Set overall validity
+            $overallValid = $commonValid -or $strategyValid
+            "test-results-valid=$overallValid" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - name: Publish Integration Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always() && steps.check-test-results.outputs.test-results-valid == 'true'
         with:
-          check_name: Console Integration Test Results
-          files: './test-results/integration-tests.xml'
-          comment_title: Console Integration Test Results
+          check_name: Console Integration Test Results (${{ matrix.persistence }})
+          files: |
+            ./test-results/common/integration-tests.xml
+            ./test-results/strategy/integration-tests.xml
+          comment_title: Console Integration Test Results (${{ matrix.persistence }})
 
       - name: Upload Integration Test Artifacts
         if: always()

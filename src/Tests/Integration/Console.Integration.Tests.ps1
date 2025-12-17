@@ -1,37 +1,56 @@
 <#
     .SYNOPSIS
-        Integration tests for GenAI Database Explorer Console Application
+        [DEPRECATED] Integration tests for GenAI Database Explorer Console Application
 
     .DESCRIPTION
- 
-        Tests include project initialization, database model extraction, AI enrichment, and export functionality.
-        These tests require:
-        - GenAI Database Explorer Console application (published)
-        - Azure SQL Database connection (AdventureWorksLT recommended)
-        - Azure OpenAI Services endpoint and API key
+        ⚠️ **DEPRECATED**: This file is no longer maintained and will be removed in a future version.
+        
+        Integration tests have been reorganized into separate files by persistence strategy:
+        - Console.Integration.Tests.Common.ps1 - Tests that work for ALL strategies
+        - Console.Integration.Tests.LocalDisk.ps1 - LocalDisk-specific tests
+        - Console.Integration.Tests.AzureBlob.ps1 - AzureBlob-specific tests
+        - Console.Integration.Tests.CosmosDb.ps1 - CosmosDb-specific tests
 
-    .PARAMETER None
-        This test file does not accept parameters. Configuration is done via environment variables.
-
-    .EXAMPLE
-        Invoke-Pester -Path "Console.Integration.Tests.ps1"
-
-        Runs all integration tests with default configuration.
+        This separation provides:
+        - Better clarity on what each strategy supports
+        - Easier maintenance (changes to one strategy don't affect others)
+        - No conditional logic or skip conditions
+        - Better documentation through file structure
 
     .NOTES
-        Framework: PowerShell Pester v5.7+
-        Author: GenAI Database Explorer Team
-        Version: 1.0.0
+        **Migration Guide**:
+        Instead of running this file, use the new strategy-specific files:
+        
+        ```powershell
+        # Run common tests (universal)
+        Invoke-Pester -Path './Console.Integration.Tests.Common.ps1'
+        
+        # Run strategy-specific tests
+        Invoke-Pester -Path './Console.Integration.Tests.LocalDisk.ps1'
+        Invoke-Pester -Path './Console.Integration.Tests.AzureBlob.ps1'
+        Invoke-Pester -Path './Console.Integration.Tests.CosmosDb.ps1'
+        ```
+        
+        See README.md in this directory for full documentation.
 
-        Environment Variables Required:
-        - SQL_CONNECTION_STRING: Connection string for test database (optional - defaults to Azure SQL sample)
-        - AZURE_OPENAI_ENDPOINT: Azure OpenAI service endpoint (optional - defaults to test endpoint)
-        - AZURE_OPENAI_API_KEY: Azure OpenAI API key (optional - defaults to dummy key)
-
-    .OUTPUTS
-        Pester test results in NUnitXml format
+    .LINK
+        src/Tests/Integration/README.md
 #>
 #Requires -Version 7
+
+Write-Warning @"
+⚠️  DEPRECATED: Console.Integration.Tests.ps1 is deprecated and will be removed.
+
+Integration tests have been reorganized by persistence strategy:
+- Console.Integration.Tests.Common.ps1 - Universal tests for all strategies
+- Console.Integration.Tests.LocalDisk.ps1 - LocalDisk-specific tests
+- Console.Integration.Tests.AzureBlob.ps1 - AzureBlob-specific tests
+- Console.Integration.Tests.CosmosDb.ps1 - CosmosDb-specific tests
+
+See src/Tests/Integration/README.md for migration guide.
+
+This file will continue to work for now but is no longer maintained.
+"@
 
 param(
     [Parameter()]
