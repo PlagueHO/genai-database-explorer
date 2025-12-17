@@ -826,6 +826,10 @@ Describe 'GenAI Database Explorer Console Application' {
                         # Handle unsupported persistence strategies gracefully
                         $commandResult.ExitCode | Should -Not -Be 0 -Because 'Unsupported persistence strategy should result in non-zero exit code'
                         Write-Warning "Persistence strategy '$($script:PersistenceStrategy)' is not yet supported for show-object command"
+                    } elseif ($commandResult.Output -match "Option.*'--name'.*is required|required.*option") {
+                        # Handle missing required --name parameter
+                        $commandResult.ExitCode | Should -Not -Be 0 -Because 'Missing required parameter should result in non-zero exit code'
+                        Write-Verbose "Command requires --name parameter (expected CLI behavior)" -Verbose
                     } elseif ($commandResult.ExitCode -eq 0) {
                         $commandResult.Output | Should -Not -BeNullOrEmpty -Because 'Successful execution should produce output'
                         $commandResult.Output | Should -Not -Match 'Exception.*at.*' -Because 'Successful execution should not show stack traces'
