@@ -172,6 +172,13 @@ jobs:
       - name: Provision Infrastructure
         run: azd provision --no-prompt
 
+      - name: Save azd environment state
+        uses: actions/upload-artifact@v4
+        with:
+          name: azd-env-${{ inputs.AZURE_ENV_NAME }}
+          path: .azure/${{ inputs.AZURE_ENV_NAME }}
+          retention-days: 1
+
       - name: Get Output Endpoints
         id: get_infrastructure_outputs
         run: |
