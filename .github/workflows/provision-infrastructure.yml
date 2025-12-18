@@ -173,6 +173,7 @@ jobs:
         run: azd provision --no-prompt
 
       - name: Save azd environment state
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: azd-env-${{ inputs.AZURE_ENV_NAME }}
