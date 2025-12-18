@@ -332,7 +332,7 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                 $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
                     'generate-vectors',
                     '--project', $script:AiProjectPath,
-                    '--dryRun'
+                    '--dry-run'
                 )
                 
                 $outputText = $result.Output -join "`n"
@@ -350,7 +350,7 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                     'generate-vectors',
                     'table',
                     '--project', $script:AiProjectPath,
-                    '--schemaName', 'SalesLT',
+                    '--schema', 'SalesLT',
                     '--name', 'Product',
                     '--overwrite'
                 )

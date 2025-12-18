@@ -293,7 +293,7 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
                 $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
                     'generate-vectors',
                     '--project', $script:AiProjectPath,
-                    '--dryRun'
+                    '--dry-run'
                 )
                 
                 $outputText = $result.Output -join "`n"
@@ -318,7 +318,7 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
                     'generate-vectors',
                     'table',
                     '--project', $script:AiProjectPath,
-                    '--schemaName', 'SalesLT',
+                    '--schema', 'SalesLT',
                     '--name', 'Product',
                     '--overwrite'
                 )
@@ -366,7 +366,7 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
                     'show-object',
                     'table',
                     '--project', $script:DisplayProjectPath,
-                    '--schemaName', 'SalesLT',
+                    '--schema', 'SalesLT',
                     '--name', 'Product'
                 )
                 
