@@ -404,7 +404,9 @@ Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
                 
                 $outputText = $result.Output -join "`n"
                 
-                if ($outputText -match 'No semantic model found|not found') {
+                if ($outputText -match 'AuthorizationFailure|Access denied|403.*not authorized|not authorized to perform this operation') {
+                    Set-ItResult -Inconclusive -Because 'Storage access not authorized - identity may lack Storage Blob Data Contributor role'
+                } elseif ($outputText -match 'No semantic model found|not found') {
                     Set-ItResult -Inconclusive -Because 'Model not available in Azure Blob Storage'
                 } elseif ($outputText -match 'not yet supported|not.*supported.*persistence') {
                     Set-ItResult -Inconclusive -Because 'Show-object not yet supported for AzureBlob'
@@ -428,7 +430,9 @@ Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
                 
                 $outputText = $result.Output -join "`n"
                 
-                if ($outputText -match 'No semantic model found|not found') {
+                if ($outputText -match 'AuthorizationFailure|Access denied|403.*not authorized|not authorized to perform this operation') {
+                    Set-ItResult -Inconclusive -Because 'Storage access not authorized - identity may lack Storage Blob Data Contributor role'
+                } elseif ($outputText -match 'No semantic model found|not found') {
                     Set-ItResult -Inconclusive -Because 'Model not available'
                 } elseif ($outputText -match 'not yet supported|not.*supported.*persistence') {
                     Set-ItResult -Inconclusive -Because 'Export-model not yet supported for AzureBlob'

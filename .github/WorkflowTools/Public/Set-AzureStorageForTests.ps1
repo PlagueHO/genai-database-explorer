@@ -95,7 +95,7 @@ function Set-AzureStorageForTests {
             # Attempt to set network rule default action to Allow (ignore if not supported)
             try {
                 Write-Verbose "Updating storage network rule set to Allow"
-                Set-AzStorageAccountNetworkRuleSet -ResourceGroupName $ResourceGroupName -Name $storage.StorageAccountName -DefaultAction Allow | Out-Null
+                Update-AzStorageAccountNetworkRuleSet -ResourceGroupName $ResourceGroupName -Name $storage.StorageAccountName -DefaultAction Allow | Out-Null
             } catch {
                 Write-Warning "Could not update storage network rule set: $($_.Exception.Message)"
             }

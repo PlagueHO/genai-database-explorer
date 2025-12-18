@@ -376,8 +376,8 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                     return
                 }
                 
-                # Verify vector envelope file or directory was created on local disk
-                $vectorsPath = Join-Path -Path $script:AiProjectPath -ChildPath 'SemanticModel' -AdditionalChildPath 'Vectors'
+                # For LocalDisk persistence, vectors are stored within entity JSON files, not in a separate directory
+                $entityPath = Join-Path -Path $script:AiProjectPath -ChildPath 'SemanticModel' -AdditionalChildPath 'tables', 'SalesLT.Product.json'
                 $semanticModelPath = Join-Path -Path $script:AiProjectPath -ChildPath 'SemanticModel'
                 
                 if (Test-Path -Path $semanticModelPath) {
@@ -387,11 +387,18 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                     }
                 }
                 
-                # Check if vectors were actually generated (output should mention generation)
-                if ($outputText -match 'generated|completed|success') {
-                    Test-Path -Path $vectorsPath | Should -BeTrue -Because "Vectors directory should exist on local disk after successful generation. Output: $outputText"
+                # Verify that vectors were processed by checking command output
+                if ($outputText -match 'Processed \d+ entit') {
+                    # Verify the entity file exists (vectors are embedded in entity JSON for LocalDisk)
+                    Test-Path -Path $entityPath | Should -BeTrue -Because "Entity file should exist after vector generation. Output: $outputText"
+                    
+                    # Verify the entity file contains vector data by checking file size (vector embeddings make files larger)
+                    if (Test-Path -Path $entityPath) {
+                        $entityFile = Get-Item -Path $entityPath
+                        $entityFile.Length | Should -BeGreaterThan 1000 -Because 'Entity file with vectors should be larger than 1KB'
+                    }
                 } else {
-                    Set-ItResult -Inconclusive -Because "Command succeeded but output doesn't confirm vector generation: $outputText"
+                    Set-ItResult -Inconclusive -Because "Vector generation output did not confirm processing: $outputText"
                 }
             }
         }
