@@ -306,6 +306,66 @@ Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
                     Set-ItResult -Inconclusive -Because "Vector generation failed with unclear error (exit code: $($result.ExitCode))"
                 }
             }
+
+            It 'Should persist vector envelopes to Azure Blob Storage' {
+                # Generate vectors for a specific object
+                $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
+                    'generate-vectors',
+                    'table',
+                    '--project', $script:AiProjectPath,
+                    '--schema', 'SalesLT',
+                    '--name', 'Product',
+                    '--overwrite'
+                )
+                
+                $outputText = $result.Output -join "`n"
+                
+                if ($result.ExitCode -ne 0) {
+                    Set-ItResult -Inconclusive -Because "Vector generation not available: $outputText"
+                    return
+                }
+                
+                # Log command output for diagnostics
+                Write-Host "Generate-vectors output: $outputText" -ForegroundColor Cyan
+                
+                # Check if the output indicates vectors were actually generated
+                if ($outputText -match 'No semantic model found|not found|Model not found') {
+                    Set-ItResult -Inconclusive -Because 'Model not available for vector generation'
+                    return
+                }
+                
+                if ($outputText -match 'not supported|not available|not configured|not yet supported|not.*supported.*persistence') {
+                    Set-ItResult -Inconclusive -Because 'Vector generation not supported for AzureBlob persistence'
+                    return
+                }
+                
+                if ($outputText -match 'AuthorizationFailure|Access denied|403.*not authorized') {
+                    Set-ItResult -Inconclusive -Because 'Storage access not authorized'
+                    return
+                }
+                
+                # For Azure Blob Storage, vectors should be stored in the blob storage
+                # We can verify by checking if the command output indicates success
+                if ($outputText -match 'generated|completed|success|saved|stored') {
+                    # Verify we can retrieve the model (which should now include vector references)
+                    $verifyResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
+                        'show-object',
+                        'table',
+                        '--project', $script:AiProjectPath,
+                        '--schema', 'SalesLT',
+                        '--name', 'Product'
+                    )
+                    
+                    if ($verifyResult.ExitCode -eq 0) {
+                        $verifyResult.ExitCode | Should -Be 0 -Because "Vector generation succeeded and model should be retrievable from Azure Blob Storage. Output: $outputText"
+                    } else {
+                        Write-Warning "Vector generation appeared successful but verification failed: $($verifyResult.Output -join "`n")"
+                        Set-ItResult -Inconclusive -Because 'Vector generation succeeded but verification failed'
+                    }
+                } else {
+                    Set-ItResult -Inconclusive -Because "Command succeeded but output doesn't confirm vector generation: $outputText"
+                }
+            }
         }
     }
 

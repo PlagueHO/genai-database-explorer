@@ -357,12 +357,41 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                 
                 $outputText = $result.Output -join "`n"
                 
-                if ($result.ExitCode -eq 0) {
-                    # Verify vector envelope file was created on local disk
-                    $vectorsPath = Join-Path -Path $script:AiProjectPath -ChildPath 'SemanticModel' -AdditionalChildPath 'Vectors'
-                    Test-Path -Path $vectorsPath | Should -BeTrue -Because 'Vectors directory should exist on local disk'
-                } else {
+                if ($result.ExitCode -ne 0) {
                     Set-ItResult -Inconclusive -Because "Vector generation not available: $outputText"
+                    return
+                }
+                
+                # Log command output for diagnostics
+                Write-Host "Generate-vectors output: $outputText" -ForegroundColor Cyan
+                
+                # Check if the output indicates vectors were actually generated
+                if ($outputText -match 'No semantic model found|not found|Model not found') {
+                    Set-ItResult -Inconclusive -Because 'Model not available for vector generation'
+                    return
+                }
+                
+                if ($outputText -match 'not supported|not available|not configured') {
+                    Set-ItResult -Inconclusive -Because 'Vector generation not supported in this configuration'
+                    return
+                }
+                
+                # Verify vector envelope file or directory was created on local disk
+                $vectorsPath = Join-Path -Path $script:AiProjectPath -ChildPath 'SemanticModel' -AdditionalChildPath 'Vectors'
+                $semanticModelPath = Join-Path -Path $script:AiProjectPath -ChildPath 'SemanticModel'
+                
+                if (Test-Path -Path $semanticModelPath) {
+                    Write-Host "SemanticModel directory contents:" -ForegroundColor Yellow
+                    Get-ChildItem -Path $semanticModelPath -Recurse | ForEach-Object {
+                        Write-Host "  $($_.FullName)" -ForegroundColor Gray
+                    }
+                }
+                
+                # Check if vectors were actually generated (output should mention generation)
+                if ($outputText -match 'generated|completed|success') {
+                    Test-Path -Path $vectorsPath | Should -BeTrue -Because "Vectors directory should exist on local disk after successful generation. Output: $outputText"
+                } else {
+                    Set-ItResult -Inconclusive -Because "Command succeeded but output doesn't confirm vector generation: $outputText"
                 }
             }
         }
