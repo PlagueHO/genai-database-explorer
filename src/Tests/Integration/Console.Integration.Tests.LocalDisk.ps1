@@ -469,7 +469,7 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                     $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
                         'export-model',
                         '--project', $script:DisplayProjectPath,
-                        '--outputPath', $exportPath,
+                        '--outputFileName', $exportPath,
                         '--fileType', 'markdown'
                     )
                     
@@ -504,7 +504,7 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                     $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
                         'export-model',
                         '--project', $script:DisplayProjectPath,
-                        '--outputPath', $exportDir,
+                        '--outputFileName', $exportDir,
                         '--fileType', 'markdown',
                         '--splitFiles'
                     )
