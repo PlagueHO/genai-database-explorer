@@ -148,31 +148,6 @@ jobs:
               }
             }
 
-      - name: Remove SQL Server Firewall Rule
-        uses: azure/powershell@v2
-        with:
-          azPSVersion: "latest"
-          inlineScript: |
-            Import-Module ./.github/WorkflowTools/WorkflowTools.psd1 -Force
-            try {
-              $fwNames = @(
-                "GitHubRunner-${{ github.run_id }}-LocalDisk",
-                "GitHubRunner-${{ github.run_id }}-AzureBlob",
-                "GitHubRunner-${{ github.run_id }}-CosmosDb"
-              )
-              foreach ($fwName in $fwNames) {
-                Write-Host "Removing SQL Server firewall rule: $fwName" -ForegroundColor Yellow
-                Remove-SqlServerFirewallRule -ResourceGroupName "${{ needs.provision-infrastructure.outputs.AZURE_RESOURCE_GROUP }}" -SqlServerName "${{ needs.provision-infrastructure.outputs.SQL_SERVER_NAME }}" -FirewallRuleName $fwName
-              }
-              Write-Host "✅ Successfully removed SQL Server firewall rule" -ForegroundColor Green
-            } catch {
-              if ($_.Exception.Message -match 'NotFound|does not exist') {
-                Write-Host "ℹ️  Firewall rule '$fwName' already removed or not found" -ForegroundColor Cyan
-              } else {
-                Write-Warning "⚠️  Failed to remove firewall rule '$fwName': $($_.Exception.Message)"
-              }
-            }
-
   delete-infrastructure:
     name: Delete Provisioned Infrastructure
     needs: [provision-infrastructure, console-app-integration-tests, post-test-network-cleanup]

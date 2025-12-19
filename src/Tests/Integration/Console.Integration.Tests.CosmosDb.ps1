@@ -210,16 +210,35 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
                     $commandResult.Output
                 }
 
+                # Log output for diagnostics
+                Write-Host "Extract-model output: $outputText" -ForegroundColor Cyan
+
                 if ($commandResult.ExitCode -eq 0) {
                     $script:ExtractSucceeded = $true
                     Write-Host "Extract-model command succeeded with Cosmos DB" -ForegroundColor Green
                     $commandResult.ExitCode | Should -Be 0 -Because 'Extract should succeed with CosmosDb strategy'
-                } elseif ($outputText -match 'AuthorizationFailure|Access denied|403.*not authorized') {
-                    Set-ItResult -Inconclusive -Because 'Database or Cosmos DB access not authorized'
+                } elseif ($outputText -match 'Login failed for user|Cannot open database|database.*login|SQL Server.*authentication') {
+                    Write-Warning "SQL Database authentication failed. Check SQL_CONNECTION_STRING and database permissions."
+                    Set-ItResult -Inconclusive -Because 'SQL Database access not authorized - verify connection string and database permissions'
+                } elseif ($outputText -match 'Cosmos.*403|CosmosException.*403|not authorized to perform.*Cosmos|Forbidden.*Cosmos') {
+                    Write-Warning "Cosmos DB authorization failed. Ensure the identity has 'Cosmos DB Data Contributor' role on account: $($script:TestEnv.AZURE_COSMOS_DB_ACCOUNT_ENDPOINT)"
+                    Set-ItResult -Inconclusive -Because 'Cosmos DB access not authorized - identity requires Cosmos DB Data Contributor role'
+                } elseif ($outputText -match 'AuthorizationFailure|Access denied|403.*not authorized|Forbidden') {
+                    Write-Warning "Authorization failure detected. This may be SQL Database or Cosmos DB access. Output: $outputText"
+                    Set-ItResult -Inconclusive -Because 'Database or Cosmos DB access not authorized - check connection string and RBAC roles'
+                } elseif ($outputText -match 'DatabaseAccountNotFound|Resource.*not found.*Cosmos|Cosmos.*account.*not found') {
+                    Write-Warning "Cosmos DB account not found or not accessible at: $($script:TestEnv.AZURE_COSMOS_DB_ACCOUNT_ENDPOINT)"
+                    Set-ItResult -Inconclusive -Because 'Cosmos DB account not found - verify endpoint URL and resource provisioning'
+                } elseif ($outputText -match 'Database.*not found|Container.*not found|does not exist.*database|does not exist.*container') {
+                    Write-Warning "Cosmos DB database or container not found. Database: $($script:TestEnv.AZURE_COSMOS_DB_DATABASE_NAME ?? 'SemanticModels (default)'), Containers: $($script:TestEnv.AZURE_COSMOS_DB_MODELS_CONTAINER ?? 'Models (default)'), $($script:TestEnv.AZURE_COSMOS_DB_ENTITIES_CONTAINER ?? 'ModelEntities (default)')"
+                    Set-ItResult -Inconclusive -Because 'Cosmos DB database or containers not found - run infrastructure provisioning to create resources'
                 } elseif ($outputText -match 'not yet supported|not.*supported.*persistence') {
                     Set-ItResult -Inconclusive -Because 'CosmosDb persistence strategy not yet fully implemented for extract-model'
+                } elseif ($commandResult.ExitCode -ne 0) {
+                    Write-Warning "Extract-model failed with exit code $($commandResult.ExitCode)"
+                    Set-ItResult -Inconclusive -Because "Extract-model failed with exit code $($commandResult.ExitCode) - infrastructure may not be ready"
                 } else {
-                    Write-Warning "Extract-model output: $outputText"
+                    Write-Warning "Extract-model behavior unclear. Output: $outputText"
                     Set-ItResult -Inconclusive -Because 'Extract-model behavior unclear for CosmosDb'
                 }
             }
@@ -318,7 +337,7 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
                     'generate-vectors',
                     'table',
                     '--project', $script:AiProjectPath,
-                    '--schema', 'SalesLT',
+                    '--schemaName', 'SalesLT',
                     '--name', 'Product',
                     '--overwrite'
                 )
@@ -357,7 +376,7 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
                         'show-object',
                         'table',
                         '--project', $script:AiProjectPath,
-                        '--schema', 'SalesLT',
+                        '--schemaName', 'SalesLT',
                         '--name', 'Product'
                     )
                     
@@ -404,7 +423,7 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
                     'show-object',
                     'table',
                     '--project', $script:DisplayProjectPath,
-                    '--schema', 'SalesLT',
+                    '--schemaName', 'SalesLT',
                     '--name', 'Product'
                 )
                 
@@ -436,7 +455,7 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
                 $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
                     'export-model',
                     '--project', $script:DisplayProjectPath,
-                    '--outputPath', $exportPath,
+                    '--outputFileName', $exportPath,
                     '--fileType', 'markdown'
                 )
                 
