@@ -13,6 +13,8 @@ on:
 
 permissions:
   contents: read
+  checks: write
+  pull-requests: write
 
 jobs:
   dotnet-lint-build-test:
@@ -44,10 +46,11 @@ jobs:
       - name: Run tests
         run: |
           if [ -d "src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test" ]; then
-            dotnet test --project src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test/${{ matrix.project }}.Test.csproj \
+            dotnet test src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test/${{ matrix.project }}.Test.csproj \
               --configuration ${{ inputs.build_configuration }} \
               --no-restore \
-              --logger "trx;LogFileName=test-results.trx"
+              --logger "trx;LogFileName=test-results.trx" \
+              --results-directory ./TestResults
           else
             echo "No tests found for ${{ matrix.project }}"
           fi
@@ -58,7 +61,7 @@ jobs:
         with:
           check_name: Unit Test Results (${{ matrix.project }})
           files: |
-            **/test-results.trx
+            TestResults/**/*.trx
           comment_title: Unit Test Results (${{ matrix.project }})
 
       - name: Upload Test Artifacts
@@ -67,8 +70,7 @@ jobs:
         with:
           name: unit-test-results-${{ matrix.project }}
           path: |
-            **/test-results.trx
-            **/TestResults/
+            TestResults/**/*.trx
           retention-days: 7
 
   publish-console-app:
