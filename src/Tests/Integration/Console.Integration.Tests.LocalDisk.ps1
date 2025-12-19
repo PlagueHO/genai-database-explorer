@@ -506,10 +506,13 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                         New-Item -ItemType Directory -Path $exportDir -Force | Out-Null
                     }
                     
+                    # Add trailing directory separator to ensure it's recognized as a directory
+                    $exportDirPath = $exportDir.TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar) + [System.IO.Path]::DirectorySeparatorChar
+                    
                     $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
                         'export-model',
                         '--project', $script:DisplayProjectPath,
-                        '--outputFileName', $exportDir,
+                        '--outputFileName', $exportDirPath,
                         '--fileType', 'markdown',
                         '--splitFiles'
                     )
@@ -524,12 +527,33 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                     } else {
                         $result.ExitCode | Should -Be 0
                         
-                        # Check if any markdown files were created in the export directory
-                        $exportedFiles = Get-ChildItem -Path $exportDir -Filter '*.md' -ErrorAction SilentlyContinue
-                        if ($exportedFiles -and $exportedFiles.Count -gt 0) {
-                            $exportedFiles.Count | Should -BeGreaterThan 0 -Because 'Split export should create markdown files'
+                        # For split files, check for the index file and subdirectory markdown files
+                        # The main index file is written to the specified directory
+                        $indexFile = Join-Path -Path $exportDir -ChildPath 'exported_model.md'
+                        
+                        # Individual entity files are written to subdirectories (tables/, views/, etc.)
+                        $tablesDir = Join-Path -Path $exportDir -ChildPath 'tables'
+                        $viewsDir = Join-Path -Path $exportDir -ChildPath 'views'
+                        $storedProcsDir = Join-Path -Path $exportDir -ChildPath 'storedprocedures'
+                        
+                        # Collect all markdown files from export directory and subdirectories
+                        $allExportedFiles = @()
+                        if (Test-Path -Path $exportDir) {
+                            $allExportedFiles = Get-ChildItem -Path $exportDir -Filter '*.md' -Recurse -ErrorAction SilentlyContinue
+                        }
+                        
+                        if ($allExportedFiles -and $allExportedFiles.Count -gt 0) {
+                            $allExportedFiles.Count | Should -BeGreaterThan 0 -Because 'Split export should create markdown files'
+                            Write-Host "Found $($allExportedFiles.Count) exported markdown files" -ForegroundColor Green
                         } else {
-                            Write-Host "Export directory contents: $(Get-ChildItem -Path $exportDir -Recurse | Select-Object -ExpandProperty FullName)" -ForegroundColor Yellow
+                            Write-Host "Export directory structure:" -ForegroundColor Yellow
+                            if (Test-Path -Path $exportDir) {
+                                Get-ChildItem -Path $exportDir -Recurse | ForEach-Object {
+                                    Write-Host "  $($_.FullName)" -ForegroundColor Gray
+                                }
+                            } else {
+                                Write-Host "  Export directory does not exist: $exportDir" -ForegroundColor Red
+                            }
                             Write-Host "Command output: $outputText" -ForegroundColor Yellow
                             Set-ItResult -Inconclusive -Because 'No markdown files found in export directory despite command success'
                         }

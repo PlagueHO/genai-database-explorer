@@ -100,6 +100,28 @@ function Set-AzureStorageForTests {
                 Write-Warning "Could not update storage network rule set: $($_.Exception.Message)"
             }
 
+            # Create storage context for container operations
+            $ctx = $storage.Context
+            
+            # Ensure the container exists
+            Write-Verbose "Checking for container: $ContainerName"
+            $container = Get-AzStorageContainer -Name $ContainerName -Context $ctx -ErrorAction SilentlyContinue
+            
+            if (-not $container) {
+                Write-Host "Container '$ContainerName' does not exist. Creating it now..."
+                try {
+                    $container = New-AzStorageContainer -Name $ContainerName -Context $ctx -Permission Off
+                    Write-Host "✅ Container '$ContainerName' created successfully"
+                }
+                catch {
+                    Write-Error "Failed to create container '$ContainerName': $($_.Exception.Message)"
+                    throw
+                }
+            }
+            else {
+                Write-Host "✅ Container '$ContainerName' already exists"
+            }
+
             # Configure endpoints and export environment variables
             $endpoint = "https://$($storage.StorageAccountName).blob.core.windows.net"
             $blobPrefix = "$Environment/$RunId"
