@@ -22,9 +22,16 @@ echo "🔨 Installing .NET global tools..."
 install_dotnet_tool() {
     local tool_name=$1
     local package_name=$2
+    local prerelease=${3:-false}
+    local prerelease_flag=""
+    
+    if [ "$prerelease" = "true" ]; then
+        prerelease_flag="--prerelease"
+    fi
+    
     echo "Installing $tool_name..."
     for i in {1..3}; do
-        if dotnet tool install -g "$package_name"; then
+        if dotnet tool install -g "$package_name" $prerelease_flag; then
             echo "✅ $tool_name installed successfully"
             return 0
         else
@@ -42,6 +49,7 @@ install_dotnet_tool "Entity Framework Core CLI" "dotnet-ef" || true
 install_dotnet_tool "Library Manager CLI" "Microsoft.Web.LibraryManager.Cli" || true
 install_dotnet_tool "Outdated Tool" "dotnet-outdated-tool" || true
 install_dotnet_tool "Format Tool" "dotnet-format" || true
+install_dotnet_tool "Aspire CLI" "aspire" true || true
 
 # Update Azure CLI and install extensions
 echo "☁️  Configuring Azure CLI extensions..."

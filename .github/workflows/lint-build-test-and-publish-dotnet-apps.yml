@@ -44,10 +44,32 @@ jobs:
       - name: Run tests
         run: |
           if [ -d "src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test" ]; then
-            dotnet test --project src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test/${{ matrix.project }}.Test.csproj --configuration ${{ inputs.build_configuration }} --no-restore
+            dotnet test --project src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test/${{ matrix.project }}.Test.csproj \
+              --configuration ${{ inputs.build_configuration }} \
+              --no-restore \
+              --logger "trx;LogFileName=test-results.trx"
           else
             echo "No tests found for ${{ matrix.project }}"
           fi
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          check_name: Unit Test Results (${{ matrix.project }})
+          files: |
+            **/test-results.trx
+          comment_title: Unit Test Results (${{ matrix.project }})
+
+      - name: Upload Test Artifacts
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: unit-test-results-${{ matrix.project }}
+          path: |
+            **/test-results.trx
+            **/TestResults/
+          retention-days: 7
 
   publish-console-app:
     name: Publish Console Application

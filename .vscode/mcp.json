@@ -1,6 +1,26 @@
 {
     "inputs": [],
     "servers": {
+        "agent-framework-docs": {
+            "type": "sse",
+            "url": "https://gitmcp.io/microsoft/agent-framework"
+        },
+        "github": {
+            "type": "http",
+            "url": "https://api.githubcopilot.com/mcp/",
+        },
+        "microsoft-foundry": {
+            "type": "http",
+            "url": "https://mcp.ai.azure.com"
+        },
+        "aspire": {
+            "type": "stdio",
+            "command": "aspire",
+            "args": [
+                "mcp",
+                "start"
+            ]
+        },
         "context7": {
             "type": "stdio",
             "command": "npx",
@@ -9,27 +29,13 @@
                 "@upstash/context7-mcp@latest"
             ]
         },
-        "github": {
-            "url": "https://api.githubcopilot.com/mcp/",
-            "type": "http"
-        },
         "playwright": {
+            "type": "stdio",
             "command": "npx",
             "args": [
                 "-y",
                 "@playwright/mcp@latest"
             ],
-            "type": "stdio",
-            "env": {}
-        },
-        "agent-framework-docs": {
-            "url": "https://gitmcp.io/microsoft/agent-framework",
-            "type": "sse"
-        },
-        "microsoft-foundry": { 
-            "type": "http", 
-            "url": "https://mcp.ai.azure.com" 
-        
-        } 
+        }
     }
 }

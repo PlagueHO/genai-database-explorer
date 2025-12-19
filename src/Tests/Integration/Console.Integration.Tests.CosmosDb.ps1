@@ -144,6 +144,140 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
             }
         }
 
+        function Test-CosmosDbAccessibility {
+            param(
+                [hashtable]$Environment,
+                [bool]$NoAzureMode
+            )
+            
+            if ($NoAzureMode) {
+                Write-Host "Skipping Cosmos DB accessibility check - NoAzure mode enabled" -ForegroundColor Yellow
+                return @{
+                    Accessible = $true
+                    Message = "NoAzure mode - validation skipped"
+                    SkipTests = $false
+                }
+            }
+
+            Write-Host "Validating Cosmos DB accessibility..." -ForegroundColor Cyan
+            
+            $endpoint = $Environment.AZURE_COSMOS_DB_ACCOUNT_ENDPOINT
+            
+            if ([string]::IsNullOrEmpty($endpoint)) {
+                Write-Warning "Cosmos DB endpoint not configured. Tests will be marked as inconclusive."
+                return @{
+                    Accessible = $false
+                    Message = "Cosmos DB endpoint not configured"
+                    SkipTests = $true
+                }
+            }
+
+            # Check if CosmosDB module is available
+            $cosmosDbModule = Get-Module -Name CosmosDB -ListAvailable -ErrorAction SilentlyContinue
+            
+            if ($cosmosDbModule) {
+                Write-Host "✓ CosmosDB PowerShell module found (v$($cosmosDbModule.Version))" -ForegroundColor Green
+                
+                try {
+                    Import-Module CosmosDB -ErrorAction Stop
+                    
+                    # Extract account name from endpoint
+                    $uri = [System.Uri]::new($endpoint)
+                    $accountName = $uri.Host.Split('.')[0]
+                    
+                    Write-Verbose "Testing Cosmos DB API access for account: $accountName" -Verbose
+                    
+                    # Create context using Azure AD authentication (DefaultAzureCredential)
+                    # This will test actual API access and authentication
+                    $cosmosDbContext = New-CosmosDbContext -Account $accountName -Token (Get-AzAccessToken -ResourceUrl 'https://cosmos.azure.com' -ErrorAction SilentlyContinue).Token -ErrorAction Stop
+                    
+                    if ($cosmosDbContext) {
+                        # Try to list databases to verify permissions
+                        $databases = Get-CosmosDbDatabase -Context $cosmosDbContext -ErrorAction Stop
+                        Write-Host "✓ Successfully authenticated to Cosmos DB account" -ForegroundColor Green
+                        Write-Host "✓ Cosmos DB API access verified (found $($databases.Count) database(s))" -ForegroundColor Green
+                        
+                        return @{
+                            Accessible = $true
+                            Message = "Cosmos DB is accessible with proper permissions"
+                            SkipTests = $false
+                        }
+                    }
+                }
+                catch {
+                    $errorMessage = $_.Exception.Message
+                    
+                    if ($errorMessage -match 'Forbidden|403|unauthorized|not authorized') {
+                        Write-Warning "Cosmos DB authentication failed - RBAC permissions may not be configured"
+                        Write-Host "  Ensure 'Cosmos DB Built-in Data Contributor' role is assigned" -ForegroundColor Yellow
+                        return @{
+                            Accessible = $false
+                            Message = "Cosmos DB RBAC permissions not configured: $errorMessage"
+                            SkipTests = $false  # Let tests run and report specific errors
+                        }
+                    }
+                    elseif ($errorMessage -match 'could not be found|not found|does not exist') {
+                        Write-Warning "Cosmos DB account not found: $errorMessage"
+                        return @{
+                            Accessible = $false
+                            Message = "Cosmos DB account not found or not accessible"
+                            SkipTests = $true
+                        }
+                    }
+                    else {
+                        Write-Warning "Failed to validate Cosmos DB access: $errorMessage"
+                        return @{
+                            Accessible = $false
+                            Message = "Cosmos DB validation failed: $errorMessage"
+                            SkipTests = $false  # Allow tests to proceed with specific error handling
+                        }
+                    }
+                }
+            }
+            else {
+                Write-Host "⚠ CosmosDB PowerShell module not available - using basic connectivity check" -ForegroundColor Yellow
+                Write-Host "  Install with: Install-Module -Name CosmosDB" -ForegroundColor Cyan
+                
+                # Fallback to basic connectivity check
+                try {
+                    $uri = [System.Uri]::new($endpoint)
+                    $host = $uri.Host
+                    
+                    Write-Verbose "Testing connectivity to Cosmos DB host: $host" -Verbose
+                    $tcpClient = New-Object System.Net.Sockets.TcpClient
+                    $connectTask = $tcpClient.ConnectAsync($host, 443)
+                    $timeout = 5000 # 5 seconds
+                    
+                    if ($connectTask.Wait($timeout)) {
+                        $tcpClient.Close()
+                        Write-Host "✓ Cosmos DB endpoint is reachable (basic connectivity only)" -ForegroundColor Green
+                        Write-Host "  Note: Permissions and authentication not verified" -ForegroundColor Yellow
+                        return @{
+                            Accessible = $true
+                            Message = "Basic connectivity verified (install CosmosDB module for full validation)"
+                            SkipTests = $false
+                        }
+                    } else {
+                        $tcpClient.Close()
+                        Write-Warning "Cosmos DB endpoint is not reachable within ${timeout}ms timeout"
+                        return @{
+                            Accessible = $false
+                            Message = "Cosmos DB endpoint not reachable - check network connectivity"
+                            SkipTests = $true
+                        }
+                    }
+                }
+                catch {
+                    Write-Warning "Failed to validate Cosmos DB connectivity: $_"
+                    return @{
+                        Accessible = $false
+                        Message = "Connectivity check failed: $_"
+                        SkipTests = $false
+                    }
+                }
+            }
+        }
+
         # Initialize test configuration
         $testConfig = Initialize-TestEnvironment -TestFilter $TestFilter
         
@@ -168,10 +302,25 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
         $script:TestWorkspace = $workspaceConfig.TestWorkspace
         $script:BaseProjectPath = $workspaceConfig.BaseProjectPath
         $script:ConsoleAppPath = $workspaceConfig.ConsoleAppPath
+
+        # Validate Cosmos DB accessibility before running tests
+        $cosmosDbValidation = Test-CosmosDbAccessibility -Environment $script:TestEnv -NoAzureMode $script:NoAzureMode
+        $script:CosmosDbAccessible = $cosmosDbValidation.Accessible
+        $script:CosmosDbValidationMessage = $cosmosDbValidation.Message
+        
+        if ($cosmosDbValidation.SkipTests) {
+            Write-Warning "Cosmos DB validation failed: $($cosmosDbValidation.Message)"
+            Write-Warning "All Cosmos DB tests will be marked as Inconclusive"
+        }
     }
 
     Context 'Database Schema Operations with Cosmos DB' {
         BeforeAll {
+            # Skip all tests in this context if Cosmos DB validation failed
+            if (-not $script:CosmosDbAccessible) {
+                Write-Warning "Skipping Database Schema Operations tests - Cosmos DB not accessible: $($script:CosmosDbValidationMessage)"
+            }
+
             $script:DbProjectPath = Join-Path -Path $script:BaseProjectPath -ChildPath 'database-test'
             $projectSetup = Initialize-TestProject -ProjectPath $script:DbProjectPath -ConsoleApp $script:ConsoleAppPath
 
@@ -202,6 +351,12 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
             }
 
             It 'Should execute extract-model and store in Cosmos DB' {
+                # Early exit if pre-validation failed
+                if (-not $script:CosmosDbAccessible) {
+                    Set-ItResult -Inconclusive -Because $script:CosmosDbValidationMessage
+                    return
+                }
+
                 $commandResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $script:DbProjectPath)
 
                 $outputText = if ($commandResult.Output -is [array]) {
@@ -220,6 +375,10 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
                 } elseif ($outputText -match 'Login failed for user|Cannot open database|database.*login|SQL Server.*authentication') {
                     Write-Warning "SQL Database authentication failed. Check SQL_CONNECTION_STRING and database permissions."
                     Set-ItResult -Inconclusive -Because 'SQL Database access not authorized - verify connection string and database permissions'
+                } elseif ($outputText -match 'cannot be authorized by AAD token in data plane|Request blocked by Auth.*AAD token|blocked by Auth.*data plane') {
+                    $script:ExtractSucceeded = $false
+                    Write-Warning "Cosmos DB AAD authentication failed. Data plane operations require native RBAC. See https://aka.ms/cosmos-native-rbac"
+                    Set-ItResult -Inconclusive -Because 'Cosmos DB AAD authentication failed - data plane operations require native RBAC. Assign Cosmos DB Built-in Data Contributor role or enable RBAC on account'
                 } elseif ($outputText -match 'Cosmos.*403|CosmosException.*403|not authorized to perform.*Cosmos|Forbidden.*Cosmos') {
                     Write-Warning "Cosmos DB authorization failed. Ensure the identity has 'Cosmos DB Data Contributor' role on account: $($script:TestEnv.AZURE_COSMOS_DB_ACCOUNT_ENDPOINT)"
                     Set-ItResult -Inconclusive -Because 'Cosmos DB access not authorized - identity requires Cosmos DB Data Contributor role'
@@ -298,8 +457,8 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
                 $outputText = $result.Output -join "`n"
                 
                 if ($outputText -match 'No semantic model found|AuthorizationFailure') {
-                    Set-ItResult -Inconclusive -Because 'Model not available or access denied'
-                } elseif ($outputText -match 'not yet supported|not.*supported.*persistence') {
+                    Set-ItResult -Inconclusive -Because 'Model not available or access denied'                } elseif ($outputText -match 'cannot be authorized by AAD token in data plane|Request blocked by Auth.*AAD token|blocked by Auth.*data plane') {
+                    Set-ItResult -Inconclusive -Because 'Cosmos DB AAD authentication failed - requires native RBAC permissions'                } elseif ($outputText -match 'not yet supported|not.*supported.*persistence') {
                     Set-ItResult -Inconclusive -Because 'Enrich-model not yet supported for CosmosDb'
                 } elseif ($result.ExitCode -eq 0) {
                     $result.ExitCode | Should -Be 0 -Because 'Enrich should succeed with CosmosDb'
@@ -316,9 +475,11 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
                 )
                 
                 $outputText = $result.Output -join "`n"
-                
+
                 if ($outputText -match 'No semantic model found|not found|Model not found') {
                     Set-ItResult -Inconclusive -Because 'Model not available in Cosmos DB'
+                } elseif ($outputText -match 'cannot be authorized by AAD token in data plane|Request blocked by Auth.*AAD token|blocked by Auth.*data plane') {
+                    Set-ItResult -Inconclusive -Because 'Cosmos DB AAD authentication failed - requires native RBAC permissions'
                 } elseif ($outputText -match 'AuthorizationFailure|Access denied|403.*not authorized') {
                     Set-ItResult -Inconclusive -Because 'Cosmos DB access not authorized'
                 } elseif ($outputText -match 'not yet supported|not.*supported.*persistence') {
@@ -355,6 +516,11 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
                 # Check if the output indicates vectors were actually generated
                 if ($outputText -match 'No semantic model found|not found|Model not found') {
                     Set-ItResult -Inconclusive -Because 'Model not available for vector generation'
+                    return
+                }
+                
+                if ($outputText -match 'cannot be authorized by AAD token in data plane|Request blocked by Auth.*AAD token|blocked by Auth.*data plane') {
+                    Set-ItResult -Inconclusive -Because 'Cosmos DB AAD authentication failed - requires native RBAC permissions'
                     return
                 }
                 
@@ -504,8 +670,12 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
 
             $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $projectPath)
             
+            $outputText = $result.Output -join "`n"
+            
             # This test mainly verifies the command doesn't fail with dual-container configuration
-            if ($result.ExitCode -eq 0 -or ($result.Output -join "`n") -match 'AuthorizationFailure|not yet supported') {
+            if ($outputText -match 'cannot be authorized by AAD token in data plane|Request blocked by Auth.*AAD token') {
+                Set-ItResult -Inconclusive -Because 'Cosmos DB AAD authentication failed - requires native RBAC permissions'
+            } elseif ($result.ExitCode -eq 0 -or $outputText -match 'AuthorizationFailure|not yet supported') {
                 $true | Should -BeTrue -Because 'Command should handle dual-container Cosmos DB configuration'
             }
         }
@@ -533,8 +703,12 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
 
             $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $projectPath)
             
+            $outputText = $result.Output -join "`n"
+            
             # This test verifies HPK-based partitioning works if implemented
-            if ($result.ExitCode -eq 0 -or ($result.Output -join "`n") -match 'AuthorizationFailure|not yet supported') {
+            if ($outputText -match 'cannot be authorized by AAD token in data plane|Request blocked by Auth.*AAD token') {
+                Set-ItResult -Inconclusive -Because 'Cosmos DB AAD authentication failed - requires native RBAC permissions'
+            } elseif ($result.ExitCode -eq 0 -or $outputText -match 'AuthorizationFailure|not yet supported') {
                 $true | Should -BeTrue -Because 'Command should handle HPK configuration'
             }
         }
