@@ -307,16 +307,15 @@ Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
                 
                 $outputText = $result.Output -join "`n"
                 
-                if ($outputText -match 'ContainerNotFound|The specified container does not exist|404.*container') {
+                # Check for success first - if exit code is 0, the command succeeded
+                if ($result.ExitCode -eq 0) {
+                    $result.ExitCode | Should -Be 0 -Because 'Dry-run should succeed with AzureBlob'
+                } elseif ($outputText -match 'ContainerNotFound|The specified container does not exist|404.*container') {
                     Set-ItResult -Inconclusive -Because 'Azure Blob Storage container does not exist'
-                } elseif ($outputText -match 'No semantic model found|not found|Model not found') {
-                    Set-ItResult -Inconclusive -Because 'Model not available in blob storage'
                 } elseif ($outputText -match 'AuthorizationFailure|Access denied|403.*not authorized') {
                     Set-ItResult -Inconclusive -Because 'Storage access not authorized'
                 } elseif ($outputText -match 'not yet supported|not.*supported.*persistence') {
                     Set-ItResult -Inconclusive -Because 'Vector generation not yet supported for AzureBlob'
-                } elseif ($result.ExitCode -eq 0) {
-                    $result.ExitCode | Should -Be 0 -Because 'Dry-run should succeed with AzureBlob'
                 } else {
                     Write-Warning "generate-vectors output: $outputText"
                     Set-ItResult -Inconclusive -Because "Vector generation failed with unclear error (exit code: $($result.ExitCode))"
@@ -341,34 +340,10 @@ Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
                     return
                 }
                 
-                # Log command output for diagnostics
-                Write-Host "Generate-vectors output: $outputText" -ForegroundColor Cyan
-                
                 # Check if the output indicates vectors were actually generated
-                if ($outputText -match 'ContainerNotFound|The specified container does not exist|404.*container') {
-                    Set-ItResult -Inconclusive -Because 'Azure Blob Storage container does not exist'
-                    return
-                }
-                
-                if ($outputText -match 'No semantic model found|not found|Model not found') {
-                    Set-ItResult -Inconclusive -Because 'Model not available for vector generation'
-                    return
-                }
-                
-                if ($outputText -match 'not supported|not available|not configured|not yet supported|not.*supported.*persistence') {
-                    Set-ItResult -Inconclusive -Because 'Vector generation not supported for AzureBlob persistence'
-                    return
-                }
-                
-                if ($outputText -match 'AuthorizationFailure|Access denied|403.*not authorized') {
-                    Set-ItResult -Inconclusive -Because 'Storage access not authorized'
-                    return
-                }
-                
-                # For Azure Blob Storage, vectors should be stored in the blob storage
-                # We can verify by checking if the command output indicates success
-                if ($outputText -match 'generated|completed|success|saved|stored') {
-                    # Verify we can retrieve the model (which should now include vector references)
+                # Look for the "Processed N entities" pattern which confirms successful vector generation
+                if ($outputText -match 'Processed \d+ entit') {
+                    # Vector generation succeeded - verify we can retrieve the model
                     $verifyResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
                         'show-object',
                         'table',
@@ -383,6 +358,12 @@ Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
                         Write-Warning "Vector generation appeared successful but verification failed: $($verifyResult.Output -join "`n")"
                         Set-ItResult -Inconclusive -Because 'Vector generation succeeded but verification failed'
                     }
+                } elseif ($outputText -match 'ContainerNotFound|The specified container does not exist|404.*container') {
+                    Set-ItResult -Inconclusive -Because 'Azure Blob Storage container does not exist'
+                } elseif ($outputText -match 'not supported|not available|not configured|not yet supported|not.*supported.*persistence') {
+                    Set-ItResult -Inconclusive -Because 'Vector generation not supported for AzureBlob persistence'
+                } elseif ($outputText -match 'AuthorizationFailure|Access denied|403.*not authorized') {
+                    Set-ItResult -Inconclusive -Because 'Storage access not authorized'
                 } else {
                     Set-ItResult -Inconclusive -Because "Command succeeded but output doesn't confirm vector generation: $outputText"
                 }

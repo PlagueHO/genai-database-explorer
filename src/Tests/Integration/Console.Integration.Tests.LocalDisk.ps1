@@ -361,10 +361,7 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                     Set-ItResult -Inconclusive -Because "Vector generation not available: $outputText"
                     return
                 }
-                
-                # Log command output for diagnostics
-                Write-Host "Generate-vectors output: $outputText" -ForegroundColor Cyan
-                
+                                
                 # Check if the output indicates vectors were actually generated
                 if ($outputText -match 'No semantic model found|not found|Model not found') {
                     Set-ItResult -Inconclusive -Because 'Model not available for vector generation'

@@ -91,22 +91,58 @@ function Test-IntegrationTestResults {
                 [xml]$xmlContent = $XmlContent
                 Write-Host "✅ Test results XML is valid" -ForegroundColor Green
                 
-                # Check for test suites
-                $testSuiteCount = 0
-                if ($xmlContent.testsuites -and $xmlContent.testsuites.testsuite) {
+                # Detect format and check for test results
+                $testCount = 0
+                $formatDetected = $null
+                
+                # Check for NUnit 2.5 format (Pester v5 default with NUnitXml - this is the expected format)
+                if ($xmlContent.'test-results') {
+                    $formatDetected = 'NUnit 2.5'
+                    $testCount = [int]$xmlContent.'test-results'.total
+                    Write-Host "✅ Format: NUnit 2.5 (Pester v5 NUnitXml) - Expected format" -ForegroundColor Green
+                    Write-Host "   Total tests: $testCount" -ForegroundColor Cyan
+                    Write-Host "   Failures: $($xmlContent.'test-results'.failures)" -ForegroundColor Cyan
+                    Write-Host "   Errors: $($xmlContent.'test-results'.errors)" -ForegroundColor Cyan
+                    Write-Host "   Inconclusive: $($xmlContent.'test-results'.inconclusive)" -ForegroundColor Cyan
+                }
+                # Check for NUnit 3.0 format (not expected, but valid)
+                elseif ($xmlContent.'test-run') {
+                    $formatDetected = 'NUnit 3.0'
+                    $testCount = [int]$xmlContent.'test-run'.total
+                    Write-Warning "⚠️  Format: NUnit 3.0 detected - Expected Pester v5 NUnitXml (NUnit 2.5)"
+                    Write-Host "   This may indicate a test configuration issue. Ensure Pester uses -OutputFormat NUnitXml" -ForegroundColor Yellow
+                    Write-Host "   Total tests: $testCount" -ForegroundColor Cyan
+                }
+                # Check for JUnit format (not expected, but valid)
+                elseif ($xmlContent.testsuites) {
+                    $formatDetected = 'JUnit'
                     if ($xmlContent.testsuites.testsuite -is [array]) {
-                        $testSuiteCount = $xmlContent.testsuites.testsuite.Count
-                    } else {
-                        $testSuiteCount = 1
+                        $testCount = ($xmlContent.testsuites.testsuite | Measure-Object -Property tests -Sum).Sum
+                    } elseif ($xmlContent.testsuites.testsuite) {
+                        $testCount = [int]$xmlContent.testsuites.testsuite.tests
                     }
+                    Write-Warning "⚠️  Format: JUnit detected - Expected Pester v5 NUnitXml (NUnit 2.5)"
+                    Write-Host "   This may indicate a test configuration issue. Ensure Pester uses -OutputFormat NUnitXml" -ForegroundColor Yellow
+                    Write-Host "   Total tests: $testCount" -ForegroundColor Cyan
+                }
+                else {
+                    Write-Warning "⚠️  Unknown test results format - XML is valid but format not recognized"
+                    Write-Host "   Root element: $($xmlContent.DocumentElement.LocalName)" -ForegroundColor Yellow
+                    Write-Host "   Expected: <test-results> (NUnit 2.5 from Pester v5 -OutputFormat NUnitXml)" -ForegroundColor Yellow
+                    return $true # Still valid XML, just unknown format
                 }
                 
-                Write-Host "Found $testSuiteCount test suite(s)" -ForegroundColor Green
-                Write-Verbose "XML validation successful"
+                if ($testCount -gt 0) {
+                    Write-Host "✅ Found $testCount test(s) in $formatDetected format" -ForegroundColor Green
+                } else {
+                    Write-Host "⚠️  No tests found in XML (may be empty test run)" -ForegroundColor Yellow
+                }
+                
+                Write-Verbose "XML validation successful - Format: $formatDetected"
                 return $true
             }
             catch {
-                Write-Warning "⚠️  Test results XML appears to be malformed: $($_.Exception.Message)"
+                Write-Warning "❌ Test results XML is malformed: $($_.Exception.Message)"
                 return $false
             }
         }
