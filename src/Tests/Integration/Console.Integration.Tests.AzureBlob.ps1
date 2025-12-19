@@ -328,7 +328,7 @@ Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
                     'generate-vectors',
                     'table',
                     '--project', $script:AiProjectPath,
-                    '--schema', 'SalesLT',
+                    '--schemaName', 'SalesLT',
                     '--name', 'Product',
                     '--overwrite'
                 )
@@ -348,7 +348,7 @@ Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
                         'show-object',
                         'table',
                         '--project', $script:AiProjectPath,
-                        '--schema', 'SalesLT',
+                        '--schemaName', 'SalesLT',
                         '--name', 'Product'
                     )
                     
@@ -400,7 +400,7 @@ Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
                     'show-object',
                     'table',
                     '--project', $script:DisplayProjectPath,
-                    '--schema', 'SalesLT',
+                    '--schemaName', 'SalesLT',
                     '--name', 'Product'
                 )
                 

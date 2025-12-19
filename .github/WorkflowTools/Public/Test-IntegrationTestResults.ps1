@@ -167,7 +167,7 @@ function Test-IntegrationTestResults {
                 if ([string]::IsNullOrWhiteSpace($content)) {
                     Write-Warning "⚠️  Test results file is empty"
                     Set-GitHubOutput -Name $OutputVariable -Value 'false'
-                    return
+                    return $false
                 }
                 
                 # Validate XML structure
@@ -188,6 +188,7 @@ function Test-IntegrationTestResults {
                 if ($isValidXml) {
                     Set-GitHubOutput -Name $OutputVariable -Value 'true'
                     Write-Verbose "Test results validation successful"
+                    return $true
                 } else {
                     Set-GitHubOutput -Name $OutputVariable -Value 'false'
                     
@@ -195,6 +196,7 @@ function Test-IntegrationTestResults {
                         Write-Host "First $PreviewLength characters of file:" -ForegroundColor Yellow
                         Write-Host $content.Substring(0, [Math]::Min($PreviewLength, $content.Length)) -ForegroundColor Gray
                     }
+                    return $false
                 }
             }
             else {
@@ -237,7 +239,7 @@ function Test-IntegrationTestResults {
                         $content = Get-Content -LiteralPath $resolvedExpectedPath -Raw
                         if (-not [string]::IsNullOrWhiteSpace($content) -and (Test-XmlStructure -XmlContent $content)) {
                             Set-GitHubOutput -Name $OutputVariable -Value 'true'
-                            return
+                            return $true
                         }
                     } catch {
                         Write-Warning "Failed to copy discovered results: $($_.Exception.Message)"
@@ -255,6 +257,7 @@ function Test-IntegrationTestResults {
                         Write-Host "Expected results directory '$expectedDir' does not exist" -ForegroundColor Red
                     }
                 }
+                return $false
             }
         }
         catch {

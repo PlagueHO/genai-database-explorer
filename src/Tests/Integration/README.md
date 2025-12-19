@@ -163,7 +163,17 @@ Tests specific to local file system persistence:
    - `show-object table` - Display table information from local model
    - Verify data retrieved from `SemanticModel/semanticmodel.json`
 
-6. **Model Export**
+6. **Natural Language Query**
+   - `query-model` - Query semantic model using natural language
+   - Verify SQL generation from natural language question
+   - Validate query execution against database
+
+7. **Vector Index Reconciliation**
+   - `reconcile-index --dry-run` - Preview index reconciliation
+   - `reconcile-index` - Re-upsert local vectors to external index
+   - Verify vector index consistency
+
+8. **Model Export**
    - `export-model` - Export to markdown format
    - Verify exported file created on local disk
    - `export-model --splitFiles` - Export to multiple files
@@ -178,23 +188,39 @@ Tests specific to Azure Blob Storage persistence:
    - Verify model accessible via blob storage APIs
    - Test with configured blob prefix
 
-2. **AI Enrichment**
+2. **Data Dictionary Application**
+   - `data-dictionary table` - Apply metadata from JSON files
+   - Verify dictionary files read and model updated in blob storage
+   - Test blob-based data dictionary operations
+
+3. **AI Enrichment**
    - `enrich-model` - Enrich and update in blob storage
    - Verify model updated in Azure Blob Storage
 
-3. **Vector Generation**
-   - `generate-vectors --dryRun` - Test planning with blob storage
-   - Verify vectors can be persisted to separate blobs
+4. **Vector Generation**
+   - `generate-vectors --dry-run` - Test planning with blob storage
+   - `generate-vectors table` - Persist vectors to separate blobs
+   - Verify vectors stored in Azure Blob Storage
 
-4. **Model Display**
+5. **Model Display**
    - `show-object table` - Display from blob storage model
    - Verify blob retrieval and deserialization
 
-5. **Model Export**
+6. **Natural Language Query**
+   - `query-model` - Query semantic model from blob storage
+   - Verify SQL generation with blob-persisted model
+   - Validate query execution against database
+
+7. **Vector Index Reconciliation**
+   - `reconcile-index --dry-run` - Preview reconciliation with blob storage
+   - `reconcile-index` - Re-upsert blob-stored vectors to external index
+   - Verify vector index consistency with blob storage
+
+8. **Model Export**
    - `export-model` - Export blob storage model to local file
    - Verify blob-to-file conversion
 
-6. **Blob Storage Scenarios**
+9. **Blob Storage Scenarios**
    - Test blob prefix configuration
    - Verify storage account endpoint handling
 
@@ -207,24 +233,39 @@ Tests specific to Azure Cosmos DB document persistence:
    - Verify model document created in Models container
    - Test dual-container architecture
 
-2. **AI Enrichment**
+2. **Data Dictionary Application**
+   - `data-dictionary table` - Apply metadata from JSON files
+   - Verify dictionary applied and model document updated in Cosmos DB
+   - Test document-based data dictionary operations
+
+3. **AI Enrichment**
    - `enrich-model` - Enrich and update Cosmos DB document
    - Verify model document updated in Models container
 
-3. **Vector Generation**
-   - `generate-vectors --dryRun` - Test planning with Cosmos DB
+4. **Vector Generation**
+   - `generate-vectors --dry-run` - Test planning with Cosmos DB
    - `generate-vectors table` - Persist vectors to Entities container
    - Verify separation between model and entity documents
 
-4. **Model Display**
+5. **Model Display**
    - `show-object table` - Display from Cosmos DB model
    - Verify document query and retrieval
 
-5. **Model Export**
+6. **Natural Language Query**
+   - `query-model` - Query semantic model from Cosmos DB
+   - Verify SQL generation with document-persisted model
+   - Validate query execution against database
+
+7. **Vector Index Reconciliation**
+   - `reconcile-index --dry-run` - Preview reconciliation with Cosmos DB
+   - `reconcile-index` - Re-upsert Cosmos DB-stored vectors to external index
+   - Verify vector index consistency with Cosmos DB storage
+
+8. **Model Export**
    - `export-model` - Export Cosmos DB model to local file
    - Verify document-to-file conversion
 
-6. **Cosmos DB Scenarios**
+9. **Cosmos DB Scenarios**
    - Test dual-container configuration (Models + Entities)
    - Verify hierarchical partition key support
    - Test database and container name configuration
@@ -235,7 +276,8 @@ For each strategy, the workflow runs tests in **chronological order** to simulat
 
 ```
 1. Initialize Project → 2. Extract Model → 3. Apply Dictionaries → 
-4. Enrich with AI → 5. Generate Vectors → 6. Display Objects → 7. Export Model
+4. Enrich with AI → 5. Generate Vectors → 6. Display Objects → 
+7. Query Model → 8. Reconcile Index → 9. Export Model
 ```
 
 Tests use **incremental state** where later tests depend on earlier operations succeeding. If extraction fails, subsequent tests are marked as **Skipped** or **Inconclusive** rather than failing.
