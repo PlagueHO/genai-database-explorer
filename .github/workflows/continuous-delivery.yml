@@ -31,6 +31,10 @@ jobs:
   lint-build-test-and-publish-dotnet-apps:
     name: Lint, Build, Test and Publish .NET Apps
     uses: ./.github/workflows/lint-build-test-and-publish-dotnet-apps.yml
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
     with:
       build_configuration: 'Release'
 
