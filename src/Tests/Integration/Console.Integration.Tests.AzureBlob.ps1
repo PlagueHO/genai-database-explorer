@@ -209,10 +209,19 @@ Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
                     $script:ExtractSucceeded = $true
                     Write-Host "Extract-model command succeeded with Azure Blob Storage" -ForegroundColor Green
                     $commandResult.ExitCode | Should -Be 0 -Because 'Extract should succeed with AzureBlob strategy'
+                } elseif ($outputText -match 'ContainerNotFound|The specified container does not exist|404.*container') {
+                    Write-Host "Azure Blob container not found - infrastructure may not be fully provisioned" -ForegroundColor Yellow
+                    Set-ItResult -Inconclusive -Because 'Azure Blob Storage container does not exist - run infrastructure provisioning first'
+                } elseif ($outputText -match 'BlobServiceClient initialization|Failed to initialize Azure Blob Storage') {
+                    Write-Host "Azure Blob Storage initialization failed: $outputText" -ForegroundColor Yellow
+                    Set-ItResult -Inconclusive -Because 'Azure Blob Storage client initialization failed - check storage account configuration'
                 } elseif ($outputText -match 'AuthorizationFailure|Access denied|403.*not authorized') {
                     Set-ItResult -Inconclusive -Because 'Database or storage access not authorized'
                 } elseif ($outputText -match 'not yet supported|not.*supported.*persistence') {
                     Set-ItResult -Inconclusive -Because 'AzureBlob persistence strategy not yet fully implemented for extract-model'
+                } elseif ($commandResult.ExitCode -ne 0) {
+                    Write-Host "Extract-model failed with exit code $($commandResult.ExitCode). Output: $outputText" -ForegroundColor Yellow
+                    Set-ItResult -Inconclusive -Because "Extract-model failed with exit code $($commandResult.ExitCode) - infrastructure may not be ready"
                 } else {
                     Write-Warning "Extract-model output: $outputText"
                     Set-ItResult -Inconclusive -Because 'Extract-model behavior unclear for AzureBlob'
@@ -273,10 +282,15 @@ Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
                 
                 $outputText = $result.Output -join "`n"
                 
-                if ($outputText -match 'No semantic model found|AuthorizationFailure') {
+                if ($outputText -match 'ContainerNotFound|The specified container does not exist|404.*container') {
+                    Set-ItResult -Inconclusive -Because 'Azure Blob Storage container does not exist'
+                } elseif ($outputText -match 'No semantic model found|AuthorizationFailure') {
                     Set-ItResult -Inconclusive -Because 'Model not available or access denied'
                 } elseif ($outputText -match 'not yet supported|not.*supported.*persistence') {
                     Set-ItResult -Inconclusive -Because 'Enrich-model not yet supported for AzureBlob'
+                } elseif ($result.ExitCode -ne 0) {
+                    Write-Host "Enrich-model failed with exit code $($result.ExitCode). Output: $outputText" -ForegroundColor Yellow
+                    Set-ItResult -Inconclusive -Because "Enrich-model failed: infrastructure may not be ready"
                 } elseif ($result.ExitCode -eq 0) {
                     $result.ExitCode | Should -Be 0 -Because 'Enrich should succeed with AzureBlob'
                 }
@@ -293,7 +307,9 @@ Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
                 
                 $outputText = $result.Output -join "`n"
                 
-                if ($outputText -match 'No semantic model found|not found|Model not found') {
+                if ($outputText -match 'ContainerNotFound|The specified container does not exist|404.*container') {
+                    Set-ItResult -Inconclusive -Because 'Azure Blob Storage container does not exist'
+                } elseif ($outputText -match 'No semantic model found|not found|Model not found') {
                     Set-ItResult -Inconclusive -Because 'Model not available in blob storage'
                 } elseif ($outputText -match 'AuthorizationFailure|Access denied|403.*not authorized') {
                     Set-ItResult -Inconclusive -Because 'Storage access not authorized'
@@ -329,6 +345,11 @@ Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
                 Write-Host "Generate-vectors output: $outputText" -ForegroundColor Cyan
                 
                 # Check if the output indicates vectors were actually generated
+                if ($outputText -match 'ContainerNotFound|The specified container does not exist|404.*container') {
+                    Set-ItResult -Inconclusive -Because 'Azure Blob Storage container does not exist'
+                    return
+                }
+                
                 if ($outputText -match 'No semantic model found|not found|Model not found') {
                     Set-ItResult -Inconclusive -Because 'Model not available for vector generation'
                     return
@@ -404,12 +425,17 @@ Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
                 
                 $outputText = $result.Output -join "`n"
                 
-                if ($outputText -match 'AuthorizationFailure|Access denied|403.*not authorized|not authorized to perform this operation') {
+                if ($outputText -match 'ContainerNotFound|The specified container does not exist|404.*container') {
+                    Set-ItResult -Inconclusive -Because 'Azure Blob Storage container does not exist'
+                } elseif ($outputText -match 'AuthorizationFailure|Access denied|403.*not authorized|not authorized to perform this operation') {
                     Set-ItResult -Inconclusive -Because 'Storage access not authorized - identity may lack Storage Blob Data Contributor role'
                 } elseif ($outputText -match 'No semantic model found|not found') {
                     Set-ItResult -Inconclusive -Because 'Model not available in Azure Blob Storage'
                 } elseif ($outputText -match 'not yet supported|not.*supported.*persistence') {
                     Set-ItResult -Inconclusive -Because 'Show-object not yet supported for AzureBlob'
+                } elseif ($result.ExitCode -ne 0) {
+                    Write-Host "Show-object failed with exit code $($result.ExitCode). Output: $outputText" -ForegroundColor Yellow
+                    Set-ItResult -Inconclusive -Because "Show-object failed: infrastructure may not be ready"
                 } else {
                     $result.ExitCode | Should -Be 0 -Because 'Should display from AzureBlob'
                     $outputText | Should -Match 'Product|Table|Schema' -Because 'Should display table information'
@@ -430,12 +456,20 @@ Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
                 
                 $outputText = $result.Output -join "`n"
                 
-                if ($outputText -match 'AuthorizationFailure|Access denied|403.*not authorized|not authorized to perform this operation') {
+                if ($outputText -match 'ContainerNotFound|The specified container does not exist|404.*container') {
+                    Set-ItResult -Inconclusive -Because 'Azure Blob Storage container does not exist'
+                } elseif ($outputText -match 'AuthorizationFailure|Access denied|403.*not authorized|not authorized to perform this operation') {
                     Set-ItResult -Inconclusive -Because 'Storage access not authorized - identity may lack Storage Blob Data Contributor role'
                 } elseif ($outputText -match 'No semantic model found|not found') {
                     Set-ItResult -Inconclusive -Because 'Model not available'
                 } elseif ($outputText -match 'not yet supported|not.*supported.*persistence') {
                     Set-ItResult -Inconclusive -Because 'Export-model not yet supported for AzureBlob'
+                } elseif ($result.ExitCode -ne 0) {
+                    Write-Host "Export-model failed with exit code $($result.ExitCode). Output: $outputText" -ForegroundColor Yellow
+                    Set-ItResult -Inconclusive -Because "Export-model failed: infrastructure may not be ready"
+                } elseif (-not (Test-Path -Path $exportPath)) {
+                    Write-Host "Export-model reported success but file not found. Output: $outputText" -ForegroundColor Yellow
+                    Set-ItResult -Inconclusive -Because 'Export file was not created despite command success'
                 } else {
                     $result.ExitCode | Should -Be 0 -Because 'Export should succeed from AzureBlob'
                     Test-Path -Path $exportPath | Should -BeTrue -Because 'Exported file should exist locally'

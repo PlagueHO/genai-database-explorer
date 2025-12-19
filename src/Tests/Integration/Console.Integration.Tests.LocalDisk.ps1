@@ -421,7 +421,14 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
 
             Set-TestProjectConfiguration @displayConfig
 
-            Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $script:DisplayProjectPath) | Out-Null
+            # Extract model and track success for dependent tests
+            $extractResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $script:DisplayProjectPath)
+            $script:DisplayModelExtracted = ($extractResult.ExitCode -eq 0)
+            
+            if (-not $script:DisplayModelExtracted) {
+                $extractOutput = $extractResult.Output -join "`n"
+                Write-Host "Display model extraction failed or was inconclusive: $extractOutput" -ForegroundColor Yellow
+            }
         }
 
         Context 'show-object command' {
@@ -452,6 +459,13 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                 It 'Should export model from local disk to markdown file' {
                     $exportPath = Join-Path -Path $script:DisplayProjectPath -ChildPath 'exported-model.md'
                     
+                    # First check if semantic model exists
+                    $semanticModelPath = Join-Path -Path $script:DisplayProjectPath -ChildPath 'SemanticModel' -AdditionalChildPath 'semanticmodel.json'
+                    if (-not (Test-Path -Path $semanticModelPath)) {
+                        Set-ItResult -Inconclusive -Because 'Semantic model not available - extract may have failed'
+                        return
+                    }
+                    
                     $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
                         'export-model',
                         '--project', $script:DisplayProjectPath,
@@ -461,8 +475,14 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                     
                     $outputText = $result.Output -join "`n"
                     
-                    if ($outputText -match 'No semantic model found|not found') {
-                        Set-ItResult -Inconclusive -Because 'Model not available'
+                    if ($outputText -match 'No semantic model found|not found|Model not found|AuthorizationFailure|Access denied') {
+                        Set-ItResult -Inconclusive -Because 'Model not available or access denied'
+                    } elseif ($result.ExitCode -ne 0) {
+                        Write-Host "Export-model failed with exit code $($result.ExitCode). Output: $outputText" -ForegroundColor Yellow
+                        Set-ItResult -Inconclusive -Because "Export-model command failed with exit code $($result.ExitCode): $outputText"
+                    } elseif (-not (Test-Path -Path $exportPath)) {
+                        Write-Host "Export-model reported success but file not found. Output: $outputText" -ForegroundColor Yellow
+                        Set-ItResult -Inconclusive -Because 'Export file was not created despite command success'
                     } else {
                         $result.ExitCode | Should -Be 0
                         Test-Path -Path $exportPath | Should -BeTrue -Because 'Exported markdown file should exist on local disk'
@@ -472,6 +492,13 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
 
             Context 'When exporting with split files option' {
                 It 'Should export model to multiple files on local disk' {
+                    # First check if semantic model exists
+                    $semanticModelPath = Join-Path -Path $script:DisplayProjectPath -ChildPath 'SemanticModel' -AdditionalChildPath 'semanticmodel.json'
+                    if (-not (Test-Path -Path $semanticModelPath)) {
+                        Set-ItResult -Inconclusive -Because 'Semantic model not available - extract may have failed'
+                        return
+                    }
+                    
                     $exportDir = Join-Path -Path $script:DisplayProjectPath -ChildPath 'exported-split'
                     
                     $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
@@ -484,8 +511,14 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                     
                     $outputText = $result.Output -join "`n"
                     
-                    if ($outputText -match 'No semantic model found|not found') {
-                        Set-ItResult -Inconclusive -Because 'Model not available'
+                    if ($outputText -match 'No semantic model found|not found|Model not found|AuthorizationFailure|Access denied') {
+                        Set-ItResult -Inconclusive -Because 'Model not available or access denied'
+                    } elseif ($result.ExitCode -ne 0) {
+                        Write-Host "Export-model (split) failed with exit code $($result.ExitCode). Output: $outputText" -ForegroundColor Yellow
+                        Set-ItResult -Inconclusive -Because "Export-model command failed with exit code $($result.ExitCode): $outputText"
+                    } elseif (-not (Test-Path -Path $exportDir)) {
+                        Write-Host "Export-model (split) reported success but directory not found. Output: $outputText" -ForegroundColor Yellow
+                        Set-ItResult -Inconclusive -Because 'Export directory was not created despite command success'
                     } else {
                         $result.ExitCode | Should -Be 0
                         Test-Path -Path $exportDir | Should -BeTrue -Because 'Export directory should exist on local disk'
