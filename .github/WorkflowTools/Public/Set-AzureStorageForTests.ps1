@@ -108,14 +108,23 @@ function Set-AzureStorageForTests {
             $container = Get-AzStorageContainer -Name $ContainerName -Context $ctx -ErrorAction SilentlyContinue
             
             if (-not $container) {
-                Write-Host "Container '$ContainerName' does not exist. Creating it now..."
+                Write-Host "Container '$ContainerName' does not exist. Attempting to create it..."
                 try {
                     $container = New-AzStorageContainer -Name $ContainerName -Context $ctx -Permission Off
                     Write-Host "✅ Container '$ContainerName' created successfully"
                 }
                 catch {
-                    Write-Error "Failed to create container '$ContainerName': $($_.Exception.Message)"
-                    throw
+                    # Authorization failure is expected if the service principal doesn't have permissions
+                    # The container should be created during infrastructure provisioning via Bicep
+                    if ($_.Exception.Message -match 'AuthorizationFailure|not authorized') {
+                        Write-Warning "Cannot create container '$ContainerName' - authorization failed. This is expected if the container should be created during infrastructure provisioning."
+                        Write-Warning "Ensure the container is created in the Bicep template or grant 'Storage Blob Data Contributor' role to the service principal."
+                        Write-Host "⚠️  Container creation skipped due to permissions - tests may fail if container doesn't exist"
+                    }
+                    else {
+                        Write-Error "Failed to create container '$ContainerName': $($_.Exception.Message)"
+                        throw
+                    }
                 }
             }
             else {

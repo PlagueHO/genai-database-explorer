@@ -415,7 +415,7 @@ module storageAccount 'br/public:avm/res/storage/storage-account:0.30.0' = if (s
     blobServices: {
       containers: [
         {
-          name: 'genaidbexp'
+          name: 'semantic-models'
           publicAccess: 'None'
         }
       ]
