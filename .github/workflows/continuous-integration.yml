@@ -27,3 +27,5 @@ jobs:
     uses: ./.github/workflows/lint-build-test-and-publish-dotnet-apps.yml
     permissions:
       contents: read
+      checks: write
+      pull-requests: write
