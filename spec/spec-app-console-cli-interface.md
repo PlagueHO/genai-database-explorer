@@ -122,15 +122,15 @@ gaidbexp init-project --project <path>
 **Syntax**:
 
 ```bash
-gaidbexp extract-model --project <path> [--skipTables] [--skipViews] [--skipStoredProcedures]
+gaidbexp extract-model --project <path> [--skip-tables] [--skip-views] [--skip-stored-procedures]
 ```
 
 **Parameters**:
 
 - `--project`, `-p` (required): Project directory path
-- `--skipTables` (optional): Skip table extraction
-- `--skipViews` (optional): Skip view extraction
-- `--skipStoredProcedures` (optional): Skip stored procedure extraction
+- `--skip-tables` (optional): Skip table extraction
+- `--skip-views` (optional): Skip view extraction
+- `--skip-stored-procedures` (optional): Skip stored procedure extraction
 
 #### 4.3 data-dictionary Command
 
@@ -139,15 +139,15 @@ gaidbexp extract-model --project <path> [--skipTables] [--skipViews] [--skipStor
 **Syntax**:
 
 ```bash
-gaidbexp data-dictionary --project <path> --sourcePathPattern <pattern> [options]
+gaidbexp data-dictionary --project <path> --source-path-pattern <pattern> [options]
 ```
 
 **Parameters**:
 
 - `--project`, `-p` (required): Project directory path
-- `--sourcePathPattern`, `-s` (required): Glob pattern for data dictionary files
+- `--source-path-pattern`, `-s` (required): Glob pattern for data dictionary files
 - `--objectType` (optional): Filter by object type (table, view, storedprocedure)
-- `--schemaName` (optional): Filter by schema name
+- `--schema-name` (optional): Filter by schema name
 - `--objectName` (optional): Filter by object name
 - `--show` (optional): Display processed entity details
 
@@ -164,11 +164,11 @@ gaidbexp enrich-model --project <path> [options]
 **Parameters**:
 
 - `--project`, `-p` (required): Project directory path
-- `--skipTables` (optional): Skip table enrichment
-- `--skipViews` (optional): Skip view enrichment
-- `--skipStoredProcedures` (optional): Skip stored procedure enrichment
+- `--skip-tables` (optional): Skip table enrichment
+- `--skip-views` (optional): Skip view enrichment
+- `--skip-stored-procedures` (optional): Skip stored procedure enrichment
 - `--objectType` (optional): Target specific object type
-- `--schemaName` (optional): Target specific schema
+- `--schema-name` (optional): Target specific schema
 - `--objectName` (optional): Target specific object
 - `--show` (optional): Display enriched entity details
 
@@ -179,14 +179,14 @@ gaidbexp enrich-model --project <path> [options]
 **Syntax**:
 
 ```bash
-gaidbexp show-object <objectType> --project <path> --schemaName <name> --name <name>
+gaidbexp show-object <objectType> --project <path> --schema-name <name> --name <name>
 ```
 
 **Parameters**:
 
 - `objectType` (required): Object type (table, view, storedprocedure)
 - `--project`, `-p` (required): Project directory path
-- `--schemaName`, `-s` (required): Schema name
+- `--schema-name`, `-s` (required): Schema name
 - `--name`, `-n` (required): Object name
 
 #### 4.6 query-model Command
@@ -221,8 +221,8 @@ gaidbexp export-model --project <path> [options]
 
 - `--project`, `-p` (required): Project directory path
 - `--outputPath`, `-o` (optional): Output file path (default: exported_model.md)
-- `--fileType`, `-f` (optional): Output format (default: markdown)
-- `--splitFiles` (optional): Create separate files per entity
+- `--file-type`, `-f` (optional): Output format (default: markdown)
+- `--split-files` (optional): Create separate files per entity
 
 ## 5. Acceptance Criteria
 
@@ -356,7 +356,7 @@ gaidbexp extract-model --project /home/user/myproject
 
 # Apply data dictionary
 gaidbexp data-dictionary --project /home/user/myproject \
-  --sourcePathPattern "/home/user/dictionaries/*.json"
+  --source-path-pattern "/home/user/dictionaries/*.json"
 
 # Enrich with AI
 gaidbexp enrich-model --project /home/user/myproject
@@ -370,7 +370,7 @@ gaidbexp query-model --project /home/user/myproject \
 
 # Export results
 gaidbexp export-model --project /home/user/myproject \
-  --outputPath /home/user/output.md --splitFiles
+  --outputPath /home/user/output.md --split-files
 ```
 
 ### Edge Cases
@@ -394,12 +394,12 @@ gaidbexp extract-model --project /nonexistent/path
 
 # Skip all object types (no-op scenario)
 gaidbexp extract-model --project /valid/path \
-  --skipTables --skipViews --skipStoredProcedures
+  --skip-tables --skip-views --skip-stored-procedures
 # Expected: Warning message, no extraction performed
 
 # Invalid object type
 gaidbexp show-object invalidtype --project /valid/path \
-  --schemaName dbo --name tablename
+  --schema-name dbo --name tablename
 # Expected: Parameter validation error
 
 # Large database timeout handling

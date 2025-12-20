@@ -41,15 +41,15 @@ Extracts a semantic model from the database schema.
 **Usage:**
 
 ```bash
-gaidbexp extract-model --project <path> [--skipTables] [--skipViews] [--skipStoredProcedures]
+gaidbexp extract-model --project <path> [--skip-tables] [--skip-views] [--skip-stored-procedures]
 ```
 
 **Options:**
 
 - `--project`, `-p` (required): Path to the project directory.
-- `--skipTables`: Skip tables during extraction.
-- `--skipViews`: Skip views during extraction.
-- `--skipStoredProcedures`: Skip stored procedures during extraction.
+- `--skip-tables`: Skip tables during extraction.
+- `--skip-views`: Skip views during extraction.
+- `--skip-stored-procedures`: Skip stored procedures during extraction.
 
 ### data-dictionary
 
@@ -58,14 +58,14 @@ Applies data dictionary files to the semantic model.
 **Usage:**
 
 ```bash
-gaidbexp data-dictionary table --project <path> --source-path <pattern> [--schema <name>] [--name <object>] [--show]
+gaidbexp data-dictionary table --project <path> --source-path <pattern> [--schema-name <name>] [--name <object>] [--show]
 ```
 
 **Options:**
 
 - `--project`, `-p` (required): Path to the project directory.
 - `--source-path`, `-d` (required): Path pattern to the data dictionary files.
-- `--schema`, `-s`: Schema name of the table to process.
+- `--schema-name`, `-s`: Schema name of the table to process.
 - `--name`, `-n`: Name of the table to process.
 - `--show`: Display the entity after processing.
 
@@ -76,21 +76,21 @@ Enriches the semantic model using Generative AI.
 **Usage:**
 
 ```bash
-gaidbexp enrich-model --project <path> [--skipTables] [--skipViews] [--skipStoredProcedures]
+gaidbexp enrich-model --project <path> [--skip-tables] [--skip-views] [--skip-stored-procedures]
 
 # Target a single object type
-gaidbexp enrich-model table --project <path> --schema <name> --name <object> [--show]
-gaidbexp enrich-model view --project <path> --schema <name> --name <object> [--show]
-gaidbexp enrich-model storedprocedure --project <path> --schema <name> --name <object> [--show]
+gaidbexp enrich-model table --project <path> --schema-name <name> --name <object> [--show]
+gaidbexp enrich-model view --project <path> --schema-name <name> --name <object> [--show]
+gaidbexp enrich-model storedprocedure --project <path> --schema-name <name> --name <object> [--show]
 ```
 
 **Options:**
 
 - `--project`, `-p` (required): Path to the project directory.
-- `--skipTables`: Skip tables during enrichment.
-- `--skipViews`: Skip views during enrichment.
-- `--skipStoredProcedures`: Skip stored procedures during enrichment.
-- For subcommands: `--schema`, `-s` and `--name`, `-n` select a specific object.
+- `--skip-tables`: Skip tables during enrichment.
+- `--skip-views`: Skip views during enrichment.
+- `--skip-stored-procedures`: Skip stored procedures during enrichment.
+- For subcommands: `--schema-name`, `-s` and `--name`, `-n` select a specific object.
 - `--show`: Display the entity after enrichment.
 
 ### show-object
@@ -100,15 +100,15 @@ Displays details of a table, view, or stored procedure.
 **Usage:**
 
 ```bash
-gaidbexp show-object table --project <path> --schemaName <name> --name <object>
-gaidbexp show-object view --project <path> --schemaName <name> --name <object>
-gaidbexp show-object storedprocedure --project <path> --schemaName <name> --name <object>
+gaidbexp show-object table --project <path> --schema-name <name> --name <object>
+gaidbexp show-object view --project <path> --schema-name <name> --name <object>
+gaidbexp show-object storedprocedure --project <path> --schema-name <name> --name <object>
 ```
 
 **Options:**
 
 - `--project`, `-p` (required): Path to the project directory.
-- `--schemaName`, `-s` (required): Schema name of the object.
+- `--schema-name`, `-s` (required): Schema name of the object.
 - `--name`, `-n` (required): Name of the object.
 
 ### query-model
@@ -133,15 +133,15 @@ Exports the semantic model to a file.
 **Usage:**
 
 ```bash
-gaidbexp export-model --project <path> [--outputFileName <file>] [--fileType <type>] [--splitFiles]
+gaidbexp export-model --project <path> [--output-file-name <file>] [--file-type <type>] [--split-files]
 ```
 
 **Options:**
 
 - `--project`, `-p` (required): Path to the project directory.
-- `--outputFileName`, `-o`: Name of the output file (defaults to `exported_model.md`).
-- `--fileType`, `-f`: Type of output file (defaults to `markdown`).
-- `--splitFiles`, `-s`: Split export into individual files per entity.
+- `--output-file-name`, `-o`: Name of the output file (defaults to `exported_model.md`).
+- `--file-type`, `-f`: Type of output file (defaults to `markdown`).
+- `--split-files`, `-s`: Split export into individual files per entity.
 
 ---
 
@@ -152,15 +152,15 @@ Generates embeddings for semantic model entities and upserts them into the confi
 **Usage:**
 
 ```bash
-gaidbexp generate-vectors --project <path> [--overwrite] [--dry-run] [--skipTables] [--skipViews] [--skipStoredProcedures]
+gaidbexp generate-vectors --project <path> [--overwrite] [--dry-run] [--skip-tables] [--skip-views] [--skip-stored-procedures]
 ```
 
 Subcommands for targeting a single object type:
 
 ```bash
-gaidbexp generate-vectors table --project <path> --schema <name> --name <object> [--overwrite] [--dry-run]
-gaidbexp generate-vectors view --project <path> --schema <name> --name <object> [--overwrite] [--dry-run]
-gaidbexp generate-vectors storedprocedure --project <path> --schema <name> --name <object> [--overwrite] [--dry-run]
+gaidbexp generate-vectors table --project <path> --schema-name <name> --name <object> [--overwrite] [--dry-run]
+gaidbexp generate-vectors view --project <path> --schema-name <name> --name <object> [--overwrite] [--dry-run]
+gaidbexp generate-vectors storedprocedure --project <path> --schema-name <name> --name <object> [--overwrite] [--dry-run]
 ```
 
 **Options:**
@@ -168,10 +168,10 @@ gaidbexp generate-vectors storedprocedure --project <path> --schema <name> --nam
 - `--project`, `-p` (required): Path to the project directory.
 - `--overwrite`: Regenerate embeddings even when content hash is unchanged.
 - `--dry-run`: Execute without writing local files or updating the external index.
-- `--skipTables`: Skip tables.
-- `--skipViews`: Skip views.
-- `--skipStoredProcedures`: Skip stored procedures.
-- For subcommands: `--schema`, `-s` and `--name`, `-n` select a specific object.
+- `--skip-tables`: Skip tables.
+- `--skip-views`: Skip views.
+- `--skip-stored-procedures`: Skip stored procedures.
+- For subcommands: `--schema-name`, `-s` and `--name`, `-n` select a specific object.
 
 ### Examples (generate-vectors)
 
@@ -186,7 +186,7 @@ gaidbexp generate-vectors --project d:/temp --overwrite
 gaidbexp generate-vectors --project d:/temp --dry-run
 
 # Target a single table
-gaidbexp generate-vectors table --project d:/temp --schema dbo --name tblItemSellingLimit
+gaidbexp generate-vectors table --project d:/temp --schema-name dbo --name tblItemSellingLimit
 ```
 
 ---

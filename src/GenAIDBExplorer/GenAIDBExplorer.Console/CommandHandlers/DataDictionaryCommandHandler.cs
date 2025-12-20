@@ -58,10 +58,9 @@ public class DataDictionaryCommandHandler(
             Required = true
         };
 
-        var schemaNameOption = new Option<string>("--schema", "-s")
+        var schemaNameOption = new Option<string>("--schema-name", "-s")
         {
-            Description = "The schema name of the object to process.",
-            HelpName = "schemaName"
+            Description = "The schema name of the object to process."
         };
 
         var nameOption = new Option<string>("--name", "-n")

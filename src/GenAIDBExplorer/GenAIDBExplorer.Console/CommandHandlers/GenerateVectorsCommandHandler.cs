@@ -28,10 +28,10 @@ public sealed class GenerateVectorsCommandHandler(
         };
         var overwriteOption = new Option<bool>("--overwrite") { Description = "Regenerate even if content hash hasn't changed" };
         var dryRunOption = new Option<bool>("--dry-run") { Description = "Run without writing files or index" };
-        var skipTablesOption = new Option<bool>("--skipTables") { Description = "Skip tables" };
-        var skipViewsOption = new Option<bool>("--skipViews") { Description = "Skip views" };
-        var skipStoredProceduresOption = new Option<bool>("--skipStoredProcedures") { Description = "Skip stored procedures" };
-        var schemaOption = new Option<string>("--schema", "-s") { Description = "Schema name for a specific object" };
+        var skipTablesOption = new Option<bool>("--skip-tables") { Description = "Skip tables" };
+        var skipViewsOption = new Option<bool>("--skip-views") { Description = "Skip views" };
+        var skipStoredProceduresOption = new Option<bool>("--skip-stored-procedures") { Description = "Skip stored procedures" };
+        var schemaOption = new Option<string>("--schema-name", "-s") { Description = "Schema name for a specific object" };
         var nameOption = new Option<string>("--name", "-n") { Description = "Object name for a specific object" };
 
         var cmd = new Command("generate-vectors", "Generate and index embeddings for entities.");

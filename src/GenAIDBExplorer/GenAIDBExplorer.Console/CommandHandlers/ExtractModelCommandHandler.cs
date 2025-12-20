@@ -45,17 +45,17 @@ public class ExtractModelCommandHandler(
             Required = true
         };
 
-        var skipTablesOption = new Option<bool>("--skipTables")
+        var skipTablesOption = new Option<bool>("--skip-tables")
         {
-            Description = "Flag to skip tables during the extract model process."
+            Description = "Flag to skip tables during the semantic model extraction process."
         };
 
-        var skipViewsOption = new Option<bool>("--skipViews")
+        var skipViewsOption = new Option<bool>("--skip-views")
         {
-            Description = "Flag to skip views during the extract model process."
+            Description = "Flag to skip views during the semantic model extraction process."
         };
 
-        var skipStoredProceduresOption = new Option<bool>("--skipStoredProcedures")
+        var skipStoredProceduresOption = new Option<bool>("--skip-stored-procedures")
         {
             Description = "Flag to skip stored procedures during the extract model process."
         };

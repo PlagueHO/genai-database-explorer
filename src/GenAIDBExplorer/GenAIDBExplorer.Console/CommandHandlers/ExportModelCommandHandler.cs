@@ -53,17 +53,17 @@ public class ExportModelCommandHandler : CommandHandler<ExportModelCommandHandle
             Required = true
         };
 
-        var outputFileNameOption = new Option<string?>("--outputFileName", "-o")
+        var outputFileNameOption = new Option<string?>("--output-file-name", "-o")
         {
             Description = "The path to the output file."
         };
 
-        var fileTypeOption = new Option<string>("--fileType", "-f")
+        var fileTypeOption = new Option<string>("--file-type", "-f")
         {
             Description = "The type of the output files. Defaults to 'markdown'."
         };
 
-        var splitFilesOption = new Option<bool>("--splitFiles", "-s")
+        var splitFilesOption = new Option<bool>("--split-files", "-s")
         {
             Description = "Flag to split the export into individual files per entity."
         };

@@ -10,7 +10,7 @@
     },
     "GenAIDBExplorer.Console enrich-model": {
       "commandName": "Project",
-      "commandLineArgs": "enrich-model -p d:\\temp --skipViews --skipStoredProcedures"
+      "commandLineArgs": "enrich-model -p d:\\temp --skip-views --skip-stored-procedures"
     },
     "GenAIDBExplorer.Console init-project": {
       "commandName": "Project",
@@ -30,7 +30,7 @@
     },
     "GenAIDBExplorer.Console export-model": {
       "commandName": "Project",
-      "commandLineArgs": "export-model \r\n-p d:\\temp --outputFileName d:\\export\\ --splitFiles --fileType markdown"
+      "commandLineArgs": "export-model \r\n-p d:\\temp --output-file-name d:\\export\\ --split-files --file-type markdown"
     }
   }
 }

@@ -141,12 +141,12 @@ Tests specific to local file system persistence:
    - `extract-model` - Extract schema from database
    - Verify `SemanticModel/semanticmodel.json` created on disk
    - Validate model name matches database
-   - `extract-model --skipTables` - Test extraction options
+   - `extract-model --skip-tables` - Test extraction options
 
 2. **Data Dictionary Application**
    - `data-dictionary table` - Apply metadata from JSON files
    - Verify dictionary files read from local file system
-   - Test `--sourcePathPattern`, `--schemaName`, `--name`, `--show` options
+   - Test `--source-path-pattern`, `--schema-name`, `--name`, `--show` options
 
 3. **AI Enrichment**
    - `enrich-model` - Add AI-generated descriptions
@@ -176,7 +176,7 @@ Tests specific to local file system persistence:
 8. **Model Export**
    - `export-model` - Export to markdown format
    - Verify exported file created on local disk
-   - `export-model --splitFiles` - Export to multiple files
+   - `export-model --split-files` - Export to multiple files
    - Verify split file structure on disk
 
 ### AzureBlob Strategy Flow

@@ -2,27 +2,33 @@
 =============================================================================
 SYNC IMPACT REPORT
 =============================================================================
-Version Change: 0.0.0 → 1.0.0
-Rationale: Initial constitution creation for GenAI Database Explorer project
+Version Change: 1.0.0 → 1.1.0
+Rationale: Added kebab-case parameter naming convention requirement for CLI interface
 
-Modified Principles: N/A (Initial creation)
+Modified Principles:
+- VI. CLI-First Interface → Added mandatory kebab-case naming convention for multi-word parameters
 
-Added Sections:
-- Core Principles (7 principles defined)
-- Technology Stack & Standards
-- Development Workflow
-- Governance
+Added Sections: None
+
+Removed Sections: None
 
 Templates Status:
-✅ plan-template.md - Reviewed, aligns with constitution
-✅ spec-template.md - Reviewed, aligns with constitution  
-✅ tasks-template.md - Reviewed, aligns with constitution
-⚠ No command templates found - Constitution is command-agnostic
+✅ plan-template.md - No updates required
+✅ spec-template.md - No updates required
+✅ tasks-template.md - No updates required
+✅ .github/copilot-instructions.md - Updated with kebab-case requirement
+✅ AGENTS.md - Already includes kebab-case convention
 
-Follow-up TODOs:
-- None - All placeholders have been filled with concrete values
+Code Impact:
+✅ All command handlers updated to use kebab-case (6 files)
+✅ All documentation updated (docs/cli/README.md, docs/QUICKSTART.md)
+✅ All integration tests updated (3 PowerShell files)
+✅ VS Code tasks updated (.vscode/tasks.json)
 
-Generated: 2025-11-25
+Follow-up TODOs: None
+
+Generated: 2025-12-21
+Previous Version Generated: 2025-11-25
 =============================================================================
 -->
 
@@ -95,12 +101,13 @@ Tests MUST be written before implementation and MUST fail before code is written
 Functionality MUST be exposed via System.CommandLine with clear, composable commands.
 
 - **Command handlers MUST follow the static factory pattern**: `SetupCommand(IHost host)`
+- **CLI parameters MUST use kebab-case** for multi-word options (e.g., `--schema-name`, `--skip-tables`, `--output-file-name`) per Microsoft's System.CommandLine design guidance
 - **Commands MUST support `--help`** with comprehensive usage information
 - **Error messages MUST be actionable** - tell users how to fix the problem
 - **Commands MUST write results to stdout** and errors to stderr
 - **Long-running operations MUST show progress** to prevent user confusion
 
-**Rationale**: CLI-first design enables scripting, CI/CD integration, and automation. System.CommandLine provides consistent help, parsing, and validation.
+**Rationale**: CLI-first design enables scripting, CI/CD integration, and automation. System.CommandLine provides consistent help, parsing, and validation. Kebab-case naming follows Microsoft's official guidance for .NET CLI tools and improves consistency across the .NET ecosystem.
 
 ### VII. Dependency Injection & Configuration
 
@@ -220,4 +227,4 @@ For day-to-day development guidance beyond constitutional rules, refer to:
 - **.github/copilot-instructions.md** for Copilot-specific integration patterns
 - **docs/** directory for component-specific technical guidance
 
-**Version**: 1.0.0 | **Ratified**: 2025-11-25 | **Last Amended**: 2025-11-25
+**Version**: 1.1.0 | **Ratified**: 2025-11-25 | **Last Amended**: 2025-12-21

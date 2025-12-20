@@ -424,7 +424,7 @@ Deterministic dimension logic:
 
 Options:
 
-- --project PATH (required), --entityType [table|view|storedProcedure|all]=all, --schemaName NAME, --name NAME
+- --project PATH (required), --entityType [table|view|storedProcedure|all]=all, --schema-name NAME, --name NAME
 - --push (upsert to external index), --overwrite, --dry-run
 - --batchSize NUM=32, --maxConcurrency NUM=Environment.ProcessorCount
 
@@ -502,7 +502,7 @@ dotnet run --project GenAIDBExplorer.Console/ -- generate-vectors --project d:/t
 ### 12.19 Reconcile-index CLI (Issue 5)
 
 - Purpose: detect and fix drift between local entity metadata/floats and external index.
-- Command (spec): reconcile-index --project PATH [--dry-run] [--entityType ...] [--schemaName ...] [--name ...]
+- Command (spec): reconcile-index --project PATH [--dry-run] [--entityType ...] [--schema-name ...] [--name ...]
 - Behavior: compare EmbeddingMetadata.ContentHash and LastUpdatedUtc with index records; upsert missing/outdated records; output a summary JSON (matched, updated, missing, errors). Dry-run reports differences without changes.
 
 ### 12.20 Telemetry naming standard (Issue 6)

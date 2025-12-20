@@ -235,7 +235,7 @@ Describe "GenAI Database Explorer Console Application" {
         
         It "Should extract database model and create semantic model file" {
             # Act
-            $result = & $script:ConsoleApp extract-model --project $script:DbProjectPath --skipTables --skipViews --skipStoredProcedures 2>&1
+            $result = & $script:ConsoleApp extract-model --project $script:DbProjectPath --skip-tables --skip-views --skip-stored-procedures 2>&1
             $exitCode = $LASTEXITCODE
             
             # Assert
@@ -264,7 +264,7 @@ Describe "GenAI Database Explorer Console Application" {
             $sampleDict | ConvertTo-Json | Set-Content $dictPath
             
             # Act
-            $result = & $script:ConsoleApp data-dictionary --project $script:DbProjectPath --sourcePathPattern "$dictPath" --objectType table 2>&1
+            $result = & $script:ConsoleApp data-dictionary --project $script:DbProjectPath --source-path-pattern "$dictPath" --objectType table 2>&1
             $exitCode = $LASTEXITCODE
             
             # Assert - Should not fail even if no matching objects
@@ -279,12 +279,12 @@ Describe "GenAI Database Explorer Console Application" {
             $script:AiProjectPath = Join-Path $script:BaseProjectPath "ai-test"
             & $script:ConsoleApp init-project --project $script:AiProjectPath | Out-Null
             # Extract model first for AI operations
-            & $script:ConsoleApp extract-model --project $script:AiProjectPath --skipTables --skipViews --skipStoredProcedures | Out-Null
+            & $script:ConsoleApp extract-model --project $script:AiProjectPath --skip-tables --skip-views --skip-stored-procedures | Out-Null
         }
         
         It "Should handle AI model enrichment gracefully when AI services are available or unavailable" {
             # Act
-            $result = & $script:ConsoleApp enrich-model --project $script:AiProjectPath --objectType table --schemaName dbo 2>&1
+            $result = & $script:ConsoleApp enrich-model --project $script:AiProjectPath --objectType table --schema-name dbo 2>&1
             $exitCode = $LASTEXITCODE
             
             # Assert - May fail if AI service unavailable, but should handle gracefully
@@ -310,12 +310,12 @@ Describe "GenAI Database Explorer Console Application" {
             # Setup project for display tests
             $script:DisplayProjectPath = Join-Path $script:BaseProjectPath "display-test"
             & $script:ConsoleApp init-project --project $script:DisplayProjectPath | Out-Null
-            & $script:ConsoleApp extract-model --project $script:DisplayProjectPath --skipTables --skipViews --skipStoredProcedures | Out-Null
+            & $script:ConsoleApp extract-model --project $script:DisplayProjectPath --skip-tables --skip-views --skip-stored-procedures | Out-Null
         }
         
         It "Should display database object information or handle missing objects gracefully" {
             # Act - Try to show any available table
-            $result = & $script:ConsoleApp show-object table --project $script:DisplayProjectPath --schemaName dbo 2>&1
+            $result = & $script:ConsoleApp show-object table --project $script:DisplayProjectPath --schema-name dbo 2>&1
             $exitCode = $LASTEXITCODE
             
             # Assert
@@ -331,7 +331,7 @@ Describe "GenAI Database Explorer Console Application" {
         It "Should export semantic model to markdown format successfully" {
             # Act
             $exportPath = Join-Path $script:DisplayProjectPath "exported-model.md"
-            $result = & $script:ConsoleApp export-model --project $script:DisplayProjectPath --outputPath $exportPath --fileType markdown 2>&1
+            $result = & $script:ConsoleApp export-model --project $script:DisplayProjectPath --outputPath $exportPath --file-type markdown 2>&1
             $exitCode = $LASTEXITCODE
             
             # Assert

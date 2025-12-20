@@ -44,7 +44,7 @@ namespace GenAIDBExplorer.Console.CommandHandlers
                 Required = true
             };
 
-            var schemaNameOption = new Option<string>("--schemaName", "-s")
+            var schemaNameOption = new Option<string>("--schema-name", "-s")
             {
                 Description = "The schema name of the object to show.",
                 Required = true

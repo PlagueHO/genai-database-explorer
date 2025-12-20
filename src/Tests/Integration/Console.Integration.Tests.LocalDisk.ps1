@@ -235,8 +235,8 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
             }
 
             Context 'When extracting with specific options' {
-                It 'Should support --skipTables option' {
-                    $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $script:DbProjectPath, '--skipTables')
+                It 'Should support --skip-tables option' {
+                    $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $script:DbProjectPath, '--skip-tables')
                     
                     if ($result.ExitCode -eq 0 -or ($result.Output -join "`n") -match 'AuthorizationFailure|Access denied') {
                         $result.ExitCode | Should -BeIn @(0) -Because 'Command should succeed or fail with known error'
@@ -262,7 +262,7 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                         'table',
                         '--project', $script:DbProjectPath,
                         '--source-path', "$script:DictPath/*.json",
-                        '--schema', 'SalesLT',
+                        '--schema-name', 'SalesLT',
                         '--name', 'Product',
                         '--show'
                     )
@@ -350,7 +350,7 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                     'generate-vectors',
                     'table',
                     '--project', $script:AiProjectPath,
-                    '--schema', 'SalesLT',
+                    '--schema-name', 'SalesLT',
                     '--name', 'Product',
                     '--overwrite'
                 )
@@ -435,7 +435,7 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                         'show-object',
                         'table',
                         '--project', $script:DisplayProjectPath,
-                        '--schemaName', 'SalesLT',
+                        '--schema-name', 'SalesLT',
                         '--name', 'Product'
                     )
                     
@@ -466,8 +466,8 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                     $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
                         'export-model',
                         '--project', $script:DisplayProjectPath,
-                        '--outputFileName', $exportPath,
-                        '--fileType', 'markdown'
+                        '--output-file-name', $exportPath,
+                        '--file-type', 'markdown'
                     )
                     
                     $outputText = $result.Output -join "`n"
@@ -509,9 +509,9 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                     $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
                         'export-model',
                         '--project', $script:DisplayProjectPath,
-                        '--outputFileName', $exportDirPath,
-                        '--fileType', 'markdown',
-                        '--splitFiles'
+                        '--output-file-name', $exportDirPath,
+                        '--file-type', 'markdown',
+                        '--split-files'
                     )
                     
                     $outputText = $result.Output -join "`n"

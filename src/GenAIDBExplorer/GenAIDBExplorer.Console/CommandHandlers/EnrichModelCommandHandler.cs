@@ -46,25 +46,24 @@ public class EnrichModelCommandHandler(
             Required = true
         };
 
-        var skipTablesOption = new Option<bool>("--skipTables")
+        var skipTablesOption = new Option<bool>("--skip-tables")
         {
             Description = "Flag to skip tables during the semantic model enrichment process."
         };
 
-        var skipViewsOption = new Option<bool>("--skipViews")
+        var skipViewsOption = new Option<bool>("--skip-views")
         {
             Description = "Flag to skip views during the semantic model enrichment process."
         };
 
-        var skipStoredProceduresOption = new Option<bool>("--skipStoredProcedures")
+        var skipStoredProceduresOption = new Option<bool>("--skip-stored-procedures")
         {
             Description = "Flag to skip stored procedures during the semantic model enrichment process."
         };
 
-        var schemaNameOption = new Option<string>("--schema", "-s")
+        var schemaNameOption = new Option<string>("--schema-name", "-s")
         {
-            Description = "The schema name of the object to enrich.",
-            HelpName = "schemaName"
+            Description = "The schema name of the object to enrich."
         };
 
         var nameOption = new Option<string>("--name", "-n")

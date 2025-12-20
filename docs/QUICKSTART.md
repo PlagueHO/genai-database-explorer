@@ -349,7 +349,7 @@ gaidbexp generate-vectors --project /path/to/project
 gaidbexp generate-vectors --project /path/to/project --overwrite
 
 # Target a single table
-gaidbexp generate-vectors table --project /path/to/project --schema dbo --name tblItemSellingLimit
+gaidbexp generate-vectors table --project /path/to/project --schema-name dbo --name tblItemSellingLimit
 ```
 
 ## Reconcile the vector index

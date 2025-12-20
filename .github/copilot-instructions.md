@@ -101,6 +101,7 @@ samples/AdventureWorksLT/
 - Target .NET 10 with C# 11 features (async/await, records, pattern matching)
 - Follow SOLID, DRY, CleanCode; meaningful, self-documenting names
 - PascalCase for types/methods; camelCase for parameters/locals
+- **CLI parameters MUST use kebab-case** for multi-word options (e.g., `--schema-name`, `--skip-tables`, `--output-file-name`)
 - Dependency Injection via `HostBuilderExtensions` and `IOptions<T>`
 - Secure coding: parameterized queries, input validation, output encoding
 - Logging via `Microsoft.Extensions.Logging`

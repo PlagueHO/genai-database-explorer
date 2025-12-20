@@ -3,7 +3,7 @@
 	"tasks": [
 		// Build and Development Tasks
 		{
-			"label": "dotnet-build-solution",
+			"label": "Build: Solution (GenAIDBExplorer)",
 			"icon": {
 				"id": "terminal"
 			},
@@ -25,7 +25,7 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "dotnet-watch-console",
+			"label": "Watch: Console (GenAIDBExplorer)",
 			"icon": {
 				"id": "eye"
 			},
@@ -43,7 +43,7 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "dotnet-publish-solution",
+			"label": "Build: Solution - Publish (GenAIDBExplorer)",
 			"icon": {
 				"id": "package"
 			},
@@ -62,7 +62,7 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "dotnet-clean-solution",
+			"label": "Build: Solution - Clean (GenAIDBExplorer)",
 			"icon": {
 				"id": "trash"
 			},
@@ -75,7 +75,7 @@
 			"group": "build"
 		},
 		{
-			"label": "dotnet-clear-nuget-cache",
+			"label": "Restore: NuGet Cache - Clear (GenAIDBExplorer)",
 			"icon": {
 				"id": "clear-all"
 			},
@@ -92,7 +92,7 @@
 
 		// Testing Tasks
 		{
-			"label": "dotnet-test-unit",
+			"label": "Test (Unit): Solution (GenAIDBExplorer)",
 			"icon": {
 				"id": "beaker"
 			},
@@ -114,7 +114,7 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "test-console-integration",
+			"label": "Test (Integration): Console (GenAIDBExplorer)",
 			"icon": {
 				"id": "terminal"
 			},
@@ -144,7 +144,7 @@
 
 		// Code Quality Tasks
 		{
-			"label": "format-verify-no-changes",
+			"label": "Format: Solution - Verify (GenAIDBExplorer)",
 			"icon": {
 				"id": "check"
 			},
@@ -167,7 +167,7 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "format-fix-all-issues",
+			"label": "Format: Solution - Fix All (GenAIDBExplorer)",
 			"icon": {
 				"id": "wrench"
 			},
@@ -184,7 +184,7 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "format-fix-whitespace-only",
+			"label": "Format: Solution - Whitespace (GenAIDBExplorer)",
 			"icon": {
 				"id": "whitespace"
 			},
@@ -204,7 +204,7 @@
 
 		// CLI Application Tasks
 		{
-			"label": "cli-init-project-temp",
+			"label": "CLI: Init Project (GenAIDBExplorer)",
 			"icon": {
 				"id": "folder"
 			},
@@ -225,7 +225,7 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "cli-extract-model-temp",
+			"label": "CLI: Extract Model (GenAIDBExplorer)",
 			"icon": {
 				"id": "database"
 			},
@@ -239,9 +239,9 @@
 				"extract-model",
 				"--project",
 				"D:/genaidbexp-temp/adventureworks",
-				"--skipTables",
-				"--skipViews",
-				"--skipStoredProcedures"
+				"--skip-tables",
+				"--skip-views",
+				"--skip-stored-procedures"
 			],
 			"options": {
 				"cwd": "${workspaceFolder}/src/GenAIDBExplorer"
@@ -249,7 +249,7 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "cli-apply-data-dictionary-temp",
+			"label": "CLI: Apply Data Dictionary (GenAIDBExplorer)",
 			"icon": {
 				"id": "book"
 			},
@@ -263,11 +263,11 @@
 				"data-dictionary",
 				"--project",
 				"D:/genaidbexp-temp/adventureworks",
-				"--sourcePathPattern",
+				"--source-path-pattern",
 				"D:/genaidbexp-temp/adventureworks/dict/*.json",
 				"--objectType",
 				"table",
-				"--schemaName",
+				"--schema-name",
 				"dbo",
 				"--objectName",
 				"tblItemSellingLimit",
@@ -279,7 +279,7 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "cli-enrich-model-temp",
+			"label": "CLI: Enrich Model (GenAIDBExplorer)",
 			"icon": {
 				"id": "sparkle"
 			},
@@ -300,7 +300,7 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "cli-generate-vectors-temp",
+			"label": "CLI: Generate Vectors (GenAIDBExplorer)",
 			"icon": {
 				"id": "symbol-numeric"
 			},
@@ -321,7 +321,7 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "cli-show-object-temp",
+			"label": "CLI: Show Object (GenAIDBExplorer)",
 			"icon": {
 				"id": "eye"
 			},
@@ -336,7 +336,7 @@
 				"table",
 				"--project",
 				"D:/genaidbexp-temp/adventureworks",
-				"--schemaName",
+				"--schema-name",
 				"SalesLT",
 				"--name",
 				"Product"
@@ -347,7 +347,7 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "cli-query-model-temp",
+			"label": "CLI: Query Model (GenAIDBExplorer)",
 			"icon": {
 				"id": "search"
 			},
@@ -368,7 +368,7 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "cli-export-model-temp",
+			"label": "CLI: Export Model (GenAIDBExplorer)",
 			"icon": {
 				"id": "export"
 			},
@@ -384,9 +384,9 @@
 				"D:/genaidbexp-temp/adventureworks",
 				"--outputPath",
 				"D:/genaidbexp-temp/adventureworks/exported_model.md",
-				"--fileType",
-				"markdown",
-				"--splitFiles"
+			"--file-type",
+			"markdown",
+			"--split-files"
 			],
 			"options": {
 				"cwd": "${workspaceFolder}/src/GenAIDBExplorer"
@@ -396,7 +396,7 @@
 
         // Bicep tasks
 		{
-			"label": "Build Bicep",
+			"label": "Build: Infrastructure (Bicep)",
 			"icon": {
 				"id": "azure"
 			},

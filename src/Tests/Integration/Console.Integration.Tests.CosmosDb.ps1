@@ -475,7 +475,7 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
                     'generate-vectors',
                     'table',
                     '--project', $script:AiProjectPath,
-                    '--schemaName', 'SalesLT',
+                    '--schema-name', 'SalesLT',
                     '--name', 'Product',
                     '--overwrite'
                 )
@@ -519,7 +519,7 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
                         'show-object',
                         'table',
                         '--project', $script:AiProjectPath,
-                        '--schemaName', 'SalesLT',
+                        '--schema-name', 'SalesLT',
                         '--name', 'Product'
                     )
                     
@@ -566,7 +566,7 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
                     'show-object',
                     'table',
                     '--project', $script:DisplayProjectPath,
-                    '--schemaName', 'SalesLT',
+                    '--schema-name', 'SalesLT',
                     '--name', 'Product'
                 )
                 
@@ -598,8 +598,8 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
                 $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
                     'export-model',
                     '--project', $script:DisplayProjectPath,
-                    '--outputFileName', $exportPath,
-                    '--fileType', 'markdown'
+                    '--output-file-name', $exportPath,
+                    '--file-type', 'markdown'
                 )
                 
                 $outputText = $result.Output -join "`n"

@@ -12,7 +12,7 @@ dotnet build src/GenAIDBExplorer/GenAIDBExplorer.slnx
 dotnet watch run --project src/GenAIDBExplorer/GenAIDBExplorer.Console/
 
 # Run unit tests
-dotnet test
+dotnet test --solution .\src\GenAIDBExplorer\GenAIDBExplorer.slnx
 
 # Run integration tests  
 pwsh -Command "New-Item -ItemType Directory -Path './test-results' -Force | Out-Null; & ./.github/scripts/Invoke-IntegrationTests.ps1"
@@ -118,16 +118,19 @@ public class SemanticDescriptionProvider(
 
 ```bash
 # Run all tests
-dotnet test
+dotnet test --solution .\src\GenAIDBExplorer\GenAIDBExplorer.slnx
 
 # Run specific test project
-dotnet test src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/
+dotnet test --project src\GenAIDBExplorer\Tests\Unit\GenAIDBExplorer.Core.Test
 
 # Run with coverage
-dotnet test --collect:"XPlat Code Coverage"
+dotnet test --solution .\src\GenAIDBExplorer\GenAIDBExplorer.slnx -- --coverage
+
+# Run with coverage (Cobertura format)
+dotnet test --solution .\src\GenAIDBExplorer\GenAIDBExplorer.slnx -- --coverage --coverage-output-format cobertura
 
 # Integration tests (requires PowerShell)
-pwsh ./.github/scripts/Invoke-IntegrationTests.ps1
+pwsh .\.github\scripts\Invoke-IntegrationTests.ps1
 ```
 
 ### Test conventions
