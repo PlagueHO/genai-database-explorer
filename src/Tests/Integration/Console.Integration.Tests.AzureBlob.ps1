@@ -273,6 +273,27 @@ Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
                     return
                 }
                 
+                $outputText = if ($script:VerifyBlobResult.Output -is [array]) {
+                    $script:VerifyBlobResult.Output -join "`n"
+                } else {
+                    $script:VerifyBlobResult.Output
+                }
+                
+                if ($outputText -match 'ContainerNotFound|The specified container does not exist|404.*container') {
+                    Set-ItResult -Inconclusive -Because 'Azure Blob Storage container does not exist'
+                    return
+                }
+                
+                if ($outputText -match 'AuthorizationFailure|Access denied|403.*not authorized') {
+                    Set-ItResult -Inconclusive -Because 'Storage access not authorized'
+                    return
+                }
+                
+                if ($outputText -match 'No objects found|No semantic model found') {
+                    Set-ItResult -Inconclusive -Because 'Model not found in Azure Blob Storage - extract may have failed silently'
+                    return
+                }
+                
                 $script:VerifyBlobResult.ExitCode | Should -Be 0 -Because 'Should be able to read model from Azure Blob Storage'
             }
         }

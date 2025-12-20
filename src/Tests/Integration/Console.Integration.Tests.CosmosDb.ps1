@@ -198,7 +198,8 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
                 Write-Host "✓ CosmosDB PowerShell module found (v$($cosmosDbModule.Version))" -ForegroundColor Green
                 
                 try {
-                    Import-Module CosmosDB -ErrorAction Stop
+                    # Force import to handle assembly conflicts in CI/CD environments
+                    Import-Module CosmosDB -Force -Global -WarningAction SilentlyContinue -ErrorAction Stop
                     
                     # Extract account name from endpoint
                     $uri = [System.Uri]::new($endpoint)
