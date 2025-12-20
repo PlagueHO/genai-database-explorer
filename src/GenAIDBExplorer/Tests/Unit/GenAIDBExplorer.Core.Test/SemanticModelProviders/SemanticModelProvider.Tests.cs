@@ -457,18 +457,42 @@ public class SemanticModelProviderTests
     }
 
     [TestMethod]
-    public async Task LoadSemanticModelAsync_WithCosmosStrategy_ShouldThrowNotSupportedException()
+    public async Task LoadSemanticModelAsync_WithCosmosStrategy_ShouldLoadFromCosmosDb()
     {
         // Arrange
         var projectSettings = _mockProject.Object.Settings;
         projectSettings.SemanticModel.PersistenceStrategy = "CosmosDb";
 
-        // Act & Assert
-        var exception = await Assert.ThrowsExactlyAsync<NotSupportedException>(
-            () => _semanticModelProvider.LoadSemanticModelAsync());
+        // Configure CosmosDb settings
+        projectSettings.SemanticModelRepository ??= new SemanticModelRepositorySettings();
+        projectSettings.SemanticModelRepository.CosmosDb = new CosmosDbConfiguration
+        {
+            AccountEndpoint = "https://test-account.documents.azure.com:443/",
+            DatabaseName = "TestDatabase",
+            ModelsContainerName = "Models",
+            EntitiesContainerName = "ModelEntities"
+        };
 
-        exception.Message.Should().Contain("CosmosDb");
-        exception.Message.Should().Contain("not yet supported");
+        var expectedModel = new SemanticModel("TestModel", "TestSource", "TestDescription");
+        var modelPath = new DirectoryInfo(Path.Combine(Path.GetTempPath(), "GenAIDBExplorer-CosmosDb", projectSettings.Database.Name));
+
+        _mockSemanticModelRepository
+            .Setup(r => r.LoadModelAsync(
+                It.Is<DirectoryInfo>(d => d.FullName.Contains("GenAIDBExplorer-CosmosDb")),
+                It.Is<SemanticModelRepositoryOptions>(o => o.StrategyName == "CosmosDb")))
+            .ReturnsAsync(expectedModel);
+
+        // Act
+        var result = await _semanticModelProvider.LoadSemanticModelAsync();
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Should().BeSameAs(expectedModel);
+        _mockSemanticModelRepository.Verify(
+            r => r.LoadModelAsync(
+                It.Is<DirectoryInfo>(d => d.FullName.Contains("GenAIDBExplorer-CosmosDb")),
+                It.Is<SemanticModelRepositoryOptions>(o => o.StrategyName == "CosmosDb")),
+            Times.Once);
     }
 
     [TestMethod]

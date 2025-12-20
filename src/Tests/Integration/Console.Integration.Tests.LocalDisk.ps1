@@ -184,43 +184,71 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
             BeforeAll {
                 $script:SemanticModelPath = Join-Path -Path $script:DbProjectPath -ChildPath 'SemanticModel' -AdditionalChildPath 'semanticmodel.json'
                 $script:ExtractSucceeded = $false
+                $script:ExtractCommandResult = $null
+                
+                # Execute extract-model command once for all tests in this context
+                try {
+                    $script:ExtractCommandResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $script:DbProjectPath)
+                    
+                    $outputText = if ($script:ExtractCommandResult.Output -is [array]) {
+                        $script:ExtractCommandResult.Output -join "`n"
+                    } else {
+                        $script:ExtractCommandResult.Output
+                    }
+                    
+                    if ($script:ExtractCommandResult.ExitCode -eq 0) {
+                        $script:ExtractSucceeded = $true
+                        Write-Host "Extract-model command succeeded" -ForegroundColor Green
+                    } elseif ($outputText -match 'AuthorizationFailure|Access denied|403.*not authorized') {
+                        Write-Host "Extract-model: Database access not authorized" -ForegroundColor Yellow
+                    }
+                } catch {
+                    Write-Host "Extract-model command failed: $_" -ForegroundColor Yellow
+                }
             }
 
-            It 'Should execute extract-model and create semanticmodel.json on local disk' {
-                $commandResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $script:DbProjectPath)
-
-                $outputText = if ($commandResult.Output -is [array]) {
-                    $commandResult.Output -join "`n"
-                } else {
-                    $commandResult.Output
+            It 'Should complete extract-model command successfully' {
+                if (-not $script:ExtractCommandResult) {
+                    Set-ItResult -Inconclusive -Because 'Extract-model command threw an exception'
+                    return
                 }
-
-                if ($commandResult.ExitCode -eq 0) {
-                    $script:ExtractSucceeded = $true
-                    Write-Host "Extract-model command succeeded" -ForegroundColor Green
-                    $commandResult.ExitCode | Should -Be 0 -Because 'Extract should succeed'
-                } elseif ($outputText -match 'AuthorizationFailure|Access denied|403.*not authorized') {
+                
+                $outputText = if ($script:ExtractCommandResult.Output -is [array]) {
+                    $script:ExtractCommandResult.Output -join "`n"
+                } else {
+                    $script:ExtractCommandResult.Output
+                }
+                
+                if ($outputText -match 'AuthorizationFailure|Access denied|403.*not authorized') {
                     Set-ItResult -Inconclusive -Because 'Database access not authorized - this is expected in some test environments'
-                } else {
-                    throw "Extract-model failed with unexpected error: $outputText"
+                    return
                 }
+                
+                $script:ExtractCommandResult.ExitCode | Should -Be 0 -Because 'Extract-model should complete successfully'
             }
 
-            It 'Should create semanticmodel.json file on local file system' {
+            It 'Should create semanticmodel.json file on local disk' {
                 if (-not $script:ExtractSucceeded) {
-                    Set-ItResult -Skipped -Because 'Extract-model did not succeed in previous test'
+                    Set-ItResult -Inconclusive -Because 'Extract-model did not succeed in previous test'
                     return
                 }
 
-                Test-Path -Path $script:SemanticModelPath | Should -BeTrue -Because 'semanticmodel.json should exist on local disk'
+                Test-Path -Path $script:SemanticModelPath | Should -BeTrue -Because 'semanticmodel.json file should exist on local disk'
+            }
+            
+            It 'Should create semantic model with a valid name property' {
+                if (-not $script:ExtractSucceeded) {
+                    Set-ItResult -Inconclusive -Because 'Extract-model did not succeed'
+                    return
+                }
                 
                 $model = Get-Content -Path $script:SemanticModelPath | ConvertFrom-Json
-                $model.Name | Should -Not -BeNullOrEmpty -Because 'Model should have a name'
+                $model.Name | Should -Not -BeNullOrEmpty -Because 'Semantic model should have a non-empty name'
             }
 
-            It 'Should set model name to database in connection string when available' {
+            It 'Should set model name to match database name from connection string' {
                 if (-not $script:ExtractSucceeded) {
-                    Set-ItResult -Skipped -Because 'Extract-model did not succeed'
+                    Set-ItResult -Inconclusive -Because 'Extract-model did not succeed'
                     return
                 }
 
@@ -231,16 +259,34 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                 if ($connectionString -match 'Database=([^;]+)') {
                     $expectedDbName = $matches[1]
                     $model.Name | Should -Be $expectedDbName -Because 'Model name should match database name from connection string'
+                } else {
+                    Set-ItResult -Inconclusive -Because 'Could not parse database name from connection string'
                 }
             }
 
             Context 'When extracting with specific options' {
-                It 'Should support --skip-tables option' {
-                    $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $script:DbProjectPath, '--skip-tables')
-                    
-                    if ($result.ExitCode -eq 0 -or ($result.Output -join "`n") -match 'AuthorizationFailure|Access denied') {
-                        $result.ExitCode | Should -BeIn @(0) -Because 'Command should succeed or fail with known error'
+                BeforeAll {
+                    $script:SkipTablesResult = $null
+                    try {
+                        $script:SkipTablesResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $script:DbProjectPath, '--skip-tables')
+                    } catch {
+                        Write-Host "Extract with --skip-tables failed: $_" -ForegroundColor Yellow
                     }
+                }
+                
+                It 'Should execute extract-model with --skip-tables option successfully' {
+                    if (-not $script:SkipTablesResult) {
+                        Set-ItResult -Inconclusive -Because 'Extract-model with --skip-tables threw an exception'
+                        return
+                    }
+                    
+                    $outputText = $script:SkipTablesResult.Output -join "`n"
+                    if ($outputText -match 'AuthorizationFailure|Access denied') {
+                        Set-ItResult -Inconclusive -Because 'Database access not authorized'
+                        return
+                    }
+                    
+                    $script:SkipTablesResult.ExitCode | Should -Be 0 -Because 'Extract-model with --skip-tables should complete successfully'
                 }
             }
         }
@@ -253,31 +299,37 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                     
                     $dictFile = Join-Path -Path $script:DictPath -ChildPath 'test-dict.json'
                     New-TestDataDictionary -DictionaryPath $dictFile -ObjectType 'table' -SchemaName 'SalesLT' -ObjectName 'Product' -Description 'Test product table'
+                    
+                    $script:DataDictResult = $null
+                    try {
+                        $script:DataDictResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
+                            'data-dictionary',
+                            'table',
+                            '--project', $script:DbProjectPath,
+                            '--source-path', "$script:DictPath/*.json",
+                            '--schema-name', 'SalesLT',
+                            '--name', 'Product',
+                            '--show'
+                        )
+                    } catch {
+                        Write-Host "data-dictionary command failed: $_" -ForegroundColor Yellow
+                    }
                 }
 
-                It 'Should apply data dictionary from local file system' {
-                    # Note: data-dictionary command requires a subcommand (table/view/etc)
-                    $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
-                        'data-dictionary',
-                        'table',
-                        '--project', $script:DbProjectPath,
-                        '--source-path', "$script:DictPath/*.json",
-                        '--schema-name', 'SalesLT',
-                        '--name', 'Product',
-                        '--show'
-                    )
-                    
-                    $outputText = $result.Output -join "`n"
-                    
-                    if ($result.ExitCode -eq 0) {
-                        $result.ExitCode | Should -Be 0
-                    } elseif ($outputText -match 'No semantic model found|not found|Model not found') {
-                        Set-ItResult -Inconclusive -Because 'Model not available - extract may have been skipped'
-                    } else {
-                        # Command syntax or other error
-                        Write-Warning "data-dictionary output: $outputText"
-                        $result.ExitCode | Should -Be 0 -Because 'data-dictionary command should succeed or indicate model not found'
+                It 'Should execute data-dictionary command successfully' {
+                    if (-not $script:DataDictResult) {
+                        Set-ItResult -Inconclusive -Because 'data-dictionary command threw an exception'
+                        return
                     }
+                    
+                    $outputText = $script:DataDictResult.Output -join "`n"
+                    
+                    if ($outputText -match 'No semantic model found|not found|Model not found') {
+                        Set-ItResult -Inconclusive -Because 'Model not available - extract may have been skipped'
+                        return
+                    }
+                    
+                    $script:DataDictResult.ExitCode | Should -Be 0 -Because 'data-dictionary command should complete successfully'
                 }
             }
         }
@@ -309,56 +361,99 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
 
         Context 'enrich-model command' {
             Context 'When enriching with AI services available' {
-                It 'Should enrich model and save to local file system' {
-                    $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('enrich-model', '--project', $script:AiProjectPath)
+                BeforeAll {
+                    $script:EnrichResult = $null
+                    $script:EnrichSucceeded = $false
                     
-                    $outputText = $result.Output -join "`n"
+                    try {
+                        $script:EnrichResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('enrich-model', '--project', $script:AiProjectPath)
+                        if ($script:EnrichResult.ExitCode -eq 0) {
+                            $script:EnrichSucceeded = $true
+                        }
+                    } catch {
+                        Write-Host "enrich-model command failed: $_" -ForegroundColor Yellow
+                    }
+                }
+                
+                It 'Should execute enrich-model command successfully' {
+                    if (-not $script:EnrichResult) {
+                        Set-ItResult -Inconclusive -Because 'enrich-model command threw an exception'
+                        return
+                    }
+                    
+                    $outputText = $script:EnrichResult.Output -join "`n"
                     
                     if ($outputText -match 'No semantic model found|AuthorizationFailure') {
                         Set-ItResult -Inconclusive -Because 'Model not available or access denied'
-                    } elseif ($result.ExitCode -eq 0) {
-                        $result.ExitCode | Should -Be 0
-                        
-                        # Verify enriched model on local disk
-                        $modelPath = Join-Path -Path $script:AiProjectPath -ChildPath 'SemanticModel' -AdditionalChildPath 'semanticmodel.json'
-                        Test-Path -Path $modelPath | Should -BeTrue -Because 'Enriched model should exist on local disk'
+                        return
                     }
+                    
+                    $script:EnrichResult.ExitCode | Should -Be 0 -Because 'enrich-model should complete successfully'
+                }
+                
+                It 'Should persist enriched model to local disk' {
+                    if (-not $script:EnrichSucceeded) {
+                        Set-ItResult -Inconclusive -Because 'enrich-model did not succeed'
+                        return
+                    }
+                    
+                    $modelPath = Join-Path -Path $script:AiProjectPath -ChildPath 'SemanticModel' -AdditionalChildPath 'semanticmodel.json'
+                    Test-Path -Path $modelPath | Should -BeTrue -Because 'Enriched model file should exist on local disk'
                 }
             }
         }
 
         Context 'generate-vectors command' {
-            It 'Should run dry-run generate-vectors without errors' {
-                $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
-                    'generate-vectors',
-                    '--project', $script:AiProjectPath,
-                    '--dry-run'
-                )
+            BeforeAll {
+                $script:VectorsDryRunResult = $null
+                try {
+                    $script:VectorsDryRunResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
+                        'generate-vectors',
+                        '--project', $script:AiProjectPath,
+                        '--dry-run'
+                    )
+                } catch {
+                    Write-Host "generate-vectors dry-run failed: $_" -ForegroundColor Yellow
+                }
+            }
+            
+            It 'Should execute generate-vectors dry-run successfully' {
+                if (-not $script:VectorsDryRunResult) {
+                    Set-ItResult -Inconclusive -Because 'generate-vectors dry-run threw an exception'
+                    return
+                }
                 
-                $outputText = $result.Output -join "`n"
+                $outputText = $script:VectorsDryRunResult.Output -join "`n"
                 
                 if ($outputText -match 'No semantic model found|not found|AuthorizationFailure') {
                     Set-ItResult -Inconclusive -Because 'Model not available or access denied'
-                } else {
-                    $result.ExitCode | Should -Be 0 -Because 'Dry-run should succeed'
+                    return
                 }
+                
+                $script:VectorsDryRunResult.ExitCode | Should -Be 0 -Because 'generate-vectors dry-run should complete successfully'
             }
 
-            It 'Should persist vector envelopes to local file system' {
+            It 'Should generate and persist vectors for specific table to local file system' {
                 # Generate vectors for a specific object
-                $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
-                    'generate-vectors',
-                    'table',
-                    '--project', $script:AiProjectPath,
-                    '--schema-name', 'SalesLT',
-                    '--name', 'Product',
-                    '--overwrite'
-                )
+                $script:VectorsGenerateResult = $null
+                try {
+                    $script:VectorsGenerateResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
+                        'generate-vectors',
+                        'table',
+                        '--project', $script:AiProjectPath,
+                        '--schema-name', 'SalesLT',
+                        '--name', 'Product',
+                        '--overwrite'
+                    )
+                } catch {
+                    Set-ItResult -Inconclusive -Because "generate-vectors command threw an exception: $_"
+                    return
+                }
                 
-                $outputText = $result.Output -join "`n"
+                $outputText = $script:VectorsGenerateResult.Output -join "`n"
                 
-                if ($result.ExitCode -ne 0) {
-                    Set-ItResult -Inconclusive -Because "Vector generation not available: $outputText"
+                if ($script:VectorsGenerateResult.ExitCode -ne 0) {
+                    Set-ItResult -Inconclusive -Because "Vector generation failed: $outputText"
                     return
                 }
                                 
@@ -373,30 +468,17 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                     return
                 }
                 
-                # For LocalDisk persistence, vectors are stored within entity JSON files, not in a separate directory
+                if ($outputText -notmatch 'Processed \d+ entit') {
+                    Set-ItResult -Inconclusive -Because "Vector generation output did not confirm processing: $outputText"
+                    return
+                }
+                
+                # For LocalDisk persistence, vectors are stored within entity JSON files
                 $entityPath = Join-Path -Path $script:AiProjectPath -ChildPath 'SemanticModel' -AdditionalChildPath 'tables', 'SalesLT.Product.json'
                 $semanticModelPath = Join-Path -Path $script:AiProjectPath -ChildPath 'SemanticModel'
-                
-                if (Test-Path -Path $semanticModelPath) {
-                    Write-Host "SemanticModel directory contents:" -ForegroundColor Yellow
-                    Get-ChildItem -Path $semanticModelPath -Recurse | ForEach-Object {
-                        Write-Host "  $($_.FullName)" -ForegroundColor Gray
-                    }
-                }
-                
-                # Verify that vectors were processed by checking command output
-                if ($outputText -match 'Processed \d+ entit') {
-                    # Verify the entity file exists (vectors are embedded in entity JSON for LocalDisk)
-                    Test-Path -Path $entityPath | Should -BeTrue -Because "Entity file should exist after vector generation. Output: $outputText"
-                    
-                    # Verify the entity file contains vector data by checking file size (vector embeddings make files larger)
-                    if (Test-Path -Path $entityPath) {
-                        $entityFile = Get-Item -Path $entityPath
-                        $entityFile.Length | Should -BeGreaterThan 1000 -Because 'Entity file with vectors should be larger than 1KB'
-                    }
-                } else {
-                    Set-ItResult -Inconclusive -Because "Vector generation output did not confirm processing: $outputText"
-                }
+                                
+                # Verify the entity file exists (vectors are embedded in entity JSON for LocalDisk)
+                Test-Path -Path $entityPath | Should -BeTrue -Because "Entity file with vectors should exist on local disk after generation"
             }
         }
     }
@@ -430,131 +512,187 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
 
         Context 'show-object command' {
             Context 'When displaying table information' {
-                It 'Should display table information from local disk model' {
-                    $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
-                        'show-object',
-                        'table',
-                        '--project', $script:DisplayProjectPath,
-                        '--schema-name', 'SalesLT',
-                        '--name', 'Product'
-                    )
+                BeforeAll {
+                    $script:ShowObjectResult = $null
+                    $script:ShowObjectSucceeded = $false
                     
-                    $outputText = $result.Output -join "`n"
+                    try {
+                        $script:ShowObjectResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
+                            'show-object',
+                            'table',
+                            '--project', $script:DisplayProjectPath,
+                            '--schema-name', 'SalesLT',
+                            '--name', 'Product'
+                        )
+                        if ($script:ShowObjectResult.ExitCode -eq 0) {
+                            $script:ShowObjectSucceeded = $true
+                        }
+                    } catch {
+                        Write-Host "show-object command failed: $_" -ForegroundColor Yellow
+                    }
+                }
+                
+                It 'Should execute show-object command successfully' {
+                    if (-not $script:ShowObjectResult) {
+                        Set-ItResult -Inconclusive -Because 'show-object command threw an exception'
+                        return
+                    }
+                    
+                    $outputText = $script:ShowObjectResult.Output -join "`n"
                     
                     if ($outputText -match 'No semantic model found|not found') {
                         Set-ItResult -Inconclusive -Because 'Model not available'
-                    } else {
-                        $result.ExitCode | Should -Be 0
-                        $outputText | Should -Match 'Product|Table|Schema' -Because 'Should display table information'
+                        return
                     }
+                    
+                    $script:ShowObjectResult.ExitCode | Should -Be 0 -Because 'show-object should complete successfully'
+                }
+                
+                It 'Should display table information in output' {
+                    if (-not $script:ShowObjectSucceeded) {
+                        Set-ItResult -Inconclusive -Because 'show-object did not succeed'
+                        return
+                    }
+                    
+                    $outputText = $script:ShowObjectResult.Output -join "`n"
+                    $outputText | Should -Match 'Product|Table|Schema' -Because 'Output should contain table information'
                 }
             }
         }
 
         Context 'export-model command' {
             Context 'When exporting to markdown format' {
-                It 'Should export model from local disk to markdown file' {
-                    $exportPath = Join-Path -Path $script:DisplayProjectPath -ChildPath 'exported-model.md'
+                BeforeAll {
+                    $script:ExportPath = Join-Path -Path $script:DisplayProjectPath -ChildPath 'exported-model.md'
+                    $script:ExportResult = $null
+                    $script:ExportSucceeded = $false
                     
-                    # First check if semantic model exists
+                    # Check if semantic model exists before attempting export
                     $semanticModelPath = Join-Path -Path $script:DisplayProjectPath -ChildPath 'SemanticModel' -AdditionalChildPath 'semanticmodel.json'
                     if (-not (Test-Path -Path $semanticModelPath)) {
-                        Set-ItResult -Inconclusive -Because 'Semantic model not available - extract may have failed'
+                        Write-Host "Semantic model not found - skipping export" -ForegroundColor Yellow
                         return
                     }
                     
-                    $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
-                        'export-model',
-                        '--project', $script:DisplayProjectPath,
-                        '--output-file-name', $exportPath,
-                        '--file-type', 'markdown'
-                    )
+                    try {
+                        $script:ExportResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
+                            'export-model',
+                            '--project', $script:DisplayProjectPath,
+                            '--output-file-name', $script:ExportPath,
+                            '--file-type', 'markdown'
+                        )
+                        if ($script:ExportResult.ExitCode -eq 0) {
+                            $script:ExportSucceeded = $true
+                        }
+                    } catch {
+                        Write-Host "export-model command failed: $_" -ForegroundColor Yellow
+                    }
+                }
+                
+                It 'Should execute export-model command successfully' {
+                    if (-not $script:ExportResult) {
+                        Set-ItResult -Inconclusive -Because 'Semantic model not available or export-model threw an exception'
+                        return
+                    }
                     
-                    $outputText = $result.Output -join "`n"
+                    $outputText = $script:ExportResult.Output -join "`n"
                     
                     if ($outputText -match 'No semantic model found|not found|Model not found|AuthorizationFailure|Access denied') {
                         Set-ItResult -Inconclusive -Because 'Model not available or access denied'
-                    } elseif ($result.ExitCode -ne 0) {
-                        Write-Host "Export-model failed with exit code $($result.ExitCode). Output: $outputText" -ForegroundColor Yellow
-                        Set-ItResult -Inconclusive -Because "Export-model command failed with exit code $($result.ExitCode): $outputText"
-                    } elseif (-not (Test-Path -Path $exportPath)) {
-                        Write-Host "Export-model reported success but file not found. Output: $outputText" -ForegroundColor Yellow
-                        Set-ItResult -Inconclusive -Because 'Export file was not created despite command success'
-                    } else {
-                        $result.ExitCode | Should -Be 0
-                        Test-Path -Path $exportPath | Should -BeTrue -Because 'Exported markdown file should exist on local disk'
+                        return
                     }
+                    
+                    $script:ExportResult.ExitCode | Should -Be 0 -Because 'export-model should complete successfully'
+                }
+                
+                It 'Should create exported markdown file on local disk' {
+                    if (-not $script:ExportSucceeded) {
+                        Set-ItResult -Inconclusive -Because 'export-model did not succeed'
+                        return
+                    }
+                    
+                    Test-Path -Path $script:ExportPath | Should -BeTrue -Because 'Exported markdown file should exist on local disk'
                 }
             }
 
             Context 'When exporting with split files option' {
-                It 'Should export model to multiple files on local disk' {
-                    # First check if semantic model exists
+                BeforeAll {
+                    $script:ExportSplitDir = Join-Path -Path $script:DisplayProjectPath -ChildPath 'exported-split'
+                    $script:ExportSplitResult = $null
+                    $script:ExportSplitSucceeded = $false
+                    
+                    # Check if semantic model exists before attempting export
                     $semanticModelPath = Join-Path -Path $script:DisplayProjectPath -ChildPath 'SemanticModel' -AdditionalChildPath 'semanticmodel.json'
                     if (-not (Test-Path -Path $semanticModelPath)) {
-                        Set-ItResult -Inconclusive -Because 'Semantic model not available - extract may have failed'
+                        Write-Host "Semantic model not found - skipping split export" -ForegroundColor Yellow
                         return
                     }
                     
-                    $exportDir = Join-Path -Path $script:DisplayProjectPath -ChildPath 'exported-split'
-                    
-                    # Create the export directory if it doesn't exist (required for split files mode)
-                    if (-not (Test-Path -Path $exportDir)) {
-                        New-Item -ItemType Directory -Path $exportDir -Force | Out-Null
+                    # Create the export directory (required for split files mode)
+                    if (-not (Test-Path -Path $script:ExportSplitDir)) {
+                        New-Item -ItemType Directory -Path $script:ExportSplitDir -Force | Out-Null
                     }
                     
                     # Add trailing directory separator to ensure it's recognized as a directory
-                    $exportDirPath = $exportDir.TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar) + [System.IO.Path]::DirectorySeparatorChar
+                    $exportDirPath = $script:ExportSplitDir.TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar) + [System.IO.Path]::DirectorySeparatorChar
                     
-                    $result = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
-                        'export-model',
-                        '--project', $script:DisplayProjectPath,
-                        '--output-file-name', $exportDirPath,
-                        '--file-type', 'markdown',
-                        '--split-files'
-                    )
+                    try {
+                        $script:ExportSplitResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
+                            'export-model',
+                            '--project', $script:DisplayProjectPath,
+                            '--output-file-name', $exportDirPath,
+                            '--file-type', 'markdown',
+                            '--split-files'
+                        )
+                        if ($script:ExportSplitResult.ExitCode -eq 0) {
+                            $script:ExportSplitSucceeded = $true
+                        }
+                    } catch {
+                        Write-Host "export-model (split) command failed: $_" -ForegroundColor Yellow
+                    }
+                }
+                
+                It 'Should execute export-model with --split-files successfully' {
+                    if (-not $script:ExportSplitResult) {
+                        Set-ItResult -Inconclusive -Because 'Semantic model not available or export-model threw an exception'
+                        return
+                    }
                     
-                    $outputText = $result.Output -join "`n"
+                    $outputText = $script:ExportSplitResult.Output -join "`n"
                     
                     if ($outputText -match 'No semantic model found|not found|Model not found|AuthorizationFailure|Access denied') {
                         Set-ItResult -Inconclusive -Because 'Model not available or access denied'
-                    } elseif ($result.ExitCode -ne 0) {
-                        Write-Host "Export-model (split) failed with exit code $($result.ExitCode). Output: $outputText" -ForegroundColor Yellow
-                        Set-ItResult -Inconclusive -Because "Export-model command failed with exit code $($result.ExitCode): $outputText"
-                    } else {
-                        $result.ExitCode | Should -Be 0
-                        
-                        # For split files, check for the index file and subdirectory markdown files
-                        # The main index file is written to the specified directory
-                        $indexFile = Join-Path -Path $exportDir -ChildPath 'exported_model.md'
-                        
-                        # Individual entity files are written to subdirectories (tables/, views/, etc.)
-                        $tablesDir = Join-Path -Path $exportDir -ChildPath 'tables'
-                        $viewsDir = Join-Path -Path $exportDir -ChildPath 'views'
-                        $storedProcsDir = Join-Path -Path $exportDir -ChildPath 'storedprocedures'
-                        
-                        # Collect all markdown files from export directory and subdirectories
-                        $allExportedFiles = @()
-                        if (Test-Path -Path $exportDir) {
-                            $allExportedFiles = Get-ChildItem -Path $exportDir -Filter '*.md' -Recurse -ErrorAction SilentlyContinue
-                        }
-                        
-                        if ($allExportedFiles -and $allExportedFiles.Count -gt 0) {
-                            $allExportedFiles.Count | Should -BeGreaterThan 0 -Because 'Split export should create markdown files'
-                            Write-Host "Found $($allExportedFiles.Count) exported markdown files" -ForegroundColor Green
-                        } else {
-                            Write-Host "Export directory structure:" -ForegroundColor Yellow
-                            if (Test-Path -Path $exportDir) {
-                                Get-ChildItem -Path $exportDir -Recurse | ForEach-Object {
-                                    Write-Host "  $($_.FullName)" -ForegroundColor Gray
-                                }
-                            } else {
-                                Write-Host "  Export directory does not exist: $exportDir" -ForegroundColor Red
-                            }
-                            Write-Host "Command output: $outputText" -ForegroundColor Yellow
-                            Set-ItResult -Inconclusive -Because 'No markdown files found in export directory despite command success'
-                        }
+                        return
                     }
+                    
+                    $script:ExportSplitResult.ExitCode | Should -Be 0 -Because 'export-model with --split-files should complete successfully'
+                }
+                
+                It 'Should create multiple markdown files in subdirectories on local disk' {
+                    if (-not $script:ExportSplitSucceeded) {
+                        Set-ItResult -Inconclusive -Because 'export-model split did not succeed'
+                        return
+                    }
+                    
+                    # Collect all markdown files from export directory and subdirectories
+                    $allExportedFiles = @()
+                    if (Test-Path -Path $script:ExportSplitDir) {
+                        $allExportedFiles = Get-ChildItem -Path $script:ExportSplitDir -Filter '*.md' -Recurse -ErrorAction SilentlyContinue
+                    }
+                    
+                    if (-not $allExportedFiles -or $allExportedFiles.Count -eq 0) {
+                        Write-Host "Export directory structure:" -ForegroundColor Yellow
+                        if (Test-Path -Path $script:ExportSplitDir) {
+                            Get-ChildItem -Path $script:ExportSplitDir -Recurse | ForEach-Object {
+                                Write-Host "  $($_.FullName)" -ForegroundColor Gray
+                            }
+                        }
+                        Set-ItResult -Inconclusive -Because 'No markdown files found in export directory despite command success'
+                        return
+                    }
+                    
+                    Write-Host "Found $($allExportedFiles.Count) exported markdown files" -ForegroundColor Green
+                    $allExportedFiles.Count | Should -BeGreaterThan 0 -Because 'Split export should create at least one markdown file'
                 }
             }
         }

@@ -54,7 +54,8 @@ public sealed class SemanticModelProvider(
                 break;
 
             case "CosmosDb":
-                throw new NotSupportedException($"Persistence strategy '{persistenceStrategy}' is not yet supported for loading semantic models.");
+                semanticModel = await LoadSemanticModelFromCosmosDbAsync();
+                break;
 
             default:
                 throw new ArgumentException($"Unknown persistence strategy '{persistenceStrategy}' specified in project settings.", nameof(persistenceStrategy));
@@ -216,6 +217,93 @@ public sealed class SemanticModelProvider(
             try
             {
                 // For Azure Blob, we can't fall back to direct load like LocalDisk since the persistence strategy handles the storage details
+                // Instead, we return a new semantic model as fallback
+                return CreateSemanticModel();
+            }
+            catch (FileNotFoundException)
+            {
+                return CreateSemanticModel();
+            }
+            catch (DirectoryNotFoundException)
+            {
+                return CreateSemanticModel();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Loads the semantic model from Azure Cosmos DB using the configured account and database with settings-driven lazy loading and caching.
+    /// </summary>
+    /// <returns>The loaded semantic model.</returns>
+    private async Task<SemanticModel> LoadSemanticModelFromCosmosDbAsync()
+    {
+        // Get the configured Cosmos DB settings
+        var cosmosDbConfig = _project.Settings.SemanticModelRepository?.CosmosDb;
+        if (cosmosDbConfig?.AccountEndpoint == null || string.IsNullOrWhiteSpace(cosmosDbConfig.AccountEndpoint))
+        {
+            throw new InvalidOperationException("CosmosDb persistence strategy is configured but no AccountEndpoint is specified in SemanticModelRepository.CosmosDb.AccountEndpoint.");
+        }
+
+        if (cosmosDbConfig?.DatabaseName == null || string.IsNullOrWhiteSpace(cosmosDbConfig.DatabaseName))
+        {
+            throw new InvalidOperationException("CosmosDb persistence strategy is configured but no DatabaseName is specified in SemanticModelRepository.CosmosDb.DatabaseName.");
+        }
+
+        // Create a logical directory path using the model name for the Cosmos DB persistence strategy
+        // Use an absolute path to avoid path resolution issues in PathValidator
+        var modelName = _project.Settings.Database.Name;
+        var logicalModelPath = new DirectoryInfo(Path.Combine(Path.GetTempPath(), "GenAIDBExplorer-CosmosDb", modelName));
+
+        var repositorySettings = _project.Settings.SemanticModelRepository!;
+        _logger.LogDebug("Loading semantic model from Cosmos DB (Account: '{AccountEndpoint}', Database: '{DatabaseName}') with settings-driven configuration (LazyLoading: {LazyLoading}, Caching: {Caching}, ChangeTracking: {ChangeTracking})",
+            cosmosDbConfig.AccountEndpoint,
+            cosmosDbConfig.DatabaseName,
+            repositorySettings.LazyLoading.Enabled,
+            repositorySettings.Caching.Enabled,
+            repositorySettings.ChangeTracking.Enabled);
+
+        // Create repository options using the builder pattern controlled by settings
+        var optionsBuilder = SemanticModelRepositoryOptionsBuilder.Create()
+            .WithLazyLoading(repositorySettings.LazyLoading.Enabled)
+            .WithChangeTracking(repositorySettings.ChangeTracking.Enabled)
+            .WithCaching(repositorySettings.Caching.Enabled, TimeSpan.FromMinutes(repositorySettings.Caching.ExpirationMinutes))
+            .WithMaxConcurrentOperations(repositorySettings.MaxConcurrentOperations)
+            .WithStrategyName("CosmosDb");
+
+        // Add performance monitoring if enabled
+        if (repositorySettings.PerformanceMonitoring.Enabled)
+        {
+            optionsBuilder = optionsBuilder.WithPerformanceMonitoring(builder =>
+                builder.EnableLocalMonitoring(true)
+                       .WithMetricsRetention(TimeSpan.FromHours(24)));
+        }
+
+        var options = optionsBuilder.Build();
+
+        // Use the repository for loading semantic models with settings-driven options
+        try
+        {
+            return await _semanticModelRepository.LoadModelAsync(logicalModelPath, options);
+        }
+        catch (RequestFailedException ex) when (ex.Status == 403 || ex.Status == 401)
+        {
+            // Authorization failures should be propagated, not swallowed
+            _logger.LogError(ex, "Authorization failure while loading semantic model from Cosmos DB (model: '{ModelName}'). Status: {Status}, ErrorCode: {ErrorCode}",
+                modelName, ex.Status, ex.ErrorCode);
+            throw;
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            // File system authorization failures should also be propagated
+            _logger.LogError(ex, "Access denied while loading semantic model from Cosmos DB (model: '{ModelName}')", modelName);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to load semantic model using repository from Cosmos DB (model: '{ModelName}'), attempting fallback to empty", modelName);
+            try
+            {
+                // For Cosmos DB, we can't fall back to direct load like LocalDisk since the persistence strategy handles the storage details
                 // Instead, we return a new semantic model as fallback
                 return CreateSemanticModel();
             }
