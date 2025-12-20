@@ -1,9 +1,11 @@
 ﻿using GenAIDBExplorer.Core.Models.Project;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Embeddings;
 using Azure.Identity;
+using System.Net;
 
 namespace GenAIDBExplorer.Core.SemanticKernel;
 
@@ -29,6 +31,24 @@ public class SemanticKernelFactory(
         var kernelBuilder = Kernel.CreateBuilder();
 
         kernelBuilder.Services.AddSingleton(_logger);
+
+        // Configure HTTP client retry policy for rate limiting (429) and transient errors
+        kernelBuilder.Services.ConfigureHttpClientDefaults(c =>
+        {
+            c.AddStandardResilienceHandler().Configure(o =>
+            {
+                o.Retry.MaxRetryAttempts = 10;
+                o.Retry.ShouldHandle = args =>
+                    ValueTask.FromResult(args.Outcome.Result?.StatusCode is HttpStatusCode.TooManyRequests or
+                        (>= HttpStatusCode.InternalServerError and <= (HttpStatusCode)599));
+                o.Retry.OnRetry = args =>
+                {
+                    _logger.LogWarning("HTTP request failed with status {StatusCode}. Retrying (attempt {AttemptNumber}).",
+                        args.Outcome.Result?.StatusCode, args.AttemptNumber + 1);
+                    return ValueTask.CompletedTask;
+                };
+            });
+        });
 
         _logger.LogDebug("Adding ChatCompletion service with endpoint: {Endpoint}, service type: {ServiceType}",
             _project.Settings.OpenAIService.Default.AzureOpenAIEndpoint,
