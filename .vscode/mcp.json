@@ -9,6 +9,10 @@
             "type": "http",
             "url": "https://api.githubcopilot.com/mcp/",
         },
+        "microsoft-learn": {
+            "type": "http",
+            "url": "https://learn.microsoft.com/api/mcp"
+        },
         "microsoft-foundry": {
             "type": "http",
             "url": "https://mcp.ai.azure.com"
