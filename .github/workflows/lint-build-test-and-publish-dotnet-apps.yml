@@ -49,7 +49,6 @@ jobs:
             dotnet test --project src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test/${{ matrix.project }}.Test.csproj \
               --configuration ${{ inputs.build_configuration }} \
               --no-restore \
-              --logger "trx;LogFileName=test-results.trx" \
               --results-directory ./TestResults
           else
             echo "No tests found for ${{ matrix.project }}"
