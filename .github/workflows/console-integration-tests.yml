@@ -249,17 +249,17 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always() && steps.check-test-results.outputs.test-results-valid == 'true'
         with:
-          check_name: Console Integration Test Results (${{ matrix.persistence }})
+          check_name: Integration Test Results (GenAIDBExplorer.Console) (${{ matrix.persistence }})
           files: |
             ./test-results/common/integration-tests.xml
             ./test-results/strategy/integration-tests.xml
-          comment_title: Console Integration Test Results (${{ matrix.persistence }})
+          comment_title: Integration Test Results (GenAIDBExplorer.Console) (${{ matrix.persistence }})
 
       - name: Upload Integration Test Artifacts
         if: always()
         uses: actions/upload-artifact@v6
         with:
-          name: console-integration-test-results-${{ matrix.persistence }}
+          name: integration-test-results-${{ matrix.persistence }}
           path: |
             ./test-results/
             ./temp-workspaces/

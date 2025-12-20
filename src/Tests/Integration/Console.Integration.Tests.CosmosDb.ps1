@@ -175,6 +175,25 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
             # Check if CosmosDB module is available
             $cosmosDbModule = Get-Module -Name CosmosDB -ListAvailable -ErrorAction SilentlyContinue
             
+            if (-not $cosmosDbModule) {
+                Write-Host "CosmosDB PowerShell module not found - attempting to install from PowerShell Gallery..." -ForegroundColor Yellow
+                
+                try {
+                    Install-Module -Name CosmosDB -Scope CurrentUser -Force -AllowClobber -ErrorAction Stop
+                    Write-Host "✓ Successfully installed CosmosDB module from PowerShell Gallery" -ForegroundColor Green
+                    $cosmosDbModule = Get-Module -Name CosmosDB -ListAvailable -ErrorAction SilentlyContinue
+                }
+                catch {
+                    Write-Warning "Failed to install CosmosDB module from PowerShell Gallery: $_"
+                    Write-Host "  Tests will be marked as inconclusive. Install manually with: Install-Module -Name CosmosDB" -ForegroundColor Yellow
+                    return @{
+                        Accessible = $false
+                        Message = "CosmosDB PowerShell module not available and could not be installed: $_"
+                        SkipTests = $true
+                    }
+                }
+            }
+            
             if ($cosmosDbModule) {
                 Write-Host "✓ CosmosDB PowerShell module found (v$($cosmosDbModule.Version))" -ForegroundColor Green
                 
@@ -231,48 +250,6 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
                             Message = "Cosmos DB validation failed: $errorMessage"
                             SkipTests = $false  # Allow tests to proceed with specific error handling
                         }
-                    }
-                }
-            }
-            else {
-                Write-Host "⚠ CosmosDB PowerShell module not available - using basic connectivity check" -ForegroundColor Yellow
-                Write-Host "  Install with: Install-Module -Name CosmosDB" -ForegroundColor Cyan
-                
-                # Fallback to basic connectivity check
-                try {
-                    $uri = [System.Uri]::new($endpoint)
-                    $host = $uri.Host
-                    
-                    Write-Verbose "Testing connectivity to Cosmos DB host: $host" -Verbose
-                    $tcpClient = New-Object System.Net.Sockets.TcpClient
-                    $connectTask = $tcpClient.ConnectAsync($host, 443)
-                    $timeout = 5000 # 5 seconds
-                    
-                    if ($connectTask.Wait($timeout)) {
-                        $tcpClient.Close()
-                        Write-Host "✓ Cosmos DB endpoint is reachable (basic connectivity only)" -ForegroundColor Green
-                        Write-Host "  Note: Permissions and authentication not verified" -ForegroundColor Yellow
-                        return @{
-                            Accessible = $true
-                            Message = "Basic connectivity verified (install CosmosDB module for full validation)"
-                            SkipTests = $false
-                        }
-                    } else {
-                        $tcpClient.Close()
-                        Write-Warning "Cosmos DB endpoint is not reachable within ${timeout}ms timeout"
-                        return @{
-                            Accessible = $false
-                            Message = "Cosmos DB endpoint not reachable - check network connectivity"
-                            SkipTests = $true
-                        }
-                    }
-                }
-                catch {
-                    Write-Warning "Failed to validate Cosmos DB connectivity: $_"
-                    return @{
-                        Accessible = $false
-                        Message = "Connectivity check failed: $_"
-                        SkipTests = $false
                     }
                 }
             }
