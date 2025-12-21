@@ -266,7 +266,9 @@ Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
                     $script:VerifyBlobResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
                         'show-object',
                         'table',
-                        '--project', $script:DbProjectPath
+                        '--project', $script:DbProjectPath,
+                        '--schema-name', 'SalesLT',
+                        '--name', 'Product'
                     )
                 } catch {
                     Set-ItResult -Inconclusive -Because "show-object command threw an exception: $_"
