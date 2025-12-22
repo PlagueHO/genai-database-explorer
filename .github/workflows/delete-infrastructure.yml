@@ -49,7 +49,7 @@ jobs:
         uses: Azure/setup-azd@v2.2.1
 
       - name: Restore azd environment state
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         continue-on-error: true
         with:
           name: azd-env-${{ inputs.AZURE_ENV_NAME }}

@@ -174,7 +174,7 @@ jobs:
 
       - name: Save azd environment state
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: azd-env-${{ inputs.AZURE_ENV_NAME }}
           path: .azure/${{ inputs.AZURE_ENV_NAME }}
