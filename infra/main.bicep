@@ -357,7 +357,7 @@ module cosmosDbAccount 'br/public:avm/res/document-db/database-account:0.18.0' =
         principalId: principalId
       }
     ]
-    dataPlaneRoleAssignments: !empty(principalId) ? [
+    sqlRoleAssignments: !empty(principalId) ? [
       {
         principalId: principalId
         roleDefinitionId: '00000000-0000-0000-0000-000000000002' // Cosmos DB Built-in Data Contributor
