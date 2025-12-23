@@ -294,6 +294,16 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
         Context 'data-dictionary command' {
             Context 'When applying data dictionary files' {
                 BeforeAll {
+                    # Ensure semantic model exists before applying data dictionary
+                    $semanticModelPath = Join-Path -Path $script:DbProjectPath -ChildPath 'SemanticModel' -AdditionalChildPath 'semanticmodel.json'
+                    if (-not (Test-Path -Path $semanticModelPath)) {
+                        Write-Host "Semantic model not found, extracting..." -ForegroundColor Yellow
+                        $extractResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $script:DbProjectPath)
+                        if ($extractResult.ExitCode -ne 0) {
+                            Write-Host "Failed to extract semantic model for data dictionary test" -ForegroundColor Yellow
+                        }
+                    }
+                    
                     $script:DictPath = Join-Path -Path $script:DbProjectPath -ChildPath 'dict'
                     New-Item -ItemType Directory -Path $script:DictPath -Force | Out-Null
                     
