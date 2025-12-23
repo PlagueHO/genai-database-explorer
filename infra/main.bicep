@@ -352,7 +352,7 @@ module cosmosDbAccount 'br/public:avm/res/document-db/database-account:0.18.0' =
     tags: tags
     roleAssignments: [
       {
-        roleDefinitionIdOrName: 'Cosmos DB Account Contributor Role'
+        roleDefinitionIdOrName: 'DocumentDB Account Contributor'
         principalType: principalIdType
         principalId: principalId
       }
