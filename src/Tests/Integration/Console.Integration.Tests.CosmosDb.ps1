@@ -144,117 +144,7 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
             }
         }
 
-        function Test-CosmosDbAccessibility {
-            param(
-                [hashtable]$Environment,
-                [bool]$NoAzureMode
-            )
-            
-            if ($NoAzureMode) {
-                Write-Host "Skipping Cosmos DB accessibility check - NoAzure mode enabled" -ForegroundColor Yellow
-                return @{
-                    Accessible = $true
-                    Message = "NoAzure mode - validation skipped"
-                    SkipTests = $false
-                }
-            }
 
-            Write-Host "Validating Cosmos DB accessibility..." -ForegroundColor Cyan
-            
-            $endpoint = $Environment.AZURE_COSMOS_DB_ACCOUNT_ENDPOINT
-            
-            if ([string]::IsNullOrEmpty($endpoint)) {
-                Write-Warning "Cosmos DB endpoint not configured. Tests will be marked as inconclusive."
-                return @{
-                    Accessible = $false
-                    Message = "Cosmos DB endpoint not configured"
-                    SkipTests = $true
-                }
-            }
-
-            # Check if CosmosDB module is available
-            $cosmosDbModule = Get-Module -Name CosmosDB -ListAvailable -ErrorAction SilentlyContinue
-            
-            if (-not $cosmosDbModule) {
-                Write-Host "CosmosDB PowerShell module not found - attempting to install from PowerShell Gallery..." -ForegroundColor Yellow
-                
-                try {
-                    Install-Module -Name CosmosDB -Scope CurrentUser -Force -AllowClobber -ErrorAction Stop
-                    Write-Host "✓ Successfully installed CosmosDB module from PowerShell Gallery" -ForegroundColor Green
-                    $cosmosDbModule = Get-Module -Name CosmosDB -ListAvailable -ErrorAction SilentlyContinue
-                }
-                catch {
-                    Write-Warning "Failed to install CosmosDB module from PowerShell Gallery: $_"
-                    Write-Host "  Tests will be marked as inconclusive. Install manually with: Install-Module -Name CosmosDB" -ForegroundColor Yellow
-                    return @{
-                        Accessible = $false
-                        Message = "CosmosDB PowerShell module not available and could not be installed: $_"
-                        SkipTests = $true
-                    }
-                }
-            }
-            
-            if ($cosmosDbModule) {
-                Write-Host "✓ CosmosDB PowerShell module found (v$($cosmosDbModule.Version))" -ForegroundColor Green
-                
-                try {
-                    # Force import to handle assembly conflicts in CI/CD environments
-                    Import-Module CosmosDB -Force -Global -WarningAction SilentlyContinue -ErrorAction Stop
-                    
-                    # Extract account name from endpoint
-                    $uri = [System.Uri]::new($endpoint)
-                    $accountName = $uri.Host.Split('.')[0]
-                    
-                    Write-Verbose "Testing Cosmos DB API access for account: $accountName" -Verbose
-                    
-                    # Create context using Azure AD authentication (DefaultAzureCredential)
-                    # This will test actual API access and authentication
-                    $cosmosDbContext = New-CosmosDbContext -Account $accountName -Token (Get-AzAccessToken -ResourceUrl 'https://cosmos.azure.com' -ErrorAction SilentlyContinue).Token -ErrorAction Stop
-                    
-                    if ($cosmosDbContext) {
-                        # Try to list databases to verify permissions
-                        $databases = Get-CosmosDbDatabase -Context $cosmosDbContext -ErrorAction Stop
-                        Write-Host "✓ Successfully authenticated to Cosmos DB account" -ForegroundColor Green
-                        Write-Host "✓ Cosmos DB API access verified (found $($databases.Count) database(s))" -ForegroundColor Green
-                        
-                        return @{
-                            Accessible = $true
-                            Message = "Cosmos DB is accessible with proper permissions"
-                            SkipTests = $false
-                        }
-                    }
-                }
-                catch {
-                    $errorMessage = $_.Exception.Message
-                    
-                    if ($errorMessage -match 'Forbidden|403|unauthorized|not authorized') {
-                        Write-Warning "Cosmos DB authentication failed - RBAC permissions may not be configured"
-                        Write-Host "  Ensure 'Cosmos DB Built-in Data Contributor' role is assigned" -ForegroundColor Yellow
-                        return @{
-                            Accessible = $false
-                            Message = "Cosmos DB RBAC permissions not configured: $errorMessage"
-                            SkipTests = $false  # Let tests run and report specific errors
-                        }
-                    }
-                    elseif ($errorMessage -match 'could not be found|not found|does not exist') {
-                        Write-Warning "Cosmos DB account not found: $errorMessage"
-                        return @{
-                            Accessible = $false
-                            Message = "Cosmos DB account not found or not accessible"
-                            SkipTests = $true
-                        }
-                    }
-                    else {
-                        Write-Warning "Failed to validate Cosmos DB access: $errorMessage"
-                        return @{
-                            Accessible = $false
-                            Message = "Cosmos DB validation failed: $errorMessage"
-                            SkipTests = $false  # Allow tests to proceed with specific error handling
-                        }
-                    }
-                }
-            }
-        }
 
         # Initialize test configuration
         $testConfig = Initialize-TestEnvironment -TestFilter $TestFilter
@@ -280,25 +170,10 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
         $script:TestWorkspace = $workspaceConfig.TestWorkspace
         $script:BaseProjectPath = $workspaceConfig.BaseProjectPath
         $script:ConsoleAppPath = $workspaceConfig.ConsoleAppPath
-
-        # Validate Cosmos DB accessibility before running tests
-        $cosmosDbValidation = Test-CosmosDbAccessibility -Environment $script:TestEnv -NoAzureMode $script:NoAzureMode
-        $script:CosmosDbAccessible = $cosmosDbValidation.Accessible
-        $script:CosmosDbValidationMessage = $cosmosDbValidation.Message
-        
-        if ($cosmosDbValidation.SkipTests) {
-            Write-Warning "Cosmos DB validation failed: $($cosmosDbValidation.Message)"
-            Write-Warning "All Cosmos DB tests will be marked as Inconclusive"
-        }
     }
 
     Context 'Database Schema Operations with Cosmos DB' {
         BeforeAll {
-            # Skip all tests in this context if Cosmos DB validation failed
-            if (-not $script:CosmosDbAccessible) {
-                Write-Warning "Skipping Database Schema Operations tests - Cosmos DB not accessible: $($script:CosmosDbValidationMessage)"
-            }
-
             $script:DbProjectPath = Join-Path -Path $script:BaseProjectPath -ChildPath 'database-test'
             $projectSetup = Initialize-TestProject -ProjectPath $script:DbProjectPath -ConsoleApp $script:ConsoleAppPath
 
@@ -329,12 +204,6 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
             }
 
             It 'Should execute extract-model and store in Cosmos DB' {
-                # Early exit if pre-validation failed
-                if (-not $script:CosmosDbAccessible) {
-                    Set-ItResult -Inconclusive -Because $script:CosmosDbValidationMessage
-                    return
-                }
-
                 $commandResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $script:DbProjectPath)
 
                 $outputText = if ($commandResult.Output -is [array]) {

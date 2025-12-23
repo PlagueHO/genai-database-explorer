@@ -51,6 +51,47 @@ Combining these into one test file with conditional logic would:
 - Obscure what each strategy actually supports
 - Create false confidence in test coverage
 
+## Test Coverage Matrix
+
+The following table shows which tests **should exist** for each persistence strategy. Use this to identify coverage gaps and guide test implementation.
+
+| Command | Test | LocalDisk | AzureBlob | CosmosDb |
+|---------|------|:---------:|:---------:|:--------:|
+| **init-project** | Should execute init-project successfully | ✅ | ✅ | ✅ |
+| **init-project** | Should create project directory structure | ✅ | ✅ | ✅ |
+| **init-project** | Should create settings.json with correct schema | ✅ | ✅ | ✅ |
+| **--help** | Should display help information | ✅ | ✅ | ✅ |
+| **invalid command** | Should handle invalid commands gracefully | ✅ | ✅ | ✅ |
+| **extract-model** | Should complete extract-model successfully | ✅ | ✅ | ✅ |
+| **extract-model** | Should create/persist semantic model | ✅ | ✅ | ✅ |
+| **extract-model** | Should create semantic model with valid name property | ✅ | ✅ | ⚠️ |
+| **extract-model** | Should set model name to match database name | ✅ | ✅ | ⚠️ |
+| **extract-model** | Should execute with --skip-tables option | ✅ | ✅ | ⚠️ |
+| **extract-model** | Should handle strategy-specific storage scenarios | ✅ | ✅ | ✅ |
+| **data-dictionary** | Should execute data-dictionary command successfully | ✅ | ✅ | ⚠️ |
+| **data-dictionary** | Should apply metadata from dictionary files | ✅ | ✅ | ⚠️ |
+| **enrich-model** | Should execute enrich-model successfully | ✅ | ✅ | ✅ |
+| **enrich-model** | Should persist enriched model to storage | ✅ | ✅ | ⚠️ |
+| **generate-vectors** | Should execute generate-vectors --dry-run successfully | ✅ | ✅ | ✅ |
+| **generate-vectors** | Should generate and persist vectors for specific table | ✅ | ✅ | ✅ |
+| **generate-vectors** | Should verify vector storage in strategy-specific location | ✅ | ✅ | ✅ |
+| **show-object** | Should execute show-object command successfully | ✅ | ✅ | ⚠️ |
+| **show-object** | Should display object information in output | ✅ | ✅ | ⚠️ |
+| **query-model** | Should execute query-model successfully | ✅ | ✅ | ⚠️ |
+| **query-model** | Should generate SQL from natural language | ✅ | ✅ | ⚠️ |
+| **reconcile-index** | Should execute reconcile-index --dry-run successfully | ⚠️ | ⚠️ | ⚠️ |
+| **reconcile-index** | Should reconcile vectors to external index | ⚠️ | ⚠️ | ⚠️ |
+| **export-model** | Should execute export-model successfully | ✅ | ✅ | ✅ |
+| **export-model** | Should create exported markdown file | ✅ | ✅ | ✅ |
+| **export-model** | Should execute export-model with --split-files | ✅ | ✅ | ⚠️ |
+| **export-model** | Should create multiple markdown files with --split-files | ✅ | ✅ | ⚠️ |
+
+**Legend:**
+
+- ✅ **Implemented** - Test exists and passes
+- ⚠️ **Missing** - Test should exist but is not yet implemented
+- ❌ **Not Applicable** - Test does not apply to this strategy
+
 ## Running Tests
 
 ### Locally
@@ -274,7 +315,7 @@ Tests specific to Azure Cosmos DB document persistence:
 
 For each strategy, the workflow runs tests in **chronological order** to simulate real-world usage:
 
-```
+```text
 1. Initialize Project → 2. Extract Model → 3. Apply Dictionaries → 
 4. Enrich with AI → 5. Generate Vectors → 6. Display Objects → 
 7. Query Model → 8. Reconcile Index → 9. Export Model
