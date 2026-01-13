@@ -680,7 +680,7 @@ namespace GenAIDBExplorer.Core.Repository
                     : $"{_configuration.BlobPrefix.TrimEnd('/')}/{DefaultModelsPrefix}";
 
                 if (_containerClient == null) throw new InvalidOperationException("Container client not initialized");
-                await foreach (var blobItem in _containerClient.GetBlobsAsync(prefix: prefix))
+                await foreach (var blobItem in _containerClient.GetBlobsAsync(BlobTraits.None, BlobStates.None, prefix: prefix, cancellationToken: CancellationToken.None))
                 {
                     // Extract model name from blob path: models/{modelName}/...
                     var relativePath = blobItem.Name.Substring(prefix.Length);
@@ -737,7 +737,7 @@ namespace GenAIDBExplorer.Core.Repository
 
                 // List all blobs with the model prefix
                 if (_containerClient == null) throw new InvalidOperationException("Container client not initialized");
-                await foreach (var blobItem in _containerClient.GetBlobsAsync(prefix: $"{blobPrefix}/"))
+                await foreach (var blobItem in _containerClient.GetBlobsAsync(BlobTraits.None, BlobStates.None, prefix: $"{blobPrefix}/", cancellationToken: CancellationToken.None))
                 {
                     var blobClient = _containerClient.GetBlobClient(blobItem.Name);
                     var deleteTask = DeleteBlobAsync(blobClient, blobItem.Name);
