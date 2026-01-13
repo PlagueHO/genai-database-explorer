@@ -3,9 +3,10 @@
 	"tasks": [
 		// Build and Development Tasks
 		{
-			"label": "Build: Solution (GenAIDBExplorer)",
+			"label": "dotnet: build",
 			"icon": {
-				"id": "terminal"
+				"id": "tools",
+				"color": "terminal.ansiYellow"
 			},
 			"command": "dotnet",
 			"type": "process",
@@ -25,9 +26,10 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "Watch: Console (GenAIDBExplorer)",
+			"label": "dotnet: watch",
 			"icon": {
-				"id": "eye"
+				"id": "eye-watch",
+				"color": "terminal.ansiCyan"
 			},
 			"command": "dotnet",
 			"type": "process",
@@ -43,9 +45,10 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "Build: Solution - Publish (GenAIDBExplorer)",
+			"label": "dotnet: publish",
 			"icon": {
-				"id": "package"
+				"id": "package",
+				"color": "terminal.ansiYellow"
 			},
 			"command": "dotnet",
 			"type": "process",
@@ -62,9 +65,10 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "Build: Solution - Clean (GenAIDBExplorer)",
+			"label": "dotnet: clean",
 			"icon": {
-				"id": "trash"
+				"id": "trash",
+				"color": "terminal.ansiRed"
 			},
 			"type": "shell",
 			"command": "dotnet",
@@ -75,9 +79,10 @@
 			"group": "build"
 		},
 		{
-			"label": "Restore: NuGet Cache - Clear (GenAIDBExplorer)",
+			"label": "dotnet: restore",
 			"icon": {
-				"id": "clear-all"
+				"id": "cloud-download",
+				"color": "terminal.ansiBlue"
 			},
 			"type": "shell",
 			"command": "dotnet",
@@ -92,9 +97,10 @@
 
 		// Testing Tasks
 		{
-			"label": "Test (Unit): Solution (GenAIDBExplorer)",
+			"label": "dotnet: test",
 			"icon": {
-				"id": "beaker"
+				"id": "beaker",
+				"color": "terminal.ansiCyan"
 			},
 			"command": "dotnet",
 			"type": "process",
@@ -114,9 +120,10 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "Test (Integration): Console (GenAIDBExplorer)",
+			"label": "dotnet: test (integration)",
 			"icon": {
-				"id": "terminal"
+				"id": "beaker",
+				"color": "terminal.ansiBlue"
 			},
 			"type": "shell",
 			"command": "pwsh",
@@ -144,9 +151,10 @@
 
 		// Code Quality Tasks
 		{
-			"label": "Format: Solution - Verify (GenAIDBExplorer)",
+			"label": "dotnet: format (verify)",
 			"icon": {
-				"id": "check"
+				"id": "verified",
+				"color": "terminal.ansiGreen"
 			},
 			"command": "dotnet",
 			"type": "process",
@@ -167,9 +175,10 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "Format: Solution - Fix All (GenAIDBExplorer)",
+			"label": "dotnet: format",
 			"icon": {
-				"id": "wrench"
+				"id": "code",
+				"color": "terminal.ansiMagenta"
 			},
 			"command": "dotnet",
 			"type": "process",
@@ -184,9 +193,10 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "Format: Solution - Whitespace (GenAIDBExplorer)",
+			"label": "dotnet: format (whitespace)",
 			"icon": {
-				"id": "whitespace"
+				"id": "whitespace",
+				"color": "terminal.ansiMagenta"
 			},
 			"command": "dotnet",
 			"type": "process",
@@ -204,9 +214,10 @@
 
 		// CLI Application Tasks
 		{
-			"label": "CLI: Init Project (GenAIDBExplorer)",
+			"label": "cli: init project",
 			"icon": {
-				"id": "folder"
+				"id": "folder",
+				"color": "terminal.ansiGreen"
 			},
 			"type": "process",
 			"command": "dotnet",
@@ -225,9 +236,10 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "CLI: Extract Model (GenAIDBExplorer)",
+			"label": "cli: extract model",
 			"icon": {
-				"id": "database"
+				"id": "database",
+				"color": "terminal.ansiBlue"
 			},
 			"type": "process",
 			"command": "dotnet",
@@ -249,9 +261,10 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "CLI: Apply Data Dictionary (GenAIDBExplorer)",
+			"label": "cli: apply data dictionary",
 			"icon": {
-				"id": "book"
+				"id": "book",
+				"color": "terminal.ansiMagenta"
 			},
 			"type": "process",
 			"command": "dotnet",
@@ -279,9 +292,10 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "CLI: Enrich Model (GenAIDBExplorer)",
+			"label": "cli: enrich model",
 			"icon": {
-				"id": "sparkle"
+				"id": "sparkle",
+				"color": "terminal.ansiYellow"
 			},
 			"type": "process",
 			"command": "dotnet",
@@ -300,9 +314,10 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "CLI: Generate Vectors (GenAIDBExplorer)",
+			"label": "cli: generate vectors",
 			"icon": {
-				"id": "symbol-numeric"
+				"id": "symbol-numeric",
+				"color": "terminal.ansiCyan"
 			},
 			"type": "process",
 			"command": "dotnet",
@@ -321,9 +336,10 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "CLI: Show Object (GenAIDBExplorer)",
+			"label": "cli: show object",
 			"icon": {
-				"id": "eye"
+				"id": "eye",
+				"color": "terminal.ansiGreen"
 			},
 			"type": "process",
 			"command": "dotnet",
@@ -347,9 +363,10 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "CLI: Query Model (GenAIDBExplorer)",
+			"label": "cli: query model",
 			"icon": {
-				"id": "search"
+				"id": "search",
+				"color": "terminal.ansiYellow"
 			},
 			"type": "process",
 			"command": "dotnet",
@@ -368,9 +385,10 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "CLI: Export Model (GenAIDBExplorer)",
+			"label": "cli: export model",
 			"icon": {
-				"id": "export"
+				"id": "export",
+				"color": "terminal.ansiMagenta"
 			},
 			"type": "process",
 			"command": "dotnet",
@@ -396,9 +414,10 @@
 
         // Bicep tasks
 		{
-			"label": "Build: Infrastructure (Bicep)",
+			"label": "bicep: build",
 			"icon": {
-				"id": "azure"
+				"id": "file-code",
+				"color": "terminal.ansiBlue"
 			},
 			"type": "shell",
 			"command": "pwsh",
