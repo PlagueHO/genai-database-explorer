@@ -26,9 +26,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
-    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.1.0" />
-  <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="2.0.2" />
     <Folder Include="Data\DatabaseProviders\" />
     <Folder Include="Models\SemanticModel\" />
   </ItemGroup>
