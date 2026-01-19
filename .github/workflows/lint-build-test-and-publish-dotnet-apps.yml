@@ -71,13 +71,13 @@ jobs:
         run: dotnet restore GenAIDBExplorer.slnx
 
       - name: Build solution
-        run: dotnet build GenAIDBExplorer.slnx --no-restore --configuration ${{ inputs.build_configuration }}
+        run: dotnet build GenAIDBExplorer.slnx --no-restore --configuration ${{ inputs.build_configuration || 'Debug' }}
 
       - name: Run unit tests
         run: |
           dotnet test --solution GenAIDBExplorer.slnx \
             --ignore-exit-code 8 \
-            --configuration ${{ inputs.build_configuration }} \
+            --configuration ${{ inputs.build_configuration || 'Debug' }} \
             --no-restore \
             --results-directory ./TestResults \
             --coverage \
