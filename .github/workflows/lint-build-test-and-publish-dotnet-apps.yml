@@ -78,11 +78,11 @@ jobs:
       - name: Run tests
         run: |
           if [ -d "src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test" ]; then
-            dotnet test --project src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test/${{ matrix.project }}.Test.csproj \
+            dotnet test src/GenAIDBExplorer/Tests/Unit/${{ matrix.project }}.Test/${{ matrix.project }}.Test.csproj \
               --configuration ${{ inputs.build_configuration }} \
               --no-restore \
               --results-directory ./TestResults \
-              --report-trx
+              --logger trx
           else
             echo "No tests found for ${{ matrix.project }}"
           fi
