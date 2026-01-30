@@ -175,6 +175,11 @@ jobs:
 
       - name: Set Azure Developer CLI environment variables
         run: |
+          azd env set SQL_SERVER_USERNAME "$SQL_SERVER_USERNAME"
+          azd env set SQL_SERVER_PASSWORD "$SQL_SERVER_PASSWORD"
+          azd env set AZURE_AI_SEARCH_DEPLOY "$AZURE_AI_SEARCH_DEPLOY"
+          azd env set COSMOS_DB_DEPLOY "$COSMOS_DB_DEPLOY"
+          azd env set STORAGE_ACCOUNT_DEPLOY "$STORAGE_ACCOUNT_DEPLOY"
           azd env set AZURE_PRINCIPAL_ID_TYPE "$AZURE_PRINCIPAL_ID_TYPE"
 
       - name: Provision Infrastructure using Azure Developer CLI
