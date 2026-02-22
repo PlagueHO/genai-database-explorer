@@ -104,7 +104,7 @@ src/GenAIDBExplorer/
 - `Microsoft.Extensions.VectorData.Abstractions` >= 10.0.0
 - `System.Numerics.Tensors` >= 10.0.2
 
-The NuGet README explicitly states: _"This package can be used with Semantic Kernel or independently and does not depend on any Semantic Kernel abstractions or core libraries."_
+The NuGet README explicitly states: *"This package can be used with Semantic Kernel or independently and does not depend on any Semantic Kernel abstractions or core libraries."*
 
 **Verified**: The `SkInMemoryVectorIndexWriter`, `SkInMemoryVectorSearchService`, `InMemoryVectorStoreAdapter`, and `IVectorStoreAdapter` source files import ONLY `Microsoft.SemanticKernel.Connectors.InMemory` — no SK core imports, no SKEXP pragmas. They will compile without SK core packages.
 
