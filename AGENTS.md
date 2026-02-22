@@ -28,7 +28,7 @@ src/GenAIDBExplorer/
 ├── GenAIDBExplorer.Console/        # CLI app, command handlers, DI setup
 ├── GenAIDBExplorer.Core/           # Domain logic, providers, models
 │   ├── Models/SemanticModel/       # Core domain objects  
-│   ├── Prompty/                    # AI prompt templates (.prompty files)
+│   ├── PromptTemplates/            # AI prompt templates (.prompt files)
 │   ├── SemanticProviders/          # AI enrichment services
 │   └── Repository/                 # Persistence abstractions
 └── Tests/Unit/                     # MSTest + FluentAssertions + Moq
@@ -45,15 +45,15 @@ samples/AdventureWorksLT/
 The application follows a **project-based workflow** where each database analysis is contained in a project folder with `settings.json`:
 
 1. **Extract Phase**: `ISemanticModelProvider` + `SchemaRepository` extract raw schema → `semanticmodel.json`
-1. **Enrich Phase**: `SemanticDescriptionProvider` uses Prompty files + `SemanticKernelFactory` to generate AI descriptions
-1. **Query Phase**: Natural language questions → SQL generation via Semantic Kernel
+1. **Enrich Phase**: `SemanticDescriptionProvider` uses prompt templates + `IChatClientFactory` to generate AI descriptions
+1. **Query Phase**: Natural language questions → SQL generation via `IChatClient`
 1. **Persistence**: Multiple strategies (LocalDisk/AzureBlob/CosmosDB) via `ISemanticModelRepository`
 
 ### Key components
 
 - **Semantic Model**: Core domain object (`SemanticModel.cs`) with lazy loading, change tracking, and caching
 - **Command Handlers**: System.CommandLine-based CLI in `GenAIDBExplorer.Console/CommandHandlers/`
-- **Semantic Providers**: AI-powered enrichment services using Prompty templates in `Core/Prompty/`
+- **Semantic Providers**: AI-powered enrichment services using prompt templates in `Core/PromptTemplates/`
 - **Repository Pattern**: Abstract persistence with multiple backends (LocalDisk/AzureBlob/CosmosDB)
 - **Project Settings**: JSON-based configuration driving all operations (`samples/AdventureWorksLT/settings.json`)
 
@@ -90,27 +90,32 @@ dotnet run --project src/GenAIDBExplorer/GenAIDBExplorer.Console/ -- export-mode
 
 ## AI/LLM integration patterns
 
-### Critical: Always use SemanticKernelFactory
+### Critical: Always use IChatClientFactory
 
 ```csharp
 public class SemanticDescriptionProvider(
-    ISemanticKernelFactory semanticKernelFactory, // <- Always inject this
+    IChatClientFactory chatClientFactory, // <- Always inject this
+    IPromptTemplateParser promptTemplateParser,
+    ILiquidTemplateRenderer liquidTemplateRenderer,
     ILogger<SemanticDescriptionProvider> logger)
 {
-    private async Task<string> ProcessWithPromptyAsync(string promptyFile)
+    private async Task<string> ProcessWithPromptTemplateAsync(string promptFile)
     {
-        var kernel = _semanticKernelFactory.CreateSemanticKernel(); // <- Standard pattern
-        var function = kernel.CreateFunctionFromPromptyFile(promptyFilename);
-        var result = await kernel.InvokeAsync(function, arguments);
-        // Track tokens: result.Metadata?["Usage"] as ChatTokenUsage
+        var chatClient = _chatClientFactory.CreateChatClient();
+        var template = _promptTemplateParser.ParseFromFile(promptFilePath);
+        var messages = _liquidTemplateRenderer.RenderMessages(template, variables);
+        var response = await chatClient.GetResponseAsync(messages);
+        // Track tokens: response.Usage (UsageDetails with long? properties)
     }
 }
 ```
 
 ### AI prompt storage
 
-- Store AI prompts in `.prompty` files under `Core/Prompty/`
-- Track token usage: `result.Metadata?["Usage"] as ChatTokenUsage`
+- Store AI prompts in `.prompt` files under `Core/PromptTemplates/`
+- Parse prompt files with `IPromptTemplateParser`, render with `ILiquidTemplateRenderer`
+- Track token usage: `response.Usage` returns `UsageDetails` (long? properties)
+- Use `ChatResponseFormat.ForJsonSchema<T>()` for structured output
 - Use structured logging with scopes for AI operations
 - Follow SemanticDescriptionProvider pattern for prompt execution
 
@@ -146,7 +151,7 @@ pwsh .\.github\scripts\Invoke-IntegrationTests.ps1
 
 All services registered in `HostBuilderExtensions.ConfigureHost()`:
 
-- Singletons for core services (`ISemanticKernelFactory`, `IProject`)
+- Singletons for core services (`IChatClientFactory`, `IPromptTemplateParser`, `ILiquidTemplateRenderer`, `IProject`)
 - Decorated providers with caching/performance monitoring
 - Configuration loaded from console project's `appsettings.json`
 

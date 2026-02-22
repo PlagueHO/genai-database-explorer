@@ -1,35 +1,38 @@
+using GenAIDBExplorer.Core.ChatClients;
 using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.Models.SemanticModel;
 using GenAIDBExplorer.Core.Models.Database;
-using GenAIDBExplorer.Core.SemanticKernel;
+using GenAIDBExplorer.Core.PromptTemplates;
 using GenAIDBExplorer.Core.SemanticModelProviders;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
-using Microsoft.SemanticKernel;
 using System.Resources;
 using System.Text.Json;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
 using GenAIDBExplorer.Core.Models.SemanticModel.Extensions;
 
 namespace GenAIDBExplorer.Core.SemanticProviders;
 
 /// <summary>
-/// Generates semantic descriptions for semantic model entities using Semantic Kernel.
+/// Generates semantic descriptions for semantic model entities using IChatClient and prompt templates.
 /// </summary>
-/// <typeparam name="TEntity">The type of semantic model entity.</typeparam>
 public class SemanticDescriptionProvider(
         IProject project,
-        ISemanticKernelFactory semanticKernelFactory,
+        IChatClientFactory chatClientFactory,
+        IPromptTemplateParser promptTemplateParser,
+        ILiquidTemplateRenderer liquidTemplateRenderer,
         ISchemaRepository schemaRepository,
         ILogger<SemanticDescriptionProvider> logger
     ) : ISemanticDescriptionProvider
 {
     private readonly IProject _project = project;
-    private readonly ISemanticKernelFactory _semanticKernelFactory = semanticKernelFactory;
+    private readonly IChatClientFactory _chatClientFactory = chatClientFactory;
+    private readonly IPromptTemplateParser _promptTemplateParser = promptTemplateParser;
+    private readonly ILiquidTemplateRenderer _liquidTemplateRenderer = liquidTemplateRenderer;
     private readonly ISchemaRepository _schemaRepository = schemaRepository;
     private readonly ILogger<SemanticDescriptionProvider> _logger = logger;
     private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Core.Resources.LogMessages", typeof(SemanticDescriptionProvider).Assembly);
 
-    private const string _promptyFolder = "Prompty";
+    private const string _promptTemplateFolder = "PromptTemplates";
 
     public async Task<SemanticProcessResult> UpdateSemanticDescriptionAsync<T>(
         SemanticModel semanticModel,
@@ -97,15 +100,8 @@ public class SemanticDescriptionProvider(
 
             var sampleDataSerialized = SerializeSampleData(sampleData);
 
-            var promptExecutionSettings = new PromptExecutionSettings
-            {
-#pragma warning disable SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-                ServiceId = "ChatCompletion"
-#pragma warning restore SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-            };
-
-            // Pass individual properties instead of complex objects to avoid Liquid template encoding issues
-            var arguments = new KernelArguments(promptExecutionSettings)
+            // Build template variables
+            var variables = new Dictionary<string, object?>
             {
                 { "entity_structure", entity.ToYaml() },
                 { "entity_data", sampleDataSerialized },
@@ -115,8 +111,8 @@ public class SemanticDescriptionProvider(
             // Add stored procedure specific fields if applicable
             if (entity is SemanticModelStoredProcedure sp)
             {
-                arguments.Add("entity_definition", sp.Definition);
-                arguments.Add("entity_parameters", sp.Parameters);
+                variables.Add("entity_definition", sp.Definition);
+                variables.Add("entity_parameters", sp.Parameters);
             }
 
             if (relatedTables.Any())
@@ -128,25 +124,32 @@ public class SemanticDescriptionProvider(
                     name = table.Name,
                     semanticdescription = table.SemanticDescription
                 }).ToArray();
-                arguments.Add("tables", serializedTables);
+                variables.Add("tables", serializedTables);
             }
 
-            var promptyFilename = $"describe_{entityType.ToLower()}.prompty";
+            var promptFilename = $"describe_{entityType.ToLower()}.prompt";
             var applicationDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            promptyFilename = Path.Combine(applicationDirectory, _promptyFolder, promptyFilename);
+            promptFilename = Path.Combine(applicationDirectory, _promptTemplateFolder, promptFilename);
 
-            var semanticKernel = _semanticKernelFactory.CreateSemanticKernel();
-#pragma warning disable SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-            var function = semanticKernel.CreateFunctionFromPromptyFile(promptyFilename);
-#pragma warning restore SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+            var templateDefinition = _promptTemplateParser.ParseFromFile(promptFilename);
+            var messages = _liquidTemplateRenderer.RenderMessages(templateDefinition, variables);
 
-            var result = await semanticKernel.InvokeAsync(function, arguments);
+            var chatClient = _chatClientFactory.CreateChatClient();
+            var response = await chatClient.GetResponseAsync(messages);
 
-            entity.SetSemanticDescription(result.ToString());
+            var resultText = response.Text;
+            if (string.IsNullOrEmpty(resultText))
+            {
+                _logger.LogWarning("AI returned an empty response for {Type} [{Schema}].[{Name}]",
+                    entityType, entity.Schema, entity.Name);
+            }
+            else
+            {
+                entity.SetSemanticDescription(resultText);
+            }
 
             var timeTaken = DateTime.UtcNow - startTime;
-            var usage = result.Metadata?["Usage"] as OpenAI.Chat.ChatTokenUsage;
-            processResult.Add(new SemanticProcessResultItem(scope, "ChatCompletion", usage, timeTaken));
+            processResult.Add(new SemanticProcessResultItem(scope, "ChatCompletion", response.Usage, timeTaken));
 
             _logger.LogInformation(
                 "{Message} {Type} [{Schema}].[{Name}]",
@@ -339,33 +342,26 @@ public class SemanticDescriptionProvider(
     {
         _logger.LogInformation("{Message} [{SchemaName}].[{ViewName}]", _resourceManagerLogMessages.GetString("GetTableListFromViewDefinition"), view.Schema, view.Name);
 
-        var promptyFilename = "get_tables_from_view_definition.prompty";
+        var promptFilename = "get_tables_from_view_definition.prompt";
         var applicationDirectory = AppDomain.CurrentDomain.BaseDirectory;
-        promptyFilename = System.IO.Path.Combine(applicationDirectory, _promptyFolder, promptyFilename);
-        var semanticKernel = _semanticKernelFactory.CreateSemanticKernel();
+        promptFilename = Path.Combine(applicationDirectory, _promptTemplateFolder, promptFilename);
 
-#pragma warning disable SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-        var function = semanticKernel.CreateFunctionFromPromptyFile(promptyFilename);
-#pragma warning restore SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-
-        var promptExecutionSettings = new OpenAIPromptExecutionSettings
-        {
-#pragma warning disable SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-            ServiceId = "ChatCompletionStructured",
-#pragma warning restore SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-#pragma warning disable SKEXP0010 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-            ResponseFormat = typeof(TableList)
-#pragma warning restore SKEXP0010 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-        };
-
-        var arguments = new KernelArguments(promptExecutionSettings)
+        var templateDefinition = _promptTemplateParser.ParseFromFile(promptFilename);
+        var variables = new Dictionary<string, object?>
         {
             { "entity_definition", view.Definition }
         };
+        var messages = _liquidTemplateRenderer.RenderMessages(templateDefinition, variables);
 
-        var result = await semanticKernel.InvokeAsync(function, arguments);
-        var resultString = result?.ToString();
-        var tableList = new TableList();
+        var chatClient = _chatClientFactory.CreateStructuredOutputChatClient();
+        var chatOptions = new ChatOptions
+        {
+            ResponseFormat = ChatResponseFormat.ForJsonSchema<TableList>()
+        };
+
+        var response = await chatClient.GetResponseAsync(messages, chatOptions);
+        var resultString = response.Text;
+        var tableList = new TableList { Tables = [] };
         if (string.IsNullOrEmpty(resultString))
         {
             _logger.LogWarning("{Message}", _resourceManagerLogMessages.GetString("SemanticKernelReturnedEmptyResult"));
@@ -375,13 +371,13 @@ public class SemanticDescriptionProvider(
             tableList = JsonSerializer.Deserialize<TableList>(resultString);
         }
 
-        _logger.LogInformation("{Message} [{SchemaName}].[{ViewName}]. Table Count={Count}", _resourceManagerLogMessages.GetString("GotTableListFromViewDefinition"), view.Schema, view.Name, tableList.Tables.Count);
+        _logger.LogInformation("{Message} [{SchemaName}].[{ViewName}]. Table Count={Count}", _resourceManagerLogMessages.GetString("GotTableListFromViewDefinition"), view.Schema, view.Name, tableList.Tables?.Count ?? 0);
 
         return tableList;
     }
 
     /// <summary>
-    /// Gets a list of tables from the specified stored procedure definition using Semantic Kernel.
+    /// Gets a list of tables from the specified stored procedure definition.
     /// </summary>
     /// <param name="semanticModel">The semantic model</param>
     /// <param name="storedProcedure">The stored procedure to get the list of tables from</param>
@@ -390,43 +386,36 @@ public class SemanticDescriptionProvider(
     {
         _logger.LogInformation("{Message} [{SchemaName}].[{ViewName}]", _resourceManagerLogMessages.GetString("GetTableListFromStoredProcedureDefinition"), storedProcedure.Schema, storedProcedure.Name);
 
-        var promptyFilename = "get_tables_from_storedprocedure_definition.prompty";
+        var promptFilename = "get_tables_from_storedprocedure_definition.prompt";
         var applicationDirectory = AppDomain.CurrentDomain.BaseDirectory;
-        promptyFilename = System.IO.Path.Combine(applicationDirectory, _promptyFolder, promptyFilename);
-        var semanticKernel = _semanticKernelFactory.CreateSemanticKernel();
+        promptFilename = Path.Combine(applicationDirectory, _promptTemplateFolder, promptFilename);
 
-#pragma warning disable SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-        var function = semanticKernel.CreateFunctionFromPromptyFile(promptyFilename);
-#pragma warning restore SKEXP0040 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-
-        var promptExecutionSettings = new OpenAIPromptExecutionSettings
-        {
-#pragma warning disable SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-            ServiceId = "ChatCompletionStructured",
-#pragma warning restore SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-#pragma warning disable SKEXP0010 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-            ResponseFormat = typeof(TableList)
-#pragma warning restore SKEXP0010 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-        };
-
-        var arguments = new KernelArguments(promptExecutionSettings)
+        var templateDefinition = _promptTemplateParser.ParseFromFile(promptFilename);
+        var variables = new Dictionary<string, object?>
         {
             { "entity_definition", storedProcedure.Definition }
         };
+        var messages = _liquidTemplateRenderer.RenderMessages(templateDefinition, variables);
 
-        var result = await semanticKernel.InvokeAsync(function, arguments);
-        var resultString = result?.ToString();
-        var tableList = new TableList();
+        var chatClient = _chatClientFactory.CreateStructuredOutputChatClient();
+        var chatOptions = new ChatOptions
+        {
+            ResponseFormat = ChatResponseFormat.ForJsonSchema<TableList>()
+        };
+
+        var response = await chatClient.GetResponseAsync(messages, chatOptions);
+        var resultString = response.Text;
+        var tableList = new TableList { Tables = [] };
         if (string.IsNullOrEmpty(resultString))
         {
-            _logger.LogWarning("{Message}]", _resourceManagerLogMessages.GetString("SemanticKernelReturnedEmptyResult"));
+            _logger.LogWarning("{Message}", _resourceManagerLogMessages.GetString("SemanticKernelReturnedEmptyResult"));
         }
         else
         {
             tableList = JsonSerializer.Deserialize<TableList>(resultString);
         }
 
-        _logger.LogInformation("{Message} [{SchemaName}].[{StoredProcedureName}]. Table Count={Count}", _resourceManagerLogMessages.GetString("GotTableListFromStoredProcedureDefinition"), storedProcedure.Schema, storedProcedure.Name, tableList.Tables.Count);
+        _logger.LogInformation("{Message} [{SchemaName}].[{StoredProcedureName}]. Table Count={Count}", _resourceManagerLogMessages.GetString("GotTableListFromStoredProcedureDefinition"), storedProcedure.Schema, storedProcedure.Name, tableList.Tables?.Count ?? 0);
 
         return tableList;
     }

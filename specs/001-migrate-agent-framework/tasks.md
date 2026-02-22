@@ -25,9 +25,9 @@
 
 **Purpose**: Add new NuGet packages and create directory structure for new components
 
-- [ ] T001 Add NuGet packages `Azure.AI.Projects`, `Azure.AI.Projects.OpenAI`, `Microsoft.Extensions.AI.OpenAI`, `Scriban` to `src/GenAIDBExplorer/GenAIDBExplorer.Core/GenAIDBExplorer.Core.csproj`
-- [ ] T002 [P] Create directory `src/GenAIDBExplorer/GenAIDBExplorer.Core/ChatClients/`
-- [ ] T003 [P] Create directory `src/GenAIDBExplorer/GenAIDBExplorer.Core/PromptTemplates/`
+- [X] T001 Add NuGet packages `Azure.AI.Projects`, `Azure.AI.Projects.OpenAI`, `Microsoft.Extensions.AI.OpenAI`, `Scriban` to `src/GenAIDBExplorer/GenAIDBExplorer.Core/GenAIDBExplorer.Core.csproj`
+- [X] T002 [P] Create directory `src/GenAIDBExplorer/GenAIDBExplorer.Core/ChatClients/`
+- [X] T003 [P] Create directory `src/GenAIDBExplorer/GenAIDBExplorer.Core/PromptTemplates/`
 
 ---
 
@@ -41,15 +41,15 @@
 
 > **Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T004 [P] Unit tests for `PromptTemplateDefinition` in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/PromptTemplates/PromptTemplateDefinitionTests.cs`
-- [ ] T005 [P] Unit tests for `PromptTemplateMessage` in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/PromptTemplates/PromptTemplateMessageTests.cs`
-- [ ] T006 [P] Unit tests for `PromptTemplateModelParameters` in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/PromptTemplates/PromptTemplateModelParametersTests.cs`
+- [X] T004 [P] Unit tests for `PromptTemplateDefinition` in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/PromptTemplates/PromptTemplateDefinitionTests.cs`
+- [X] T005 [P] Unit tests for `PromptTemplateMessage` in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/PromptTemplates/PromptTemplateMessageTests.cs`
+- [X] T006 [P] Unit tests for `PromptTemplateModelParameters` in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/PromptTemplates/PromptTemplateModelParametersTests.cs`
 
 ### Implementation for Foundational
 
-- [ ] T007 [P] Implement `PromptTemplateDefinition` record in `src/GenAIDBExplorer/GenAIDBExplorer.Core/PromptTemplates/PromptTemplateDefinition.cs` (fields: Name, Description, ModelParameters, Messages per data-model.md)
-- [ ] T008 [P] Implement `PromptTemplateMessage` record in `src/GenAIDBExplorer/GenAIDBExplorer.Core/PromptTemplates/PromptTemplateMessage.cs` (fields: Role as ChatRole, ContentTemplate as string)
-- [ ] T009 [P] Implement `PromptTemplateModelParameters` record in `src/GenAIDBExplorer/GenAIDBExplorer.Core/PromptTemplates/PromptTemplateModelParameters.cs` (fields: Temperature, TopP, MaxTokens)
+- [X] T007 [P] Implement `PromptTemplateDefinition` record in `src/GenAIDBExplorer/GenAIDBExplorer.Core/PromptTemplates/PromptTemplateDefinition.cs` (fields: Name, Description, ModelParameters, Messages per data-model.md)
+- [X] T008 [P] Implement `PromptTemplateMessage` record in `src/GenAIDBExplorer/GenAIDBExplorer.Core/PromptTemplates/PromptTemplateMessage.cs` (fields: Role as ChatRole, ContentTemplate as string)
+- [X] T009 [P] Implement `PromptTemplateModelParameters` record in `src/GenAIDBExplorer/GenAIDBExplorer.Core/PromptTemplates/PromptTemplateModelParameters.cs` (fields: Temperature, TopP, MaxTokens)
 
 **Checkpoint**: Foundation models ready — user story implementation can now begin
 
@@ -65,18 +65,18 @@
 
 > **Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T010 [P] [US5] Unit tests for `IPromptTemplateParser` — YAML extraction, role parsing, malformed YAML frontmatter, no role markers edge case, `FileNotFoundException` for missing file — in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/PromptTemplates/PromptTemplateParserTests.cs`
-- [ ] T011 [P] [US5] Unit tests for `ILiquidTemplateRenderer` — variable substitution, for-loops, missing variables produce empty string, few-shot multi-role rendering, Liquid syntax errors throw `InvalidOperationException` — in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/PromptTemplates/LiquidTemplateRendererTests.cs`
-- [ ] T012 [P] [US5] Parity tests — load each of the 6 `.prompt` files with known inputs, verify rendered output matches expected golden output (SC-002) — in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/PromptTemplates/PromptTemplateParityTests.cs`
+- [X] T010 [P] [US5] Unit tests for `IPromptTemplateParser` — YAML extraction, role parsing, malformed YAML frontmatter, no role markers edge case, `FileNotFoundException` for missing file — in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/PromptTemplates/PromptTemplateParserTests.cs`
+- [X] T011 [P] [US5] Unit tests for `ILiquidTemplateRenderer` — variable substitution, for-loops, missing variables produce empty string, few-shot multi-role rendering, Liquid syntax errors throw `InvalidOperationException` — in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/PromptTemplates/LiquidTemplateRendererTests.cs`
+- [X] T012 [P] [US5] Parity tests — load each of the 6 `.prompt` files with known inputs, verify rendered output matches expected golden output (SC-002) — in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/PromptTemplates/PromptTemplateParityTests.cs`
 
 ### Implementation for User Story 5
 
-- [ ] T013 [US5] Implement `IPromptTemplateParser` interface in `src/GenAIDBExplorer/GenAIDBExplorer.Core/PromptTemplates/IPromptTemplateParser.cs` (per contract in `specs/001-migrate-agent-framework/contracts/IPromptTemplateParser.cs`)
-- [ ] T014 [US5] Implement `PromptTemplateParser` using YamlDotNet for YAML frontmatter extraction and role-delimiter parsing (`system:`, `user:`, `assistant:`) in `src/GenAIDBExplorer/GenAIDBExplorer.Core/PromptTemplates/PromptTemplateParser.cs`
-- [ ] T015 [US5] Implement `ILiquidTemplateRenderer` interface in `src/GenAIDBExplorer/GenAIDBExplorer.Core/PromptTemplates/ILiquidTemplateRenderer.cs` (per contract in `specs/001-migrate-agent-framework/contracts/ILiquidTemplateRenderer.cs`)
-- [ ] T016 [US5] Implement `LiquidTemplateRenderer` using Scriban `Template.ParseLiquid()` in `src/GenAIDBExplorer/GenAIDBExplorer.Core/PromptTemplates/LiquidTemplateRenderer.cs`
-- [ ] T017 [US5] Copy 6 `.prompty` files from `src/GenAIDBExplorer/GenAIDBExplorer.Core/Prompty/` to `src/GenAIDBExplorer/GenAIDBExplorer.Core/PromptTemplates/` with `.prompt` extension — content unchanged (FR-008): `describe_semanticmodeltable.prompt`, `describe_semanticmodelview.prompt`, `describe_semanticmodelstoredprocedure.prompt`, `get_table_from_data_dictionary_markdown.prompt`, `get_tables_from_view_definition.prompt`, `get_tables_from_storedprocedure_definition.prompt`
-- [ ] T018 [US5] Create test data directory with golden expected outputs for parity tests in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/PromptTemplates/TestData/`
+- [X] T013 [US5] Implement `IPromptTemplateParser` interface in `src/GenAIDBExplorer/GenAIDBExplorer.Core/PromptTemplates/IPromptTemplateParser.cs` (per contract in `specs/001-migrate-agent-framework/contracts/IPromptTemplateParser.cs`)
+- [X] T014 [US5] Implement `PromptTemplateParser` using YamlDotNet for YAML frontmatter extraction and role-delimiter parsing (`system:`, `user:`, `assistant:`) in `src/GenAIDBExplorer/GenAIDBExplorer.Core/PromptTemplates/PromptTemplateParser.cs`
+- [X] T015 [US5] Implement `ILiquidTemplateRenderer` interface in `src/GenAIDBExplorer/GenAIDBExplorer.Core/PromptTemplates/ILiquidTemplateRenderer.cs` (per contract in `specs/001-migrate-agent-framework/contracts/ILiquidTemplateRenderer.cs`)
+- [X] T016 [US5] Implement `LiquidTemplateRenderer` using Scriban `Template.ParseLiquid()` in `src/GenAIDBExplorer/GenAIDBExplorer.Core/PromptTemplates/LiquidTemplateRenderer.cs`
+- [X] T017 [US5] Copy 6 `.prompty` files from `src/GenAIDBExplorer/GenAIDBExplorer.Core/Prompty/` to `src/GenAIDBExplorer/GenAIDBExplorer.Core/PromptTemplates/` with `.prompt` extension — content unchanged (FR-008): `describe_semanticmodeltable.prompt`, `describe_semanticmodelview.prompt`, `describe_semanticmodelstoredprocedure.prompt`, `get_table_from_data_dictionary_markdown.prompt`, `get_tables_from_view_definition.prompt`, `get_tables_from_storedprocedure_definition.prompt`
+- [X] T018 [US5] Create test data directory with golden expected outputs for parity tests in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/PromptTemplates/TestData/`
 
 **Checkpoint**: Prompt template parser and renderer are functional and verified. All 6 templates produce identical output (SC-002).
 
@@ -92,14 +92,14 @@
 
 > **Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T019 [P] [US6] Unit tests for `IChatClientFactory` — `CreateChatClient()`, `CreateStructuredOutputChatClient()`, Entra ID auth path, API key auth path, missing config throws, invalid endpoint throws — in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/ChatClients/ChatClientFactoryTests.cs`
-- [ ] T020 [P] [US6] Unit tests for `CreateEmbeddingGenerator()` — returns configured `IEmbeddingGenerator<string, Embedding<float>>`, correct deployment used — in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/ChatClients/ChatClientFactoryEmbeddingTests.cs`
+- [X] T019 [P] [US6] Unit tests for `IChatClientFactory` — `CreateChatClient()`, `CreateStructuredOutputChatClient()`, Entra ID auth path, API key auth path, missing config throws, invalid endpoint throws — in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/ChatClients/ChatClientFactoryTests.cs`
+- [X] T020 [P] [US6] Unit tests for `CreateEmbeddingGenerator()` — returns configured `IEmbeddingGenerator<string, Embedding<float>>`, correct deployment used — in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/ChatClients/ChatClientFactoryEmbeddingTests.cs`
 
 ### Implementation for User Story 6
 
-- [ ] T021 [US6] Implement `IChatClientFactory` interface in `src/GenAIDBExplorer/GenAIDBExplorer.Core/ChatClients/IChatClientFactory.cs` (per contract in `specs/001-migrate-agent-framework/contracts/IChatClientFactory.cs`)
-- [ ] T022 [US6] Implement `ChatClientFactory` in `src/GenAIDBExplorer/GenAIDBExplorer.Core/ChatClients/ChatClientFactory.cs` — use `AIProjectClient` from `Azure.AI.Projects` with Foundry project endpoint for connection discovery, create `AzureOpenAIClient` via `Azure.AI.Projects.OpenAI`, produce `IChatClient` (via `.GetChatClient().AsIChatClient()`) and `IEmbeddingGenerator` (via `.GetEmbeddingClient().AsEmbeddingGenerator()`). Support both Entra ID (`DefaultAzureCredential`) and API key auth. Apply retry policies (10 retries, HTTP 429/5xx per FR-012).
-- [ ] T023 [US6] Update project settings model to include Microsoft Foundry project endpoint field (`FoundryProjectEndpoint`) in `src/GenAIDBExplorer/GenAIDBExplorer.Core/Models/Project/` and integrate into `ProjectSettings` for deserialization from `settings.json`
+- [X] T021 [US6] Implement `IChatClientFactory` interface in `src/GenAIDBExplorer/GenAIDBExplorer.Core/ChatClients/IChatClientFactory.cs` (per contract in `specs/001-migrate-agent-framework/contracts/IChatClientFactory.cs`)
+- [X] T022 [US6] Implement `ChatClientFactory` in `src/GenAIDBExplorer/GenAIDBExplorer.Core/ChatClients/ChatClientFactory.cs` — use `AIProjectClient` from `Azure.AI.Projects` with Foundry project endpoint for connection discovery, create `AzureOpenAIClient` via `Azure.AI.Projects.OpenAI`, produce `IChatClient` (via `.GetChatClient().AsIChatClient()`) and `IEmbeddingGenerator` (via `.GetEmbeddingClient().AsEmbeddingGenerator()`). Support both Entra ID (`DefaultAzureCredential`) and API key auth. Apply retry policies (10 retries, HTTP 429/5xx per FR-012).
+- [X] T023 [US6] Update project settings model to include Microsoft Foundry project endpoint field (`FoundryProjectEndpoint`) in `src/GenAIDBExplorer/GenAIDBExplorer.Core/Models/Project/` and integrate into `ProjectSettings` for deserialization from `settings.json`
 
 **Checkpoint**: `ChatClientFactory` creates working AI clients from project settings with both auth methods (SC-006).
 
@@ -115,15 +115,15 @@
 
 > **Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T024 [P] [US1] Unit tests for migrated `SemanticDescriptionProvider.UpdateSemanticDescriptionAsync` — mocked `IChatClient`, verify prompt rendered correctly via `ILiquidTemplateRenderer`, token tracking from `ChatResponse.Usage`, `ILogger.BeginScope(...)` with operation context (FR-019), edge case: empty/null AI response returns graceful error (Edge Case #4) — in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/SemanticProviders/SemanticDescriptionProviderTests.cs` (update existing)
-- [ ] T025 [P] [US1] Unit tests for `GetTableListFromViewDefinitionAsync` and `GetTableListFromStoredProcedureDefinitionAsync` with structured output — mocked `IChatClient` returning JSON matching `TableList` schema (FR-011), edge case: response not matching expected JSON schema produces clear deserialization error (Edge Case #6) — in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/SemanticProviders/SemanticDescriptionProviderStructuredOutputTests.cs`
+- [X] T024 [P] [US1] Unit tests for migrated `SemanticDescriptionProvider.UpdateSemanticDescriptionAsync` — mocked `IChatClient`, verify prompt rendered correctly via `ILiquidTemplateRenderer`, token tracking from `ChatResponse.Usage`, `ILogger.BeginScope(...)` with operation context (FR-019), edge case: empty/null AI response returns graceful error (Edge Case #4) — in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/SemanticProviders/SemanticDescriptionProviderTests.cs` (update existing)
+- [X] T025 [P] [US1] Unit tests for `GetTableListFromViewDefinitionAsync` and `GetTableListFromStoredProcedureDefinitionAsync` with structured output — mocked `IChatClient` returning JSON matching `TableList` schema (FR-011), edge case: response not matching expected JSON schema produces clear deserialization error (Edge Case #6) — in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/SemanticProviders/SemanticDescriptionProviderStructuredOutputTests.cs`
 
 ### Implementation for User Story 1
 
-- [ ] T026 [US1] Migrate `SemanticDescriptionProvider` constructor to inject `IChatClientFactory`, `IPromptTemplateParser`, `ILiquidTemplateRenderer` instead of `ISemanticKernelFactory` in `src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticProviders/SemanticDescriptionProvider.cs`
-- [ ] T027 [US1] Rewrite `UpdateSemanticDescriptionAsync` to use `IChatClient.GetResponseAsync()` with rendered messages from parser/renderer, extract token usage from `ChatResponse.Usage`, wrap in `ILogger.BeginScope(...)` with template name and model deployment (FR-007, FR-019) in `src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticProviders/SemanticDescriptionProvider.cs`
-- [ ] T028 [US1] Rewrite `GetTableListFromViewDefinitionAsync` and `GetTableListFromStoredProcedureDefinitionAsync` to use structured output via JSON schema response format with `IChatClient` (FR-011) in `src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticProviders/SemanticDescriptionProvider.cs`
-- [ ] T029 [US1] Remove all SK imports (`using Microsoft.SemanticKernel.*`, `KernelArguments`, `PromptExecutionSettings`), `#pragma warning disable SKEXP0001`/`SKEXP0040` suppressions from `src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticProviders/SemanticDescriptionProvider.cs`
+- [X] T026 [US1] Migrate `SemanticDescriptionProvider` constructor to inject `IChatClientFactory`, `IPromptTemplateParser`, `ILiquidTemplateRenderer` instead of `ISemanticKernelFactory` in `src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticProviders/SemanticDescriptionProvider.cs`
+- [X] T027 [US1] Rewrite `UpdateSemanticDescriptionAsync` to use `IChatClient.GetResponseAsync()` with rendered messages from parser/renderer, extract token usage from `ChatResponse.Usage`, wrap in `ILogger.BeginScope(...)` with template name and model deployment (FR-007, FR-019) in `src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticProviders/SemanticDescriptionProvider.cs`
+- [X] T028 [US1] Rewrite `GetTableListFromViewDefinitionAsync` and `GetTableListFromStoredProcedureDefinitionAsync` to use structured output via JSON schema response format with `IChatClient` (FR-011) in `src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticProviders/SemanticDescriptionProvider.cs`
+- [X] T029 [US1] Remove all SK imports (`using Microsoft.SemanticKernel.*`, `KernelArguments`, `PromptExecutionSettings`), `#pragma warning disable SKEXP0001`/`SKEXP0040` suppressions from `src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticProviders/SemanticDescriptionProvider.cs`
 
 **Checkpoint**: `enrich-model` produces AI descriptions using `IChatClient` + prompt templates. Token tracking works (SC-004).
 
@@ -139,13 +139,13 @@
 
 > **Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T030 [P] [US2] Unit tests for migrated `DataDictionaryProvider` — mocked `IChatClient` with JSON schema response, verify `TableDataDictionary` deserialization, token tracking from `ChatResponse.Usage`, `ILogger.BeginScope(...)` (FR-019), edge cases: empty/null AI response (Edge Case #4), response not matching expected JSON schema (Edge Case #6) — in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/DataDictionary/DataDictionaryProviderTests.cs` (update existing or create)
+- [X] T030 [P] [US2] Unit tests for migrated `DataDictionaryProvider` — mocked `IChatClient` with JSON schema response, verify `TableDataDictionary` deserialization, token tracking from `ChatResponse.Usage`, `ILogger.BeginScope(...)` (FR-019), edge cases: empty/null AI response (Edge Case #4), response not matching expected JSON schema (Edge Case #6) — in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/DataDictionary/DataDictionaryProviderTests.cs` (update existing or create)
 
 ### Implementation for User Story 2
 
-- [ ] T031 [US2] Migrate `DataDictionaryProvider` constructor to inject `IChatClientFactory`, `IPromptTemplateParser`, `ILiquidTemplateRenderer` instead of `ISemanticKernelFactory` in `src/GenAIDBExplorer/GenAIDBExplorer.Core/DataDictionary/DataDictionaryProvider.cs`
-- [ ] T032 [US2] Rewrite AI invocation in `DataDictionaryProvider` to use `IChatClient.GetResponseAsync()` with `ChatResponseFormat.ForJsonSchema<TableDataDictionary>()`, extract token usage from `ChatResponse.Usage`, wrap in `ILogger.BeginScope(...)` (FR-007, FR-011, FR-019) in `src/GenAIDBExplorer/GenAIDBExplorer.Core/DataDictionary/DataDictionaryProvider.cs`
-- [ ] T033 [US2] Remove all SK imports (`using Microsoft.SemanticKernel.*`, `KernelArguments`, `OpenAIPromptExecutionSettings`), `#pragma warning disable SKEXP*` from `src/GenAIDBExplorer/GenAIDBExplorer.Core/DataDictionary/DataDictionaryProvider.cs`
+- [X] T031 [US2] Migrate `DataDictionaryProvider` constructor to inject `IChatClientFactory`, `IPromptTemplateParser`, `ILiquidTemplateRenderer` instead of `ISemanticKernelFactory` in `src/GenAIDBExplorer/GenAIDBExplorer.Core/DataDictionary/DataDictionaryProvider.cs`
+- [X] T032 [US2] Rewrite AI invocation in `DataDictionaryProvider` to use `IChatClient.GetResponseAsync()` with `ChatResponseFormat.ForJsonSchema<TableDataDictionary>()`, extract token usage from `ChatResponse.Usage`, wrap in `ILogger.BeginScope(...)` (FR-007, FR-011, FR-019) in `src/GenAIDBExplorer/GenAIDBExplorer.Core/DataDictionary/DataDictionaryProvider.cs`
+- [X] T033 [US2] Remove all SK imports (`using Microsoft.SemanticKernel.*`, `KernelArguments`, `OpenAIPromptExecutionSettings`), `#pragma warning disable SKEXP*` from `src/GenAIDBExplorer/GenAIDBExplorer.Core/DataDictionary/DataDictionaryProvider.cs`
 
 **Checkpoint**: `data-dictionary` imports structured AI output using `IChatClient` (SC-003). Token tracking works.
 
@@ -161,12 +161,12 @@
 
 > **Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T034 [P] [US3] Unit tests for `ChatClientEmbeddingGenerator` — mocked `IEmbeddingGenerator<string, Embedding<float>>`, verify embedding result, `ILogger.BeginScope(...)` (FR-019), error handling for null/empty input — in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/VectorEmbedding/ChatClientEmbeddingGeneratorTests.cs`
+- [X] T034 [P] [US3] Unit tests for `ChatClientEmbeddingGenerator` — mocked `IEmbeddingGenerator<string, Embedding<float>>`, verify embedding result, `ILogger.BeginScope(...)` (FR-019), error handling for null/empty input — in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/VectorEmbedding/ChatClientEmbeddingGeneratorTests.cs`
 
 ### Implementation for User Story 3
 
-- [ ] T035 [US3] Implement `ChatClientEmbeddingGenerator` in `src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticVectors/Embeddings/ChatClientEmbeddingGenerator.cs` — inject `IChatClientFactory`, call `CreateEmbeddingGenerator()`, wrap in `ILogger.BeginScope(...)` (FR-005, FR-019)
-- [ ] T036 [US3] Delete `SemanticKernelEmbeddingGenerator` from `src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticVectors/Embeddings/SemanticKernelEmbeddingGenerator.cs`
+- [X] T035 [US3] Implement `ChatClientEmbeddingGenerator` in `src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticVectors/Embeddings/ChatClientEmbeddingGenerator.cs` — inject `IChatClientFactory`, call `CreateEmbeddingGenerator()`, wrap in `ILogger.BeginScope(...)` (FR-005, FR-019)
+- [X] T036 [US3] Delete `SemanticKernelEmbeddingGenerator` from `src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticVectors/Embeddings/SemanticKernelEmbeddingGenerator.cs`
 
 **Checkpoint**: `generate-vectors` produces embeddings using `IEmbeddingGenerator` from `IChatClientFactory`. InMemory vector store unchanged (FR-018).
 
@@ -182,14 +182,14 @@
 
 > **Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T037 [P] [US4] Unit tests for DI container — verify `IChatClientFactory`, `IPromptTemplateParser`, `ILiquidTemplateRenderer`, `IEmbeddingGenerator` resolve correctly from service provider — in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/ChatClients/DependencyInjectionTests.cs`
+- [X] T037 [P] [US4] Unit tests for DI container — verify `IChatClientFactory`, `IPromptTemplateParser`, `ILiquidTemplateRenderer`, `IEmbeddingGenerator` resolve correctly from service provider — in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/ChatClients/DependencyInjectionTests.cs`
 
 ### Implementation for User Story 4
 
-- [ ] T038 [US4] Register `IChatClientFactory`/`ChatClientFactory`, `IPromptTemplateParser`/`PromptTemplateParser`, `ILiquidTemplateRenderer`/`LiquidTemplateRenderer` as singletons (FR-015) in `src/GenAIDBExplorer/GenAIDBExplorer.Console/Extensions/HostBuilderExtensions.cs`
-- [ ] T039 [US4] Register `ChatClientEmbeddingGenerator` replacing `SemanticKernelEmbeddingGenerator` for embedding generation in `src/GenAIDBExplorer/GenAIDBExplorer.Console/Extensions/HostBuilderExtensions.cs`
-- [ ] T040 [US4] Remove `ISemanticKernelFactory`/`SemanticKernelFactory` singleton registration from `src/GenAIDBExplorer/GenAIDBExplorer.Console/Extensions/HostBuilderExtensions.cs`
-- [ ] T041 [US4] Update `settings.json` sample to include Microsoft Foundry project endpoint field in `samples/AdventureWorksLT/settings.json`
+- [X] T038 [US4] Register `IChatClientFactory`/`ChatClientFactory`, `IPromptTemplateParser`/`PromptTemplateParser`, `ILiquidTemplateRenderer`/`LiquidTemplateRenderer` as singletons (FR-015) in `src/GenAIDBExplorer/GenAIDBExplorer.Console/Extensions/HostBuilderExtensions.cs`
+- [X] T039 [US4] Register `ChatClientEmbeddingGenerator` replacing `SemanticKernelEmbeddingGenerator` for embedding generation in `src/GenAIDBExplorer/GenAIDBExplorer.Console/Extensions/HostBuilderExtensions.cs`
+- [X] T040 [US4] Remove `ISemanticKernelFactory`/`SemanticKernelFactory` singleton registration from `src/GenAIDBExplorer/GenAIDBExplorer.Console/Extensions/HostBuilderExtensions.cs`
+- [X] T041 [US4] Update `settings.json` sample to include Microsoft Foundry project endpoint field in `samples/AdventureWorksLT/settings.json`
 
 **Checkpoint**: All CLI commands execute with new DI registrations (SC-003). No SK factory in DI container.
 
@@ -205,19 +205,19 @@
 
 > **Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T042 [P] [US7] Verification test — scan all `.cs` files for `using Microsoft.SemanticKernel` (excluding `Connectors.InMemory` in vector store files), `KernelArguments`, `PromptExecutionSettings`, `SKEXP` — in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/Migration/SemanticKernelRemovalVerificationTests.cs`
+- [X] T042 [P] [US7] Verification test — scan all `.cs` files for `using Microsoft.SemanticKernel` (excluding `Connectors.InMemory` in vector store files), `KernelArguments`, `PromptExecutionSettings`, `SKEXP` — in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/Migration/SemanticKernelRemovalVerificationTests.cs`
 
 ### Implementation for User Story 7
 
-- [ ] T043 [P] [US7] Delete `ISemanticKernelFactory` from `src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticKernel/ISemanticKernelFactory.cs` (FR-014)
-- [ ] T044 [P] [US7] Delete `SemanticKernelFactory` from `src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticKernel/SemanticKernelFactory.cs` (FR-014)
-- [ ] T045 [US7] Delete `SemanticKernel/` directory from `src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticKernel/`
-- [ ] T046 [US7] Delete old `Prompty/` directory from `src/GenAIDBExplorer/GenAIDBExplorer.Core/Prompty/` (templates already copied to `PromptTemplates/` in T017)
-- [ ] T047 [US7] Delete `SemanticKernelFactoryTests.cs` from `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/SemanticKernel/SemanticKernelFactoryTests.cs`
-- [ ] T048 [US7] Remove 9 SK NuGet packages from `src/GenAIDBExplorer/GenAIDBExplorer.Core/GenAIDBExplorer.Core.csproj` — retain `Microsoft.SemanticKernel.Connectors.InMemory` per FR-018, Decision D1 (packages to remove: `Microsoft.SemanticKernel`, `Microsoft.SemanticKernel.Abstractions`, `Microsoft.SemanticKernel.Connectors.AzureOpenAI`, `Microsoft.SemanticKernel.Connectors.OpenAI`, `Microsoft.SemanticKernel.Core`, `Microsoft.SemanticKernel.PromptTemplates.Handlebars`, `Microsoft.SemanticKernel.PromptTemplates.Liquid`, `Microsoft.SemanticKernel.Prompty`, `Microsoft.SemanticKernel.Yaml`)
-- [ ] T049 [US7] Remove any SK NuGet packages (except `Microsoft.SemanticKernel.Connectors.InMemory`) from `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/GenAIDBExplorer.Core.Test.csproj`
-- [ ] T050 [US7] Verify solution builds with `dotnet build src/GenAIDBExplorer/GenAIDBExplorer.slnx`
-- [ ] T051 [US7] Run full test suite with `dotnet test --solution src/GenAIDBExplorer/GenAIDBExplorer.slnx` — all tests must pass (SC-001)
+- [X] T043 [P] [US7] Delete `ISemanticKernelFactory` from `src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticKernel/ISemanticKernelFactory.cs` (FR-014)
+- [X] T044 [P] [US7] Delete `SemanticKernelFactory` from `src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticKernel/SemanticKernelFactory.cs` (FR-014)
+- [X] T045 [US7] Delete `SemanticKernel/` directory from `src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticKernel/`
+- [X] T046 [US7] Delete old `Prompty/` directory from `src/GenAIDBExplorer/GenAIDBExplorer.Core/Prompty/` (templates already copied to `PromptTemplates/` in T017)
+- [X] T047 [US7] Delete `SemanticKernelFactoryTests.cs` from `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/SemanticKernel/SemanticKernelFactoryTests.cs`
+- [X] T048 [US7] Remove 9 SK NuGet packages from `src/GenAIDBExplorer/GenAIDBExplorer.Core/GenAIDBExplorer.Core.csproj` — retain `Microsoft.SemanticKernel.Connectors.InMemory` per FR-018, Decision D1 (packages to remove: `Microsoft.SemanticKernel`, `Microsoft.SemanticKernel.Abstractions`, `Microsoft.SemanticKernel.Connectors.AzureOpenAI`, `Microsoft.SemanticKernel.Connectors.OpenAI`, `Microsoft.SemanticKernel.Core`, `Microsoft.SemanticKernel.PromptTemplates.Handlebars`, `Microsoft.SemanticKernel.PromptTemplates.Liquid`, `Microsoft.SemanticKernel.Prompty`, `Microsoft.SemanticKernel.Yaml`)
+- [X] T049 [US7] Remove any SK NuGet packages (except `Microsoft.SemanticKernel.Connectors.InMemory`) from `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.Core.Test/GenAIDBExplorer.Core.Test.csproj`
+- [X] T050 [US7] Verify solution builds with `dotnet build src/GenAIDBExplorer/GenAIDBExplorer.slnx`
+- [X] T051 [US7] Run full test suite with `dotnet test --solution src/GenAIDBExplorer/GenAIDBExplorer.slnx` — all tests must pass (SC-001)
 
 **Checkpoint**: Zero SK packages remain except InMemory connector (SC-005). Solution builds and all tests pass (SC-001).
 
@@ -227,11 +227,11 @@
 
 **Purpose**: Documentation, constitution amendment, settings migration guide, code formatting
 
-- [ ] T052 [P] Write migration guide documenting new `settings.json` fields for Microsoft Foundry Project endpoint (FR-017) in `docs/technical/migration-agent-framework.md`
-- [ ] T053 [P] Update Constitution Principle II: (a) rename principle title from "AI Integration via Semantic Kernel" to "AI Integration via Microsoft.Extensions.AI", (b) replace `ISemanticKernelFactory.CreateSemanticKernel()` with `IChatClientFactory`, (c) update prompt file location from `.prompty` under `Core/Prompty/` to `.prompt` under `Core/PromptTemplates/`, (d) update token tracking from `result.Metadata?["Usage"] as ChatTokenUsage` to `ChatResponse.Usage`, (e) update enforced pattern reference from `SemanticDescriptionProvider` to migrated pattern using `IChatClient` (R9 from research.md)
-- [ ] T054 [P] Update `docs/components/` documentation to reflect new architecture (`ChatClientFactory`, `PromptTemplateParser`, `LiquidTemplateRenderer`)
-- [ ] T055 Run `dotnet format src/GenAIDBExplorer/GenAIDBExplorer.slnx whitespace` to ensure code formatting compliance
-- [ ] T056 Run quickstart.md validation — verify all steps in `specs/001-migrate-agent-framework/quickstart.md` execute successfully
+- [X] T052 [P] Write migration guide documenting new `settings.json` fields for Microsoft Foundry Project endpoint (FR-017) in `docs/technical/migration-agent-framework.md`
+- [X] T053 [P] Update Constitution Principle II: (a) rename principle title from "AI Integration via Semantic Kernel" to "AI Integration via Microsoft.Extensions.AI", (b) replace `ISemanticKernelFactory.CreateSemanticKernel()` with `IChatClientFactory`, (c) update prompt file location from `.prompty` under `Core/Prompty/` to `.prompt` under `Core/PromptTemplates/`, (d) update token tracking from `result.Metadata?["Usage"] as ChatTokenUsage` to `ChatResponse.Usage`, (e) update enforced pattern reference from `SemanticDescriptionProvider` to migrated pattern using `IChatClient` (R9 from research.md)
+- [X] T054 [P] Update `docs/components/` documentation to reflect new architecture (`ChatClientFactory`, `PromptTemplateParser`, `LiquidTemplateRenderer`)
+- [X] T055 Run `dotnet format src/GenAIDBExplorer/GenAIDBExplorer.slnx whitespace` to ensure code formatting compliance
+- [X] T056 Run quickstart.md validation — verify all steps in `specs/001-migrate-agent-framework/quickstart.md` execute successfully
 
 ---
 

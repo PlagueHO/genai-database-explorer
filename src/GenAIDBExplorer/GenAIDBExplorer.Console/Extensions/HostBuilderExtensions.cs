@@ -1,10 +1,11 @@
 ﻿using GenAIDBExplorer.Console.Services;
 using GenAIDBExplorer.Console.CommandHandlers;
+using GenAIDBExplorer.Core.ChatClients;
 using GenAIDBExplorer.Core.Data.ConnectionManager;
 using GenAIDBExplorer.Core.Data.DatabaseProviders;
 using GenAIDBExplorer.Core.DataDictionary;
 using GenAIDBExplorer.Core.Models.Project;
-using GenAIDBExplorer.Core.SemanticKernel;
+using GenAIDBExplorer.Core.PromptTemplates;
 using GenAIDBExplorer.Core.SemanticModelProviders;
 using GenAIDBExplorer.Core.SemanticProviders;
 using GenAIDBExplorer.Core.SemanticVectors.Infrastructure;
@@ -150,14 +151,16 @@ public static class HostBuilderExtensions
         // Register the Data Dictionary provider
         services.AddSingleton<IDataDictionaryProvider, DataDictionaryProvider>();
 
-        // Register the Semantic Kernel factory
-        services.AddSingleton<ISemanticKernelFactory, SemanticKernelFactory>();
+        // Register AI service factories (replacing ISemanticKernelFactory)
+        services.AddSingleton<IChatClientFactory, ChatClientFactory>();
+        services.AddSingleton<IPromptTemplateParser, PromptTemplateParser>();
+        services.AddSingleton<ILiquidTemplateRenderer, LiquidTemplateRenderer>();
 
         // Vector indexing/search infrastructure
         services.AddSingleton<IVectorIndexPolicy, VectorIndexPolicy>();
         services.AddSingleton<IVectorInfrastructureFactory, VectorInfrastructureFactory>();
         services.AddSingleton<IVectorRecordMapper, VectorRecordMapper>();
-        services.AddSingleton<IEmbeddingGenerator, SemanticKernelEmbeddingGenerator>();
+        services.AddSingleton<IEmbeddingGenerator, ChatClientEmbeddingGenerator>();
         services.AddSingleton<IEntityKeyBuilder, EntityKeyBuilder>();
         services.AddSingleton<IVectorIndexWriter, SkInMemoryVectorIndexWriter>();
         services.AddSingleton<IVectorSearchService, SkInMemoryVectorSearchService>();

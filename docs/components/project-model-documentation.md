@@ -24,7 +24,7 @@ The Project Model encapsulates project-scoped configuration and utilities for Ge
 
 ### System Context and Relationships
 
-- Used by CLI command handlers and providers to access configuration (e.g., SemanticKernelFactory, repositories)
+- Used by CLI command handlers and providers to access configuration (e.g., ChatClientFactory, repositories)
 
 ## 2. Architecture
 

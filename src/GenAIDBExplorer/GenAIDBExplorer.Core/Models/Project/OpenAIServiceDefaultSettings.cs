@@ -35,4 +35,12 @@ public class OpenAIServiceDefaultSettings
     public string? TenantId { get; set; }
 
     public string? AzureOpenAIAppId { get; set; }
+
+    /// <summary>
+    /// Microsoft Foundry project endpoint URL used by AIProjectClient for connection discovery.
+    /// Format: https://{resource}.services.ai.azure.com/api/projects/{project-name}
+    /// Required when using the Foundry SDK for AI service connection management.
+    /// </summary>
+    [Url(ErrorMessage = "FoundryProjectEndpoint must be a valid URL")]
+    public string? FoundryProjectEndpoint { get; set; }
 }

@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using Microsoft.Extensions.AI;
 
 namespace GenAIDBExplorer.Core.SemanticProviders;
 
@@ -35,9 +36,9 @@ public class SemanticProcessResult : IEnumerable<SemanticProcessResultItem>
     /// Gets the total input token count.
     /// </summary>
     /// <returns></returns>
-    public int GetTotalInputTokenCount()
+    public long GetTotalInputTokenCount()
     {
-        return _items.Sum(item => item.TokenUsage?.InputTokenCount ?? 0);
+        return _items.Sum(item => item.TokenUsage?.InputTokenCount ?? 0L);
     }
 
     /// <summary>
@@ -45,18 +46,18 @@ public class SemanticProcessResult : IEnumerable<SemanticProcessResultItem>
     /// </summary>
     /// <param name="label"></param>
     /// <returns></returns>
-    public int GetTotalInputTokenCount(string label)
+    public long GetTotalInputTokenCount(string label)
     {
-        return _items.Where(item => item.Label == label).Sum(item => item.TokenUsage?.InputTokenCount ?? 0);
+        return _items.Where(item => item.Label == label).Sum(item => item.TokenUsage?.InputTokenCount ?? 0L);
     }
 
     /// <summary>
     /// Gets the total output token count.
     /// </summary>
     /// <returns></returns>
-    public int GetTotalOutputTokenCount()
+    public long GetTotalOutputTokenCount()
     {
-        return _items.Sum(item => item.TokenUsage?.OutputTokenCount ?? 0);
+        return _items.Sum(item => item.TokenUsage?.OutputTokenCount ?? 0L);
     }
 
     /// <summary>
@@ -64,27 +65,27 @@ public class SemanticProcessResult : IEnumerable<SemanticProcessResultItem>
     /// </summary>
     /// <param name="label"></param>
     /// <returns></returns>
-    public int GetTotalOutputTokenCount(string label)
+    public long GetTotalOutputTokenCount(string label)
     {
-        return _items.Where(item => item.Label == label).Sum(item => item.TokenUsage?.OutputTokenCount ?? 0);
+        return _items.Where(item => item.Label == label).Sum(item => item.TokenUsage?.OutputTokenCount ?? 0L);
     }
 
     /// <summary>
     /// Gets the total token count.
     /// </summary>
     /// <returns></returns>
-    public int GetTotalTokenCount()
+    public long GetTotalTokenCount()
     {
-        return _items.Sum(item => item.TokenUsage?.TotalTokenCount ?? 0);
+        return _items.Sum(item => item.TokenUsage?.TotalTokenCount ?? 0L);
     }
 
     /// <summary>
     /// Gets the total token count for a specific label.
     /// </summary>
     /// <param name="other"></param>
-    public int GetTotalTokenCount(string label)
+    public long GetTotalTokenCount(string label)
     {
-        return _items.Where(item => item.Label == label).Sum(item => item.TokenUsage?.TotalTokenCount ?? 0);
+        return _items.Where(item => item.Label == label).Sum(item => item.TokenUsage?.TotalTokenCount ?? 0L);
     }
 
     /// <summary>
@@ -124,12 +125,12 @@ public class SemanticProcessResult : IEnumerable<SemanticProcessResultItem>
 public class SemanticProcessResultItem(
     string id,
     string label,
-    OpenAI.Chat.ChatTokenUsage? tokenUsage,
+    UsageDetails? tokenUsage,
     TimeSpan timeTaken
 )
 {
     public string Id { get; set; } = id;
     public string Label { get; set; } = label;
-    public OpenAI.Chat.ChatTokenUsage? TokenUsage { get; set; } = tokenUsage;
+    public UsageDetails? TokenUsage { get; set; } = tokenUsage;
     public TimeSpan TimeTaken { get; set; } = timeTaken;
 }
