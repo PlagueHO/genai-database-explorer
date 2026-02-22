@@ -113,7 +113,7 @@
         // "TenantId": "<AzureTenantId>"               // Optional: for multi-tenant Entra ID
     },
     "ChatCompletion": {
-        "DeploymentName": "<deployment-name>"           // e.g., "gpt-4-1"
+        "DeploymentName": "<deployment-name>"           // e.g., "gpt-5-2-chat"
     },
     "ChatCompletionStructured": {
         "DeploymentName": "<deployment-name>"           // Must support structured output

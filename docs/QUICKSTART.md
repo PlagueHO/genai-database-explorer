@@ -233,7 +233,7 @@ Edit the `settings.json` file in the project directory to set the desired config
             "Endpoint": "https://<Set your Microsoft Foundry endpoint>.services.ai.azure.com/" // Foundry endpoint (also accepts .openai.azure.com and .cognitiveservices.azure.com)
         },
         "ChatCompletion": {
-            "DeploymentName": "<Set your chat completion deployment name>" // Recommend gpt-4.1 or gpt-4.1-mini
+            "DeploymentName": "<Set your chat completion deployment name>" // Recommend gpt-5.2-chat or newer
         },
         "Embedding": {
             "DeploymentName": "<Set your embedding deployment name>" // Recommend text-embedding-3-large/small or ada-002

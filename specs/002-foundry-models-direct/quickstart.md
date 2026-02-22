@@ -38,10 +38,10 @@ Replace the `OpenAIService` section with the new `FoundryModels` section:
         "Endpoint": "https://myresource.openai.azure.com/"
     },
     "ChatCompletion": {
-        "DeploymentName": "gpt-4-1"
+        "DeploymentName": "gpt-5-2-chat"
     },
     "ChatCompletionStructured": {
-        "DeploymentName": "gpt-4-1"
+        "DeploymentName": "gpt-5-2-chat"
     },
     "Embedding": {
         "DeploymentName": "text-embedding-ada-002"

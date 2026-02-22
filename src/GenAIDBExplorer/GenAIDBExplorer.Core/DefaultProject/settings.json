@@ -82,7 +82,7 @@
             // "TenantId": "<AzureTenantId>" // Optional: Azure tenant ID for DefaultAzureCredential. Use when resource is in different tenant than default
         },
         "ChatCompletion": {
-            "DeploymentName": "<Set your deployment name>" // Deployment name for chat completion (including structured output). Recommend gpt-4.1 or gpt-4.1-mini (or above)
+            "DeploymentName": "<Set your deployment name>" // Deployment name for chat completion (including structured output). Recommend gpt-5.2-chat or newer
         },
         "Embedding": {
             "DeploymentName": "<Set your deployment name>" // Deployment name for vector embeddings (recommend text-embedding-3-large/small or ada-002)

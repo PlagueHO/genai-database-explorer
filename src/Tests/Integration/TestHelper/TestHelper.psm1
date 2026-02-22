@@ -299,7 +299,7 @@ function Set-ProjectSettings {
         Switch to enable no-azure mode, which uses mock/local configurations instead of Azure services.
 
     .PARAMETER ChatCompletionDeploymentId
-        The deployment ID for the chat completion model (default: 'gpt-4-1').
+        The deployment ID for the chat completion model (default: 'gpt-5-2-chat').
 
     .PARAMETER EmbeddingDeploymentId
         The deployment ID for the text embedding model (default: 'text-embedding-ada-002').
@@ -366,7 +366,7 @@ function Set-TestProjectConfiguration {
         [bool]$NoAzureMode = $false,
 
         [Parameter()]
-        [string]$ChatCompletionDeploymentId = 'gpt-4-1',
+        [string]$ChatCompletionDeploymentId = 'gpt-5-2-chat',
 
         [Parameter()]
         [string]$EmbeddingDeploymentId = 'text-embedding-ada-002',

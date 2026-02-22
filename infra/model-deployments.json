@@ -2,25 +2,13 @@
   {
     "model": {
       "format": "OpenAI",
-      "name": "gpt-4.1",
-      "version": "2025-04-14"
+      "name": "gpt-5.2-chat",
+      "version": "2025-12-11"
     },
-    "name": "gpt-4-1",
+    "name": "gpt-5-2-chat",
     "sku": {
       "name": "GlobalStandard",
       "capacity": 50
-    }
-  },
-  {
-    "model": {
-      "format": "OpenAI",
-      "name": "gpt-4.1-mini",
-      "version": "2025-04-14"
-    },
-    "name": "gpt-4-1-mini",
-    "sku": {
-      "name": "GlobalStandard",
-      "capacity": 100
     }
   },
   {
