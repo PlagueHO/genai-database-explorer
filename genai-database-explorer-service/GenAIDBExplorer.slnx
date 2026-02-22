@@ -48,4 +48,6 @@
   </Folder>
   <Project Path="src/GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj" />
   <Project Path="src/GenAIDBExplorer.Core/GenAIDBExplorer.Core.csproj" />
+  <Project Path="src/GenAIDBExplorer.AppHost/GenAIDBExplorer.AppHost.csproj" />
+  <Project Path="src/GenAIDBExplorer.ServiceDefaults/GenAIDBExplorer.ServiceDefaults.csproj" />
 </Solution>

@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GenAIDBExplorer.Core\GenAIDBExplorer.Core.csproj" />
+    <ProjectReference Include="..\GenAIDBExplorer.ServiceDefaults\GenAIDBExplorer.ServiceDefaults.csproj" />
   </ItemGroup>
 
   <ItemGroup>

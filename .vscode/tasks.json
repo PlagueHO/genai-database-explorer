@@ -412,6 +412,32 @@
 			"problemMatcher": "$msCompile"
 		},
 
+		// Aspire Tasks
+		{
+			"label": "aspire: run",
+			"icon": {
+				"id": "debug-start",
+				"color": "terminal.ansiGreen"
+			},
+			"type": "shell",
+			"command": "aspire",
+			"args": [
+				"run"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": "$msCompile",
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
+			"presentation": {
+				"reveal": "always",
+				"panel": "new"
+			}
+		},
+
         // Bicep tasks
 		{
 			"label": "bicep: build",

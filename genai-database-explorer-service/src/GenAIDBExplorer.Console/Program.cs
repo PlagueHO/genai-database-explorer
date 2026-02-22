@@ -24,6 +24,7 @@ internal static class Program
 
         // Build the host
         var builder = Host.CreateApplicationBuilder(args);
+        builder.AddServiceDefaults();
         builder.ConfigureHost(args);
         var host = builder.Build();
 
