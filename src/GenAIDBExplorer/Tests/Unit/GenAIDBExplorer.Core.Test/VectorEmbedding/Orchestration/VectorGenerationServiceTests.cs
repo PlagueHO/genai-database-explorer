@@ -30,7 +30,7 @@ public class VectorGenerationServiceTests
                 SettingsVersion = new Version(1, 0),
                 Database = new DatabaseSettings(),
                 DataDictionary = new DataDictionarySettings(),
-                OpenAIService = new OpenAIServiceSettings(),
+                FoundryModels = new FoundryModelsSettings(),
                 SemanticModel = new SemanticModelSettings { PersistenceStrategy = "LocalDisk" },
                 SemanticModelRepository = new SemanticModelRepositorySettings
                 {

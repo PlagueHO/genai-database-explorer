@@ -46,7 +46,7 @@ public class SemanticModelProviderTests
         {
             Database = databaseSettings,
             DataDictionary = new DataDictionarySettings(),
-            OpenAIService = new OpenAIServiceSettings(),
+            FoundryModels = new FoundryModelsSettings(),
             SemanticModel = new SemanticModelSettings
             {
                 MaxDegreeOfParallelism = 2

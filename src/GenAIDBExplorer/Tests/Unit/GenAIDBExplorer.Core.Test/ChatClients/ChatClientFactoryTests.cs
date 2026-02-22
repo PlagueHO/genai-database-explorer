@@ -11,13 +11,12 @@ namespace GenAIDBExplorer.Core.Test.ChatClients;
 public class ChatClientFactoryTests
 {
     private static IProject CreateMockProject(
-        string serviceType = "AzureOpenAI",
-        AzureOpenAIAuthenticationType authType = AzureOpenAIAuthenticationType.ApiKey,
+        AuthenticationType authType = AuthenticationType.ApiKey,
         string? endpoint = "https://test.openai.azure.com/",
         string? apiKey = "test-api-key",
-        string? chatDeploymentId = "gpt-4o",
-        string? chatStructuredDeploymentId = "gpt-4o-structured",
-        string? embeddingDeploymentId = "text-embedding-3-small",
+        string? chatDeploymentName = "gpt-4o",
+        string? chatStructuredDeploymentName = "gpt-4o-structured",
+        string? embeddingDeploymentName = "text-embedding-3-small",
         string? tenantId = null)
     {
         var projectMock = new Mock<IProject>();
@@ -28,27 +27,26 @@ public class ChatClientFactoryTests
             DataDictionary = new DataDictionarySettings(),
             SemanticModel = new SemanticModelSettings(),
             SemanticModelRepository = new SemanticModelRepositorySettings(),
-            OpenAIService = new OpenAIServiceSettings
+            FoundryModels = new FoundryModelsSettings
             {
-                Default = new OpenAIServiceDefaultSettings
+                Default = new FoundryModelsDefaultSettings
                 {
-                    ServiceType = serviceType,
-                    AzureAuthenticationType = authType,
-                    AzureOpenAIEndpoint = endpoint,
-                    AzureOpenAIKey = apiKey,
+                    AuthenticationType = authType,
+                    Endpoint = endpoint,
+                    ApiKey = apiKey,
                     TenantId = tenantId
                 },
-                ChatCompletion = new OpenAIServiceChatCompletionSettings
+                ChatCompletion = new ChatCompletionDeploymentSettings
                 {
-                    AzureOpenAIDeploymentId = chatDeploymentId
+                    DeploymentName = chatDeploymentName
                 },
-                ChatCompletionStructured = new OpenAIServiceChatCompletionStructuredSettings
+                ChatCompletionStructured = new ChatCompletionStructuredDeploymentSettings
                 {
-                    AzureOpenAIDeploymentId = chatStructuredDeploymentId
+                    DeploymentName = chatStructuredDeploymentName
                 },
-                Embedding = new OpenAIServiceEmbeddingSettings
+                Embedding = new EmbeddingDeploymentSettings
                 {
-                    AzureOpenAIDeploymentId = embeddingDeploymentId
+                    DeploymentName = embeddingDeploymentName
                 }
             }
         };
@@ -63,7 +61,7 @@ public class ChatClientFactoryTests
     public void CreateChatClient_WithApiKeyAuth_ShouldReturnIChatClient()
     {
         // Arrange
-        var project = CreateMockProject(authType: AzureOpenAIAuthenticationType.ApiKey);
+        var project = CreateMockProject(authType: AuthenticationType.ApiKey);
         var logger = Mock.Of<ILogger<ChatClientFactory>>();
         var factory = new ChatClientFactory(project, logger);
 
@@ -79,7 +77,7 @@ public class ChatClientFactoryTests
     public void CreateChatClient_WithEntraIdAuth_ShouldReturnIChatClient()
     {
         // Arrange
-        var project = CreateMockProject(authType: AzureOpenAIAuthenticationType.EntraIdAuthentication);
+        var project = CreateMockProject(authType: AuthenticationType.EntraIdAuthentication);
         var logger = Mock.Of<ILogger<ChatClientFactory>>();
         var factory = new ChatClientFactory(project, logger);
 
@@ -111,7 +109,7 @@ public class ChatClientFactoryTests
     public void CreateChatClient_MissingDeploymentId_ShouldThrowInvalidOperationException()
     {
         // Arrange
-        var project = CreateMockProject(chatDeploymentId: null);
+        var project = CreateMockProject(chatDeploymentName: null);
         var logger = Mock.Of<ILogger<ChatClientFactory>>();
         var factory = new ChatClientFactory(project, logger);
 
@@ -128,7 +126,7 @@ public class ChatClientFactoryTests
     {
         // Arrange
         var project = CreateMockProject(
-            authType: AzureOpenAIAuthenticationType.ApiKey,
+            authType: AuthenticationType.ApiKey,
             apiKey: null);
         var logger = Mock.Of<ILogger<ChatClientFactory>>();
         var factory = new ChatClientFactory(project, logger);
@@ -149,7 +147,7 @@ public class ChatClientFactoryTests
     public void CreateStructuredOutputChatClient_WithApiKeyAuth_ShouldReturnIChatClient()
     {
         // Arrange
-        var project = CreateMockProject(authType: AzureOpenAIAuthenticationType.ApiKey);
+        var project = CreateMockProject(authType: AuthenticationType.ApiKey);
         var logger = Mock.Of<ILogger<ChatClientFactory>>();
         var factory = new ChatClientFactory(project, logger);
 
@@ -165,7 +163,7 @@ public class ChatClientFactoryTests
     public void CreateStructuredOutputChatClient_MissingDeploymentId_ShouldThrowInvalidOperationException()
     {
         // Arrange
-        var project = CreateMockProject(chatStructuredDeploymentId: null);
+        var project = CreateMockProject(chatStructuredDeploymentName: null);
         var logger = Mock.Of<ILogger<ChatClientFactory>>();
         var factory = new ChatClientFactory(project, logger);
 
@@ -185,7 +183,7 @@ public class ChatClientFactoryTests
     public void CreateEmbeddingGenerator_WithApiKeyAuth_ShouldReturnEmbeddingGenerator()
     {
         // Arrange
-        var project = CreateMockProject(authType: AzureOpenAIAuthenticationType.ApiKey);
+        var project = CreateMockProject(authType: AuthenticationType.ApiKey);
         var logger = Mock.Of<ILogger<ChatClientFactory>>();
         var factory = new ChatClientFactory(project, logger);
 
@@ -201,7 +199,7 @@ public class ChatClientFactoryTests
     public void CreateEmbeddingGenerator_WithEntraIdAuth_ShouldReturnEmbeddingGenerator()
     {
         // Arrange
-        var project = CreateMockProject(authType: AzureOpenAIAuthenticationType.EntraIdAuthentication);
+        var project = CreateMockProject(authType: AuthenticationType.EntraIdAuthentication);
         var logger = Mock.Of<ILogger<ChatClientFactory>>();
         var factory = new ChatClientFactory(project, logger);
 
@@ -217,7 +215,7 @@ public class ChatClientFactoryTests
     public void CreateEmbeddingGenerator_MissingDeploymentId_ShouldThrowInvalidOperationException()
     {
         // Arrange
-        var project = CreateMockProject(embeddingDeploymentId: null);
+        var project = CreateMockProject(embeddingDeploymentName: null);
         var logger = Mock.Of<ILogger<ChatClientFactory>>();
         var factory = new ChatClientFactory(project, logger);
 
@@ -238,7 +236,7 @@ public class ChatClientFactoryTests
     {
         // Arrange
         var project = CreateMockProject(
-            authType: AzureOpenAIAuthenticationType.EntraIdAuthentication,
+            authType: AuthenticationType.EntraIdAuthentication,
             tenantId: "12345678-1234-1234-1234-123456789012");
         var logger = Mock.Of<ILogger<ChatClientFactory>>();
         var factory = new ChatClientFactory(project, logger);

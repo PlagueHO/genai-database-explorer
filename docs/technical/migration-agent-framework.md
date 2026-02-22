@@ -21,24 +21,6 @@ for all AI operations (chat completion, structured output, embeddings). This has
 
 ## Settings Changes
 
-### New Field: `FoundryProjectEndpoint`
-
-The `OpenAIService.Default` section in `settings.json` now supports an optional `FoundryProjectEndpoint` field
-for Microsoft Foundry project endpoint URL:
-
-```json
-{
-  "OpenAIService": {
-    "Default": {
-      "AzureOpenAIEndpoint": "<endpoint>",
-      "FoundryProjectEndpoint": "https://<resource>.services.ai.azure.com/api/projects/<project-name>"
-    }
-  }
-}
-```
-
-This field is optional and used when connecting via the Microsoft Foundry SDK (`Azure.AI.Projects`).
-
 ## NuGet Package Changes
 
 ### Removed Packages

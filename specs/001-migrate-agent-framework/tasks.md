@@ -288,16 +288,20 @@
 ### Parallel Opportunities
 
 **Phase 2** (after Phase 1):
+
 - T004, T005, T006 — all model tests in parallel
 - T007, T008, T009 — all model implementations in parallel
 
 **Phase 3 + Phase 4** (after Phase 2):
+
 - Phase 3 (US5) and Phase 4 (US6) can run in parallel — different files, no dependencies between them
 
 **Phase 5 + Phase 6 + Phase 7** (after Phase 3 + 4):
+
 - US1 (T024–T029), US2 (T030–T033), US3 (T034–T036) can all run in parallel — different provider files
 
 **Phase 9** (within US7):
+
 - T043, T044 — file deletions in parallel
 
 ---
@@ -357,10 +361,12 @@ Stream C (US3 — Embeddings):
 ### Parallel Team Strategy
 
 With multiple developers after Phase 2 completes:
+
 - Developer A: Phase 3 (US5 — Parser/Renderer)
 - Developer B: Phase 4 (US6 — Auth/Factory)
 
 After Phase 3+4 complete:
+
 - Developer A: Phase 5 (US1 — Enrichment)
 - Developer B: Phase 6 (US2 — Data Dictionary)
 - Developer C: Phase 7 (US3 — Embeddings)

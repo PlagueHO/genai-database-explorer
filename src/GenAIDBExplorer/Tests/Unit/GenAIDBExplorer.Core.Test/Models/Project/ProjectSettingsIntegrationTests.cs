@@ -81,20 +81,20 @@ public class ProjectSettingsIntegrationTests
                         "ConsistencyLevel": "Strong"
                     }
                 },
-                "OpenAIService": {
+                "FoundryModels": {
                     "Default": {
-                        "ServiceType": "AzureOpenAI",
-                        "AzureOpenAIKey": "test-key",
-                        "AzureOpenAIEndpoint": "https://test.cognitiveservices.azure.com/"
+                        "AuthenticationType": "ApiKey",
+                        "ApiKey": "test-key",
+                        "Endpoint": "https://test.cognitiveservices.azure.com/"
                     },
                     "ChatCompletion": {
-                        "AzureOpenAIDeploymentId": "gpt-4o"
+                        "DeploymentName": "gpt-4o"
                     },
                     "ChatCompletionStructured": {
-                        "AzureOpenAIDeploymentId": "gpt-4o"
+                        "DeploymentName": "gpt-4o"
                     },
                     "Embedding": {
-                        "AzureOpenAIDeploymentId": "text-embedding-3-large"
+                        "DeploymentName": "text-embedding-3-large"
                     }
                 }
             }
@@ -163,20 +163,20 @@ public class ProjectSettingsIntegrationTests
                         "Directory": "TestSemanticModel"
                     }
                 },
-                "OpenAIService": {
+                "FoundryModels": {
                     "Default": {
-                        "ServiceType": "AzureOpenAI",
-                        "AzureOpenAIKey": "test-key",
-                        "AzureOpenAIEndpoint": "https://test.cognitiveservices.azure.com/"
+                        "AuthenticationType": "ApiKey",
+                        "ApiKey": "test-key",
+                        "Endpoint": "https://test.cognitiveservices.azure.com/"
                     },
                     "ChatCompletion": {
-                        "AzureOpenAIDeploymentId": "gpt-4o"
+                        "DeploymentName": "gpt-4o"
                     },
                     "ChatCompletionStructured": {
-                        "AzureOpenAIDeploymentId": "gpt-4o"
+                        "DeploymentName": "gpt-4o"
                     },
                     "Embedding": {
-                        "AzureOpenAIDeploymentId": "text-embedding-3-large"
+                        "DeploymentName": "text-embedding-3-large"
                     }
                 }
             }
@@ -215,20 +215,20 @@ public class ProjectSettingsIntegrationTests
                         "Directory": "TestSemanticModel"
                     }
                 },
-                "OpenAIService": {
+                "FoundryModels": {
                     "Default": {
-                        "ServiceType": "AzureOpenAI",
-                        "AzureOpenAIKey": "test-key",
-                        "AzureOpenAIEndpoint": "https://test.cognitiveservices.azure.com/"
+                        "AuthenticationType": "ApiKey",
+                        "ApiKey": "test-key",
+                        "Endpoint": "https://test.cognitiveservices.azure.com/"
                     },
                     "ChatCompletion": {
-                        "AzureOpenAIDeploymentId": "gpt-4o"
+                        "DeploymentName": "gpt-4o"
                     },
                     "ChatCompletionStructured": {
-                        "AzureOpenAIDeploymentId": "gpt-4o"
+                        "DeploymentName": "gpt-4o"
                     },
                     "Embedding": {
-                        "AzureOpenAIDeploymentId": "text-embedding-3-large"
+                        "DeploymentName": "text-embedding-3-large"
                     }
                 }
             }
@@ -241,5 +241,168 @@ public class ProjectSettingsIntegrationTests
         FluentActions.Invoking(() => _project.LoadProjectConfiguration(_testDirectory))
             .Should().Throw<ValidationException>()
             .WithMessage("*Invalid PersistenceStrategy 'InvalidStrategy'*");
+    }
+
+    [TestMethod]
+    public void LoadProjectConfiguration_OldOpenAIServiceSection_ShouldThrowValidationExceptionWithMigrationMessage()
+    {
+        // Arrange
+        var settingsJson = """
+            {
+                "SettingsVersion": "1.0.0",
+                "Database": {
+                    "Name": "TestDB",
+                    "ConnectionString": "Server=.;Database=Test;Integrated Security=true;",
+                    "Description": "Test database"
+                },
+                "DataDictionary": {
+                    "ColumnTypeMapping": []
+                },
+                "SemanticModel": {
+                    "PersistenceStrategy": "LocalDisk",
+                    "MaxDegreeOfParallelism": 4
+                },
+                "SemanticModelRepository": {
+                    "LocalDisk": {
+                        "Directory": "TestSemanticModel"
+                    }
+                },
+                "FoundryModels": {
+                    "Default": {
+                        "AuthenticationType": "ApiKey",
+                        "ApiKey": "test-key",
+                        "Endpoint": "https://test.cognitiveservices.azure.com/"
+                    },
+                    "ChatCompletion": {
+                        "DeploymentName": "gpt-4o"
+                    },
+                    "ChatCompletionStructured": {
+                        "DeploymentName": "gpt-4o"
+                    },
+                    "Embedding": {
+                        "DeploymentName": "text-embedding-3-large"
+                    }
+                },
+                "OpenAIService": {
+                    "Default": {
+                        "ServiceType": "AzureOpenAI"
+                    }
+                }
+            }
+            """;
+
+        var settingsPath = Path.Combine(_testDirectory.FullName, "settings.json");
+        File.WriteAllText(settingsPath, settingsJson);
+
+        // Act & Assert
+        FluentActions.Invoking(() => _project.LoadProjectConfiguration(_testDirectory))
+            .Should().Throw<ValidationException>()
+            .WithMessage("*'OpenAIService'*has been replaced by 'FoundryModels'*");
+    }
+
+    [TestMethod]
+    [DataRow("https://myresource.services.ai.azure.com/", DisplayName = "Foundry AI Services endpoint")]
+    [DataRow("https://myresource.openai.azure.com/", DisplayName = "Azure OpenAI endpoint")]
+    [DataRow("https://myresource.cognitiveservices.azure.com/", DisplayName = "Cognitive Services endpoint")]
+    public void LoadProjectConfiguration_ValidEndpointPatterns_ShouldSucceed(string endpointUrl)
+    {
+        // Arrange
+        var settingsJson = $$"""
+            {
+                "SettingsVersion": "1.0.0",
+                "Database": {
+                    "Name": "TestDB",
+                    "ConnectionString": "Server=.;Database=Test;Integrated Security=true;",
+                    "Description": "Test database"
+                },
+                "DataDictionary": {
+                    "ColumnTypeMapping": []
+                },
+                "SemanticModel": {
+                    "PersistenceStrategy": "LocalDisk",
+                    "MaxDegreeOfParallelism": 4
+                },
+                "SemanticModelRepository": {
+                    "LocalDisk": {
+                        "Directory": "TestSemanticModel"
+                    }
+                },
+                "FoundryModels": {
+                    "Default": {
+                        "AuthenticationType": "ApiKey",
+                        "ApiKey": "test-key",
+                        "Endpoint": "{{endpointUrl}}"
+                    },
+                    "ChatCompletion": {
+                        "DeploymentName": "gpt-4o"
+                    },
+                    "ChatCompletionStructured": {
+                        "DeploymentName": "gpt-4o"
+                    },
+                    "Embedding": {
+                        "DeploymentName": "text-embedding-3-large"
+                    }
+                }
+            }
+            """;
+
+        var settingsPath = Path.Combine(_testDirectory.FullName, "settings.json");
+        File.WriteAllText(settingsPath, settingsJson);
+
+        // Act & Assert - should not throw
+        FluentActions.Invoking(() => _project.LoadProjectConfiguration(_testDirectory))
+            .Should().NotThrow();
+    }
+
+    [TestMethod]
+    public void LoadProjectConfiguration_InvalidEndpointDomain_ShouldThrowValidationException()
+    {
+        // Arrange
+        var settingsJson = """
+            {
+                "SettingsVersion": "1.0.0",
+                "Database": {
+                    "Name": "TestDB",
+                    "ConnectionString": "Server=.;Database=Test;Integrated Security=true;",
+                    "Description": "Test database"
+                },
+                "DataDictionary": {
+                    "ColumnTypeMapping": []
+                },
+                "SemanticModel": {
+                    "PersistenceStrategy": "LocalDisk",
+                    "MaxDegreeOfParallelism": 4
+                },
+                "SemanticModelRepository": {
+                    "LocalDisk": {
+                        "Directory": "TestSemanticModel"
+                    }
+                },
+                "FoundryModels": {
+                    "Default": {
+                        "AuthenticationType": "ApiKey",
+                        "ApiKey": "test-key",
+                        "Endpoint": "https://example.com/"
+                    },
+                    "ChatCompletion": {
+                        "DeploymentName": "gpt-4o"
+                    },
+                    "ChatCompletionStructured": {
+                        "DeploymentName": "gpt-4o"
+                    },
+                    "Embedding": {
+                        "DeploymentName": "text-embedding-3-large"
+                    }
+                }
+            }
+            """;
+
+        var settingsPath = Path.Combine(_testDirectory.FullName, "settings.json");
+        File.WriteAllText(settingsPath, settingsJson);
+
+        // Act & Assert
+        FluentActions.Invoking(() => _project.LoadProjectConfiguration(_testDirectory))
+            .Should().Throw<ValidationException>()
+            .WithMessage("*does not appear to be a valid Foundry Models endpoint*");
     }
 }

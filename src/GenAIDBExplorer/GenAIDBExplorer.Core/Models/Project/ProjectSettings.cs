@@ -24,9 +24,9 @@ public class ProjectSettings
     public required DataDictionarySettings DataDictionary { get; set; }
 
     /// <summary>
-    /// Gets or sets the OpenAI service settings.
+    /// Gets or sets the Foundry Models settings.
     /// </summary>
-    public required OpenAIServiceSettings OpenAIService { get; set; }
+    public required FoundryModelsSettings FoundryModels { get; set; }
 
     /// <summary>
     /// Gets or sets the semantic model settings.

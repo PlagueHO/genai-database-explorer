@@ -74,28 +74,22 @@
         },
         "MaxConcurrentOperations": 10 // Maximum number of concurrent repository operations (1-50)
     },
-    "OpenAIService": {
+    "FoundryModels": {
         "Default": {
-            "ServiceType": "AzureOpenAI", // AzureOpenAI, OpenAI
-            "AzureAuthenticationType": "EntraIdAuthentication", // Authentication method for Azure OpenAI: "EntraIdAuthentication" (default, uses managed identity/DefaultAzureCredential) or "ApiKey" (traditional API key)
-            // "OpenAIKey": "<Set your OpenAI API key>"
-            "AzureOpenAIKey": "<Set your Azure OpenAI API key>", // Azure OpenAI key. Only required when AzureAuthenticationType is "ApiKey". When using "EntraIdAuthentication", this can be omitted
-            "AzureOpenAIEndpoint": "https://<Set your Azure OpenAI endpoint>.cognitiveservices.azure.com/" // Azure OpenAI endpoint
+            "AuthenticationType": "EntraIdAuthentication", // Authentication method: "EntraIdAuthentication" (default, uses managed identity/DefaultAzureCredential) or "ApiKey" (traditional API key)
+            // "ApiKey": "<Set your API key>", // Only required when AuthenticationType is "ApiKey". When using "EntraIdAuthentication", this can be omitted
+            "Endpoint": "https://<Set your Foundry Models endpoint>.services.ai.azure.com/" // Foundry Models endpoint (also accepts .openai.azure.com or .cognitiveservices.azure.com)
             // "TenantId": "<AzureTenantId>" // Optional: Azure tenant ID for DefaultAzureCredential. Use when resource is in different tenant than default
-            // "AzureOpenAIAppId": "" // Azure OpenAI App Id
         },
         "ChatCompletion": {
-            // "ModelId": "gpt-4.1-mini-2025-04-14", // Only required when using OpenAI. Recommend gpt-4.1-2025-04-14 or gpt-4.1-mini-2025-04-14 (or above)
-            "AzureOpenAIDeploymentId": "<Set your Azure OpenAI deployment id>" // Only required when using Azure OpenAI. Recommend gpt-4o or gpt-4o-mini
+            "DeploymentName": "<Set your deployment name>" // Deployment name for chat completion. Recommend gpt-4.1 or gpt-4.1-mini (or above)
         },
         // Required for structured chat completion to reliably extract entity lists. Must be a model that supports structured output.
         "ChatCompletionStructured": {
-            // "ModelId": "gpt-4.1-mini-2025-04-14", // Only required when using OpenAI. Recommend gpt-4.1-2025-04-14 or gpt-4.1-mini-2025-04-14 (or above)
-            "AzureOpenAIDeploymentId": "<Set your Azure OpenAI deployment id>" // Only required when using Azure OpenAI. Recommend gpt-4o (2024-08-06 or later)
+            "DeploymentName": "<Set your deployment name>" // Deployment name for structured output. Recommend gpt-4.1 or newer
         },
         "Embedding": {
-            // "ModelId": "gpt-4o-mini-2024-07-18", // Only required when using OpenAI. Recommend gpt-4o-2024-08-06 or gpt-4o-mini-2024-07-18
-            "AzureOpenAIDeploymentId": "<Set your Azure OpenAI deployment id>" // Only required when using Azure OpenAI. Used for vector embeddings generation (recommend text-embedding-3-large/small or ada-002)
+            "DeploymentName": "<Set your deployment name>" // Deployment name for vector embeddings (recommend text-embedding-3-large/small or ada-002)
         }
     },
     "VectorIndex": {
