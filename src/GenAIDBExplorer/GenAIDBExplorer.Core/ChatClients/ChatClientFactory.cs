@@ -1,18 +1,18 @@
-using Azure;
-using Azure.AI.OpenAI;
+using System.ClientModel;
+using System.ClientModel.Primitives;
 using Azure.Identity;
 using GenAIDBExplorer.Core.Models.Project;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
-using OpenAI.Chat;
-using OpenAI.Embeddings;
+using OpenAI;
 
 namespace GenAIDBExplorer.Core.ChatClients;
 
 /// <summary>
 /// Factory for creating AI chat clients and embedding generators from project configuration.
-/// Uses <see cref="AzureOpenAIClient"/> for Azure OpenAI service, supporting both
-/// Entra ID and API key authentication.
+/// Uses <see cref="OpenAIClient"/> with endpoint override for Azure AI Foundry,
+/// supporting both Entra ID and API key authentication.
+/// This approach supports any model hosted in Azure AI Foundry (OpenAI, DeepSeek, Meta, etc.).
 /// </summary>
 public sealed class ChatClientFactory(
     IProject project,
@@ -22,59 +22,64 @@ public sealed class ChatClientFactory(
     private readonly IProject _project = project;
     private readonly ILogger<ChatClientFactory> _logger = logger;
 
+    /// <summary>
+    /// The Azure AI Foundry token audience scope for Entra ID authentication.
+    /// </summary>
+    private const string FoundryTokenScope = "https://ai.azure.com/.default";
+
     /// <inheritdoc />
     public IChatClient CreateChatClient()
     {
-        var defaultSettings = _project.Settings.OpenAIService.Default;
-        var chatSettings = _project.Settings.OpenAIService.ChatCompletion;
+        var defaultSettings = _project.Settings.FoundryModels.Default;
+        var chatSettings = _project.Settings.FoundryModels.ChatCompletion;
 
-        var deploymentId = chatSettings.AzureOpenAIDeploymentId
-            ?? throw new InvalidOperationException("AzureOpenAI ChatCompletion deployment ID is required.");
+        var deploymentName = chatSettings.DeploymentName
+            ?? throw new InvalidOperationException("ChatCompletion deployment name is required.");
 
-        _logger.LogDebug("Creating chat client with deployment: {DeploymentId}", deploymentId);
+        _logger.LogDebug("Creating chat client with deployment: {DeploymentName}", deploymentName);
 
-        var azureClient = CreateAzureOpenAIClient(defaultSettings);
-        return azureClient.GetChatClient(deploymentId).AsIChatClient();
+        var client = CreateOpenAIClient(defaultSettings);
+        return client.GetChatClient(deploymentName).AsIChatClient();
     }
 
     /// <inheritdoc />
     public IChatClient CreateStructuredOutputChatClient()
     {
-        var defaultSettings = _project.Settings.OpenAIService.Default;
-        var chatSettings = _project.Settings.OpenAIService.ChatCompletionStructured;
+        var defaultSettings = _project.Settings.FoundryModels.Default;
+        var chatSettings = _project.Settings.FoundryModels.ChatCompletionStructured;
 
-        var deploymentId = chatSettings.AzureOpenAIDeploymentId
-            ?? throw new InvalidOperationException("AzureOpenAI ChatCompletionStructured deployment ID is required.");
+        var deploymentName = chatSettings.DeploymentName
+            ?? throw new InvalidOperationException("ChatCompletionStructured deployment name is required.");
 
-        _logger.LogDebug("Creating structured output chat client with deployment: {DeploymentId}", deploymentId);
+        _logger.LogDebug("Creating structured output chat client with deployment: {DeploymentName}", deploymentName);
 
-        var azureClient = CreateAzureOpenAIClient(defaultSettings);
-        return azureClient.GetChatClient(deploymentId).AsIChatClient();
+        var client = CreateOpenAIClient(defaultSettings);
+        return client.GetChatClient(deploymentName).AsIChatClient();
     }
 
     /// <inheritdoc />
     public IEmbeddingGenerator<string, Embedding<float>> CreateEmbeddingGenerator()
     {
-        var defaultSettings = _project.Settings.OpenAIService.Default;
-        var embeddingSettings = _project.Settings.OpenAIService.Embedding;
+        var defaultSettings = _project.Settings.FoundryModels.Default;
+        var embeddingSettings = _project.Settings.FoundryModels.Embedding;
 
-        var deploymentId = embeddingSettings.AzureOpenAIDeploymentId
-            ?? throw new InvalidOperationException("AzureOpenAI Embedding deployment ID is required.");
+        var deploymentName = embeddingSettings.DeploymentName
+            ?? throw new InvalidOperationException("Embedding deployment name is required.");
 
-        _logger.LogDebug("Creating embedding generator with deployment: {DeploymentId}", deploymentId);
+        _logger.LogDebug("Creating embedding generator with deployment: {DeploymentName}", deploymentName);
 
-        var azureClient = CreateAzureOpenAIClient(defaultSettings);
-        return azureClient.GetEmbeddingClient(deploymentId).AsIEmbeddingGenerator();
+        var client = CreateOpenAIClient(defaultSettings);
+        return client.GetEmbeddingClient(deploymentName).AsIEmbeddingGenerator();
     }
 
-    private AzureOpenAIClient CreateAzureOpenAIClient(OpenAIServiceDefaultSettings defaultSettings)
+    private OpenAIClient CreateOpenAIClient(FoundryModelsDefaultSettings defaultSettings)
     {
-        var endpoint = defaultSettings.AzureOpenAIEndpoint
-            ?? throw new InvalidOperationException("AzureOpenAI endpoint is required.");
+        var endpoint = defaultSettings.Endpoint
+            ?? throw new InvalidOperationException("Foundry Models endpoint is required.");
 
-        var endpointUri = new Uri(endpoint);
+        var clientOptions = new OpenAIClientOptions { Endpoint = new Uri(endpoint) };
 
-        if (defaultSettings.AzureAuthenticationType == AzureOpenAIAuthenticationType.EntraIdAuthentication)
+        if (defaultSettings.AuthenticationType == AuthenticationType.EntraIdAuthentication)
         {
             var credential = !string.IsNullOrWhiteSpace(defaultSettings.TenantId)
                 ? new DefaultAzureCredential(new DefaultAzureCredentialOptions { TenantId = defaultSettings.TenantId })
@@ -84,19 +89,23 @@ public sealed class ChatClientFactory(
                 ? $" for tenant {defaultSettings.TenantId}"
                 : string.Empty;
             _logger.LogInformation(
-                "Using Microsoft Entra ID Default authentication for Azure OpenAI{TenantInfo}.",
+                "Using Microsoft Entra ID Default authentication for Foundry Models{TenantInfo}.",
                 tenantInfo);
 
-            return new AzureOpenAIClient(endpointUri, credential);
+#pragma warning disable OPENAI001 // OpenAIClient(AuthenticationPolicy, OpenAIClientOptions) is experimental; this is the Microsoft-recommended Foundry auth pattern
+            return new OpenAIClient(
+                new BearerTokenPolicy(credential, FoundryTokenScope),
+                clientOptions);
+#pragma warning restore OPENAI001
         }
         else
         {
-            var apiKey = defaultSettings.AzureOpenAIKey
-                ?? throw new InvalidOperationException("AzureOpenAI API key is required when using ApiKey authentication.");
+            var apiKey = defaultSettings.ApiKey
+                ?? throw new InvalidOperationException("API key is required when using ApiKey authentication.");
 
-            _logger.LogInformation("Using API key authentication for Azure OpenAI.");
+            _logger.LogInformation("Using API key authentication for Foundry Models.");
 
-            return new AzureOpenAIClient(endpointUri, new AzureKeyCredential(apiKey));
+            return new OpenAIClient(new ApiKeyCredential(apiKey), clientOptions);
         }
     }
 }

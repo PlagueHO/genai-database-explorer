@@ -96,7 +96,7 @@ public class Project(
             Database = new DatabaseSettings(),
             DataDictionary = new DataDictionarySettings(),
             SemanticModel = new SemanticModelSettings(),
-            OpenAIService = new OpenAIServiceSettings(),
+            FoundryModels = new FoundryModelsSettings(),
             SemanticModelRepository = new SemanticModelRepositorySettings(),
             VectorIndex = new VectorIndexSettings()
         };
@@ -107,7 +107,7 @@ public class Project(
         _configuration?.GetSection(DatabaseSettings.PropertyName).Bind(Settings.Database);
         _configuration?.GetSection(DataDictionarySettings.PropertyName).Bind(Settings.DataDictionary);
         _configuration?.GetSection(SemanticModelSettings.PropertyName).Bind(Settings.SemanticModel);
-        _configuration?.GetSection(OpenAIServiceSettings.PropertyName).Bind(Settings.OpenAIService);
+        _configuration?.GetSection(FoundryModelsSettings.PropertyName).Bind(Settings.FoundryModels);
         _configuration?.GetSection(SemanticModelRepositorySettings.PropertyName).Bind(Settings.SemanticModelRepository);
         _configuration?.GetSection(VectorIndexSettings.PropertyName).Bind(Settings.VectorIndex);
 
@@ -145,12 +145,12 @@ public class Project(
         Validator.ValidateObject(Settings.VectorIndex, vectorIndexContext, validateAllProperties: true);
         logger.LogInformation("{Message} '{Section}'", _resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "VectorIndex");
 
-        validationContext = new ValidationContext(Settings.OpenAIService);
-        Validator.ValidateObject(Settings.OpenAIService, validationContext, validateAllProperties: true);
-        logger.LogInformation("{Message} '{Section}'", _resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "OpenAIService");
+        validationContext = new ValidationContext(Settings.FoundryModels);
+        Validator.ValidateObject(Settings.FoundryModels, validationContext, validateAllProperties: true);
+        logger.LogInformation("{Message} '{Section}'", _resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "FoundryModels");
 
-        // Validate OpenAI service-specific configuration
-        ValidateOpenAIConfiguration();
+        // Validate Foundry Models-specific configuration
+        ValidateFoundryModelsConfiguration();
 
         logger.LogInformation("{Message}", _resourceManagerLogMessages.GetString("ProjectSettingsValidationCompleted"));
     }
@@ -197,88 +197,75 @@ public class Project(
     }
 
     /// <summary>
-    /// Validates OpenAI service configuration to ensure endpoints are valid URIs and required settings are present.
+    /// Validates Foundry Models configuration to ensure endpoints are valid URIs and required settings are present.
     /// </summary>
-    private void ValidateOpenAIConfiguration()
+    private void ValidateFoundryModelsConfiguration()
     {
-        var openAISettings = Settings.OpenAIService?.Default;
-        if (openAISettings == null)
+        // Detect old OpenAIService section and provide migration guidance
+        if (_configuration?.GetSection("OpenAIService").Exists() == true)
+        {
+            throw new ValidationException(
+                "The 'OpenAIService' configuration section has been replaced by 'FoundryModels'. " +
+                "Please update your settings.json file. See documentation for the new configuration format.");
+        }
+
+        var foundrySettings = Settings.FoundryModels?.Default;
+        if (foundrySettings == null)
         {
             return; // Basic validation will catch this
         }
 
-        // Validate Azure OpenAI endpoint URL format
-        if (openAISettings.ServiceType == "AzureOpenAI" && !string.IsNullOrEmpty(openAISettings.AzureOpenAIEndpoint))
+        // Validate Endpoint URL format
+        if (!string.IsNullOrEmpty(foundrySettings.Endpoint))
         {
-            if (!Uri.TryCreate(openAISettings.AzureOpenAIEndpoint, UriKind.Absolute, out var endpointUri))
+            if (!Uri.TryCreate(foundrySettings.Endpoint, UriKind.Absolute, out var endpointUri))
             {
                 throw new ValidationException(
-                    $"AzureOpenAIEndpoint '{openAISettings.AzureOpenAIEndpoint}' is not a valid URL. " +
-                    "Expected format: https://your-resource.cognitiveservices.azure.com/");
+                    $"Endpoint '{foundrySettings.Endpoint}' is not a valid URL. " +
+                    "Expected format: https://your-resource.services.ai.azure.com/");
             }
 
             // Validate that it's an HTTPS URL
             if (endpointUri.Scheme != Uri.UriSchemeHttps)
             {
                 throw new ValidationException(
-                    $"AzureOpenAIEndpoint must use HTTPS. Current URL: {openAISettings.AzureOpenAIEndpoint}");
+                    $"Endpoint must use HTTPS. Current URL: {foundrySettings.Endpoint}");
             }
 
-            // Validate that it looks like an Azure endpoint
+            // Validate that it looks like a valid Foundry Models endpoint
             var host = endpointUri.Host.ToLowerInvariant();
-            if (!host.EndsWith(".cognitiveservices.azure.com") && !host.EndsWith(".openai.azure.com"))
+            if (!host.EndsWith(".services.ai.azure.com") &&
+                !host.EndsWith(".openai.azure.com") &&
+                !host.EndsWith(".cognitiveservices.azure.com"))
             {
                 throw new ValidationException(
-                    $"AzureOpenAIEndpoint '{openAISettings.AzureOpenAIEndpoint}' does not appear to be a valid Azure OpenAI or Azure Cognitive Services endpoint. " +
-                    "Expected format: https://your-resource.cognitiveservices.azure.com/ or https://your-resource.openai.azure.com/");
+                    $"Endpoint '{foundrySettings.Endpoint}' does not appear to be a valid Foundry Models endpoint. " +
+                    "Expected hostname ending with .services.ai.azure.com, .openai.azure.com, or .cognitiveservices.azure.com");
             }
         }
 
-        // Validate deployment IDs are provided when using Azure OpenAI
-        if (openAISettings.ServiceType == "AzureOpenAI")
+        // Validate deployment names are provided
+        if (string.IsNullOrWhiteSpace(Settings.FoundryModels?.ChatCompletion?.DeploymentName))
         {
-            if (string.IsNullOrWhiteSpace(Settings.OpenAIService?.ChatCompletion?.AzureOpenAIDeploymentId))
-            {
-                throw new ValidationException("ChatCompletion.AzureOpenAIDeploymentId is required when using Azure OpenAI service.");
-            }
-
-            if (string.IsNullOrWhiteSpace(Settings.OpenAIService?.ChatCompletionStructured?.AzureOpenAIDeploymentId))
-            {
-                throw new ValidationException("ChatCompletionStructured.AzureOpenAIDeploymentId is required when using Azure OpenAI service.");
-            }
-
-            if (string.IsNullOrWhiteSpace(Settings.OpenAIService?.Embedding?.AzureOpenAIDeploymentId))
-            {
-                throw new ValidationException("Embedding.AzureOpenAIDeploymentId is required when using Azure OpenAI service.");
-            }
-
-            // Validate authentication-specific requirements for Azure OpenAI
-            if (openAISettings.AzureAuthenticationType == AzureOpenAIAuthenticationType.ApiKey)
-            {
-                if (string.IsNullOrWhiteSpace(openAISettings.AzureOpenAIKey))
-                {
-                    throw new ValidationException("AzureOpenAIKey is required when using ApiKey authentication with Azure OpenAI service.");
-                }
-            }
-            // Note: For EntraIdAuthentication, no additional API key validation is needed
+            throw new ValidationException("ChatCompletion.DeploymentName is required.");
         }
 
-        // Validate model IDs are provided when using OpenAI
-        if (openAISettings.ServiceType == "OpenAI")
+        if (string.IsNullOrWhiteSpace(Settings.FoundryModels?.ChatCompletionStructured?.DeploymentName))
         {
-            if (string.IsNullOrWhiteSpace(Settings.OpenAIService?.ChatCompletion?.ModelId))
-            {
-                throw new ValidationException("ChatCompletion.ModelId is required when using OpenAI service.");
-            }
+            throw new ValidationException("ChatCompletionStructured.DeploymentName is required.");
+        }
 
-            if (string.IsNullOrWhiteSpace(Settings.OpenAIService?.ChatCompletionStructured?.ModelId))
-            {
-                throw new ValidationException("ChatCompletionStructured.ModelId is required when using OpenAI service.");
-            }
+        if (string.IsNullOrWhiteSpace(Settings.FoundryModels?.Embedding?.DeploymentName))
+        {
+            throw new ValidationException("Embedding.DeploymentName is required.");
+        }
 
-            if (string.IsNullOrWhiteSpace(Settings.OpenAIService?.Embedding?.ModelId))
+        // Validate authentication-specific requirements
+        if (foundrySettings.AuthenticationType == AuthenticationType.ApiKey)
+        {
+            if (string.IsNullOrWhiteSpace(foundrySettings.ApiKey))
             {
-                throw new ValidationException("Embedding.ModelId is required when using OpenAI service.");
+                throw new ValidationException("ApiKey is required when using ApiKey authentication.");
             }
         }
     }

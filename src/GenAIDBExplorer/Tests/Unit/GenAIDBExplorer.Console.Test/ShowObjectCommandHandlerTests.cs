@@ -41,7 +41,7 @@ public class ShowObjectCommandHandlerTests
             {
                 PersistenceStrategy = "LocalDisk"
             },
-            OpenAIService = new OpenAIServiceSettings(),
+            FoundryModels = new FoundryModelsSettings(),
             SemanticModelRepository = new SemanticModelRepositorySettings
             {
                 LocalDisk = new LocalDiskConfiguration

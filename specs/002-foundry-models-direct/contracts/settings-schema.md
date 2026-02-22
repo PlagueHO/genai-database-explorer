@@ -28,11 +28,7 @@ This feature does not expose REST/API endpoints. The "contract" is the JSON sett
 
             // OPTIONAL: Azure tenant ID for DefaultAzureCredential.
             // Use when the Foundry resource is in a different tenant than the default credential chain.
-            // "TenantId": "<azure-tenant-id>",
-
-            // OPTIONAL: Foundry project endpoint for connection discovery.
-            // Format: https://<resource>.services.ai.azure.com/api/projects/<project-name>
-            // "FoundryProjectEndpoint": "https://<resource>.services.ai.azure.com/api/projects/<project>"
+            // "TenantId": "<azure-tenant-id>"
         },
         "ChatCompletion": {
             // REQUIRED: Deployment name for chat completion models in the Foundry resource.

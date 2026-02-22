@@ -65,7 +65,6 @@
 | Class | Property | Notes |
 |---|---|---|
 | Default settings | `TenantId` | Still needed for multi-tenant Entra ID |
-| Default settings | `FoundryProjectEndpoint` | Already exists — optional Foundry project URL |
 
 ### Files to MODIFY (non-rename, code changes)
 

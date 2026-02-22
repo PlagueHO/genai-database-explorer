@@ -19,7 +19,6 @@ BEFORE:
                                     │     AzureOpenAIEndpoint: string?
                                     │     TenantId: string?
                                     │     AzureOpenAIAppId: string?
-                                    │     FoundryProjectEndpoint: string?
                                     │
                                     ├── ChatCompletion ──→ OpenAIServiceChatCompletionSettings
                                     │     ModelId: string?
@@ -44,7 +43,6 @@ AFTER:
 └──────────────────────────┘        │     ApiKey: string?
                                     │     Endpoint: string?  [Required]
                                     │     TenantId: string?
-                                    │     FoundryProjectEndpoint: string?
                                     │
                                     ├── ChatCompletion ──→ ChatCompletionDeploymentSettings
                                     │     DeploymentName: string?  [Required]
@@ -77,7 +75,6 @@ AFTER:
 | `ApiKey` | `string?` | Conditional | `null` | Required when `AuthenticationType` = `ApiKey` | API key for Foundry endpoint |
 | `Endpoint` | `string?` | Yes | `null` | `[Required]`, `[Url]`, must be HTTPS with valid domain | Foundry Models endpoint URL |
 | `TenantId` | `string?` | No | `null` | — | Optional: Azure tenant ID for multi-tenant Entra ID |
-| `FoundryProjectEndpoint` | `string?` | No | `null` | `[Url]` | Optional: Foundry project URL for connection discovery |
 
 ### AuthenticationType (replaces AzureOpenAIAuthenticationType)
 

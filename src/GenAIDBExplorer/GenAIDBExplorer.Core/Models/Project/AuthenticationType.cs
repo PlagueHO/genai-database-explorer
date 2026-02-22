@@ -1,13 +1,13 @@
 namespace GenAIDBExplorer.Core.Models.Project;
 
 /// <summary>
-/// Specifies the authentication method to use when connecting to Azure OpenAI services.
+/// Specifies the authentication method to use when connecting to Foundry Models endpoints.
 /// </summary>
-public enum AzureOpenAIAuthenticationType
+public enum AuthenticationType
 {
     /// <summary>
-    /// Use Azure OpenAI API key authentication.
-    /// This is the traditional authentication method using API keys from the Azure OpenAI resource.
+    /// Use API key authentication.
+    /// This is the traditional authentication method using API keys from the Foundry resource.
     /// </summary>
     ApiKey,
 

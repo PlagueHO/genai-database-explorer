@@ -45,13 +45,12 @@ public class ExtractModelCommandHandlerTests
             {
                 ColumnTypeMapping = []
             },
-            OpenAIService = new OpenAIServiceSettings
+            FoundryModels = new FoundryModelsSettings
             {
-                Default = new OpenAIServiceDefaultSettings
+                Default = new FoundryModelsDefaultSettings
                 {
-                    ServiceType = "AzureOpenAI",
-                    AzureOpenAIKey = "test-key",
-                    AzureOpenAIEndpoint = "https://test.openai.azure.com/"
+                    ApiKey = "test-key",
+                    Endpoint = "https://test.openai.azure.com/"
                 }
             },
             SemanticModel = new SemanticModelSettings

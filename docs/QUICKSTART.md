@@ -210,7 +210,7 @@ Replace `/path/to/project` with the desired path for the project directory. This
 
 ## Configure the project
 
-After creating a new project, you can configure it by editing the project configuration file (`settings.json`). This file contains various settings that control the behavior of the GenAI Database Explorer, including the database connection string and the connection settings to the Azure OpenAI or OpenAI services.
+After creating a new project, you can configure it by editing the project configuration file (`settings.json`). This file contains various settings that control the behavior of the GenAI Database Explorer, including the database connection string and the connection settings to Microsoft Foundry Models.
 
 Edit the `settings.json` file in the project directory to set the desired configuration values:
 
@@ -226,26 +226,21 @@ Edit the `settings.json` file in the project directory to set the desired config
         // ... other parameters
   },
   // ... other settings
-    "OpenAIService": {
+    "FoundryModels": {
         "Default": {
-            "ServiceType": "AzureOpenAI", // AzureOpenAI, OpenAI
-            // "OpenAIKey": "<Set your OpenAI API key>"
-            "AzureOpenAIKey": "<Set your Azure OpenAI API key>", // Azure OpenAI key. If not provided, will attempt using Azure Default Credential
-            "AzureOpenAIEndpoint": "https://<Set your Azure OpenAI endpoint>.cognitiveservices.azure.com/" // Azure OpenAI endpoint
-            // "AzureOpenAIAppId": "" // Azure OpenAI App Id
+            "AuthenticationType": "EntraIdAuthentication", // EntraIdAuthentication (recommended), ApiKey
+            // "ApiKey": "<Set your API key>", // Only required when AuthenticationType is ApiKey
+            "Endpoint": "https://<Set your Microsoft Foundry endpoint>.services.ai.azure.com/" // Foundry endpoint (also accepts .openai.azure.com and .cognitiveservices.azure.com)
         },
         "ChatCompletion": {
-            // "ModelId": "gpt-4.1-mini-2025-04-14", // Only required when using OpenAI. Recommend gpt-4.1-2025-04-14 or gpt-4.1-mini-2025-04-14 (or above)
-            "AzureOpenAIDeploymentId": "<Set your Azure OpenAI deployment id>" // Only required when using Azure OpenAI. Recommend gpt-4o or gpt-4o-mini
+            "DeploymentName": "<Set your chat completion deployment name>" // Recommend gpt-4.1 or gpt-4.1-mini
         },
         // Required for structured chat completion to reliably extract entity lists. Must be a model that supports structured output.
         "ChatCompletionStructured": {
-            // "ModelId": "gpt-4.1-mini-2025-04-14", // Only required when using OpenAI. Recommend gpt-4.1-2025-04-14 or gpt-4.1-mini-2025-04-14 (or above)
-            "AzureOpenAIDeploymentId": "<Set your Azure OpenAI deployment id>" // Only required when using Azure OpenAI. Recommend gpt-4o (2024-08-06 or later)
+            "DeploymentName": "<Set your structured chat completion deployment name>" // Recommend gpt-4.1 or gpt-4.1-mini
         },
         "Embedding": {
-            // "ModelId": "gpt-4o-mini-2024-07-18", // Only required when using OpenAI. Recommend gpt-4o-2024-08-06 or gpt-4o-mini-2024-07-18
-            "AzureOpenAIDeploymentId": "<Set your Azure OpenAI deployment id>" // Only required when using Azure OpenAI. Used for vector embeddings generation (recommend text-embedding-3-large/small or ada-002)
+            "DeploymentName": "<Set your embedding deployment name>" // Recommend text-embedding-3-large/small or ada-002
         }
     },
     "VectorIndex": {

@@ -51,7 +51,7 @@ public class SemanticDescriptionProviderTests
                 Description = "A test database"
             },
             DataDictionary = new DataDictionarySettings(),
-            OpenAIService = new OpenAIServiceSettings(),
+            FoundryModels = new FoundryModelsSettings(),
             SemanticModel = new SemanticModelSettings
             {
                 MaxDegreeOfParallelism = 1
