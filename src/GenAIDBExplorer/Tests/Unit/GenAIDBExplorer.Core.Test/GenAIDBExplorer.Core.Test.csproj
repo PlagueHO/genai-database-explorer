@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="FluentAssertions" Version="8.8.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.3" />
     <PackageReference Include="Microsoft.Extensions.VectorData.Abstractions" Version="9.7.0" />
     <PackageReference Include="Microsoft.SemanticKernel.Connectors.InMemory" Version="1.68.0-preview" />
     <PackageReference Update="Microsoft.Testing.Extensions.CodeCoverage" Version="18.3.2" />
