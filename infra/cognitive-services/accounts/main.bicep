@@ -148,6 +148,13 @@ import { connectionType } from 'connection/main.bicep'
 @sys.description('Optional. Connections to create in the Cognitive Services account.')
 param connections connectionType[] = []
 
+import { capabilityHostType } from 'capabilityHost/main.bicep'
+@sys.description('Optional. Capability hosts to create in the Cognitive Services account. These enable AI agent functionality.')
+param capabilityHosts capabilityHostType[] = []
+
+import { applicationType, applicationOutputType } from 'project/application/main.bicep'
+import { projectCapabilityHostType, projectCapabilityHostOutputType } from 'project/capabilityHost/main.bicep'
+
 @sys.description('Optional. The flag to disable stored completions. When true, Azure OpenAI will not store prompts and completions for content filtering and abuse monitoring.')
 param storedCompletionsDisabled bool?
 
@@ -384,13 +391,13 @@ resource cognitiveService 'Microsoft.CognitiveServices/accounts@2025-10-01-previ
           keySource: 'Microsoft.KeyVault'
           keyVaultProperties: {
             identityClientId: !empty(customerManagedKey.?userAssignedIdentityResourceId ?? '')
-              ? cMKUserAssignedIdentity.properties.clientId
+              ? cMKUserAssignedIdentity.?properties.clientId!
               : null
-            keyVaultUri: cMKKeyVault.properties.vaultUri
+            keyVaultUri: cMKKeyVault.?properties.vaultUri!
             keyName: customerManagedKey!.keyName
             keyVersion: !empty(customerManagedKey.?keyVersion ?? '')
               ? customerManagedKey!.?keyVersion
-              : last(split(cMKKeyVault::cMKKey.properties.keyUriWithVersion, '/'))
+              : last(split(cMKKeyVault::cMKKey.?properties.keyUriWithVersion!, '/'))
           }
         }
       : null
@@ -465,7 +472,7 @@ resource cognitiveService_diagnosticSettings 'Microsoft.Insights/diagnosticSetti
 ]
 
 @batchSize(1)
-module cognitiveService_privateEndpoints 'br/public:avm/res/network/private-endpoint:0.11.0' = [
+module cognitiveService_privateEndpoints 'br/public:avm/res/network/private-endpoint:0.11.1' = [
   for (privateEndpoint, index) in (privateEndpoints ?? []): {
     name: take('${uniqueString(deployment().name, location)}-cognitiveService-PrivateEndpoint-${index}', 64)
     scope: az.resourceGroup(
@@ -537,6 +544,8 @@ module cognitiveService_projects './project/main.bicep' = [
       managedIdentities: project.?managedIdentities ?? managedIdentities
       roleAssignments: project.?roleAssignments ?? roleAssignments
       tags: project.?tags ?? tags
+      applications: project.?applications ?? []
+      capabilityHosts: project.?capabilityHosts ?? []
     }
   }
 ]
@@ -564,6 +573,33 @@ module cognitiveServices_connections 'connection/main.bicep' = [
   }
 ]
 
+// Helper function to build connection resource ID from connection name
+func buildConnectionResourceId(accountId string, connectionName string) string =>
+  '${accountId}/connections/${connectionName}'
+
+@batchSize(1)
+module cognitiveServices_capabilityHosts 'capabilityHost/main.bicep' = [
+  for capabilityHost in capabilityHosts: {
+    name: '${take('${cognitiveService.name}-${capabilityHost.name}', 60)}-cph'
+    dependsOn: [
+      cognitiveServices_connections
+    ]
+    params: {
+      accountName: cognitiveService.name
+      name: capabilityHost.name
+      capabilityHostKind: capabilityHost.capabilityHostKind
+      threadStorageConnections: capabilityHost.?threadStorageConnectionNames != null
+        ? map(capabilityHost.threadStorageConnectionNames!, connName => buildConnectionResourceId(cognitiveService.id, connName))
+        : null
+      vectorStoreConnections: capabilityHost.?vectorStoreConnectionNames != null
+        ? map(capabilityHost.vectorStoreConnectionNames!, connName => buildConnectionResourceId(cognitiveService.id, connName))
+        : null
+      storageConnections: capabilityHost.?storageConnectionNames != null
+        ? map(capabilityHost.storageConnectionNames!, connName => buildConnectionResourceId(cognitiveService.id, connName))
+        : null
+    }
+  }
+]
 
 resource cognitiveService_roleAssignments 'Microsoft.Authorization/roleAssignments@2022-04-01' = [
   for (roleAssignment, index) in (formattedRoleAssignments ?? []): {
@@ -635,7 +671,7 @@ output location string = cognitiveService.location
 import { secretsOutputType } from 'br/public:avm/utl/types/avm-common-types:0.6.0'
 @description('A hashtable of references to the secrets exported to the provided Key Vault. The key of each reference is each secret\'s name.')
 output exportedSecrets secretsOutputType = (secretsExportConfiguration != null)
-  ? toObject(secretsExport.outputs.secretsSet, secret => last(split(secret.secretResourceId, '/')), secret => secret)
+  ? toObject(secretsExport.?outputs.secretsSet!, secret => last(split(secret.secretResourceId, '/')), secret => secret)
   : {}
 
 @description('The private endpoints of the cognitive services account.')
@@ -655,6 +691,16 @@ output projects projectOutputType[] = [
     name: cognitiveService_projects[index].outputs.projectResourceName
     resourceId: cognitiveService_projects[index].outputs.projectResourceId
     systemAssignedMIPrincipalId: cognitiveService_projects[index].outputs.?systemAssignedMIPrincipalId
+    applications: cognitiveService_projects[index].outputs.?applications ?? []
+    capabilityHosts: cognitiveService_projects[index].outputs.?capabilityHostsOutput ?? []
+  }
+]
+
+@description('The Capability Hosts created in the Cognitive Services account.')
+output capabilityHostsOutput capabilityHostOutputType[] = [
+  for (capabilityHost, index) in (capabilityHosts ?? []): {
+    name: cognitiveServices_capabilityHosts[index].outputs.name
+    resourceId: cognitiveServices_capabilityHosts[index].outputs.resourceId
   }
 ]
 
@@ -698,6 +744,22 @@ type projectOutputType = {
 
   @description('The principal ID of the system assigned identity.')
   systemAssignedMIPrincipalId: string?
+
+  @description('The applications created in the project.')
+  applications: applicationOutputType[]?
+
+  @description('The capability hosts created in the project.')
+  capabilityHosts: projectCapabilityHostOutputType[]?
+}
+
+@export()
+@description('The type for the capability host output.')
+type capabilityHostOutputType = {
+  @description('The name of the capability host.')
+  name: string
+
+  @description('The resource ID of the capability host.')
+  resourceId: string
 }
 
 
@@ -786,6 +848,12 @@ type projectType = {
 
   @sys.description('Resource tags. This corresponds to the "tags" property of the Microsoft.CognitiveServices/accounts/projects resource.')
   tags: object?
+
+  @sys.description('Applications to deploy within this Foundry Project.')
+  applications: applicationType[]?
+
+  @sys.description('Capability hosts to deploy within this Foundry Project. These configure per-project storage backends for threads, vectors, and files.')
+  capabilityHosts: projectCapabilityHostType[]?
 }
 
 @sys.description('Defines the nested properties for an Azure Foundry Project, corresponding to the "properties" object of the Microsoft.CognitiveServices/accounts/projects resource.')
