@@ -45,16 +45,8 @@ public sealed class ChatClientFactory(
     /// <inheritdoc />
     public IChatClient CreateStructuredOutputChatClient()
     {
-        var defaultSettings = _project.Settings.FoundryModels.Default;
-        var chatSettings = _project.Settings.FoundryModels.ChatCompletionStructured;
-
-        var deploymentName = chatSettings.DeploymentName
-            ?? throw new InvalidOperationException("ChatCompletionStructured deployment name is required.");
-
-        _logger.LogDebug("Creating structured output chat client with deployment: {DeploymentName}", deploymentName);
-
-        var client = CreateOpenAIClient(defaultSettings);
-        return client.GetChatClient(deploymentName).AsIChatClient();
+        _logger.LogDebug("Creating structured output chat client (delegates to ChatCompletion deployment).");
+        return CreateChatClient();
     }
 
     /// <inheritdoc />

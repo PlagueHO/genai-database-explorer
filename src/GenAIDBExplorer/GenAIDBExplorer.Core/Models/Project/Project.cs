@@ -250,11 +250,6 @@ public class Project(
             throw new ValidationException("ChatCompletion.DeploymentName is required.");
         }
 
-        if (string.IsNullOrWhiteSpace(Settings.FoundryModels?.ChatCompletionStructured?.DeploymentName))
-        {
-            throw new ValidationException("ChatCompletionStructured.DeploymentName is required.");
-        }
-
         if (string.IsNullOrWhiteSpace(Settings.FoundryModels?.Embedding?.DeploymentName))
         {
             throw new ValidationException("Embedding.DeploymentName is required.");

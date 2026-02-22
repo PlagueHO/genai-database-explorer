@@ -17,7 +17,8 @@ public interface IChatClientFactory
 
     /// <summary>
     /// Creates a chat client for structured output (JSON schema responses).
-    /// Uses the "ChatCompletionStructured" deployment/model from project settings.
+    /// Uses the same "ChatCompletion" deployment as <see cref="CreateChatClient"/>,
+    /// since all current models support structured output.
     /// </summary>
     /// <returns>An <see cref="IChatClient"/> configured for structured output.</returns>
     IChatClient CreateStructuredOutputChatClient();

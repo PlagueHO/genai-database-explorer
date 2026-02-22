@@ -235,10 +235,6 @@ Edit the `settings.json` file in the project directory to set the desired config
         "ChatCompletion": {
             "DeploymentName": "<Set your chat completion deployment name>" // Recommend gpt-4.1 or gpt-4.1-mini
         },
-        // Required for structured chat completion to reliably extract entity lists. Must be a model that supports structured output.
-        "ChatCompletionStructured": {
-            "DeploymentName": "<Set your structured chat completion deployment name>" // Recommend gpt-4.1 or gpt-4.1-mini
-        },
         "Embedding": {
             "DeploymentName": "<Set your embedding deployment name>" // Recommend text-embedding-3-large/small or ada-002
         }
@@ -318,7 +314,7 @@ gaidbexp extract-model --project /path/to/project
 
 ## Add a database dictionary for each table
 
-This is an optional step you can use if you have a database dictionary that provides additional information about the database schema. The dictionary should be a folder of markdown files, one for each table in the database. This process will use the `ChatCompletionStructured` model to extract the dictionary information from the markdown files.
+This is an optional step you can use if you have a database dictionary that provides additional information about the database schema. The dictionary should be a folder of markdown files, one for each table in the database. This process will use the `ChatCompletion` model to extract the dictionary information from the markdown files.
 
 ```bash
 gaidbexp data-dictionary table --project /path/to/project -d /path/to/data_dictionary/*.md

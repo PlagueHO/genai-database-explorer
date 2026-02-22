@@ -15,7 +15,6 @@ public class ChatClientFactoryTests
         string? endpoint = "https://test.openai.azure.com/",
         string? apiKey = "test-api-key",
         string? chatDeploymentName = "gpt-4o",
-        string? chatStructuredDeploymentName = "gpt-4o-structured",
         string? embeddingDeploymentName = "text-embedding-3-small",
         string? tenantId = null)
     {
@@ -39,10 +38,6 @@ public class ChatClientFactoryTests
                 ChatCompletion = new ChatCompletionDeploymentSettings
                 {
                     DeploymentName = chatDeploymentName
-                },
-                ChatCompletionStructured = new ChatCompletionStructuredDeploymentSettings
-                {
-                    DeploymentName = chatStructuredDeploymentName
                 },
                 Embedding = new EmbeddingDeploymentSettings
                 {
@@ -157,22 +152,6 @@ public class ChatClientFactoryTests
         // Assert
         client.Should().NotBeNull();
         client.Should().BeAssignableTo<IChatClient>();
-    }
-
-    [TestMethod]
-    public void CreateStructuredOutputChatClient_MissingDeploymentId_ShouldThrowInvalidOperationException()
-    {
-        // Arrange
-        var project = CreateMockProject(chatStructuredDeploymentName: null);
-        var logger = Mock.Of<ILogger<ChatClientFactory>>();
-        var factory = new ChatClientFactory(project, logger);
-
-        // Act
-        var act = () => factory.CreateStructuredOutputChatClient();
-
-        // Assert
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*deployment*");
     }
 
     #endregion

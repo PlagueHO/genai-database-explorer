@@ -82,11 +82,7 @@
             // "TenantId": "<AzureTenantId>" // Optional: Azure tenant ID for DefaultAzureCredential. Use when resource is in different tenant than default
         },
         "ChatCompletion": {
-            "DeploymentName": "<Set your deployment name>" // Deployment name for chat completion. Recommend gpt-4.1 or gpt-4.1-mini (or above)
-        },
-        // Required for structured chat completion to reliably extract entity lists. Must be a model that supports structured output.
-        "ChatCompletionStructured": {
-            "DeploymentName": "<Set your deployment name>" // Deployment name for structured output. Recommend gpt-4.1 or newer
+            "DeploymentName": "<Set your deployment name>" // Deployment name for chat completion (including structured output). Recommend gpt-4.1 or gpt-4.1-mini (or above)
         },
         "Embedding": {
             "DeploymentName": "<Set your deployment name>" // Deployment name for vector embeddings (recommend text-embedding-3-large/small or ada-002)

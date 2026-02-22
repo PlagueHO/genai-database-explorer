@@ -301,9 +301,6 @@ function Set-ProjectSettings {
     .PARAMETER ChatCompletionDeploymentId
         The deployment ID for the chat completion model (default: 'gpt-4-1').
 
-    .PARAMETER ChatCompletionStructuredDeploymentId
-        The deployment ID for structured chat completion model (default: 'gpt-4-1-mini').
-
     .PARAMETER EmbeddingDeploymentId
         The deployment ID for the text embedding model (default: 'text-embedding-ada-002').
     .PARAMETER PersistenceStrategy
@@ -372,9 +369,6 @@ function Set-TestProjectConfiguration {
         [string]$ChatCompletionDeploymentId = 'gpt-4-1',
 
         [Parameter()]
-        [string]$ChatCompletionStructuredDeploymentId = 'gpt-4-1-mini',
-
-        [Parameter()]
         [string]$EmbeddingDeploymentId = 'text-embedding-ada-002',
 
         [Parameter()]
@@ -428,10 +422,6 @@ function Set-TestProjectConfiguration {
         }
         ChatCompletion = @{
             AzureOpenAIDeploymentId = ($NoAzureMode) ? $null : $ChatCompletionDeploymentId
-            ModelId = ($NoAzureMode) ? 'gpt-4o-mini' : $null
-        }
-        ChatCompletionStructured = @{
-            AzureOpenAIDeploymentId = ($NoAzureMode) ? $null : $ChatCompletionStructuredDeploymentId
             ModelId = ($NoAzureMode) ? 'gpt-4o-mini' : $null
         }
         Embedding = @{

@@ -17,12 +17,6 @@ public class FoundryModelsSettings()
     public ChatCompletionDeploymentSettings ChatCompletion { get; set; } = new ChatCompletionDeploymentSettings();
 
     /// <summary>
-    /// Gets or sets the structured chat completion settings.
-    /// </summary>
-    [Required]
-    public ChatCompletionStructuredDeploymentSettings ChatCompletionStructured { get; set; } = new ChatCompletionStructuredDeploymentSettings();
-
-    /// <summary>
     /// Gets or sets the embedding settings.
     /// </summary>
     [Required]

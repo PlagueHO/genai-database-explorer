@@ -90,9 +90,6 @@ public class ProjectSettingsIntegrationTests
                     "ChatCompletion": {
                         "DeploymentName": "gpt-4o"
                     },
-                    "ChatCompletionStructured": {
-                        "DeploymentName": "gpt-4o"
-                    },
                     "Embedding": {
                         "DeploymentName": "text-embedding-3-large"
                     }
@@ -172,9 +169,6 @@ public class ProjectSettingsIntegrationTests
                     "ChatCompletion": {
                         "DeploymentName": "gpt-4o"
                     },
-                    "ChatCompletionStructured": {
-                        "DeploymentName": "gpt-4o"
-                    },
                     "Embedding": {
                         "DeploymentName": "text-embedding-3-large"
                     }
@@ -224,9 +218,6 @@ public class ProjectSettingsIntegrationTests
                     "ChatCompletion": {
                         "DeploymentName": "gpt-4o"
                     },
-                    "ChatCompletionStructured": {
-                        "DeploymentName": "gpt-4o"
-                    },
                     "Embedding": {
                         "DeploymentName": "text-embedding-3-large"
                     }
@@ -274,9 +265,6 @@ public class ProjectSettingsIntegrationTests
                         "Endpoint": "https://test.cognitiveservices.azure.com/"
                     },
                     "ChatCompletion": {
-                        "DeploymentName": "gpt-4o"
-                    },
-                    "ChatCompletionStructured": {
                         "DeploymentName": "gpt-4o"
                     },
                     "Embedding": {
@@ -336,9 +324,6 @@ public class ProjectSettingsIntegrationTests
                     "ChatCompletion": {
                         "DeploymentName": "gpt-4o"
                     },
-                    "ChatCompletionStructured": {
-                        "DeploymentName": "gpt-4o"
-                    },
                     "Embedding": {
                         "DeploymentName": "text-embedding-3-large"
                     }
@@ -385,9 +370,6 @@ public class ProjectSettingsIntegrationTests
                         "Endpoint": "https://example.com/"
                     },
                     "ChatCompletion": {
-                        "DeploymentName": "gpt-4o"
-                    },
-                    "ChatCompletionStructured": {
                         "DeploymentName": "gpt-4o"
                     },
                     "Embedding": {
