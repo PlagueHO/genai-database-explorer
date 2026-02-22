@@ -197,10 +197,10 @@ jobs:
             
             # Run both Common tests and strategy-specific tests
             Write-Host "`nRunning Common tests (universal for all strategies)..." -ForegroundColor Magenta
-            Invoke-IntegrationTests -TestResultsPath './test-results/common' -TestScriptPath './src/Tests/Integration/Console.Integration.Tests.Common.ps1'
+            Invoke-IntegrationTests -TestResultsPath './test-results/common' -TestScriptPath './genai-database-explorer-service/tests/integration/Console.Integration.Tests.Common.ps1'
             
             Write-Host "`nRunning ${{ matrix.persistence }}-specific tests..." -ForegroundColor Magenta
-            Invoke-IntegrationTests -TestResultsPath './test-results/strategy' -TestScriptPath "./src/Tests/Integration/${{ matrix.test-file }}"
+            Invoke-IntegrationTests -TestResultsPath './test-results/strategy' -TestScriptPath "./genai-database-explorer-service/tests/integration/${{ matrix.test-file }}"
         env:
           SQL_CONNECTION_STRING: "Server=${{ inputs.SQL_SERVER_NAME }}.database.windows.net;Database=AdventureWorksLT;User Id=${{ secrets.SQL_SERVER_USERNAME }};Password=${{ secrets.SQL_SERVER_PASSWORD }};Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
           AZURE_OPENAI_ENDPOINT: ${{ inputs.AZURE_AI_FOUNDRY_ENDPOINT || env.AZURE_OPENAI_ENDPOINT }}

@@ -1,6 +1,6 @@
 ---
 title: Semantic Model Repository - Technical Documentation
-component_path: src/GenAIDBExplorer/GenAIDBExplorer.Core/Repository
+component_path: genai-database-explorer-service/src/GenAIDBExplorer.Core/Repository
 version: 1.0
 date_created: 2025-08-10
 last_updated: 2025-08-10

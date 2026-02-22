@@ -38,10 +38,10 @@ jobs:
             ${{ runner.os }}-nuget-
 
       - name: Restore dependencies
-        run: dotnet restore src/GenAIDBExplorer/GenAIDBExplorer.slnx
+        run: dotnet restore genai-database-explorer-service/GenAIDBExplorer.slnx
 
       - name: Lint with dotnet format
-        run: dotnet format src/GenAIDBExplorer/GenAIDBExplorer.slnx --verify-no-changes --severity error
+        run: dotnet format genai-database-explorer-service/GenAIDBExplorer.slnx --verify-no-changes --severity error
 
   dotnet-build-test:
     runs-on: ubuntu-latest
@@ -49,7 +49,7 @@ jobs:
     name: Build and Test Solution
     defaults:
       run:
-        working-directory: src/GenAIDBExplorer
+        working-directory: genai-database-explorer-service
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -106,7 +106,7 @@ jobs:
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           recreate: true
-          path: src/GenAIDBExplorer/TestResults/CoverageReport/SummaryGithub.md
+          path: genai-database-explorer-service/TestResults/CoverageReport/SummaryGithub.md
 
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
@@ -114,7 +114,7 @@ jobs:
         with:
           check_name: Unit Test Results
           files: |
-            src/GenAIDBExplorer/TestResults/**/*.trx
+            genai-database-explorer-service/TestResults/**/*.trx
           comment_title: Unit Test Results
 
       - name: Upload Test Artifacts
@@ -123,7 +123,7 @@ jobs:
         with:
           name: dotnet-test-results
           path: |
-            src/GenAIDBExplorer/TestResults/**/*.trx
+            genai-database-explorer-service/TestResults/**/*.trx
           retention-days: 7
 
       - name: Upload Coverage Report (HTML)
@@ -131,7 +131,7 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: coverage-report-html
-          path: src/GenAIDBExplorer/TestResults/CoverageReport/
+          path: genai-database-explorer-service/TestResults/CoverageReport/
           retention-days: 7
 
   publish-console-app:
@@ -156,11 +156,11 @@ jobs:
             ${{ runner.os }}-nuget-
 
       - name: Restore dependencies
-        run: dotnet restore src/GenAIDBExplorer/GenAIDBExplorer.slnx
+        run: dotnet restore genai-database-explorer-service/GenAIDBExplorer.slnx
 
       - name: Publish Console Application
         run: |
-          dotnet publish src/GenAIDBExplorer/GenAIDBExplorer.Console \
+          dotnet publish genai-database-explorer-service/src/GenAIDBExplorer.Console \
             --configuration Release \
             --output ./publish \
             --no-restore \

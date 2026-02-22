@@ -16,11 +16,11 @@ public class PromptTemplateParityTests
 
     private static string GetPromptTemplatesDir()
     {
-        // Navigate from test output (Tests/Unit/GenAIDBExplorer.Core.Test/bin/Debug/net10.0)
-        // up 6 levels to src/GenAIDBExplorer/, then into GenAIDBExplorer.Core/PromptTemplates/
+        // Navigate from test output (tests/unit/GenAIDBExplorer.Core.Test/bin/Debug/net10.0)
+        // up 6 levels to genai-database-explorer-service/, then into src/GenAIDBExplorer.Core/PromptTemplates/
         var baseDir = AppContext.BaseDirectory;
         var corePromptDir = Path.GetFullPath(
-            Path.Combine(baseDir, "..", "..", "..", "..", "..", "..", "GenAIDBExplorer.Core", "PromptTemplates"));
+            Path.Combine(baseDir, "..", "..", "..", "..", "..", "..", "src", "GenAIDBExplorer.Core", "PromptTemplates"));
         return corePromptDir;
     }
 

@@ -1,6 +1,6 @@
 ---
 title: Project Model - Technical Documentation
-component_path: src/GenAIDBExplorer/GenAIDBExplorer.Core/Models/Project/
+component_path: genai-database-explorer-service/src/GenAIDBExplorer.Core/Models/Project/
 version: 1.0
 date_created: 2025-01-10
 owner: Core Platform

@@ -1,6 +1,6 @@
 ---
 title: Semantic Model - Technical Documentation
-component_path: d:\source\GitHub\PlagueHO\genai-database-explorer\src\GenAIDBExplorer\GenAIDBExplorer.Core\Models\SemanticModel
+component_path: genai-database-explorer-service/src/GenAIDBExplorer.Core/Models/SemanticModel
 version: 1.0
 date_created: 2025-08-11
 last_updated: 2025-08-11

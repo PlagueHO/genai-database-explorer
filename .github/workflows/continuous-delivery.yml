@@ -8,8 +8,7 @@ on:
       - v*
     paths:
       - infra/**
-      - src/**
-      - tests/**
+      - genai-database-explorer-service/**
 
   workflow_dispatch:
 

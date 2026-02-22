@@ -40,7 +40,7 @@ function Invoke-IntegrationTests {
         
         [Parameter()]
         [ValidateNotNullOrEmpty()]
-        [string]$TestScriptPath = './src/Tests/Integration/Console.Integration.Tests.ps1'
+        [string]$TestScriptPath = './genai-database-explorer-service/tests/integration/Console.Integration.Tests.ps1'
     )
 
     begin {

@@ -69,27 +69,31 @@ public class ExtractModelCommandHandler : CommandHandler<ExtractModelCommandHand
 Ctrl+Shift+P → "Tasks: Run Task" → build/watch/test/publish
 
 # Direct commands
-dotnet build src/GenAIDBExplorer/GenAIDBExplorer.Console/
-dotnet watch run --project src/GenAIDBExplorer/GenAIDBExplorer.Console/
+dotnet build genai-database-explorer-service/src/GenAIDBExplorer.Console/
+dotnet watch run --project genai-database-explorer-service/src/GenAIDBExplorer.Console/
 dotnet test  # From solution root
 
 # CLI operations (require project folder)
-dotnet run --project GenAIDBExplorer.Console/ -- init-project -p d:/temp
-dotnet run --project GenAIDBExplorer.Console/ -- extract-model -p d:/temp
-dotnet run --project GenAIDBExplorer.Console/ -- enrich-model -p d:/temp
+dotnet run --project src/GenAIDBExplorer.Console/ -- init-project -p d:/temp
+dotnet run --project src/GenAIDBExplorer.Console/ -- extract-model -p d:/temp
+dotnet run --project src/GenAIDBExplorer.Console/ -- enrich-model -p d:/temp
 ```
 
 ## Project Structure Conventions
 
 ```
-src/GenAIDBExplorer/
-├── GenAIDBExplorer.Console/        # CLI app, command handlers, DI setup
-├── GenAIDBExplorer.Core/           # Domain logic, providers, models
-│   ├── Models/SemanticModel/       # Core domain objects  
-│   ├── PromptTemplates/            # AI prompt templates (.prompt files)
-│   ├── SemanticProviders/          # AI enrichment services
-│   └── Repository/                 # Persistence abstractions
-└── Tests/Unit/                     # MSTest + FluentAssertions + Moq
+genai-database-explorer-service/
+├── GenAIDBExplorer.slnx            # .NET solution file
+├── src/
+│   ├── GenAIDBExplorer.Console/    # CLI app, command handlers, DI setup
+│   └── GenAIDBExplorer.Core/       # Domain logic, providers, models
+│       ├── Models/SemanticModel/   # Core domain objects  
+│       ├── PromptTemplates/        # AI prompt templates (.prompt files)
+│       ├── SemanticProviders/      # AI enrichment services
+│       └── Repository/             # Persistence abstractions
+└── tests/
+    ├── unit/                       # MSTest + FluentAssertions + Moq
+    └── integration/                # Pester integration tests
 
 # Working directories (project folders)
 samples/AdventureWorksLT/
@@ -122,7 +126,7 @@ samples/AdventureWorksLT/
 ## Test
 
 - Use `dotnet test` to run all tests
-- Test files should be named `*Tests.cs` and located in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.*.Test/`
+- Test files should be named `*Tests.cs` and located in `genai-database-explorer-service/tests/unit/GenAIDBExplorer.*.Test/`
 - Use MSTest, FluentAssertions, and Moq for unit tests
 - Use AAA pattern for test structure: Arrange, Act, Assert
 - Use `Should().BeTrue()` for boolean assertions

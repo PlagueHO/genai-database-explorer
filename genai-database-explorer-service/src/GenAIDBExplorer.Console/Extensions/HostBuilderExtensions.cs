@@ -44,11 +44,11 @@ public static class HostBuilderExtensions
         var candidateRoots = new[]
         {
             // When running from repo root
-            Path.Combine("src", "GenAIDBExplorer", "GenAIDBExplorer.Console"),
+            Path.Combine("genai-database-explorer-service", "src", "GenAIDBExplorer.Console"),
             // When working directory already is console project
             ".",
-            // When tasks set cwd to src/GenAIDBExplorer
-            Path.Combine("GenAIDBExplorer.Console")
+            // When tasks set cwd to genai-database-explorer-service
+            Path.Combine("src", "GenAIDBExplorer.Console")
         };
         foreach (var root in candidateRoots.Distinct())
         {

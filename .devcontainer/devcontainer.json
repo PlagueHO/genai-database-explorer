@@ -93,7 +93,7 @@
     
     // Add additional configuration
     "remoteUser": "vscode",
-    "postCreateCommand": "dotnet restore src/GenAIDBExplorer/",
+    "postCreateCommand": "dotnet restore genai-database-explorer-service/",
     "forwardPorts": [5000, 5001, 7071],
     "portsAttributes": {
         "5000": {

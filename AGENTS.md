@@ -6,32 +6,36 @@ This is a .NET 10 solution that uses Generative AI to help users explore and que
 
 ```bash
 # Build the solution
-dotnet build src/GenAIDBExplorer/GenAIDBExplorer.slnx
+dotnet build genai-database-explorer-service/GenAIDBExplorer.slnx
 
 # Watch mode for development
-dotnet watch run --project src/GenAIDBExplorer/GenAIDBExplorer.Console/
+dotnet watch run --project genai-database-explorer-service/src/GenAIDBExplorer.Console/
 
 # Run unit tests
-dotnet test --solution .\src\GenAIDBExplorer\GenAIDBExplorer.slnx
+dotnet test --solution .\genai-database-explorer-service\GenAIDBExplorer.slnx
 
 # Run integration tests  
 pwsh -Command "New-Item -ItemType Directory -Path './test-results' -Force | Out-Null; & ./.github/scripts/Invoke-IntegrationTests.ps1"
 
 # Format code
-dotnet format src/GenAIDBExplorer/GenAIDBExplorer.slnx
+dotnet format genai-database-explorer-service/GenAIDBExplorer.slnx
 ```
 
 ## Project structure
 
 ```text
-src/GenAIDBExplorer/
-├── GenAIDBExplorer.Console/        # CLI app, command handlers, DI setup
-├── GenAIDBExplorer.Core/           # Domain logic, providers, models
-│   ├── Models/SemanticModel/       # Core domain objects  
-│   ├── PromptTemplates/            # AI prompt templates (.prompt files)
-│   ├── SemanticProviders/          # AI enrichment services
-│   └── Repository/                 # Persistence abstractions
-└── Tests/Unit/                     # MSTest + FluentAssertions + Moq
+genai-database-explorer-service/
+├── GenAIDBExplorer.slnx            # .NET solution file
+├── src/
+│   ├── GenAIDBExplorer.Console/    # CLI app, command handlers, DI setup
+│   └── GenAIDBExplorer.Core/       # Domain logic, providers, models
+│       ├── Models/SemanticModel/   # Core domain objects  
+│       ├── PromptTemplates/        # AI prompt templates (.prompt files)
+│       ├── SemanticProviders/      # AI enrichment services
+│       └── Repository/             # Persistence abstractions
+└── tests/
+    ├── unit/                       # MSTest + FluentAssertions + Moq
+    └── integration/                # Pester integration tests
 
 # Working directories (project folders)
 samples/AdventureWorksLT/
@@ -63,19 +67,19 @@ All CLI operations require a project folder with `settings.json`:
 
 ```bash
 # Initialize a new project
-dotnet run --project src/GenAIDBExplorer/GenAIDBExplorer.Console/ -- init-project -p d:/temp/myproject
+dotnet run --project genai-database-explorer-service/src/GenAIDBExplorer.Console/ -- init-project -p d:/temp/myproject
 
 # Extract database schema
-dotnet run --project src/GenAIDBExplorer/GenAIDBExplorer.Console/ -- extract-model -p d:/temp/myproject
+dotnet run --project genai-database-explorer-service/src/GenAIDBExplorer.Console/ -- extract-model -p d:/temp/myproject
 
 # Enrich with AI descriptions
-dotnet run --project src/GenAIDBExplorer/GenAIDBExplorer.Console/ -- enrich-model -p d:/temp/myproject
+dotnet run --project genai-database-explorer-service/src/GenAIDBExplorer.Console/ -- enrich-model -p d:/temp/myproject
 
 # Query with natural language
-dotnet run --project src/GenAIDBExplorer/GenAIDBExplorer.Console/ -- query-model -p d:/temp/myproject
+dotnet run --project genai-database-explorer-service/src/GenAIDBExplorer.Console/ -- query-model -p d:/temp/myproject
 
 # Export model to markdown
-dotnet run --project src/GenAIDBExplorer/GenAIDBExplorer.Console/ -- export-model -p d:/temp/myproject --outputPath output.md
+dotnet run --project genai-database-explorer-service/src/GenAIDBExplorer.Console/ -- export-model -p d:/temp/myproject --outputPath output.md
 ```
 
 ## Code style
@@ -123,16 +127,16 @@ public class SemanticDescriptionProvider(
 
 ```bash
 # Run all tests
-dotnet test --solution .\src\GenAIDBExplorer\GenAIDBExplorer.slnx
+dotnet test --solution .\genai-database-explorer-service\GenAIDBExplorer.slnx
 
 # Run specific test project
-dotnet test --project src\GenAIDBExplorer\Tests\Unit\GenAIDBExplorer.Core.Test
+dotnet test --project genai-database-explorer-service\tests\unit\GenAIDBExplorer.Core.Test
 
 # Run with coverage
-dotnet test --solution .\src\GenAIDBExplorer\GenAIDBExplorer.slnx -- --coverage
+dotnet test --solution .\genai-database-explorer-service\GenAIDBExplorer.slnx -- --coverage
 
 # Run with coverage (Cobertura format)
-dotnet test --solution .\src\GenAIDBExplorer\GenAIDBExplorer.slnx -- --coverage --coverage-output-format cobertura
+dotnet test --solution .\genai-database-explorer-service\GenAIDBExplorer.slnx -- --coverage --coverage-output-format cobertura
 
 # Integration tests (requires PowerShell)
 pwsh .\.github\scripts\Invoke-IntegrationTests.ps1
@@ -141,7 +145,7 @@ pwsh .\.github\scripts\Invoke-IntegrationTests.ps1
 ### Test conventions
 
 - Use MSTest, FluentAssertions, and Moq for unit tests
-- Test files named `*Tests.cs` in `src/GenAIDBExplorer/Tests/Unit/GenAIDBExplorer.*.Test/`
+- Test files named `*Tests.cs` in `genai-database-explorer-service/tests/unit/GenAIDBExplorer.*.Test/`
 - Use AAA pattern: Arrange, Act, Assert
 - Use `Should().BeTrue()` for boolean assertions
 - Use `Should().BeEquivalentTo()` for object comparisons

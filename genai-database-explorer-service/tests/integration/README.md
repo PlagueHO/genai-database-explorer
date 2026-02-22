@@ -99,11 +99,11 @@ The following table shows which tests **should exist** for each persistence stra
 ```powershell
 # Run all tests for a specific strategy
 $env:PERSISTENCE_STRATEGY = 'LocalDisk'
-Invoke-Pester -Path './src/Tests/Integration/Console.Integration.Tests.Common.ps1'
-Invoke-Pester -Path './src/Tests/Integration/Console.Integration.Tests.LocalDisk.ps1'
+Invoke-Pester -Path './genai-database-explorer-service/tests/integration/Console.Integration.Tests.Common.ps1'
+Invoke-Pester -Path './genai-database-explorer-service/tests/integration/Console.Integration.Tests.LocalDisk.ps1'
 
 # Run only common tests
-Invoke-Pester -Path './src/Tests/Integration/Console.Integration.Tests.Common.ps1'
+Invoke-Pester -Path './genai-database-explorer-service/tests/integration/Console.Integration.Tests.Common.ps1'
 
 # Run with specific configuration
 $env:SQL_CONNECTION_STRING = 'Server=...;Database=...;'

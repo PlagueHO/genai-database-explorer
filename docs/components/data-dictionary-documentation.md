@@ -1,6 +1,6 @@
 ---
 title: Data Dictionary Component - Technical Documentation
-component_path: src/GenAIDBExplorer/GenAIDBExplorer.Core/DataDictionary
+component_path: genai-database-explorer-service/src/GenAIDBExplorer.Core/DataDictionary
 version: 1.0
 date_created: 2025-08-11
 last_updated: 2025-08-11

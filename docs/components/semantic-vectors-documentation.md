@@ -1,6 +1,6 @@
 ---
 title: Semantic Vectors - Technical Documentation
-component_path: src/GenAIDBExplorer/GenAIDBExplorer.Core/SemanticVectors
+component_path: genai-database-explorer-service/src/GenAIDBExplorer.Core/SemanticVectors
 version: 0.1
 date_created: 2025-08-11
 last_updated:

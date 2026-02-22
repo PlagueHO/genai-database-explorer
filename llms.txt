@@ -47,9 +47,9 @@ This project generates semantic models from database schemas, enriches them with
 
 ## Source Code
 
-- [Console Application](src/GenAIDBExplorer/GenAIDBExplorer.Console/): Command-line interface providing init-project, extract-model, enrich-model, and query-model commands
-- [Core Library](src/GenAIDBExplorer/GenAIDBExplorer.Core/): Domain logic, semantic providers, data dictionary processing, and repository patterns
-- [Unit Tests](src/GenAIDBExplorer/Tests/Unit/): Comprehensive test suite using MSTest, FluentAssertions, and Moq
+- [Console Application](genai-database-explorer-service/src/GenAIDBExplorer.Console/): Command-line interface providing init-project, extract-model, enrich-model, and query-model commands
+- [Core Library](genai-database-explorer-service/src/GenAIDBExplorer.Core/): Domain logic, semantic providers, data dictionary processing, and repository patterns
+- [Unit Tests](genai-database-explorer-service/tests/unit/): Comprehensive test suite using MSTest, FluentAssertions, and Moq
 
 ## Optional
 

@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\GenAIDBExplorer.Core\GenAIDBExplorer.Core.csproj" />
+    <ProjectReference Include="..\..\..\src\GenAIDBExplorer.Core\GenAIDBExplorer.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
