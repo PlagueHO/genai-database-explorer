@@ -42,7 +42,7 @@ This document contains links to technical documentation, repositories, and resou
 - [Managing tokens in Azure OpenAI](https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/manage-tokens)
 - [Token counting and estimation](https://platform.openai.com/tokenizer)
 
-## .NET and C#
+## .NET and C #
 
 ### .NET 10
 

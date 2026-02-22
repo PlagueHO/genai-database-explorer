@@ -33,7 +33,7 @@ System context
 ## 2. Architecture
 
 - ARC-001 Patterns: Strategy (embedding/index/search implementations), Factory (VectorInfrastructureFactory), Policy (VectorIndexPolicy), Orchestrator (VectorOrchestrator), Mapper, Key Builder, Options + Validation, Repository-like writer abstraction.
-- ARC-002 Dependencies: Microsoft.SemanticKernel, Microsoft.Extensions.AI, Microsoft.SemanticKernel.Connectors.InMemory, Microsoft.Extensions.VectorData, logging (ILogger), performance monitor (IPerformanceMonitor), secure JSON serialization.
+- ARC-002 Dependencies: Microsoft.Extensions.AI, Microsoft.SemanticKernel.Connectors.InMemory, Microsoft.Extensions.VectorData, logging (ILogger), performance monitor (IPerformanceMonitor), secure JSON serialization.
 - ARC-003 Interactions: Orchestrator -> GenerationService -> Infrastructure/Mapper/Embedding/KeyBuilder/IndexWriter (+ optional persistence).
 - ARC-004 Diagrams: Flow of responsibilities and type relationships below.
 - ARC-005 Mermaid diagrams (flowchart and class diagram) provided separately for correctness.
@@ -77,10 +77,10 @@ classDiagram
     <<interface>>
     +GenerateAsync(text: string, infrastructure: VectorInfrastructure, ct: CancellationToken) ReadOnlyMemory~float~
   }
-  class SemanticKernelEmbeddingGenerator {
+  class ChatClientEmbeddingGenerator {
     +GenerateAsync(...)
   }
-  SemanticKernelEmbeddingGenerator ..|> IEmbeddingGenerator
+  ChatClientEmbeddingGenerator ..|> IEmbeddingGenerator
 
   class IVectorIndexWriter {
     <<interface>>
@@ -206,7 +206,7 @@ Key public interfaces and methods.
 
 ## 4. Implementation Details
 
-- Embeddings: SemanticKernelEmbeddingGenerator resolves Microsoft.Extensions.AI IEmbeddingGenerator from the SK kernel using optional serviceId, tracks performance, handles missing registrations gracefully.
+- Embeddings: ChatClientEmbeddingGenerator uses IChatClientFactory.CreateEmbeddingGenerator() to obtain an IEmbeddingGenerator<string, Embedding<float>>, tracks performance, handles missing registrations gracefully.
 - Indexing: InMemoryVectorIndexWriter uses process-static dictionary; SkInMemoryVectorIndexWriter uses SK InMemoryVectorStore and ensures collection exists via reflective helper to support multiple SK versions.
 - Search: InMemoryVectorSearchService computes cosine similarity using TensorPrimitives; SkInMemoryVectorSearchService delegates to SK collection SearchAsync.
 - Infrastructure: VectorInfrastructureFactory applies VectorIndexPolicy to resolve provider and returns minimal VectorInfrastructure (provider, collection, embedding service id, settings).
@@ -282,8 +282,8 @@ Best practices
 ## 7. Reference Information
 
 - Dependencies
-  - Microsoft.SemanticKernel, Microsoft.Extensions.AI, Microsoft.Extensions.VectorData
-  - Microsoft.SemanticKernel.Connectors.InMemory
+  - Microsoft.Extensions.AI, Microsoft.Extensions.VectorData
+  - Microsoft.SemanticKernel.Connectors.InMemory (vector store only)
   - Microsoft.Extensions.Logging, GenAIDBExplorer.Core.Repository.Performance
 
 - Configuration (excerpt)

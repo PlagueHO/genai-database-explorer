@@ -362,15 +362,15 @@ AfterAll {
 ### Test Result Integration Benefits
 
 1. **Pester 5.5+ Best Practices**: Uses latest `[PesterConfiguration]` object with proper error handling and detailed verbosity
-2. **Descriptive Test Names**: Clear, business-focused test descriptions without technical prefixes
-3. **Structured Context**: Logical grouping by functional areas (project management, database operations, AI operations, display/export)
-4. **Proper BeforeAll/AfterAll**: Global setup and teardown with error handling and validation
-5. **Enhanced Assertions**: Uses `-Because` parameter for clear assertion failures with meaningful context
-6. **Robust Error Handling**: Proper exception handling and graceful failure scenarios
-7. **Resource Validation**: Validates prerequisites and handles missing resources appropriately
-8. **Output Suppression**: Uses `| Out-Null` for setup commands to reduce noise in test output
-9. **Path Safety**: Proper path construction and existence validation throughout tests
-10. **GitHub Actions Integration**: Compatible test result formats (NUnitXml) for CI/CD visualization
+1. **Descriptive Test Names**: Clear, business-focused test descriptions without technical prefixes
+1. **Structured Context**: Logical grouping by functional areas (project management, database operations, AI operations, display/export)
+1. **Proper BeforeAll/AfterAll**: Global setup and teardown with error handling and validation
+1. **Enhanced Assertions**: Uses `-Because` parameter for clear assertion failures with meaningful context
+1. **Robust Error Handling**: Proper exception handling and graceful failure scenarios
+1. **Resource Validation**: Validates prerequisites and handles missing resources appropriately
+1. **Output Suppression**: Uses `| Out-Null` for setup commands to reduce noise in test output
+1. **Path Safety**: Proper path construction and existence validation throughout tests
+1. **GitHub Actions Integration**: Compatible test result formats (NUnitXml) for CI/CD visualization
 
 ## Input/Output Contracts
 
@@ -542,10 +542,10 @@ pester_test_logs: archive # Detailed Pester execution logs and console outputs
 ### Update Process
 
 1. **Specification Update**: Modify this document first
-2. **Review & Approval**: Pull request review by repository maintainers
-3. **Implementation**: Apply changes to workflow files
-4. **Testing**: Validate with feature branch or manual dispatch
-5. **Deployment**: Merge to main branch
+1. **Review & Approval**: Pull request review by repository maintainers
+1. **Implementation**: Apply changes to workflow files
+1. **Testing**: Validate with feature branch or manual dispatch
+1. **Deployment**: Merge to main branch
 
 ### Version History
 

@@ -48,7 +48,7 @@ This is a representation of the database schema that is enriched by Generative A
 
 ## Disclaimer
 
-This repository is provided "as is" without warranty of any kind, whether express or implied. Use at your own risk! The author will not be liable for any losses or damages associated with the use of this repository. 
+This repository is provided "as is" without warranty of any kind, whether express or implied. Use at your own risk! The author will not be liable for any losses or damages associated with the use of this repository.
 
 It is intended to be used as a starting point for your own project and not as a final product.
 

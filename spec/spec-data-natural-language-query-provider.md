@@ -156,35 +156,35 @@ public enum QuestionComplexity
 ### Simple (Direct Answers)
 
 1. "What columns does the Customer table have?" - Schema retrieval
-2. "Show me all orders from last month" - Basic SQL generation
-3. "What data type is CustomerID?" - Column metadata
-4. "How many records in Products table?" - Count aggregation
+1. "Show me all orders from last month" - Basic SQL generation
+1. "What data type is CustomerID?" - Column metadata
+1. "How many records in Products table?" - Count aggregation
 
 ### Moderate (2-3 Steps)
 
 1. "What does GetCustomerOrderHistory stored procedure do?" - Business logic
-2. "How are customers related to orders?" - Relationship analysis
-3. "Which tables have most foreign keys?" - Schema patterns
-4. "Better way to write: SELECT * FROM Orders WHERE YEAR(OrderDate) = 2024?" - Basic optimization
+1. "How are customers related to orders?" - Relationship analysis
+1. "Which tables have most foreign keys?" - Schema patterns
+1. "Better way to write: SELECT * FROM Orders WHERE YEAR(OrderDate) = 2024?" - Basic optimization
 
 ### Complex (Multi-Step Analysis)
 
 1. "Analyze data model for performance bottlenecks" - Schema analysis
-2. "What happens if I delete a customer record?" - Impact analysis
-3. "Compare approaches to find customers with no orders" - Query alternatives
-4. "How does order fulfillment work via procedures/triggers?" - Process analysis
+1. "What happens if I delete a customer record?" - Impact analysis
+1. "Compare approaches to find customers with no orders" - Query alternatives
+1. "How does order fulfillment work via procedures/triggers?" - Process analysis
 
 ### Advanced (Deep Reasoning)
 
 1. "Design strategy to identify churning customers by order patterns" - Predictive design
-2. "What data quality issues exist and how to fix?" - Quality assessment
-3. "Redesign product tables for multi-language support" - Architecture
-4. "Analyze indexing strategy for common query patterns" - Performance review
+1. "What data quality issues exist and how to fix?" - Quality assessment
+1. "Redesign product tables for multi-language support" - Architecture
+1. "Analyze indexing strategy for common query patterns" - Performance review
 
 ### Educational/Comparative
 
 1. "Explain clustered vs non-clustered indexes with examples" - Education
-2. "Why choose stored procedure vs view for this use case?" - Design rationale
+1. "Why choose stored procedure vs view for this use case?" - Design rationale
 
 ## 6. Acceptance Criteria
 

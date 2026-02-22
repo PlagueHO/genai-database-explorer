@@ -43,25 +43,25 @@ This solution accelerator supports deployment using the [Azure Developer CLI](ht
 Before you begin, ensure you have the following prerequisites in place:
 
 1. An active Azure subscription - [Create a free account](https://azure.microsoft.com/free/) if you don't have one.
-2. [Azure Developer CLI (azd)](https://aka.ms/install-azd) Install or update to the latest version.
-3. **Windows Only:** [PowerShell](https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-windows) of the latest version. Ensure that PowerShell executable `pwsh.exe` is added to the `PATH` variable.
+1. [Azure Developer CLI (azd)](https://aka.ms/install-azd) Install or update to the latest version.
+1. **Windows Only:** [PowerShell](https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-windows) of the latest version. Ensure that PowerShell executable `pwsh.exe` is added to the `PATH` variable.
 
 #### If you have not cloned this repository
 
 1. Download the [Azure Developer CLI](https://learn.microsoft.com/azure/developer/azure-developer-cli/overview)
-2. Clone and initialize this repository:
+1. Clone and initialize this repository:
 
    ```bash
    azd init -t PlagueHO/genai-database-explorer
    ```
 
-3. Authenticate the Azure Developer CLI:
+1. Authenticate the Azure Developer CLI:
 
    ```bash
    azd auth login
    ```
 
-4. (Optional) Configure deployment options using environment variables (see [Configuration Options](#configuration-options) below):
+1. (Optional) Configure deployment options using environment variables (see [Configuration Options](#configuration-options) below):
 
    ```bash
    azd env set ENABLE_PUBLIC_NETWORK_ACCESS true
@@ -69,7 +69,7 @@ Before you begin, ensure you have the following prerequisites in place:
    azd env set AZURE_AI_SEARCH_DEPLOY true
    ```
 
-5. Deploy the infrastructure:
+1. Deploy the infrastructure:
 
    ```bash
    azd up
@@ -78,26 +78,26 @@ Before you begin, ensure you have the following prerequisites in place:
 #### If you have already cloned this repository
 
 1. Download the [Azure Developer CLI](https://learn.microsoft.com/azure/developer/azure-developer-cli/overview)
-2. Navigate to the repository root directory:
+1. Navigate to the repository root directory:
 
    ```bash
    cd genai-database-explorer
    ```
 
-3. Authenticate the Azure Developer CLI:
+1. Authenticate the Azure Developer CLI:
 
    ```bash
    azd auth login
    ```
 
-4. (Optional) Configure deployment options using environment variables (see [Configuration Options](#configuration-options) below):
+1. (Optional) Configure deployment options using environment variables (see [Configuration Options](#configuration-options) below):
 
    ```bash
    azd env set ENABLE_PUBLIC_NETWORK_ACCESS true
    azd env set STORAGE_ACCOUNT_DEPLOY true
    ```
 
-5. Deploy the infrastructure:
+1. Deploy the infrastructure:
 
    ```bash
    azd up

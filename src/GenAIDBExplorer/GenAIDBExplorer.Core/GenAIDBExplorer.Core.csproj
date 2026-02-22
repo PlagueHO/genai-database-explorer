@@ -27,15 +27,11 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.2" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.2" />
     <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="10.2.0" />
-    <PackageReference Include="Microsoft.SemanticKernel" Version="1.70.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.Abstractions" Version="1.70.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.Connectors.AzureOpenAI" Version="1.70.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.Connectors.OpenAI" Version="1.70.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.Core" Version="1.70.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.PromptTemplates.Handlebars" Version="1.70.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.PromptTemplates.Liquid" Version="1.70.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.Prompty" Version="1.68.0-beta" />
-    <PackageReference Include="Microsoft.SemanticKernel.Yaml" Version="1.70.0" />
+    <PackageReference Include="Azure.AI.Projects" Version="1.0.0-beta.5" />
+    <PackageReference Include="Azure.AI.Projects.OpenAI" Version="1.0.0-beta.5" />
+    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="10.3.0" />
+    <PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" />
+    <PackageReference Include="Scriban" Version="6.2.1" />
     <PackageReference Include="Microsoft.SemanticKernel.Connectors.InMemory" Version="1.68.0-preview" />
     <PackageReference Include="Microsoft.Extensions.VectorData.Abstractions" Version="9.7.0" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
@@ -78,22 +74,25 @@
     <None Update="DefaultProject\settings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Prompty\get_tables_from_storedprocedure_definition.prompty">
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="PromptTemplates\describe_semanticmodeltable.prompt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Prompty\describe_semanticmodelstoredprocedure.prompty">
+    <None Update="PromptTemplates\describe_semanticmodelview.prompt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Prompty\get_table_from_data_dictionary_markdown.prompty">
+    <None Update="PromptTemplates\describe_semanticmodelstoredprocedure.prompt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Prompty\get_tables_from_view_definition.prompty">
+    <None Update="PromptTemplates\get_table_from_data_dictionary_markdown.prompt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Prompty\describe_semanticmodeltable.prompty">
+    <None Update="PromptTemplates\get_tables_from_view_definition.prompt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Prompty\describe_semanticmodelview.prompty">
+    <None Update="PromptTemplates\get_tables_from_storedprocedure_definition.prompt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

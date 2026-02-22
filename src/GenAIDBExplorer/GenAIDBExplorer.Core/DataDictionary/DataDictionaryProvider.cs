@@ -1,9 +1,9 @@
+using GenAIDBExplorer.Core.ChatClients;
 using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.Models.SemanticModel;
-using GenAIDBExplorer.Core.SemanticKernel;
+using GenAIDBExplorer.Core.PromptTemplates;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
 using System.Text;
 using System.Text.Json;
 using System.Resources;
@@ -15,15 +15,19 @@ namespace GenAIDBExplorer.Core.DataDictionary;
 /// </summary>
 public class DataDictionaryProvider(
         IProject project,
-        ISemanticKernelFactory semanticKernelFactory,
+        IChatClientFactory chatClientFactory,
+        IPromptTemplateParser promptTemplateParser,
+        ILiquidTemplateRenderer liquidTemplateRenderer,
         ILogger<DataDictionaryProvider> logger
     ) : IDataDictionaryProvider
 {
     private readonly IProject _project = project;
-    private readonly ISemanticKernelFactory _semanticKernelFactory = semanticKernelFactory;
+    private readonly IChatClientFactory _chatClientFactory = chatClientFactory;
+    private readonly IPromptTemplateParser _promptTemplateParser = promptTemplateParser;
+    private readonly ILiquidTemplateRenderer _liquidTemplateRenderer = liquidTemplateRenderer;
     private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Core.Resources.LogMessages", typeof(DataDictionaryProvider).Assembly);
     private static readonly ResourceManager _resourceManagerErrorMessages = new("GenAIDBExplorer.Core.Resources.ErrorMessages", typeof(DataDictionaryProvider).Assembly);
-    private const string _promptyFolder = "Prompty";
+    private const string _promptTemplateFolder = "PromptTemplates";
 
     /// <summary>
     /// Enriches the semantic model by adding information from a data dictionary.
@@ -132,46 +136,32 @@ public class DataDictionaryProvider(
     /// <exception cref="InvalidOperationException"></exception>
     internal async Task<TableDataDictionary> GetTableFromMarkdownAsync(string markdownContent)
     {
-        // Initialize Semantic Kernel
-        var semanticKernel = _semanticKernelFactory.CreateSemanticKernel();
-
-        // Load the prompty function - use application base directory to ensure correct path resolution
         var applicationDirectory = AppDomain.CurrentDomain.BaseDirectory;
-        var promptyFilename = Path.Combine(applicationDirectory, _promptyFolder, "get_table_from_data_dictionary_markdown.prompty");
-#pragma warning disable SKEXP0040 // Experimental API
-        var function = semanticKernel.CreateFunctionFromPromptyFile(promptyFilename);
-#pragma warning restore SKEXP0040 // Experimental API
+        var promptFilename = Path.Combine(applicationDirectory, _promptTemplateFolder, "get_table_from_data_dictionary_markdown.prompt");
 
-        // Set up prompt execution settings
-        var promptExecutionSettings = new OpenAIPromptExecutionSettings
-        {
-#pragma warning disable SKEXP0001 // Experimental API
-            ServiceId = "ChatCompletionStructured",
-#pragma warning restore SKEXP0001 // Experimental API
-#pragma warning disable SKEXP0010 // Experimental API
-            ResponseFormat = typeof(TableDataDictionary)
-#pragma warning restore SKEXP0010 // Experimental API
-        };
-
-        // Prepare arguments
-        var arguments = new KernelArguments(promptExecutionSettings)
+        var templateDefinition = _promptTemplateParser.ParseFromFile(promptFilename);
+        var variables = new Dictionary<string, object?>
         {
             { "entity_markdown", markdownContent }
         };
+        var messages = _liquidTemplateRenderer.RenderMessages(templateDefinition, variables);
 
-        // Invoke the function
-        var result = await semanticKernel.InvokeAsync(function, arguments);
+        var chatClient = _chatClientFactory.CreateStructuredOutputChatClient();
+        var chatOptions = new ChatOptions
+        {
+            ResponseFormat = ChatResponseFormat.ForJsonSchema<TableDataDictionary>()
+        };
 
-        var resultString = result?.ToString();
+        var response = await chatClient.GetResponseAsync(messages, chatOptions);
+        var resultString = response.Text;
 
         if (string.IsNullOrEmpty(resultString))
         {
-            logger.LogWarning("Semantic Kernel returned an empty result for markdown content.");
+            logger.LogWarning("AI returned an empty result for markdown content.");
             throw new InvalidOperationException("Failed to extract table structure from markdown content.");
         }
         else
         {
-            // Deserialize the result into a SemanticModelTable
             var table = JsonSerializer.Deserialize<TableDataDictionary>(resultString)
                 ?? throw new InvalidOperationException("Failed to deserialize table structure from markdown content.");
 

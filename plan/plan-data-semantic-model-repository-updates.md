@@ -88,12 +88,12 @@ The implementation includes basic performance monitoring through the existing `I
    - Define `ILocalDiskPersistenceStrategy`, `IAzureBlobPersistenceStrategy`, `ICosmosPersistenceStrategy`
    - Add factory interface for strategy selection
 
-2. **Implement repository pattern abstraction**
+1. **Implement repository pattern abstraction**
    - Create `ISemanticModelRepository` interface
    - Implement base `SemanticModelRepository` class
    - Add strategy selection logic
 
-3. **Configure dependency injection**
+1. **Configure dependency injection**
    - Register persistence strategies in DI container
    - Add configuration options for each strategy
    - Implement strategy factory with DI integration
@@ -106,30 +106,30 @@ The implementation includes basic performance monitoring through the existing `I
    1. Define class `LocalDiskPersistenceStrategy : ILocalDiskPersistenceStrategy`:
       - Wrap calls to `SemanticModel.SaveModelAsync(DirectoryInfo)` and `SemanticModel.LoadModelAsync(DirectoryInfo)`.
       - Preserve existing public API signatures so that legacy callers are unaffected.
-   2. Index file generation:
+   1. Index file generation:
       - Produce `index.json` in model root listing entity categories (tables, views, storedprocedures) and relative file paths.
       - Use `System.Text.Json` with `WriteIndented = true` for readability.
-   3. Validation and safety:
+   1. Validation and safety:
       - Apply `PathValidator` to sanitize `modelPath.FullName` and prevent directory traversal.
       - Enforce entity name length ≤128 via `EntityNameSanitizer`.
       - Log errors through `ILogger<LocalDiskPersistenceStrategy>` with structured context.
-   4. Error handling and rollback:
+   1. Error handling and rollback:
       - Catch `IOException`, `UnauthorizedAccessException`, wrap with descriptive messages.
       - Write to a temp directory and use atomic rename/move to avoid partial writes.
 
-2. **Add CRUD operations on disk**
+1. **Add CRUD operations on disk**
    1. Extend `ILocalDiskPersistenceStrategy` interface:
       - `Task<bool> ExistsAsync(DirectoryInfo modelPath)`
       - `Task<IEnumerable<string>> ListModelsAsync(DirectoryInfo rootPath)`
       - `Task DeleteModelAsync(DirectoryInfo modelPath)`
-   2. Implement methods in `LocalDiskPersistenceStrategy`:
+   1. Implement methods in `LocalDiskPersistenceStrategy`:
       - `ExistsAsync`: call `Directory.Exists`, validate path security.
       - `ListModelsAsync`: enumerate subfolders under `rootPath`, return model folder names.
       - `DeleteModelAsync`: acquire exclusive lock via `FileStream(FileShare.None)`, delete directory recursively, rollback on errors.
-   3. Concurrency and atomicity:
+   1. Concurrency and atomicity:
       - Use `FileStream` locks and temp-to-final directory swaps for atomic operations.
       - Ensure file handles are released before moving or deleting.
-   4. Testing requirements:
+   1. Testing requirements:
       - Unit tests against `Path.GetTempPath()`-based test directory, covering success and failure scenarios.
       - Regression tests to verify `SaveModelAsync`/`LoadModelAsync` still work on existing model artifacts.
 
@@ -151,7 +151,7 @@ The implementation includes basic performance monitoring through the existing `I
    - Implement hierarchical blob naming and index blob management
    - Add connection string configuration and authentication
 
-2. **Implement Cosmos DB strategy**
+1. **Implement Cosmos DB strategy**
    - Create `CosmosPersistenceStrategy` class
    - Add Cosmos DB SDK dependencies
    - Implement hierarchical partition key structure
@@ -377,12 +377,12 @@ The performance monitoring system provides enterprise-grade reliability and can 
    - Replace `FindStoredProcedure(string, string)` with `Task<SemanticModelStoredProcedure?> FindStoredProcedureAsync(string, string)`
    - **ENSURE**: Methods work transparently with both lazy and eager loading scenarios
 
-2. **Update SemanticModel implementation**
+1. **Update SemanticModel implementation**
    - Implement async Find methods that detect lazy loading state automatically
    - Route to appropriate collection access (sync Collections vs async GetXxxAsync methods)
    - **ENSURE**: No sync-over-async patterns - true async throughout
 
-3. **Remove synchronous Find methods entirely**
+1. **Remove synchronous Find methods entirely**
    - Clean break from old API for clarity and consistency
    - Compilation errors will guide consumers to new async methods
    - **ENSURE**: Clear error messages help with migration
@@ -410,10 +410,10 @@ The performance monitoring system provides enterprise-grade reliability and can 
 1. **Update Console CommandHandlers**
    - All usages updated to use `await FindTableAsync()`, `await FindViewAsync()`, and `await FindStoredProcedureAsync()`.
 
-2. **Update Core Library Usage**
+1. **Update Core Library Usage**
    - All usages in `DataDictionaryProvider.cs` and related files updated to async Find methods.
 
-3. **Update Unit Tests**
+1. **Update Unit Tests**
    - All test usages updated to async Find methods; all tests passing.
 
 **Phase 6b Status**: ✅ **COMPLETED** on 2025-07-14 – All consumers updated to use async Find methods; no references to old synchronous methods remain.

@@ -80,7 +80,8 @@
       // "OpenAIKey": "<Set your OpenAI API key>"
       // "AzureOpenAIKey": "<AzureOpenAIKey>", // Azure OpenAI key. Only required when AzureAuthenticationType is "ApiKey"
       "AzureOpenAIEndpoint": "<AzureOpenAIEndpoint>" ,// Azure OpenAI endpoint
-      "TenantId": "6b0cec69-4986-422e-b209-bf8e288b0243" // Optional: Azure tenant ID for DefaultAzureCredential. Use when resource is in different tenant than default
+      "TenantId": "6b0cec69-4986-422e-b209-bf8e288b0243", // Optional: Azure tenant ID for DefaultAzureCredential. Use when resource is in different tenant than default
+      "FoundryProjectEndpoint": "" // Optional: Microsoft Foundry project endpoint URL (e.g., https://<resource>.services.ai.azure.com/api/projects/<project-name>)
       // "AzureOpenAIAppId": "" // Azure OpenAI App Id
     },
     "ChatCompletion": {

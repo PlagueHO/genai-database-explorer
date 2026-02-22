@@ -43,8 +43,8 @@ module cosmosDbAccount 'br/public:avm/res/document-db/database-account:0.18.0' =
 ### Key Features
 
 1. **Native Support**: Data plane role assignments are now natively supported in the AVM Cosmos DB module
-2. **Simplified Deployment**: No need for separate module or complex role definition ID construction
-3. **Built-in Role GUIDs**: Use the standard Cosmos DB built-in role definition IDs directly
+1. **Simplified Deployment**: No need for separate module or complex role definition ID construction
+1. **Built-in Role GUIDs**: Use the standard Cosmos DB built-in role definition IDs directly
 
 ### Notes
 

@@ -214,29 +214,29 @@ Task: "Create [Entity2] model in src/models/[entity2].py"
 ### MVP First (User Story 1 Only)
 
 1. Complete Phase 1: Setup
-2. Complete Phase 2: Foundational (CRITICAL - blocks all stories)
-3. Complete Phase 3: User Story 1
-4. **STOP and VALIDATE**: Test User Story 1 independently
-5. Deploy/demo if ready
+1. Complete Phase 2: Foundational (CRITICAL - blocks all stories)
+1. Complete Phase 3: User Story 1
+1. **STOP and VALIDATE**: Test User Story 1 independently
+1. Deploy/demo if ready
 
 ### Incremental Delivery
 
 1. Complete Setup + Foundational → Foundation ready
-2. Add User Story 1 → Test independently → Deploy/Demo (MVP!)
-3. Add User Story 2 → Test independently → Deploy/Demo
-4. Add User Story 3 → Test independently → Deploy/Demo
-5. Each story adds value without breaking previous stories
+1. Add User Story 1 → Test independently → Deploy/Demo (MVP!)
+1. Add User Story 2 → Test independently → Deploy/Demo
+1. Add User Story 3 → Test independently → Deploy/Demo
+1. Each story adds value without breaking previous stories
 
 ### Parallel Team Strategy
 
 With multiple developers:
 
 1. Team completes Setup + Foundational together
-2. Once Foundational is done:
+1. Once Foundational is done:
    - Developer A: User Story 1
    - Developer B: User Story 2
    - Developer C: User Story 3
-3. Stories complete and integrate independently
+1. Stories complete and integrate independently
 
 ---
 

@@ -5,18 +5,6 @@
             "type": "sse",
             "url": "https://gitmcp.io/microsoft/agent-framework"
         },
-        "github": {
-            "type": "http",
-            "url": "https://api.githubcopilot.com/mcp/",
-        },
-        "microsoft-learn": {
-            "type": "http",
-            "url": "https://learn.microsoft.com/api/mcp"
-        },
-        "microsoft-foundry": {
-            "type": "http",
-            "url": "https://mcp.ai.azure.com"
-        },
         "aspire": {
             "type": "stdio",
             "command": "aspire",
@@ -32,6 +20,18 @@
                 "-y",
                 "@upstash/context7-mcp@latest"
             ]
+        },
+        "github": {
+            "type": "http",
+            "url": "https://api.githubcopilot.com/mcp/",
+        },
+        "microsoft-learn": {
+            "type": "http",
+            "url": "https://learn.microsoft.com/api/mcp"
+        },
+        "microsoft-foundry": {
+            "type": "http",
+            "url": "https://mcp.ai.azure.com"
         },
         "playwright": {
             "type": "stdio",

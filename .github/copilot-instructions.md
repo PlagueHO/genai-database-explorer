@@ -7,40 +7,43 @@ This is a .NET 10 solution that uses Generative AI to help users explore and que
 The application follows a **project-based workflow** where each database analysis is contained in a project folder with `settings.json`:
 
 1. **Extract Phase**: `ISemanticModelProvider` + `SchemaRepository` extract raw schema → `semanticmodel.json`
-2. **Enrich Phase**: `SemanticDescriptionProvider` uses Prompty files + `SemanticKernelFactory` to generate AI descriptions
-3. **Query Phase**: Natural language questions → SQL generation via Semantic Kernel
+2. **Enrich Phase**: `SemanticDescriptionProvider` uses prompt templates + `IChatClientFactory` to generate AI descriptions
+3. **Query Phase**: Natural language questions → SQL generation via `IChatClient`
 4. **Persistence**: Multiple strategies (LocalDisk/AzureBlob/CosmosDB) via `ISemanticModelRepository`
 
 ### Key Components
 
 - **Semantic Model**: Core domain object (`SemanticModel.cs`) with lazy loading, change tracking, and caching
 - **Command Handlers**: System.CommandLine-based CLI in `GenAIDBExplorer.Console/CommandHandlers/`
-- **Semantic Providers**: AI-powered enrichment services using Prompty templates in `Core/Prompty/`
+- **Semantic Providers**: AI-powered enrichment services using prompt templates in `Core/PromptTemplates/`
 - **Repository Pattern**: Abstract persistence with multiple backends (LocalDisk/AzureBlob/CosmosDB)
 - **Project Settings**: JSON-based configuration driving all operations (`samples/AdventureWorksLT/settings.json`)
 
 ## Critical Patterns
 
-### AI Integration (Semantic Kernel + Prompty)
+### AI Integration via Microsoft.Extensions.AI
 ```csharp
-// ALL AI operations use SemanticKernelFactory.CreateSemanticKernel()
+// ALL AI operations use IChatClientFactory
 public class SemanticDescriptionProvider(
-    ISemanticKernelFactory semanticKernelFactory, // <- Always inject this
+    IChatClientFactory chatClientFactory, // <- Always inject this
+    IPromptTemplateParser promptTemplateParser,
+    ILiquidTemplateRenderer liquidTemplateRenderer,
     ILogger<SemanticDescriptionProvider> logger)
 {
-    private async Task<string> ProcessWithPromptyAsync(string promptyFile)
+    private async Task<string> ProcessWithPromptTemplateAsync(string promptFile)
     {
-        var kernel = _semanticKernelFactory.CreateSemanticKernel(); // <- Standard pattern
-        var function = kernel.CreateFunctionFromPromptyFile(promptyFilename);
-        var result = await kernel.InvokeAsync(function, arguments);
-        // Track tokens: result.Metadata?["Usage"] as ChatTokenUsage
+        var chatClient = _chatClientFactory.CreateChatClient();
+        var template = _promptTemplateParser.ParseFromFile(promptFilePath);
+        var messages = _liquidTemplateRenderer.RenderMessages(template, variables);
+        var response = await chatClient.GetResponseAsync(messages);
+        // Track tokens: response.Usage (UsageDetails with long? properties)
     }
 }
 ```
 
 ### Dependency Injection Setup
 All services registered in `HostBuilderExtensions.ConfigureHost()`:
-- Singletons for core services (`ISemanticKernelFactory`, `IProject`)
+- Singletons for core services (`IChatClientFactory`, `IPromptTemplateParser`, `ILiquidTemplateRenderer`, `IProject`)
 - Decorated providers with caching/performance monitoring
 - Configuration loaded from console project's `appsettings.json`
 
@@ -83,7 +86,7 @@ src/GenAIDBExplorer/
 ├── GenAIDBExplorer.Console/        # CLI app, command handlers, DI setup
 ├── GenAIDBExplorer.Core/           # Domain logic, providers, models
 │   ├── Models/SemanticModel/       # Core domain objects  
-│   ├── Prompty/                    # AI prompt templates (.prompty files)
+│   ├── PromptTemplates/            # AI prompt templates (.prompt files)
 │   ├── SemanticProviders/          # AI enrichment services
 │   └── Repository/                 # Persistence abstractions
 └── Tests/Unit/                     # MSTest + FluentAssertions + Moq
@@ -137,9 +140,11 @@ Key pattern: `IProject.Settings` provides strongly-typed access to all configura
 
 ## AI/LLM Integration Requirements
 
-- **ALWAYS** use `ISemanticKernelFactory.CreateSemanticKernel()` for AI operations
-- Store AI prompts in `.prompty` files under `Core/Prompty/`
-- Track token usage: `result.Metadata?["Usage"] as ChatTokenUsage`
+- **ALWAYS** use `IChatClientFactory` for AI operations (creates `IChatClient` and `IEmbeddingGenerator` instances)
+- Store AI prompts in `.prompt` files under `Core/PromptTemplates/`
+- Parse prompt files with `IPromptTemplateParser`, render with `ILiquidTemplateRenderer`
+- Track token usage: `response.Usage` returns `UsageDetails` (long? properties)
+- Use `ChatResponseFormat.ForJsonSchema<T>()` for structured output
 - Use structured logging with scopes for AI operations
 - Follow SemanticDescriptionProvider pattern for prompt execution
 
