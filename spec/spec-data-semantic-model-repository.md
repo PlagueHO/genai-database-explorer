@@ -347,7 +347,7 @@ Documents (each with hierarchical partition key):
 The system supports two legacy formats for backward compatibility:
 
 1. **Legacy Direct Format** (no envelope): Entity data stored directly as JSON without version or embedding wrapper
-2. **Legacy Envelope Format** (without version): `{ "data": {...}, "embedding": {...} }` without version field
+1. **Legacy Envelope Format** (without version): `{ "data": {...}, "embedding": {...} }` without version field
 
 **Schema Evolution Rules:**
 

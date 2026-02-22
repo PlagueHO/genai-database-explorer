@@ -310,13 +310,13 @@ internal static class Program
 
 1. **Enhanced Observability**: OpenTelemetry integration provides standardized metrics, traces, and logs that can be visualized and analyzed in various tools.
 
-2. **Local Development Experience**: The .NET Aspire dashboard provides real-time visibility into application behavior during development, enabling faster debugging and performance optimization.
+1. **Local Development Experience**: The .NET Aspire dashboard provides real-time visibility into application behavior during development, enabling faster debugging and performance optimization.
 
-3. **Cloud Integration**: Seamless integration with Azure Application Insights enables production monitoring without additional code changes.
+1. **Cloud Integration**: Seamless integration with Azure Application Insights enables production monitoring without additional code changes.
 
-4. **Health Monitoring**: Standardized health checks provide operational status information for monitoring systems.
+1. **Health Monitoring**: Standardized health checks provide operational status information for monitoring systems.
 
-5. **Future Extensibility**: The .NET Aspire framework provides a foundation for adding additional cloud-native capabilities in the future, such as service discovery and resilience patterns.
+1. **Future Extensibility**: The .NET Aspire framework provides a foundation for adding additional cloud-native capabilities in the future, such as service discovery and resilience patterns.
 
 The console application structure presents unique challenges for .NET Aspire integration, since Aspire was primarily designed for web applications. However, by using the Custom ServiceDefaults approach described in Microsoft's documentation, we can adapt Aspire's capabilities for console applications while maintaining backward compatibility.
 

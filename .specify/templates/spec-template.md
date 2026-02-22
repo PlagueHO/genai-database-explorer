@@ -31,7 +31,7 @@
 **Acceptance Scenarios**:
 
 1. **Given** [initial state], **When** [action], **Then** [expected outcome]
-2. **Given** [initial state], **When** [action], **Then** [expected outcome]
+1. **Given** [initial state], **When** [action], **Then** [expected outcome]
 
 ---
 

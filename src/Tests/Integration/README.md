@@ -117,8 +117,8 @@ Invoke-Pester -Path './src/Tests/Integration/Console.Integration.Tests.LocalDisk
 The GitHub Actions workflow automatically:
 
 1. Runs **Common** tests for all strategies
-2. Runs **strategy-specific** tests based on the matrix
-3. Publishes separate results for each strategy
+1. Runs **strategy-specific** tests based on the matrix
+1. Publishes separate results for each strategy
 
 See `.github/workflows/console-integration-tests.yml` for details.
 
@@ -170,7 +170,7 @@ Tests that run for **all strategies** before strategy-specific tests:
    - Validate project structure creation
    - Verify settings.json contents
 
-2. **CLI Interface**
+1. **CLI Interface**
    - `--help` - Verify help information displays
    - Invalid commands - Verify proper error handling
 
@@ -184,37 +184,37 @@ Tests specific to local file system persistence:
    - Validate model name matches database
    - `extract-model --skip-tables` - Test extraction options
 
-2. **Data Dictionary Application**
+1. **Data Dictionary Application**
    - `data-dictionary table` - Apply metadata from JSON files
    - Verify dictionary files read from local file system
    - Test `--source-path-pattern`, `--schema-name`, `--name`, `--show` options
 
-3. **AI Enrichment**
+1. **AI Enrichment**
    - `enrich-model` - Add AI-generated descriptions
    - Verify enriched model saved to local disk
    - Validate model file updated in place
 
-4. **Vector Generation**
+1. **Vector Generation**
    - `generate-vectors --dryRun` - Test vector generation planning
    - `generate-vectors table` - Generate and persist vectors for specific object
    - Verify `SemanticModel/Vectors/` directory created on disk
    - Test `--overwrite` option
 
-5. **Model Display**
+1. **Model Display**
    - `show-object table` - Display table information from local model
    - Verify data retrieved from `SemanticModel/semanticmodel.json`
 
-6. **Natural Language Query**
+1. **Natural Language Query**
    - `query-model` - Query semantic model using natural language
    - Verify SQL generation from natural language question
    - Validate query execution against database
 
-7. **Vector Index Reconciliation**
+1. **Vector Index Reconciliation**
    - `reconcile-index --dry-run` - Preview index reconciliation
    - `reconcile-index` - Re-upsert local vectors to external index
    - Verify vector index consistency
 
-8. **Model Export**
+1. **Model Export**
    - `export-model` - Export to markdown format
    - Verify exported file created on local disk
    - `export-model --split-files` - Export to multiple files
@@ -229,39 +229,39 @@ Tests specific to Azure Blob Storage persistence:
    - Verify model accessible via blob storage APIs
    - Test with configured blob prefix
 
-2. **Data Dictionary Application**
+1. **Data Dictionary Application**
    - `data-dictionary table` - Apply metadata from JSON files
    - Verify dictionary files read and model updated in blob storage
    - Test blob-based data dictionary operations
 
-3. **AI Enrichment**
+1. **AI Enrichment**
    - `enrich-model` - Enrich and update in blob storage
    - Verify model updated in Azure Blob Storage
 
-4. **Vector Generation**
+1. **Vector Generation**
    - `generate-vectors --dry-run` - Test planning with blob storage
    - `generate-vectors table` - Persist vectors to separate blobs
    - Verify vectors stored in Azure Blob Storage
 
-5. **Model Display**
+1. **Model Display**
    - `show-object table` - Display from blob storage model
    - Verify blob retrieval and deserialization
 
-6. **Natural Language Query**
+1. **Natural Language Query**
    - `query-model` - Query semantic model from blob storage
    - Verify SQL generation with blob-persisted model
    - Validate query execution against database
 
-7. **Vector Index Reconciliation**
+1. **Vector Index Reconciliation**
    - `reconcile-index --dry-run` - Preview reconciliation with blob storage
    - `reconcile-index` - Re-upsert blob-stored vectors to external index
    - Verify vector index consistency with blob storage
 
-8. **Model Export**
+1. **Model Export**
    - `export-model` - Export blob storage model to local file
    - Verify blob-to-file conversion
 
-9. **Blob Storage Scenarios**
+1. **Blob Storage Scenarios**
    - Test blob prefix configuration
    - Verify storage account endpoint handling
 
@@ -274,39 +274,39 @@ Tests specific to Azure Cosmos DB document persistence:
    - Verify model document created in Models container
    - Test dual-container architecture
 
-2. **Data Dictionary Application**
+1. **Data Dictionary Application**
    - `data-dictionary table` - Apply metadata from JSON files
    - Verify dictionary applied and model document updated in Cosmos DB
    - Test document-based data dictionary operations
 
-3. **AI Enrichment**
+1. **AI Enrichment**
    - `enrich-model` - Enrich and update Cosmos DB document
    - Verify model document updated in Models container
 
-4. **Vector Generation**
+1. **Vector Generation**
    - `generate-vectors --dry-run` - Test planning with Cosmos DB
    - `generate-vectors table` - Persist vectors to Entities container
    - Verify separation between model and entity documents
 
-5. **Model Display**
+1. **Model Display**
    - `show-object table` - Display from Cosmos DB model
    - Verify document query and retrieval
 
-6. **Natural Language Query**
+1. **Natural Language Query**
    - `query-model` - Query semantic model from Cosmos DB
    - Verify SQL generation with document-persisted model
    - Validate query execution against database
 
-7. **Vector Index Reconciliation**
+1. **Vector Index Reconciliation**
    - `reconcile-index --dry-run` - Preview reconciliation with Cosmos DB
    - `reconcile-index` - Re-upsert Cosmos DB-stored vectors to external index
    - Verify vector index consistency with Cosmos DB storage
 
-8. **Model Export**
+1. **Model Export**
    - `export-model` - Export Cosmos DB model to local file
    - Verify document-to-file conversion
 
-9. **Cosmos DB Scenarios**
+1. **Cosmos DB Scenarios**
    - Test dual-container configuration (Models + Entities)
    - Verify hierarchical partition key support
    - Test database and container name configuration
@@ -326,6 +326,6 @@ Tests use **incremental state** where later tests depend on earlier operations s
 ## Adding New Tests
 
 1. **If the test applies to ALL strategies**: Add to `Console.Integration.Tests.Common.ps1`
-2. **If the test is strategy-specific**: Add to the appropriate strategy file
-3. **If unsure**: Add to the strategy file where you're implementing the feature first, then migrate to Common if it proves universal
-4. **Maintain test flow order**: Insert new tests in the logical workflow sequence (e.g., new enrichment tests go between extraction and display)
+1. **If the test is strategy-specific**: Add to the appropriate strategy file
+1. **If unsure**: Add to the strategy file where you're implementing the feature first, then migrate to Common if it proves universal
+1. **Maintain test flow order**: Insert new tests in the logical workflow sequence (e.g., new enrichment tests go between extraction and display)

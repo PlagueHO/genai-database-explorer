@@ -56,8 +56,8 @@ graph TB
 ### Supported Storage Strategies
 
 1. **Local Disk Storage** - File system-based storage for development and single-user scenarios
-2. **Azure Blob Storage** - Cloud storage with hierarchical organization and concurrent operations
-3. **Azure Cosmos DB** - NoSQL database storage with global distribution and consistency options
+1. **Azure Blob Storage** - Cloud storage with hierarchical organization and concurrent operations
+1. **Azure Cosmos DB** - NoSQL database storage with global distribution and consistency options
 
 ## Storage Strategy Comparison
 
@@ -597,32 +597,32 @@ var model = await repository.LoadModelAsync(
    - Check DefaultAzureCredential configuration
    - Validate service principal credentials
 
-2. **Performance Issues**
+1. **Performance Issues**
    - Adjust concurrency limits
    - Review timeout configurations
    - Monitor throttling metrics
    - Check cache hit rates and configuration
    - Enable lazy loading for large models
 
-3. **Data Consistency**
+1. **Data Consistency**
    - Check consistency level settings (Cosmos DB)
    - Verify concurrent operation handling
    - Review retry policy configuration
    - Ensure change tracking is properly enabled
 
-4. **Memory Issues**
+1. **Memory Issues**
    - Enable lazy loading for large semantic models
    - Configure appropriate cache memory limits
    - Monitor cache statistics for memory usage
    - Ensure proper disposal of resources
 
-5. **Cache Performance Issues**
+1. **Cache Performance Issues**
    - Monitor cache hit rates (should be >70%)
    - Adjust cache size and TTL settings
    - Check for cache eviction patterns
    - Verify cache key generation consistency
 
-6. **Change Tracking Issues**
+1. **Change Tracking Issues**
    - Ensure change tracking is enabled before modifications
    - Verify `SaveChangesAsync()` vs `SaveModelAsync()` usage
    - Check for proper entity modification patterns

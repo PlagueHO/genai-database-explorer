@@ -45,9 +45,9 @@ samples/AdventureWorksLT/
 The application follows a **project-based workflow** where each database analysis is contained in a project folder with `settings.json`:
 
 1. **Extract Phase**: `ISemanticModelProvider` + `SchemaRepository` extract raw schema → `semanticmodel.json`
-2. **Enrich Phase**: `SemanticDescriptionProvider` uses Prompty files + `SemanticKernelFactory` to generate AI descriptions
-3. **Query Phase**: Natural language questions → SQL generation via Semantic Kernel
-4. **Persistence**: Multiple strategies (LocalDisk/AzureBlob/CosmosDB) via `ISemanticModelRepository`
+1. **Enrich Phase**: `SemanticDescriptionProvider` uses Prompty files + `SemanticKernelFactory` to generate AI descriptions
+1. **Query Phase**: Natural language questions → SQL generation via Semantic Kernel
+1. **Persistence**: Multiple strategies (LocalDisk/AzureBlob/CosmosDB) via `ISemanticModelRepository`
 
 ### Key components
 

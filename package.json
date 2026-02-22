@@ -1,0 +1,20 @@
+{
+  "name": "genai-database-explorer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint:md": "markdownlint-cli2 \"**/*.md\" \"#node_modules\"",
+    "lint:md:fix": "markdownlint-cli2 --fix \"**/*.md\" \"#node_modules\""
+  },
+  "devDependencies": {
+    "markdownlint-cli2": "^0.20.0"
+  },
+  "description": "GenAI Database Explorer - AI-powered database exploration and querying",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PlagueHO/genai-database-explorer.git"
+  },
+  "author": "Daniel Scott-Raynsford",
+  "license": "MIT"
+}

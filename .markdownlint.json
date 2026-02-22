@@ -1,0 +1,18 @@
+{
+    "default": true,
+    "MD029": {
+        "style": "one"
+    },
+    "MD013": false,
+    "MD024": {
+        "siblings_only": true
+    },
+    "MD033": {
+        "allowed_elements": ["br"]
+    },
+    "MD034": true,
+    "MD036": false,
+    "MD041": false,
+    "MD060": false,
+    "no-hard-tabs": true
+}

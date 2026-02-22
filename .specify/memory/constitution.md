@@ -161,19 +161,19 @@ All services MUST be registered via `HostBuilderExtensions.ConfigureHost()` for 
 ### Pre-Implementation
 
 1. **Read existing specifications** in `spec/` directory for relevant features
-2. **Check existing plans** in `plan/` directory for architectural decisions
-3. **Review project documentation** in `docs/` for component behavior
-4. **Validate against constitution** - ensure proposed changes align with principles
+1. **Check existing plans** in `plan/` directory for architectural decisions
+1. **Review project documentation** in `docs/` for component behavior
+1. **Validate against constitution** - ensure proposed changes align with principles
 
 ### Implementation
 
 1. **Create feature branch** following naming convention `###-feature-name`
-2. **Write tests first** - ensure they fail before implementation
-3. **Implement minimum code** to make tests pass
-4. **Run `format-fix-whitespace-only`** task after any C# file changes
-5. **Verify all tests pass** via `dotnet test`
-6. **Run integration tests** if touching CLI commands or database operations
-7. **Update documentation** if public APIs or CLI commands change
+1. **Write tests first** - ensure they fail before implementation
+1. **Implement minimum code** to make tests pass
+1. **Run `format-fix-whitespace-only`** task after any C# file changes
+1. **Verify all tests pass** via `dotnet test`
+1. **Run integration tests** if touching CLI commands or database operations
+1. **Update documentation** if public APIs or CLI commands change
 
 ### Quality Gates
 
@@ -203,14 +203,14 @@ All services MUST be registered via `HostBuilderExtensions.ConfigureHost()` for 
 ### Amendment Process
 
 1. **Propose amendment** via issue or pull request with rationale
-2. **Version bump follows semantic versioning**:
+1. **Version bump follows semantic versioning**:
    - **MAJOR**: Backward incompatible principle changes or removals
    - **MINOR**: New principles added or substantial expansions
    - **PATCH**: Clarifications, wording improvements, non-semantic fixes
-3. **Update sync impact report** at top of constitution file
-4. **Propagate changes** to affected templates, commands, and documentation
-5. **Ratification date remains** original adoption date
-6. **Last amended date becomes** date of amendment approval
+1. **Update sync impact report** at top of constitution file
+1. **Propagate changes** to affected templates, commands, and documentation
+1. **Ratification date remains** original adoption date
+1. **Last amended date becomes** date of amendment approval
 
 ### Compliance Reviews
 
