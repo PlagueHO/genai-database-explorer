@@ -105,7 +105,7 @@ samples/AdventureWorksLT/
 ## Style & Conventions
 
 - Ensure new/changed code is indented correctly
-- Target .NET 10 with C# 11 features (async/await, records, pattern matching)
+- Target .NET 10 with C# 14 features (async/await, records, pattern matching, primary constructors, collection expressions)
 - Follow SOLID, DRY, CleanCode; meaningful, self-documenting names
 - PascalCase for types/methods; camelCase for parameters/locals
 - **CLI parameters MUST use kebab-case** for multi-word options (e.g., `--schema-name`, `--skip-tables`, `--output-file-name`)
