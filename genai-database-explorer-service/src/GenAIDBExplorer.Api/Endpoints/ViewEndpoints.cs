@@ -38,6 +38,7 @@ public static class ViewEndpoints
 
     private static async Task<IResult> ListViews(
         ISemanticModelCacheService cacheService,
+        ILoggerFactory loggerFactory,
         int offset = 0,
         int limit = 50)
     {
@@ -65,8 +66,10 @@ public static class ViewEndpoints
             return Results.Ok(new PaginatedResponse<EntitySummaryResponse>(
                 items, totalCount, offset, limit));
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            var logger = loggerFactory.CreateLogger(nameof(ViewEndpoints));
+            logger.LogError(ex, "Failed to list views");
             return Results.Problem(
                 title: "Service Unavailable",
                 detail: "The semantic model is not currently available.",
@@ -77,6 +80,7 @@ public static class ViewEndpoints
 
     private static async Task<IResult> GetViewDetail(
         ISemanticModelCacheService cacheService,
+        ILoggerFactory loggerFactory,
         string schema,
         string name)
     {
@@ -94,10 +98,7 @@ public static class ViewEndpoints
                     type: "https://tools.ietf.org/html/rfc9110#section-15.5.5");
             }
 
-            var columns = view.Columns.Select(c => new ColumnResponse(
-                c.Name, c.Type, c.Description, c.IsPrimaryKey, c.IsNullable,
-                c.IsIdentity, c.IsComputed, c.IsXmlDocument, c.MaxLength,
-                c.Precision, c.Scale, c.ReferencedTable, c.ReferencedColumn)).ToList();
+            var columns = view.Columns.ToColumnResponses();
 
             var response = new ViewDetailResponse(
                 view.Schema,
@@ -113,8 +114,10 @@ public static class ViewEndpoints
 
             return Results.Ok(response);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            var logger = loggerFactory.CreateLogger(nameof(ViewEndpoints));
+            logger.LogError(ex, "Failed to get view detail for {Schema}.{Name}", schema, name);
             return Results.Problem(
                 title: "Service Unavailable",
                 detail: "The semantic model is not currently available.",
@@ -127,6 +130,7 @@ public static class ViewEndpoints
         ISemanticModelCacheService cacheService,
         ISemanticModelRepository repository,
         IProject project,
+        ILoggerFactory loggerFactory,
         string schema,
         string name,
         UpdateEntityDescriptionRequest request)
@@ -164,16 +168,9 @@ public static class ViewEndpoints
                 view.SetSemanticDescription(request.SemanticDescription);
             }
 
-            var semanticModelDirectory = project.Settings.SemanticModelRepository?.LocalDisk?.Directory
-                ?? throw new InvalidOperationException("LocalDisk persistence strategy is configured but no directory is specified in SemanticModelRepository.LocalDisk.Directory.");
-            var modelPath = new DirectoryInfo(
-                Path.Combine(project.ProjectDirectory.FullName, semanticModelDirectory));
-            await repository.SaveChangesAsync(model, modelPath);
+            await repository.SaveChangesAsync(model, project.GetSemanticModelPath());
 
-            var columns = view.Columns.Select(c => new ColumnResponse(
-                c.Name, c.Type, c.Description, c.IsPrimaryKey, c.IsNullable,
-                c.IsIdentity, c.IsComputed, c.IsXmlDocument, c.MaxLength,
-                c.Precision, c.Scale, c.ReferencedTable, c.ReferencedColumn)).ToList();
+            var columns = view.Columns.ToColumnResponses();
 
             var response = new ViewDetailResponse(
                 view.Schema,
@@ -189,8 +186,10 @@ public static class ViewEndpoints
 
             return Results.Ok(response);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            var logger = loggerFactory.CreateLogger(nameof(ViewEndpoints));
+            logger.LogError(ex, "Failed to patch view {Schema}.{Name}", schema, name);
             return Results.Problem(
                 title: "Service Unavailable",
                 detail: "The semantic model is not currently available.",

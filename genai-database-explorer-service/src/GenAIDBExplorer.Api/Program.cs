@@ -64,6 +64,10 @@ app.UseExceptionHandler(exceptionApp =>
 {
     exceptionApp.Run(async context =>
     {
+        var exceptionFeature = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+        var logger = context.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("GlobalExceptionHandler");
+        logger.LogError(exceptionFeature?.Error, "Unhandled exception processing {Method} {Path}", context.Request.Method, context.Request.Path);
+
         context.Response.StatusCode = StatusCodes.Status500InternalServerError;
         context.Response.ContentType = "application/problem+json";
 
@@ -86,7 +90,7 @@ if (app.Environment.IsDevelopment())
 
 // Apply CORS policy
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
-if (allowedOrigins.Length > 0 && allowedOrigins[0] == "*")
+if (allowedOrigins.Contains("*"))
 {
     app.UseCors(policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 }

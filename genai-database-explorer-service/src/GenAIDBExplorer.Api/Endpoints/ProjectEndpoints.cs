@@ -22,7 +22,8 @@ public static class ProjectEndpoints
 
     private static async Task<IResult> GetProjectInfo(
         IProject project,
-        ISemanticModelCacheService cacheService)
+        ISemanticModelCacheService cacheService,
+        ILoggerFactory loggerFactory)
     {
         try
         {
@@ -57,8 +58,10 @@ public static class ProjectEndpoints
 
             return Results.Ok(response);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            var logger = loggerFactory.CreateLogger(nameof(ProjectEndpoints));
+            logger.LogError(ex, "Failed to retrieve project information");
             return Results.Problem(
                 title: "Service Unavailable",
                 detail: "Unable to retrieve project information.",

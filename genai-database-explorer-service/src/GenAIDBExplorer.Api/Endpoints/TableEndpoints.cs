@@ -38,6 +38,7 @@ public static class TableEndpoints
 
     private static async Task<IResult> ListTables(
         ISemanticModelCacheService cacheService,
+        ILoggerFactory loggerFactory,
         int offset = 0,
         int limit = 50)
     {
@@ -65,8 +66,10 @@ public static class TableEndpoints
             return Results.Ok(new PaginatedResponse<EntitySummaryResponse>(
                 items, totalCount, offset, limit));
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            var logger = loggerFactory.CreateLogger(nameof(TableEndpoints));
+            logger.LogError(ex, "Failed to list tables");
             return Results.Problem(
                 title: "Service Unavailable",
                 detail: "The semantic model is not currently available.",
@@ -77,6 +80,7 @@ public static class TableEndpoints
 
     private static async Task<IResult> GetTableDetail(
         ISemanticModelCacheService cacheService,
+        ILoggerFactory loggerFactory,
         string schema,
         string name)
     {
@@ -94,14 +98,8 @@ public static class TableEndpoints
                     type: "https://tools.ietf.org/html/rfc9110#section-15.5.5");
             }
 
-            var columns = table.Columns.Select(c => new ColumnResponse(
-                c.Name, c.Type, c.Description, c.IsPrimaryKey, c.IsNullable,
-                c.IsIdentity, c.IsComputed, c.IsXmlDocument, c.MaxLength,
-                c.Precision, c.Scale, c.ReferencedTable, c.ReferencedColumn)).ToList();
-
-            var indexes = table.Indexes.Select(i => new IndexResponse(
-                i.Name, i.Type, i.ColumnName,
-                i.IsUnique, i.IsPrimaryKey, i.IsUniqueConstraint)).ToList();
+            var columns = table.Columns.ToColumnResponses();
+            var indexes = table.Indexes.ToIndexResponses();
 
             var response = new TableDetailResponse(
                 table.Schema,
@@ -118,8 +116,10 @@ public static class TableEndpoints
 
             return Results.Ok(response);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            var logger = loggerFactory.CreateLogger(nameof(TableEndpoints));
+            logger.LogError(ex, "Failed to get table detail for {Schema}.{Name}", schema, name);
             return Results.Problem(
                 title: "Service Unavailable",
                 detail: "The semantic model is not currently available.",
@@ -132,6 +132,7 @@ public static class TableEndpoints
         ISemanticModelCacheService cacheService,
         ISemanticModelRepository repository,
         IProject project,
+        ILoggerFactory loggerFactory,
         string schema,
         string name,
         UpdateEntityDescriptionRequest request)
@@ -169,20 +170,10 @@ public static class TableEndpoints
                 table.SetSemanticDescription(request.SemanticDescription);
             }
 
-            var semanticModelDirectory = project.Settings.SemanticModelRepository?.LocalDisk?.Directory
-                ?? throw new InvalidOperationException("LocalDisk persistence strategy is configured but no directory is specified in SemanticModelRepository.LocalDisk.Directory.");
-            var modelPath = new DirectoryInfo(
-                Path.Combine(project.ProjectDirectory.FullName, semanticModelDirectory));
-            await repository.SaveChangesAsync(model, modelPath);
+            await repository.SaveChangesAsync(model, project.GetSemanticModelPath());
 
-            var columns = table.Columns.Select(c => new ColumnResponse(
-                c.Name, c.Type, c.Description, c.IsPrimaryKey, c.IsNullable,
-                c.IsIdentity, c.IsComputed, c.IsXmlDocument, c.MaxLength,
-                c.Precision, c.Scale, c.ReferencedTable, c.ReferencedColumn)).ToList();
-
-            var indexes = table.Indexes.Select(i => new IndexResponse(
-                i.Name, i.Type, i.ColumnName,
-                i.IsUnique, i.IsPrimaryKey, i.IsUniqueConstraint)).ToList();
+            var columns = table.Columns.ToColumnResponses();
+            var indexes = table.Indexes.ToIndexResponses();
 
             var response = new TableDetailResponse(
                 table.Schema,
@@ -199,8 +190,10 @@ public static class TableEndpoints
 
             return Results.Ok(response);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            var logger = loggerFactory.CreateLogger(nameof(TableEndpoints));
+            logger.LogError(ex, "Failed to patch table {Schema}.{Name}", schema, name);
             return Results.Problem(
                 title: "Service Unavailable",
                 detail: "The semantic model is not currently available.",

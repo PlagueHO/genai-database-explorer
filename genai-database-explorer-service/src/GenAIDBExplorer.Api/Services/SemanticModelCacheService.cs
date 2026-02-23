@@ -43,10 +43,7 @@ public class SemanticModelCacheService(
         await _loadSemaphore.WaitAsync();
         try
         {
-            var semanticModelDirectory = project.Settings.SemanticModelRepository?.LocalDisk?.Directory
-                ?? throw new InvalidOperationException("LocalDisk persistence strategy is configured but no directory is specified in SemanticModelRepository.LocalDisk.Directory.");
-            var modelPath = new DirectoryInfo(
-                Path.Combine(project.ProjectDirectory.FullName, semanticModelDirectory));
+            var modelPath = project.GetSemanticModelPath();
 
             var options = new SemanticModelRepositoryOptions
             {

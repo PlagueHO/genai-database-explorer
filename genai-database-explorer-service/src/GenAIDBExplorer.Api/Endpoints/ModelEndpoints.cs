@@ -25,7 +25,9 @@ public static class ModelEndpoints
         return app;
     }
 
-    private static async Task<IResult> GetModelSummary(ISemanticModelCacheService cacheService)
+    private static async Task<IResult> GetModelSummary(
+        ISemanticModelCacheService cacheService,
+        ILoggerFactory loggerFactory)
     {
         try
         {
@@ -40,8 +42,10 @@ public static class ModelEndpoints
 
             return Results.Ok(response);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            var logger = loggerFactory.CreateLogger(nameof(ModelEndpoints));
+            logger.LogError(ex, "Failed to retrieve semantic model summary");
             return Results.Problem(
                 title: "Service Unavailable",
                 detail: "The semantic model is not currently available.",
@@ -50,7 +54,9 @@ public static class ModelEndpoints
         }
     }
 
-    private static async Task<IResult> ReloadModel(ISemanticModelCacheService cacheService)
+    private static async Task<IResult> ReloadModel(
+        ISemanticModelCacheService cacheService,
+        ILoggerFactory loggerFactory)
     {
         try
         {
@@ -65,8 +71,10 @@ public static class ModelEndpoints
 
             return Results.Ok(response);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            var logger = loggerFactory.CreateLogger(nameof(ModelEndpoints));
+            logger.LogError(ex, "Failed to reload semantic model");
             return Results.Problem(
                 title: "Service Unavailable",
                 detail: "Failed to reload the semantic model.",

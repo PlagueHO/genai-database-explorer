@@ -67,6 +67,22 @@ public class Project(
         ProjectUtils.CopyDirectory(defaultProjectDirectory, projectDirectory);
     }
 
+    /// <inheritdoc />
+    public DirectoryInfo GetSemanticModelPath()
+    {
+        var strategy = Settings.SemanticModel?.PersistenceStrategy?.ToLowerInvariant() ?? "localdisk";
+        return strategy switch
+        {
+            "localdisk" => new DirectoryInfo(
+                Path.Combine(
+                    ProjectDirectory.FullName,
+                    Settings.SemanticModelRepository?.LocalDisk?.Directory
+                        ?? throw new InvalidOperationException(
+                            "LocalDisk persistence strategy is configured but no directory is specified in SemanticModelRepository.LocalDisk.Directory."))),
+            _ => ProjectDirectory
+        };
+    }
+
     /// <summary>
     /// Loads the configuration from the specified project path.
     /// </summary>

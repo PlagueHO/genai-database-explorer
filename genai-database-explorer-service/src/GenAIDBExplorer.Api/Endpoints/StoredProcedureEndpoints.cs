@@ -38,6 +38,7 @@ public static class StoredProcedureEndpoints
 
     private static async Task<IResult> ListStoredProcedures(
         ISemanticModelCacheService cacheService,
+        ILoggerFactory loggerFactory,
         int offset = 0,
         int limit = 50)
     {
@@ -65,8 +66,10 @@ public static class StoredProcedureEndpoints
             return Results.Ok(new PaginatedResponse<EntitySummaryResponse>(
                 items, totalCount, offset, limit));
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            var logger = loggerFactory.CreateLogger(nameof(StoredProcedureEndpoints));
+            logger.LogError(ex, "Failed to list stored procedures");
             return Results.Problem(
                 title: "Service Unavailable",
                 detail: "The semantic model is not currently available.",
@@ -77,6 +80,7 @@ public static class StoredProcedureEndpoints
 
     private static async Task<IResult> GetStoredProcedureDetail(
         ISemanticModelCacheService cacheService,
+        ILoggerFactory loggerFactory,
         string schema,
         string name)
     {
@@ -108,8 +112,10 @@ public static class StoredProcedureEndpoints
 
             return Results.Ok(response);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            var logger = loggerFactory.CreateLogger(nameof(StoredProcedureEndpoints));
+            logger.LogError(ex, "Failed to get stored procedure detail for {Schema}.{Name}", schema, name);
             return Results.Problem(
                 title: "Service Unavailable",
                 detail: "The semantic model is not currently available.",
@@ -122,6 +128,7 @@ public static class StoredProcedureEndpoints
         ISemanticModelCacheService cacheService,
         ISemanticModelRepository repository,
         IProject project,
+        ILoggerFactory loggerFactory,
         string schema,
         string name,
         UpdateEntityDescriptionRequest request)
@@ -159,11 +166,7 @@ public static class StoredProcedureEndpoints
                 storedProcedure.SetSemanticDescription(request.SemanticDescription);
             }
 
-            var semanticModelDirectory = project.Settings.SemanticModelRepository?.LocalDisk?.Directory
-                ?? throw new InvalidOperationException("LocalDisk persistence strategy is configured but no directory is specified in SemanticModelRepository.LocalDisk.Directory.");
-            var modelPath = new DirectoryInfo(
-                Path.Combine(project.ProjectDirectory.FullName, semanticModelDirectory));
-            await repository.SaveChangesAsync(model, modelPath);
+            await repository.SaveChangesAsync(model, project.GetSemanticModelPath());
 
             var response = new StoredProcedureDetailResponse(
                 storedProcedure.Schema,
@@ -179,8 +182,10 @@ public static class StoredProcedureEndpoints
 
             return Results.Ok(response);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            var logger = loggerFactory.CreateLogger(nameof(StoredProcedureEndpoints));
+            logger.LogError(ex, "Failed to patch stored procedure {Schema}.{Name}", schema, name);
             return Results.Problem(
                 title: "Service Unavailable",
                 detail: "The semantic model is not currently available.",
