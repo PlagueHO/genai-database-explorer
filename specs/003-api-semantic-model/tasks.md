@@ -41,12 +41,12 @@ All source paths are relative to `genai-database-explorer-service/`:
 
 **Purpose**: Create the new API project, test project, and basic configuration files
 
-- [ ] T001 Create API project file `src/GenAIDBExplorer.Api/GenAIDBExplorer.Api.csproj` with Microsoft.NET.Sdk.Web targeting net10.0, referencing GenAIDBExplorer.Core and GenAIDBExplorer.ServiceDefaults
-- [ ] T002 [P] Create API test project file `tests/unit/GenAIDBExplorer.Api.Test/GenAIDBExplorer.Api.Test.csproj` with MSTest.Sdk targeting net10.0, referencing GenAIDBExplorer.Api, FluentAssertions, Moq, and Microsoft.AspNetCore.Mvc.Testing
-- [ ] T003 Add GenAIDBExplorer.Api and GenAIDBExplorer.Api.Test projects to `GenAIDBExplorer.slnx`
-- [ ] T004 [P] Create `src/GenAIDBExplorer.Api/appsettings.json` with GenAIDBExplorer:ProjectPath, Cors:AllowedOrigins, and Logging configuration
-- [ ] T005 [P] Create `src/GenAIDBExplorer.Api/appsettings.Development.json` with permissive CORS and debug logging overrides
-- [ ] T006 [P] Create `src/GenAIDBExplorer.Api/Properties/launchSettings.json` with HTTP/HTTPS local development URLs
+- [X] T001 Create API project file `src/GenAIDBExplorer.Api/GenAIDBExplorer.Api.csproj` with Microsoft.NET.Sdk.Web targeting net10.0, referencing GenAIDBExplorer.Core and GenAIDBExplorer.ServiceDefaults
+- [X] T002 [P] Create API test project file `tests/unit/GenAIDBExplorer.Api.Test/GenAIDBExplorer.Api.Test.csproj` with MSTest.Sdk targeting net10.0, referencing GenAIDBExplorer.Api, FluentAssertions, Moq, and Microsoft.AspNetCore.Mvc.Testing
+- [X] T003 Add GenAIDBExplorer.Api and GenAIDBExplorer.Api.Test projects to `GenAIDBExplorer.slnx`
+- [X] T004 [P] Create `src/GenAIDBExplorer.Api/appsettings.json` with GenAIDBExplorer:ProjectPath, Cors:AllowedOrigins, and Logging configuration
+- [X] T005 [P] Create `src/GenAIDBExplorer.Api/appsettings.Development.json` with permissive CORS and debug logging overrides
+- [X] T006 [P] Create `src/GenAIDBExplorer.Api/Properties/launchSettings.json` with HTTP/HTTPS local development URLs
 
 ---
 
@@ -56,19 +56,19 @@ All source paths are relative to `genai-database-explorer-service/`:
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T007 Create `src/GenAIDBExplorer.Api/Services/ISemanticModelCacheService.cs` with GetModelAsync(), ReloadModelAsync(), and IsLoaded property
-- [ ] T008 Create `src/GenAIDBExplorer.Api/Services/SemanticModelCacheService.cs` implementing ISemanticModelCacheService with volatile reference and Interlocked.Exchange for atomic model swap
-- [ ] T009 [P] Create `src/GenAIDBExplorer.Api/Health/SemanticModelHealthCheck.cs` implementing IHealthCheck, returning Healthy/Degraded/Unhealthy based on cache state
-- [ ] T010 Create `src/GenAIDBExplorer.Core/Extensions/ServiceRegistrationExtensions.cs` extracting shared Core service registrations (repository, persistence strategies, project, caching, performance monitoring) from Console's HostBuilderExtensions
-- [ ] T011 Refactor `src/GenAIDBExplorer.Console/Extensions/HostBuilderExtensions.cs` to call shared registration method from `src/GenAIDBExplorer.Core/Extensions/ServiceRegistrationExtensions.cs` instead of inline registrations
-- [ ] T012 Create `src/GenAIDBExplorer.Api/Program.cs` skeleton with AddServiceDefaults, shared DI, SemanticModelCacheService registration, health check registration, JSON serialization config, structured request logging middleware (FR-013), and MapDefaultEndpoints
-- [ ] T013 Register Api project in Aspire AppHost by adding `builder.AddProject<Projects.GenAIDBExplorer_Api>("genaidbexplorer-api")` in `src/GenAIDBExplorer.AppHost/AppHost.cs`
-- [ ] T014 [P] Create shared DTO `src/GenAIDBExplorer.Api/Models/PaginatedResponse.cs` as generic record with Items, TotalCount, Offset, Limit properties
-- [ ] T015 [P] Create shared DTO `src/GenAIDBExplorer.Api/Models/EntitySummaryResponse.cs` as record with Schema, Name, Description, SemanticDescription, NotUsed properties
-- [ ] T016 [P] Create shared DTO `src/GenAIDBExplorer.Api/Models/ColumnResponse.cs` as record mapping from SemanticModelColumn properties
-- [ ] T017 [P] Create shared DTO `src/GenAIDBExplorer.Api/Models/IndexResponse.cs` as record mapping from SemanticModelIndex properties
-- [ ] T018 [P] Write tests for SemanticModelCacheService (load, reload, atomic swap, concurrent access, failure recovery) in `tests/unit/GenAIDBExplorer.Api.Test/Services/SemanticModelCacheServiceTests.cs`
-- [ ] T019 [P] Write tests for SemanticModelHealthCheck (healthy when loaded, unhealthy when not loaded, degraded during reload) in `tests/unit/GenAIDBExplorer.Api.Test/Health/SemanticModelHealthCheckTests.cs`
+- [X] T007 Create `src/GenAIDBExplorer.Api/Services/ISemanticModelCacheService.cs` with GetModelAsync(), ReloadModelAsync(), and IsLoaded property
+- [X] T008 Create `src/GenAIDBExplorer.Api/Services/SemanticModelCacheService.cs` implementing ISemanticModelCacheService with volatile reference and Interlocked.Exchange for atomic model swap
+- [X] T009 [P] Create `src/GenAIDBExplorer.Api/Health/SemanticModelHealthCheck.cs` implementing IHealthCheck, returning Healthy/Degraded/Unhealthy based on cache state
+- [X] T010 Create `src/GenAIDBExplorer.Core/Extensions/ServiceRegistrationExtensions.cs` extracting shared Core service registrations (repository, persistence strategies, project, caching, performance monitoring) from Console's HostBuilderExtensions
+- [X] T011 Refactor `src/GenAIDBExplorer.Console/Extensions/HostBuilderExtensions.cs` to call shared registration method from `src/GenAIDBExplorer.Core/Extensions/ServiceRegistrationExtensions.cs` instead of inline registrations
+- [X] T012 Create `src/GenAIDBExplorer.Api/Program.cs` skeleton with AddServiceDefaults, shared DI, SemanticModelCacheService registration, health check registration, JSON serialization config, structured request logging middleware (FR-013), and MapDefaultEndpoints
+- [X] T013 Register Api project in Aspire AppHost by adding `builder.AddProject<Projects.GenAIDBExplorer_Api>("genaidbexplorer-api")` in `src/GenAIDBExplorer.AppHost/AppHost.cs`
+- [X] T014 [P] Create shared DTO `src/GenAIDBExplorer.Api/Models/PaginatedResponse.cs` as generic record with Items, TotalCount, Offset, Limit properties
+- [X] T015 [P] Create shared DTO `src/GenAIDBExplorer.Api/Models/EntitySummaryResponse.cs` as record with Schema, Name, Description, SemanticDescription, NotUsed properties
+- [X] T016 [P] Create shared DTO `src/GenAIDBExplorer.Api/Models/ColumnResponse.cs` as record mapping from SemanticModelColumn properties
+- [X] T017 [P] Create shared DTO `src/GenAIDBExplorer.Api/Models/IndexResponse.cs` as record mapping from SemanticModelIndex properties
+- [X] T018 [P] Write tests for SemanticModelCacheService (load, reload, atomic swap, concurrent access, failure recovery) in `tests/unit/GenAIDBExplorer.Api.Test/Services/SemanticModelCacheServiceTests.cs`
+- [X] T019 [P] Write tests for SemanticModelHealthCheck (healthy when loaded, unhealthy when not loaded, degraded during reload) in `tests/unit/GenAIDBExplorer.Api.Test/Health/SemanticModelHealthCheckTests.cs`
 
 **Checkpoint**: Foundation ready — `dotnet build` succeeds, `dotnet test` passes for cache and health check tests, health endpoint returns 200 when model loaded. User story implementation can now begin.
 
@@ -84,13 +84,13 @@ All source paths are relative to `genai-database-explorer-service/`:
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T020 [US1] Write ModelEndpointsTests (GET /api/model returns summary, POST /api/model/reload refreshes cache, 503 when model not loaded) in `tests/unit/GenAIDBExplorer.Api.Test/Endpoints/ModelEndpointsTests.cs`
+- [X] T020 [US1] Write ModelEndpointsTests (GET /api/model returns summary, POST /api/model/reload refreshes cache, 503 when model not loaded) in `tests/unit/GenAIDBExplorer.Api.Test/Endpoints/ModelEndpointsTests.cs`
 
 ### Implementation for User Story 1
 
-- [ ] T021 [P] [US1] Create `src/GenAIDBExplorer.Api/Models/SemanticModelSummaryResponse.cs` as record with Name, Source, Description, TableCount, ViewCount, StoredProcedureCount
-- [ ] T022 [US1] Implement ModelEndpoints with MapModelEndpoints extension method (GET /api/model, POST /api/model/reload with Problem Details 503 response when model not loaded) in `src/GenAIDBExplorer.Api/Endpoints/ModelEndpoints.cs`
-- [ ] T023 [US1] Register model endpoints by calling MapModelEndpoints in `src/GenAIDBExplorer.Api/Program.cs`
+- [X] T021 [P] [US1] Create `src/GenAIDBExplorer.Api/Models/SemanticModelSummaryResponse.cs` as record with Name, Source, Description, TableCount, ViewCount, StoredProcedureCount
+- [X] T022 [US1] Implement ModelEndpoints with MapModelEndpoints extension method (GET /api/model, POST /api/model/reload with Problem Details 503 response when model not loaded) in `src/GenAIDBExplorer.Api/Endpoints/ModelEndpoints.cs`
+- [X] T023 [US1] Register model endpoints by calling MapModelEndpoints in `src/GenAIDBExplorer.Api/Program.cs`
 
 **Checkpoint**: User Story 1 fully functional — GET /api/model returns model summary, POST /api/model/reload refreshes the cache, 503 returned when model not loaded.
 
@@ -106,13 +106,13 @@ All source paths are relative to `genai-database-explorer-service/`:
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T024 [US2] Write TableEndpointsTests (GET list with pagination, GET detail with columns/indexes, 404 for missing table, 503 when model not loaded, pagination edge cases) in `tests/unit/GenAIDBExplorer.Api.Test/Endpoints/TableEndpointsTests.cs`
+- [X] T024 [US2] Write TableEndpointsTests (GET list with pagination, GET detail with columns/indexes, 404 for missing table, 503 when model not loaded, pagination edge cases) in `tests/unit/GenAIDBExplorer.Api.Test/Endpoints/TableEndpointsTests.cs`
 
 ### Implementation for User Story 2
 
-- [ ] T025 [P] [US2] Create `src/GenAIDBExplorer.Api/Models/TableDetailResponse.cs` as record with Schema, Name, Description, SemanticDescription, SemanticDescriptionLastUpdate, Details, AdditionalInformation, NotUsed, NotUsedReason, Columns, Indexes
-- [ ] T026 [US2] Implement TableEndpoints with MapTableEndpoints extension method (GET /api/tables with offset/limit, GET /api/tables/{schema}/{name} with path parameter validation and Problem Details error responses) in `src/GenAIDBExplorer.Api/Endpoints/TableEndpoints.cs`
-- [ ] T027 [US2] Register table endpoints by calling MapTableEndpoints in `src/GenAIDBExplorer.Api/Program.cs`
+- [X] T025 [P] [US2] Create `src/GenAIDBExplorer.Api/Models/TableDetailResponse.cs` as record with Schema, Name, Description, SemanticDescription, SemanticDescriptionLastUpdate, Details, AdditionalInformation, NotUsed, NotUsedReason, Columns, Indexes
+- [X] T026 [US2] Implement TableEndpoints with MapTableEndpoints extension method (GET /api/tables with offset/limit, GET /api/tables/{schema}/{name} with path parameter validation and Problem Details error responses) in `src/GenAIDBExplorer.Api/Endpoints/TableEndpoints.cs`
+- [X] T027 [US2] Register table endpoints by calling MapTableEndpoints in `src/GenAIDBExplorer.Api/Program.cs`
 
 **Checkpoint**: User Stories 1 AND 2 fully functional — tables can be listed and individually retrieved with all details.
 
@@ -128,13 +128,13 @@ All source paths are relative to `genai-database-explorer-service/`:
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T028 [US3] Write ViewEndpointsTests (GET list with pagination, GET detail with columns/definition, 404 for missing view, 503 when model not loaded) in `tests/unit/GenAIDBExplorer.Api.Test/Endpoints/ViewEndpointsTests.cs`
+- [X] T028 [US3] Write ViewEndpointsTests (GET list with pagination, GET detail with columns/definition, 404 for missing view, 503 when model not loaded) in `tests/unit/GenAIDBExplorer.Api.Test/Endpoints/ViewEndpointsTests.cs`
 
 ### Implementation for User Story 3
 
-- [ ] T029 [P] [US3] Create `src/GenAIDBExplorer.Api/Models/ViewDetailResponse.cs` as record with Schema, Name, Description, SemanticDescription, SemanticDescriptionLastUpdate, AdditionalInformation, Definition, NotUsed, NotUsedReason, Columns
-- [ ] T030 [US3] Implement ViewEndpoints with MapViewEndpoints extension method (GET /api/views with offset/limit, GET /api/views/{schema}/{name} with path parameter validation and Problem Details error responses) in `src/GenAIDBExplorer.Api/Endpoints/ViewEndpoints.cs`
-- [ ] T031 [US3] Register view endpoints by calling MapViewEndpoints in `src/GenAIDBExplorer.Api/Program.cs`
+- [X] T029 [P] [US3] Create `src/GenAIDBExplorer.Api/Models/ViewDetailResponse.cs` as record with Schema, Name, Description, SemanticDescription, SemanticDescriptionLastUpdate, AdditionalInformation, Definition, NotUsed, NotUsedReason, Columns
+- [X] T030 [US3] Implement ViewEndpoints with MapViewEndpoints extension method (GET /api/views with offset/limit, GET /api/views/{schema}/{name} with path parameter validation and Problem Details error responses) in `src/GenAIDBExplorer.Api/Endpoints/ViewEndpoints.cs`
+- [X] T031 [US3] Register view endpoints by calling MapViewEndpoints in `src/GenAIDBExplorer.Api/Program.cs`
 
 **Checkpoint**: User Stories 1, 2, AND 3 fully functional — views can be listed and individually retrieved.
 
@@ -150,13 +150,13 @@ All source paths are relative to `genai-database-explorer-service/`:
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T032 [US4] Write StoredProcedureEndpointsTests (GET list with pagination, GET detail with parameters/definition, 404 for missing procedure, 503 when model not loaded) in `tests/unit/GenAIDBExplorer.Api.Test/Endpoints/StoredProcedureEndpointsTests.cs`
+- [X] T032 [US4] Write StoredProcedureEndpointsTests (GET list with pagination, GET detail with parameters/definition, 404 for missing procedure, 503 when model not loaded) in `tests/unit/GenAIDBExplorer.Api.Test/Endpoints/StoredProcedureEndpointsTests.cs`
 
 ### Implementation for User Story 4
 
-- [ ] T033 [P] [US4] Create `src/GenAIDBExplorer.Api/Models/StoredProcedureDetailResponse.cs` as record with Schema, Name, Description, SemanticDescription, SemanticDescriptionLastUpdate, AdditionalInformation, Parameters, Definition, NotUsed, NotUsedReason
-- [ ] T034 [US4] Implement StoredProcedureEndpoints with MapStoredProcedureEndpoints extension method (GET /api/stored-procedures with offset/limit, GET /api/stored-procedures/{schema}/{name} with path parameter validation and Problem Details error responses) in `src/GenAIDBExplorer.Api/Endpoints/StoredProcedureEndpoints.cs`
-- [ ] T035 [US4] Register stored procedure endpoints by calling MapStoredProcedureEndpoints in `src/GenAIDBExplorer.Api/Program.cs`
+- [X] T033 [P] [US4] Create `src/GenAIDBExplorer.Api/Models/StoredProcedureDetailResponse.cs` as record with Schema, Name, Description, SemanticDescription, SemanticDescriptionLastUpdate, AdditionalInformation, Parameters, Definition, NotUsed, NotUsedReason
+- [X] T034 [US4] Implement StoredProcedureEndpoints with MapStoredProcedureEndpoints extension method (GET /api/stored-procedures with offset/limit, GET /api/stored-procedures/{schema}/{name} with path parameter validation and Problem Details error responses) in `src/GenAIDBExplorer.Api/Endpoints/StoredProcedureEndpoints.cs`
+- [X] T035 [US4] Register stored procedure endpoints by calling MapStoredProcedureEndpoints in `src/GenAIDBExplorer.Api/Program.cs`
 
 **Checkpoint**: All read-only stories (US1–US4) fully functional — complete browsing experience for model, tables, views, and stored procedures.
 
@@ -172,16 +172,16 @@ All source paths are relative to `genai-database-explorer-service/`:
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T036 [P] [US5] Create `src/GenAIDBExplorer.Api/Models/UpdateEntityDescriptionRequest.cs` as record with nullable Description and SemanticDescription properties, plus validation
-- [ ] T037 [US5] Add PATCH test scenarios (update description, update semantic description, 404 for missing entity, 400 for invalid input) to `tests/unit/GenAIDBExplorer.Api.Test/Endpoints/TableEndpointsTests.cs`
-- [ ] T038 [P] [US5] Add PATCH test scenarios to `tests/unit/GenAIDBExplorer.Api.Test/Endpoints/ViewEndpointsTests.cs`
-- [ ] T039 [P] [US5] Add PATCH test scenarios to `tests/unit/GenAIDBExplorer.Api.Test/Endpoints/StoredProcedureEndpointsTests.cs`
+- [X] T036 [P] [US5] Create `src/GenAIDBExplorer.Api/Models/UpdateEntityDescriptionRequest.cs` as record with nullable Description and SemanticDescription properties, plus validation
+- [X] T037 [US5] Add PATCH test scenarios (update description, update semantic description, 404 for missing entity, 400 for invalid input) to `tests/unit/GenAIDBExplorer.Api.Test/Endpoints/TableEndpointsTests.cs`
+- [X] T038 [P] [US5] Add PATCH test scenarios to `tests/unit/GenAIDBExplorer.Api.Test/Endpoints/ViewEndpointsTests.cs`
+- [X] T039 [P] [US5] Add PATCH test scenarios to `tests/unit/GenAIDBExplorer.Api.Test/Endpoints/StoredProcedureEndpointsTests.cs`
 
 ### Implementation for User Story 5
 
-- [ ] T040 [US5] Implement PATCH /api/tables/{schema}/{name} in `src/GenAIDBExplorer.Api/Endpoints/TableEndpoints.cs` with input validation, model update, and repository persistence
-- [ ] T041 [P] [US5] Implement PATCH /api/views/{schema}/{name} in `src/GenAIDBExplorer.Api/Endpoints/ViewEndpoints.cs` with input validation, model update, and repository persistence
-- [ ] T042 [P] [US5] Implement PATCH /api/stored-procedures/{schema}/{name} in `src/GenAIDBExplorer.Api/Endpoints/StoredProcedureEndpoints.cs` with input validation, model update, and repository persistence
+- [X] T040 [US5] Implement PATCH /api/tables/{schema}/{name} in `src/GenAIDBExplorer.Api/Endpoints/TableEndpoints.cs` with input validation, model update, and repository persistence
+- [X] T041 [P] [US5] Implement PATCH /api/views/{schema}/{name} in `src/GenAIDBExplorer.Api/Endpoints/ViewEndpoints.cs` with input validation, model update, and repository persistence
+- [X] T042 [P] [US5] Implement PATCH /api/stored-procedures/{schema}/{name} in `src/GenAIDBExplorer.Api/Endpoints/StoredProcedureEndpoints.cs` with input validation, model update, and repository persistence
 
 **Checkpoint**: Full CRUD for entity descriptions — updates are persisted and survive API restarts.
 
@@ -197,13 +197,13 @@ All source paths are relative to `genai-database-explorer-service/`:
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T043 [US6] Write ProjectEndpointsTests (GET /api/project returns config, 503 when model not loaded) in `tests/unit/GenAIDBExplorer.Api.Test/Endpoints/ProjectEndpointsTests.cs`
+- [X] T043 [US6] Write ProjectEndpointsTests (GET /api/project returns config, 503 when model not loaded) in `tests/unit/GenAIDBExplorer.Api.Test/Endpoints/ProjectEndpointsTests.cs`
 
 ### Implementation for User Story 6
 
-- [ ] T044 [P] [US6] Create `src/GenAIDBExplorer.Api/Models/ProjectInfoResponse.cs` as record with ProjectPath, ModelName, ModelSource, PersistenceStrategy, ModelLoaded
-- [ ] T045 [US6] Implement ProjectEndpoints with MapProjectEndpoints extension method (GET /api/project) in `src/GenAIDBExplorer.Api/Endpoints/ProjectEndpoints.cs`
-- [ ] T046 [US6] Register project endpoints by calling MapProjectEndpoints in `src/GenAIDBExplorer.Api/Program.cs`
+- [X] T044 [P] [US6] Create `src/GenAIDBExplorer.Api/Models/ProjectInfoResponse.cs` as record with ProjectPath, ModelName, ModelSource, PersistenceStrategy, ModelLoaded
+- [X] T045 [US6] Implement ProjectEndpoints with MapProjectEndpoints extension method (GET /api/project) in `src/GenAIDBExplorer.Api/Endpoints/ProjectEndpoints.cs`
+- [X] T046 [US6] Register project endpoints by calling MapProjectEndpoints in `src/GenAIDBExplorer.Api/Program.cs`
 
 **Checkpoint**: All 6 user stories fully functional — complete API surface implemented.
 
@@ -213,11 +213,11 @@ All source paths are relative to `genai-database-explorer-service/`:
 
 **Purpose**: Finalize middleware, documentation, error handling, and validation across all endpoints
 
-- [ ] T047 [P] Configure CORS middleware with config-driven allowed origins in `src/GenAIDBExplorer.Api/Program.cs`
-- [ ] T048 [P] Configure OpenAPI document generation at /openapi/v1.json in `src/GenAIDBExplorer.Api/Program.cs`
-- [ ] T049 Add global exception handler producing RFC 9457 Problem Details for unhandled exceptions in `src/GenAIDBExplorer.Api/Program.cs`
-- [ ] T050 Run quickstart.md validation scenarios (health check, model retrieval, table listing, table detail, description update, reload, project info) and verify SC-001 (< 3s response) and SC-005 (10 concurrent reads) meet success criteria
-- [ ] T051 Run full test suite with `dotnet test` and verify solution builds cleanly with `dotnet build`
+- [X] T047 [P] Configure CORS middleware with config-driven allowed origins in `src/GenAIDBExplorer.Api/Program.cs`
+- [X] T048 [P] Configure OpenAPI document generation at /openapi/v1.json in `src/GenAIDBExplorer.Api/Program.cs`
+- [X] T049 Add global exception handler producing RFC 9457 Problem Details for unhandled exceptions in `src/GenAIDBExplorer.Api/Program.cs`
+- [X] T050 Run quickstart.md validation scenarios (health check, model retrieval, table listing, table detail, description update, reload, project info) and verify SC-001 (< 3s response) and SC-005 (10 concurrent reads) meet success criteria
+- [X] T051 Run full test suite with `dotnet test` and verify solution builds cleanly with `dotnet build`
 
 ---
 

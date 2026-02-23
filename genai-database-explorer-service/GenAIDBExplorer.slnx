@@ -43,9 +43,11 @@
   </Folder>
   <Folder Name="/tests/" />
   <Folder Name="/tests/unit/">
+    <Project Path="tests/unit/GenAIDBExplorer.Api.Test/GenAIDBExplorer.Api.Test.csproj" />
     <Project Path="tests/unit/GenAIDBExplorer.Console.Test/GenAIDBExplorer.Console.Test.csproj" />
     <Project Path="tests/unit/GenAIDBExplorer.Core.Test/GenAIDBExplorer.Core.Test.csproj" />
   </Folder>
+  <Project Path="src/GenAIDBExplorer.Api/GenAIDBExplorer.Api.csproj" />
   <Project Path="src/GenAIDBExplorer.Console/GenAIDBExplorer.Console.csproj" />
   <Project Path="src/GenAIDBExplorer.Core/GenAIDBExplorer.Core.csproj" />
   <Project Path="src/GenAIDBExplorer.AppHost/GenAIDBExplorer.AppHost.csproj" />

@@ -1,0 +1,211 @@
+using GenAIDBExplorer.Api.Models;
+using GenAIDBExplorer.Api.Services;
+using GenAIDBExplorer.Core.Models.Project;
+using GenAIDBExplorer.Core.Repository;
+
+namespace GenAIDBExplorer.Api.Endpoints;
+
+public static class TableEndpoints
+{
+    public static WebApplication MapTableEndpoints(this WebApplication app)
+    {
+        var group = app.MapGroup("/api/tables")
+            .WithTags("Tables");
+
+        group.MapGet("/", ListTables)
+            .WithName("ListTables")
+            .WithDescription("List tables with pagination")
+            .Produces<PaginatedResponse<EntitySummaryResponse>>()
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
+
+        group.MapGet("/{schema}/{name}", GetTableDetail)
+            .WithName("GetTableDetail")
+            .WithDescription("Get table details including columns and indexes")
+            .Produces<TableDetailResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
+
+        group.MapPatch("/{schema}/{name}", PatchTable)
+            .WithName("PatchTable")
+            .WithDescription("Update table descriptions")
+            .Produces<TableDetailResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
+
+        return app;
+    }
+
+    private static async Task<IResult> ListTables(
+        ISemanticModelCacheService cacheService,
+        int offset = 0,
+        int limit = 50)
+    {
+        if (offset < 0) offset = 0;
+        if (limit < 1) limit = 1;
+        if (limit > 200) limit = 200;
+
+        try
+        {
+            var model = await cacheService.GetModelAsync();
+            var tables = (await model.GetTablesAsync()).ToList();
+            var totalCount = tables.Count;
+
+            var items = tables
+                .Skip(offset)
+                .Take(limit)
+                .Select(t => new EntitySummaryResponse(
+                    t.Schema,
+                    t.Name,
+                    t.Description,
+                    t.SemanticDescription,
+                    t.NotUsed))
+                .ToList();
+
+            return Results.Ok(new PaginatedResponse<EntitySummaryResponse>(
+                items, totalCount, offset, limit));
+        }
+        catch (Exception)
+        {
+            return Results.Problem(
+                title: "Service Unavailable",
+                detail: "The semantic model is not currently available.",
+                statusCode: StatusCodes.Status503ServiceUnavailable,
+                type: "https://tools.ietf.org/html/rfc9110#section-15.6.4");
+        }
+    }
+
+    private static async Task<IResult> GetTableDetail(
+        ISemanticModelCacheService cacheService,
+        string schema,
+        string name)
+    {
+        try
+        {
+            var model = await cacheService.GetModelAsync();
+            var table = await model.FindTableAsync(schema, name);
+
+            if (table is null)
+            {
+                return Results.Problem(
+                    title: "Not Found",
+                    detail: $"Table '{schema}.{name}' was not found in the semantic model.",
+                    statusCode: StatusCodes.Status404NotFound,
+                    type: "https://tools.ietf.org/html/rfc9110#section-15.5.5");
+            }
+
+            var columns = table.Columns.Select(c => new ColumnResponse(
+                c.Name, c.Type, c.Description, c.IsPrimaryKey, c.IsNullable,
+                c.IsIdentity, c.IsComputed, c.IsXmlDocument, c.MaxLength,
+                c.Precision, c.Scale, c.ReferencedTable, c.ReferencedColumn)).ToList();
+
+            var indexes = table.Indexes.Select(i => new IndexResponse(
+                i.Name, i.Type, i.ColumnName,
+                i.IsUnique, i.IsPrimaryKey, i.IsUniqueConstraint)).ToList();
+
+            var response = new TableDetailResponse(
+                table.Schema,
+                table.Name,
+                table.Description,
+                table.SemanticDescription,
+                table.SemanticDescriptionLastUpdate,
+                table.Details,
+                table.AdditionalInformation,
+                table.NotUsed,
+                table.NotUsedReason,
+                columns,
+                indexes);
+
+            return Results.Ok(response);
+        }
+        catch (Exception)
+        {
+            return Results.Problem(
+                title: "Service Unavailable",
+                detail: "The semantic model is not currently available.",
+                statusCode: StatusCodes.Status503ServiceUnavailable,
+                type: "https://tools.ietf.org/html/rfc9110#section-15.6.4");
+        }
+    }
+
+    private static async Task<IResult> PatchTable(
+        ISemanticModelCacheService cacheService,
+        ISemanticModelRepository repository,
+        IProject project,
+        string schema,
+        string name,
+        UpdateEntityDescriptionRequest request)
+    {
+        if (request.Description is null && request.SemanticDescription is null)
+        {
+            return Results.Problem(
+                title: "Bad Request",
+                detail: "At least one of Description or SemanticDescription must be provided.",
+                statusCode: StatusCodes.Status400BadRequest,
+                type: "https://tools.ietf.org/html/rfc9110#section-15.5.1");
+        }
+
+        try
+        {
+            var model = await cacheService.GetModelAsync();
+            var table = await model.FindTableAsync(schema, name);
+
+            if (table is null)
+            {
+                return Results.Problem(
+                    title: "Not Found",
+                    detail: $"Table '{schema}.{name}' was not found in the semantic model.",
+                    statusCode: StatusCodes.Status404NotFound,
+                    type: "https://tools.ietf.org/html/rfc9110#section-15.5.5");
+            }
+
+            if (request.Description is not null)
+            {
+                table.Description = request.Description;
+            }
+
+            if (request.SemanticDescription is not null)
+            {
+                table.SetSemanticDescription(request.SemanticDescription);
+            }
+
+            var semanticModelDirectory = project.Settings.SemanticModelRepository?.LocalDisk?.Directory
+                ?? throw new InvalidOperationException("LocalDisk persistence strategy is configured but no directory is specified in SemanticModelRepository.LocalDisk.Directory.");
+            var modelPath = new DirectoryInfo(
+                Path.Combine(project.ProjectDirectory.FullName, semanticModelDirectory));
+            await repository.SaveChangesAsync(model, modelPath);
+
+            var columns = table.Columns.Select(c => new ColumnResponse(
+                c.Name, c.Type, c.Description, c.IsPrimaryKey, c.IsNullable,
+                c.IsIdentity, c.IsComputed, c.IsXmlDocument, c.MaxLength,
+                c.Precision, c.Scale, c.ReferencedTable, c.ReferencedColumn)).ToList();
+
+            var indexes = table.Indexes.Select(i => new IndexResponse(
+                i.Name, i.Type, i.ColumnName,
+                i.IsUnique, i.IsPrimaryKey, i.IsUniqueConstraint)).ToList();
+
+            var response = new TableDetailResponse(
+                table.Schema,
+                table.Name,
+                table.Description,
+                table.SemanticDescription,
+                table.SemanticDescriptionLastUpdate,
+                table.Details,
+                table.AdditionalInformation,
+                table.NotUsed,
+                table.NotUsedReason,
+                columns,
+                indexes);
+
+            return Results.Ok(response);
+        }
+        catch (Exception)
+        {
+            return Results.Problem(
+                title: "Service Unavailable",
+                detail: "The semantic model is not currently available.",
+                statusCode: StatusCodes.Status503ServiceUnavailable,
+                type: "https://tools.ietf.org/html/rfc9110#section-15.6.4");
+        }
+    }
+}
