@@ -70,7 +70,7 @@ Your task is to ensure .NET/C# code in ${selection} meets the best practices spe
 
 ## Performance & Security
 
-- Use C# 12+ features and .NET 8 optimizations where applicable
+- Use C# 14 features and .NET 10 optimizations where applicable
 - Implement proper input validation and sanitization
 - Use parameterized queries for database operations
 - Follow secure coding practices for AI/ML operations

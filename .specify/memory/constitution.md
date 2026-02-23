@@ -2,11 +2,13 @@
 =============================================================================
 SYNC IMPACT REPORT
 =============================================================================
-Version Change: 1.0.0 → 1.1.0
-Rationale: Added kebab-case parameter naming convention requirement for CLI interface
+Version Change: 1.1.0 → 1.2.0
+Rationale: Updated technology stack from .NET 9 / C# 11+ to .NET 10 / C# 14 to reflect actual project target framework
 
-Modified Principles:
-- VI. CLI-First Interface → Added mandatory kebab-case naming convention for multi-word parameters
+Modified Principles: None
+
+Modified Sections:
+- Technology Stack & Standards → Required Technologies updated from .NET 9 / C# 11+ to .NET 10 / C# 14
 
 Added Sections: None
 
@@ -16,19 +18,15 @@ Templates Status:
 ✅ plan-template.md - No updates required
 ✅ spec-template.md - No updates required
 ✅ tasks-template.md - No updates required
-✅ .github/copilot-instructions.md - Updated with kebab-case requirement
-✅ AGENTS.md - Already includes kebab-case convention
+✅ .github/copilot-instructions.md - Updated C# version reference
+✅ AGENTS.md - Updated C# version reference
 
-Code Impact:
-✅ All command handlers updated to use kebab-case (6 files)
-✅ All documentation updated (docs/cli/README.md, docs/QUICKSTART.md)
-✅ All integration tests updated (3 PowerShell files)
-✅ VS Code tasks updated (.vscode/tasks.json)
+Code Impact: None (all .csproj files already target net10.0)
 
 Follow-up TODOs: None
 
-Generated: 2025-12-21
-Previous Version Generated: 2025-11-25
+Generated: 2026-02-23
+Previous Version Generated: 2025-12-21
 =============================================================================
 -->
 
@@ -125,7 +123,7 @@ All services MUST be registered via `HostBuilderExtensions.ConfigureHost()` for 
 
 ### Required Technologies
 
-- **.NET 9** with C# 11+ features (async/await, records, pattern matching)
+- **.NET 10** with C# 14 features (async/await, records, pattern matching, primary constructors, collection expressions)
 - **Semantic Kernel** for AI integration
 - **System.CommandLine** (migrating to Beta5) for CLI
 - **Microsoft.Extensions.** libraries for DI, Configuration, Logging
@@ -227,4 +225,4 @@ For day-to-day development guidance beyond constitutional rules, refer to:
 - **.github/copilot-instructions.md** for Copilot-specific integration patterns
 - **docs/** directory for component-specific technical guidance
 
-**Version**: 1.1.0 | **Ratified**: 2025-11-25 | **Last Amended**: 2025-12-21
+**Version**: 1.2.0 | **Ratified**: 2025-11-25 | **Last Amended**: 2026-02-23

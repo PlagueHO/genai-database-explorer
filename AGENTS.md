@@ -84,7 +84,7 @@ dotnet run --project genai-database-explorer-service/src/GenAIDBExplorer.Console
 
 ## Code style
 
-- Target .NET 10 with C# 11 features (async/await, records, pattern matching)
+- Target .NET 10 with C# 14 features (async/await, records, pattern matching, primary constructors, collection expressions)
 - Follow SOLID, DRY, CleanCode principles; meaningful, self-documenting names
 - PascalCase for types/methods; camelCase for parameters/locals
 - Dependency Injection via `HostBuilderExtensions` and `IOptions<T>`
