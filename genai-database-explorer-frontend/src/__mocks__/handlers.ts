@@ -53,8 +53,8 @@ export const handlers = [
     const body = (await request.json()) as Record<string, unknown>;
     const col = detail.columns.find((c) => c.name === params.columnName);
     if (!col) return new HttpResponse(null, { status: 404 });
-    const updated = { ...col, ...body };
-    return HttpResponse.json(updated);
+    Object.assign(col, body);
+    return HttpResponse.json(col);
   }),
 
   // Views
@@ -92,8 +92,8 @@ export const handlers = [
     const body = (await request.json()) as Record<string, unknown>;
     const col = detail.columns.find((c) => c.name === params.columnName);
     if (!col) return new HttpResponse(null, { status: 404 });
-    const updated = { ...col, ...body };
-    return HttpResponse.json(updated);
+    Object.assign(col, body);
+    return HttpResponse.json(col);
   }),
 
   // Stored Procedures

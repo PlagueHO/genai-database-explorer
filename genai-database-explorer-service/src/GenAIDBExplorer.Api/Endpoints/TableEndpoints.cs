@@ -253,7 +253,7 @@ public static class TableEndpoints
                     type: "https://tools.ietf.org/html/rfc9110#section-15.5.5");
             }
 
-            var column = table.Columns.FirstOrDefault(c => c.Name == columnName);
+            var column = table.Columns.FirstOrDefault(c => string.Equals(c.Name, columnName, StringComparison.OrdinalIgnoreCase));
             if (column is null)
             {
                 return Results.Problem(

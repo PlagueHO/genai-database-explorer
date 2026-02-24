@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { Title3 } from '@fluentui/react-components';
 import { useTableDetail, usePatchTable, usePatchTableColumn } from '../hooks/useTables';
@@ -16,11 +17,14 @@ export function TableDetailPage() {
   const patchTable = usePatchTable(schema!, name!);
   const patchColumn = usePatchTableColumn(schema!, name!);
 
+  useEffect(() => {
+    if (error?.message?.includes('Not Found')) {
+      navigate('/tables', { replace: true });
+    }
+  }, [error, navigate]);
+
   if (isLoading) return <LoadingSpinner label="Loading table..." />;
-  if (error?.message?.includes('Not Found')) {
-    navigate('/tables', { replace: true });
-    return null;
-  }
+  if (error?.message?.includes('Not Found')) return null;
   if (error) return <ErrorBanner error={error} />;
   if (!data) return null;
 

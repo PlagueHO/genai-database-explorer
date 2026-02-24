@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { Title3 } from '@fluentui/react-components';
 import { useViewDetail, usePatchView, usePatchViewColumn } from '../hooks/useViews';
@@ -16,11 +17,14 @@ export function ViewDetailPage() {
   const patchView = usePatchView(schema!, name!);
   const patchColumn = usePatchViewColumn(schema!, name!);
 
+  useEffect(() => {
+    if (error?.message?.includes('Not Found')) {
+      navigate('/views', { replace: true });
+    }
+  }, [error, navigate]);
+
   if (isLoading) return <LoadingSpinner label="Loading view..." />;
-  if (error?.message?.includes('Not Found')) {
-    navigate('/views', { replace: true });
-    return null;
-  }
+  if (error?.message?.includes('Not Found')) return null;
   if (error) return <ErrorBanner error={error} />;
   if (!data) return null;
 
