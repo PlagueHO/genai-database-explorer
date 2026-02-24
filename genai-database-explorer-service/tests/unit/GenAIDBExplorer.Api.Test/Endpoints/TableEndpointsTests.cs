@@ -162,7 +162,7 @@ public class TableEndpointsTests
             .Returns(Task.CompletedTask);
         using var client = _factory.CreateClient();
 
-        var request = new UpdateEntityDescriptionRequest("New description", null);
+        var request = new UpdateEntityDescriptionRequest("New description", null, null, null);
 
         // Act
         var response = await client.PatchAsJsonAsync("/api/tables/SalesLT/Product", request);
@@ -186,7 +186,7 @@ public class TableEndpointsTests
             .Returns(Task.CompletedTask);
         using var client = _factory.CreateClient();
 
-        var request = new UpdateEntityDescriptionRequest(null, "New semantic description");
+        var request = new UpdateEntityDescriptionRequest(null, "New semantic description", null, null);
 
         // Act
         var response = await client.PatchAsJsonAsync("/api/tables/SalesLT/Product", request);
@@ -207,7 +207,7 @@ public class TableEndpointsTests
         _factory.MockCacheService.Setup(c => c.IsLoaded).Returns(true);
         using var client = _factory.CreateClient();
 
-        var request = new UpdateEntityDescriptionRequest("Desc", null);
+        var request = new UpdateEntityDescriptionRequest("Desc", null, null, null);
 
         // Act
         var response = await client.PatchAsJsonAsync("/api/tables/SalesLT/NonExistent", request);
@@ -225,7 +225,7 @@ public class TableEndpointsTests
         _factory.MockCacheService.Setup(c => c.IsLoaded).Returns(true);
         using var client = _factory.CreateClient();
 
-        var request = new UpdateEntityDescriptionRequest(null, null);
+        var request = new UpdateEntityDescriptionRequest(null, null, null, null);
 
         // Act
         var response = await client.PatchAsJsonAsync("/api/tables/SalesLT/Product", request);

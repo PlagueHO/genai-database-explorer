@@ -33,6 +33,14 @@ public static class TableEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
 
+        group.MapPatch("/{schema}/{name}/columns/{columnName}", PatchTableColumn)
+            .WithName("PatchTableColumn")
+            .WithDescription("Update table column descriptions")
+            .Produces<ColumnResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
+
         return app;
     }
 
@@ -137,11 +145,11 @@ public static class TableEndpoints
         string name,
         UpdateEntityDescriptionRequest request)
     {
-        if (request.Description is null && request.SemanticDescription is null)
+        if (request.Description is null && request.SemanticDescription is null && request.NotUsed is null && request.NotUsedReason is null)
         {
             return Results.Problem(
                 title: "Bad Request",
-                detail: "At least one of Description or SemanticDescription must be provided.",
+                detail: "At least one of Description, SemanticDescription, NotUsed, or NotUsedReason must be provided.",
                 statusCode: StatusCodes.Status400BadRequest,
                 type: "https://tools.ietf.org/html/rfc9110#section-15.5.1");
         }
@@ -170,6 +178,16 @@ public static class TableEndpoints
                 table.SetSemanticDescription(request.SemanticDescription);
             }
 
+            if (request.NotUsed is not null)
+            {
+                table.NotUsed = request.NotUsed.Value;
+            }
+
+            if (request.NotUsedReason is not null)
+            {
+                table.NotUsedReason = request.NotUsedReason;
+            }
+
             await repository.SaveChangesAsync(model, project.GetSemanticModelPath());
 
             var columns = table.Columns.ToColumnResponses();
@@ -194,6 +212,81 @@ public static class TableEndpoints
         {
             var logger = loggerFactory.CreateLogger(nameof(TableEndpoints));
             logger.LogError(ex, "Failed to patch table {Schema}.{Name}", schema, name);
+            return Results.Problem(
+                title: "Service Unavailable",
+                detail: "The semantic model is not currently available.",
+                statusCode: StatusCodes.Status503ServiceUnavailable,
+                type: "https://tools.ietf.org/html/rfc9110#section-15.6.4");
+        }
+    }
+
+    private static async Task<IResult> PatchTableColumn(
+        ISemanticModelCacheService cacheService,
+        ISemanticModelRepository repository,
+        IProject project,
+        ILoggerFactory loggerFactory,
+        string schema,
+        string name,
+        string columnName,
+        UpdateColumnDescriptionRequest request)
+    {
+        if (request.Description is null && request.SemanticDescription is null)
+        {
+            return Results.Problem(
+                title: "Bad Request",
+                detail: "At least one of Description or SemanticDescription must be provided.",
+                statusCode: StatusCodes.Status400BadRequest,
+                type: "https://tools.ietf.org/html/rfc9110#section-15.5.1");
+        }
+
+        try
+        {
+            var model = await cacheService.GetModelAsync();
+            var table = await model.FindTableAsync(schema, name);
+
+            if (table is null)
+            {
+                return Results.Problem(
+                    title: "Not Found",
+                    detail: $"Table '{schema}.{name}' was not found in the semantic model.",
+                    statusCode: StatusCodes.Status404NotFound,
+                    type: "https://tools.ietf.org/html/rfc9110#section-15.5.5");
+            }
+
+            var column = table.Columns.FirstOrDefault(c => string.Equals(c.Name, columnName, StringComparison.OrdinalIgnoreCase));
+            if (column is null)
+            {
+                return Results.Problem(
+                    title: "Not Found",
+                    detail: $"Column '{columnName}' was not found in table '{schema}.{name}'.",
+                    statusCode: StatusCodes.Status404NotFound,
+                    type: "https://tools.ietf.org/html/rfc9110#section-15.5.5");
+            }
+
+            if (request.Description is not null)
+            {
+                column.Description = request.Description;
+            }
+
+            if (request.SemanticDescription is not null)
+            {
+                column.SetSemanticDescription(request.SemanticDescription);
+            }
+
+            await repository.SaveChangesAsync(model, project.GetSemanticModelPath());
+
+            var response = new ColumnResponse(
+                column.Name, column.Type, column.Description, column.IsPrimaryKey,
+                column.IsNullable, column.IsIdentity, column.IsComputed, column.IsXmlDocument,
+                column.MaxLength, column.Precision, column.Scale,
+                column.ReferencedTable, column.ReferencedColumn);
+
+            return Results.Ok(response);
+        }
+        catch (Exception ex)
+        {
+            var logger = loggerFactory.CreateLogger(nameof(TableEndpoints));
+            logger.LogError(ex, "Failed to patch column {ColumnName} in table {Schema}.{Name}", columnName, schema, name);
             return Results.Problem(
                 title: "Service Unavailable",
                 detail: "The semantic model is not currently available.",

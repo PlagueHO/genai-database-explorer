@@ -13,4 +13,8 @@
     <ProjectReference Include="..\GenAIDBExplorer.Console\GenAIDBExplorer.Console.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.JavaScript" Version="13.1.1" />
+  </ItemGroup>
+
 </Project>

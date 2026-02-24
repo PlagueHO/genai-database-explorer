@@ -117,7 +117,7 @@ public class ViewEndpointsTests
             .Returns(Task.CompletedTask);
         using var client = _factory.CreateClient();
 
-        var request = new UpdateEntityDescriptionRequest("Updated view desc", null);
+        var request = new UpdateEntityDescriptionRequest("Updated view desc", null, null, null);
 
         // Act
         var response = await client.PatchAsJsonAsync("/api/views/SalesLT/vProductAndDescription", request);
@@ -141,7 +141,7 @@ public class ViewEndpointsTests
             .Returns(Task.CompletedTask);
         using var client = _factory.CreateClient();
 
-        var request = new UpdateEntityDescriptionRequest(null, "Updated semantic desc");
+        var request = new UpdateEntityDescriptionRequest(null, "Updated semantic desc", null, null);
 
         // Act
         var response = await client.PatchAsJsonAsync("/api/views/SalesLT/vProductAndDescription", request);
@@ -162,7 +162,7 @@ public class ViewEndpointsTests
         _factory.MockCacheService.Setup(c => c.IsLoaded).Returns(true);
         using var client = _factory.CreateClient();
 
-        var request = new UpdateEntityDescriptionRequest("Desc", null);
+        var request = new UpdateEntityDescriptionRequest("Desc", null, null, null);
 
         // Act
         var response = await client.PatchAsJsonAsync("/api/views/SalesLT/NonExistent", request);
@@ -180,7 +180,7 @@ public class ViewEndpointsTests
         _factory.MockCacheService.Setup(c => c.IsLoaded).Returns(true);
         using var client = _factory.CreateClient();
 
-        var request = new UpdateEntityDescriptionRequest(null, null);
+        var request = new UpdateEntityDescriptionRequest(null, null, null, null);
 
         // Act
         var response = await client.PatchAsJsonAsync("/api/views/SalesLT/vProductAndDescription", request);

@@ -119,7 +119,7 @@ public class StoredProcedureEndpointsTests
             .Returns(Task.CompletedTask);
         using var client = _factory.CreateClient();
 
-        var request = new UpdateEntityDescriptionRequest("Updated sproc desc", null);
+        var request = new UpdateEntityDescriptionRequest("Updated sproc desc", null, null, null);
 
         // Act
         var response = await client.PatchAsJsonAsync("/api/stored-procedures/dbo/uspGetCustomers", request);
@@ -143,7 +143,7 @@ public class StoredProcedureEndpointsTests
             .Returns(Task.CompletedTask);
         using var client = _factory.CreateClient();
 
-        var request = new UpdateEntityDescriptionRequest(null, "Updated semantic desc");
+        var request = new UpdateEntityDescriptionRequest(null, "Updated semantic desc", null, null);
 
         // Act
         var response = await client.PatchAsJsonAsync("/api/stored-procedures/dbo/uspGetCustomers", request);
@@ -164,7 +164,7 @@ public class StoredProcedureEndpointsTests
         _factory.MockCacheService.Setup(c => c.IsLoaded).Returns(true);
         using var client = _factory.CreateClient();
 
-        var request = new UpdateEntityDescriptionRequest("Desc", null);
+        var request = new UpdateEntityDescriptionRequest("Desc", null, null, null);
 
         // Act
         var response = await client.PatchAsJsonAsync("/api/stored-procedures/dbo/NonExistent", request);
@@ -182,7 +182,7 @@ public class StoredProcedureEndpointsTests
         _factory.MockCacheService.Setup(c => c.IsLoaded).Returns(true);
         using var client = _factory.CreateClient();
 
-        var request = new UpdateEntityDescriptionRequest(null, null);
+        var request = new UpdateEntityDescriptionRequest(null, null, null, null);
 
         // Act
         var response = await client.PatchAsJsonAsync("/api/stored-procedures/dbo/uspGetCustomers", request);

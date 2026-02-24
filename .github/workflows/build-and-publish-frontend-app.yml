@@ -1,0 +1,88 @@
+name: Build and Publish Frontend App
+
+on:
+  workflow_call:
+
+jobs:
+  build-and-publish-frontend-app:
+    name: Build and Publish Frontend App
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: genai-database-explorer-frontend
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: genai-database-explorer-frontend/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run linting
+        run: pnpm lint
+
+      - name: Run unit tests with coverage
+        if: always()
+        run: pnpm exec vitest run --coverage --coverage.reporter=json --coverage.reporter=json-summary --coverage.reporter=html --coverage.reporter=cobertura --reporter=junit --reporter=verbose --reporter=github-actions --outputFile.junit=test-results/junit.xml
+
+      - name: Generate Coverage Markdown Summary
+        if: always()
+        run: |
+          mkdir -p TestResults/CoverageReport
+          node -e "const fs=require('fs');const c=JSON.parse(fs.readFileSync('./coverage/coverage-summary.json'));const t=c.total;const fmt=v=>typeof v==='number'?v.toFixed(2):'0.00';const h='# Code Coverage Summary\n\n| Metric | Coverage |\n|--------|----------|\n| Statements | '+fmt(t.statements.pct)+'% |\n| Branches | '+fmt(t.branches.pct)+'% |\n| Functions | '+fmt(t.functions.pct)+'% |\n| Lines | '+fmt(t.lines.pct)+'% |\n';fs.writeFileSync('./TestResults/CoverageReport/SummaryGithub.md',h);"
+
+      - name: Add Coverage to Job Summary
+        if: always()
+        run: cat TestResults/CoverageReport/SummaryGithub.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Add Coverage PR Comment
+        if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' && always()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          recreate: true
+          path: genai-database-explorer-frontend/TestResults/CoverageReport/SummaryGithub.md
+
+      - name: Build app
+        run: pnpm run build
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: frontend-vitest-test-results
+          path: genai-database-explorer-frontend/test-results/**/*.xml
+          retention-days: 7
+
+      - name: Upload Coverage Report (HTML)
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: frontend-coverage-report-html
+          path: genai-database-explorer-frontend/coverage/
+          retention-days: 30
+
+      - name: Upload Code Coverage (Cobertura)
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: frontend-code-coverage-cobertura
+          path: genai-database-explorer-frontend/coverage/coverage-final.json
+          retention-days: 7
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: genai-database-explorer-frontend
+          path: genai-database-explorer-frontend/dist
