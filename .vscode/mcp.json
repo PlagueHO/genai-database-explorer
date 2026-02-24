@@ -21,6 +21,14 @@
                 "@upstash/context7-mcp@latest"
             ]
         },
+        "copilotkit-docs": {
+            "url": "https://gitmcp.io/copilotkit/copilotkit",
+            "type": "sse"
+        },        
+        "fluentui-docs": {
+            "url": "https://gitmcp.io/microsoft/fluentui",
+            "type": "sse"
+        },        
         "github": {
             "type": "http",
             "url": "https://api.githubcopilot.com/mcp/",
@@ -32,6 +40,14 @@
         "microsoft-foundry": {
             "type": "http",
             "url": "https://mcp.ai.azure.com"
+        },
+        "nodejs-docs": {
+            "url": "https://gitmcp.io/nodejs/node",
+            "type": "sse"
+        },
+        "react-docs": {
+            "url": "https://gitmcp.io/facebook/react",
+            "type": "sse"
         },
         "playwright": {
             "type": "stdio",

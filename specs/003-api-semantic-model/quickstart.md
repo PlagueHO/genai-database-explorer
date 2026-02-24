@@ -6,8 +6,8 @@
 ## Prerequisites
 
 1. .NET 10 SDK installed
-2. An initialized GenAI Database Explorer project (e.g., `samples/AdventureWorksLT/`)
-3. The semantic model has been extracted (run `extract-model` command first)
+1. An initialized GenAI Database Explorer project (e.g., `samples/AdventureWorksLT/`)
+1. The semantic model has been extracted (run `extract-model` command first)
 
 ## Running the API
 

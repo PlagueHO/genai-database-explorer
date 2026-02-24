@@ -311,31 +311,31 @@ T032 → T033 → T034 → T035
 ### MVP First (User Stories 1 + 2)
 
 1. Complete Phase 1: Setup
-2. Complete Phase 2: Foundational (CRITICAL — blocks all stories)
-3. Complete Phase 3: US1 — Retrieve Semantic Model
-4. Complete Phase 4: US2 — Browse Individual Tables
-5. **STOP and VALIDATE**: Test model retrieval and table browsing independently
-6. Deploy/demo if ready — front-end can browse the semantic model and tables
+1. Complete Phase 2: Foundational (CRITICAL — blocks all stories)
+1. Complete Phase 3: US1 — Retrieve Semantic Model
+1. Complete Phase 4: US2 — Browse Individual Tables
+1. **STOP and VALIDATE**: Test model retrieval and table browsing independently
+1. Deploy/demo if ready — front-end can browse the semantic model and tables
 
 ### Incremental Delivery
 
 1. Complete Setup + Foundational → Foundation ready
-2. Add US1 → Test independently → Deploy/Demo (minimal MVP: model summary)
-3. Add US2 → Test independently → Deploy/Demo (MVP: model + tables)
-4. Add US3 + US4 → Test independently → Deploy/Demo (full browsing)
-5. Add US5 → Test independently → Deploy/Demo (editing capability)
-6. Add US6 → Test independently → Deploy/Demo (project info context)
-7. Polish → Final deployment
+1. Add US1 → Test independently → Deploy/Demo (minimal MVP: model summary)
+1. Add US2 → Test independently → Deploy/Demo (MVP: model + tables)
+1. Add US3 + US4 → Test independently → Deploy/Demo (full browsing)
+1. Add US5 → Test independently → Deploy/Demo (editing capability)
+1. Add US6 → Test independently → Deploy/Demo (project info context)
+1. Polish → Final deployment
 
 ### Parallel Team Strategy
 
 With multiple developers:
 
 1. Team completes Setup + Foundational together
-2. Once Foundational is done:
+1. Once Foundational is done:
    - Developer A: US1 → US2 → US5 (core + tables + write endpoints)
    - Developer B: US3 → US4 → US6 (views + stored procedures + project config)
-3. Team Polish phase together
+1. Team Polish phase together
 
 ---
 
