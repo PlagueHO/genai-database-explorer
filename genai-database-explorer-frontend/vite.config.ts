@@ -18,6 +18,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
     include: ['src/**/*.{test,spec}.{ts,tsx}', 'tests/**/*.{test,spec}.{ts,tsx}'],
+    passWithNoTests: true,
   },
   server: {
     // Proxy API requests to backend service.
