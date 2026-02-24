@@ -41,7 +41,7 @@ jobs:
         if: always()
         run: |
           mkdir -p TestResults/CoverageReport
-          node -e "const fs=require('fs');const c=JSON.parse(fs.readFileSync('./coverage/coverage-summary.json'));const t=c.total;const h='# Code Coverage Summary\n\n| Metric | Coverage |\n|--------|----------|\n| Statements | '+t.statements.pct.toFixed(2)+'% |\n| Branches | '+t.branches.pct.toFixed(2)+'% |\n| Functions | '+t.functions.pct.toFixed(2)+'% |\n| Lines | '+t.lines.pct.toFixed(2)+'% |\n';fs.writeFileSync('./TestResults/CoverageReport/SummaryGithub.md',h);"
+          node -e "const fs=require('fs');const c=JSON.parse(fs.readFileSync('./coverage/coverage-summary.json'));const t=c.total;const fmt=v=>typeof v==='number'?v.toFixed(2):'0.00';const h='# Code Coverage Summary\n\n| Metric | Coverage |\n|--------|----------|\n| Statements | '+fmt(t.statements.pct)+'% |\n| Branches | '+fmt(t.branches.pct)+'% |\n| Functions | '+fmt(t.functions.pct)+'% |\n| Lines | '+fmt(t.lines.pct)+'% |\n';fs.writeFileSync('./TestResults/CoverageReport/SummaryGithub.md',h);"
 
       - name: Add Coverage to Job Summary
         if: always()
