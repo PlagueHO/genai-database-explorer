@@ -5,5 +5,7 @@ namespace GenAIDBExplorer.Api.Models;
 /// </summary>
 public record UpdateEntityDescriptionRequest(
     string? Description,
-    string? SemanticDescription
+    string? SemanticDescription,
+    bool? NotUsed,
+    string? NotUsedReason
 );

@@ -133,11 +133,11 @@ public static class StoredProcedureEndpoints
         string name,
         UpdateEntityDescriptionRequest request)
     {
-        if (request.Description is null && request.SemanticDescription is null)
+        if (request.Description is null && request.SemanticDescription is null && request.NotUsed is null && request.NotUsedReason is null)
         {
             return Results.Problem(
                 title: "Bad Request",
-                detail: "At least one of Description or SemanticDescription must be provided.",
+                detail: "At least one of Description, SemanticDescription, NotUsed, or NotUsedReason must be provided.",
                 statusCode: StatusCodes.Status400BadRequest,
                 type: "https://tools.ietf.org/html/rfc9110#section-15.5.1");
         }
@@ -164,6 +164,16 @@ public static class StoredProcedureEndpoints
             if (request.SemanticDescription is not null)
             {
                 storedProcedure.SetSemanticDescription(request.SemanticDescription);
+            }
+
+            if (request.NotUsed is not null)
+            {
+                storedProcedure.NotUsed = request.NotUsed.Value;
+            }
+
+            if (request.NotUsedReason is not null)
+            {
+                storedProcedure.NotUsedReason = request.NotUsedReason;
             }
 
             await repository.SaveChangesAsync(model, project.GetSemanticModelPath());

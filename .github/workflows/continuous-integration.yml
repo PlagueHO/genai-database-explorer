@@ -29,3 +29,11 @@ jobs:
       contents: read
       checks: write
       pull-requests: write
+
+  build-and-publish-frontend-app:
+    name: Build and Publish Frontend App
+    uses: ./.github/workflows/build-and-publish-frontend-app.yml
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write

@@ -26,13 +26,13 @@
 
 **Purpose**: Initialize the React frontend project and configure the development toolchain.
 
-- [ ] T001 Scaffold Vite + React 19 + TypeScript project in `genai-database-explorer-frontend/` using `pnpm create vite`
-- [ ] T002 Install core dependencies: `@fluentui/react-components`, `tailwindcss`, `@tanstack/react-query`, `react-router` in `genai-database-explorer-frontend/package.json`
-- [ ] T003 [P] Configure Tailwind CSS v4 in `genai-database-explorer-frontend/tailwind.config.ts` and import in `genai-database-explorer-frontend/src/main.tsx`
-- [ ] T004 [P] Configure ESLint + Prettier for frontend in `genai-database-explorer-frontend/eslint.config.js` and `genai-database-explorer-frontend/.prettierrc`
-- [ ] T005 [P] Configure Vitest in `genai-database-explorer-frontend/vite.config.ts` and install `vitest`, `@testing-library/react`, `@testing-library/jest-dom` as dev dependencies
-- [ ] T006 [P] Configure Playwright for E2E tests in `genai-database-explorer-frontend/playwright.config.ts`
-- [ ] T007 Define all TypeScript API interfaces in `genai-database-explorer-frontend/src/types/api.ts` per data-model.md (ProjectInfo, SemanticModelSummary, PaginatedResponse, EntitySummary, TableDetail, ViewDetail, StoredProcedureDetail, Column, Index, UpdateEntityDescriptionRequest, UpdateColumnDescriptionRequest, ProblemDetails)
+- [X] T001 Scaffold Vite + React 19 + TypeScript project in `genai-database-explorer-frontend/` using `pnpm create vite`
+- [X] T002 Install core dependencies: `@fluentui/react-components`, `tailwindcss`, `@tanstack/react-query`, `react-router` in `genai-database-explorer-frontend/package.json`
+- [X] T003 [P] Configure Tailwind CSS v4 in `genai-database-explorer-frontend/tailwind.config.ts` and import in `genai-database-explorer-frontend/src/main.tsx`
+- [X] T004 [P] Configure ESLint + Prettier for frontend in `genai-database-explorer-frontend/eslint.config.js` and `genai-database-explorer-frontend/.prettierrc`
+- [X] T005 [P] Configure Vitest in `genai-database-explorer-frontend/vite.config.ts` and install `vitest`, `@testing-library/react`, `@testing-library/jest-dom` as dev dependencies
+- [X] T006 [P] Configure Playwright for E2E tests in `genai-database-explorer-frontend/playwright.config.ts`
+- [X] T007 Define all TypeScript API interfaces in `genai-database-explorer-frontend/src/types/api.ts` per data-model.md (ProjectInfo, SemanticModelSummary, PaginatedResponse, EntitySummary, TableDetail, ViewDetail, StoredProcedureDetail, Column, Index, UpdateEntityDescriptionRequest, UpdateColumnDescriptionRequest, ProblemDetails)
 
 ---
 
@@ -42,22 +42,22 @@
 
 **CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T008 Implement base API client with typed fetch wrapper, error handling, and base URL configuration via `VITE_API_BASE_URL` in `genai-database-explorer-frontend/src/api/client.ts`
-- [ ] T009 [P] Implement project API client (`getProject`) in `genai-database-explorer-frontend/src/api/projectApi.ts`
-- [ ] T010 [P] Implement model API client (`getModel`, `reloadModel`) in `genai-database-explorer-frontend/src/api/modelApi.ts`
-- [ ] T011 [P] Implement tables API client (`listTables`, `getTable`, `patchTable`, `patchTableColumn`) in `genai-database-explorer-frontend/src/api/tablesApi.ts`
-- [ ] T012 [P] Implement views API client (`listViews`, `getView`, `patchView`, `patchViewColumn`) in `genai-database-explorer-frontend/src/api/viewsApi.ts`
-- [ ] T013 [P] Implement stored procedures API client (`listStoredProcedures`, `getStoredProcedure`, `patchStoredProcedure`) in `genai-database-explorer-frontend/src/api/storedProceduresApi.ts`
-- [ ] T014 Create `AppUIContext` provider with `sidebarCollapsed` and `chatPanelOpen` state in `genai-database-explorer-frontend/src/context/AppUIContext.tsx`
-- [ ] T015 Configure React Query `QueryClientProvider` and React Router in `genai-database-explorer-frontend/src/App.tsx` with FluentUI `FluentProvider` wrapping
-- [ ] T016 Implement `AppLayout` component with left sidebar, main content area (Router Outlet), and collapsible right chat panel in `genai-database-explorer-frontend/src/components/layout/AppLayout.tsx`
-- [ ] T017 [P] Implement `Sidebar` component with navigation links (Dashboard, Tables, Views, Stored Procedures) using FluentUI `NavDrawer`/`Nav` in `genai-database-explorer-frontend/src/components/layout/Sidebar.tsx`
-- [ ] T018 [P] Implement `LoadingSpinner` component in `genai-database-explorer-frontend/src/components/common/LoadingSpinner.tsx` using FluentUI `Spinner`
-- [ ] T019 [P] Implement `ErrorBanner` component in `genai-database-explorer-frontend/src/components/common/ErrorBanner.tsx` using FluentUI `MessageBar`
-- [ ] T020 [P] Implement `EmptyState` component in `genai-database-explorer-frontend/src/components/common/EmptyState.tsx`
-- [ ] T021 Define all routes in `genai-database-explorer-frontend/src/App.tsx`: `/` (Dashboard), `/tables`, `/tables/:schema/:name`, `/views`, `/views/:schema/:name`, `/stored-procedures`, `/stored-procedures/:schema/:name`
-- [ ] T022 Add `Aspire.Hosting.JavaScript` NuGet package to `genai-database-explorer-service/src/GenAIDBExplorer.AppHost/GenAIDBExplorer.AppHost.csproj`
-- [ ] T023 Wire frontend into Aspire AppHost using `AddViteApp()` with `WithReference(api).WaitFor(api)` in `genai-database-explorer-service/src/GenAIDBExplorer.AppHost/Program.cs`
+- [X] T008 Implement base API client with typed fetch wrapper, error handling, and base URL configuration via `VITE_API_BASE_URL` in `genai-database-explorer-frontend/src/api/client.ts`
+- [X] T009 [P] Implement project API client (`getProject`) in `genai-database-explorer-frontend/src/api/projectApi.ts`
+- [X] T010 [P] Implement model API client (`getModel`, `reloadModel`) in `genai-database-explorer-frontend/src/api/modelApi.ts`
+- [X] T011 [P] Implement tables API client (`listTables`, `getTable`, `patchTable`, `patchTableColumn`) in `genai-database-explorer-frontend/src/api/tablesApi.ts`
+- [X] T012 [P] Implement views API client (`listViews`, `getView`, `patchView`, `patchViewColumn`) in `genai-database-explorer-frontend/src/api/viewsApi.ts`
+- [X] T013 [P] Implement stored procedures API client (`listStoredProcedures`, `getStoredProcedure`, `patchStoredProcedure`) in `genai-database-explorer-frontend/src/api/storedProceduresApi.ts`
+- [X] T014 Create `AppUIContext` provider with `sidebarCollapsed` and `chatPanelOpen` state in `genai-database-explorer-frontend/src/context/AppUIContext.tsx`
+- [X] T015 Configure React Query `QueryClientProvider` and React Router in `genai-database-explorer-frontend/src/App.tsx` with FluentUI `FluentProvider` wrapping
+- [X] T016 Implement `AppLayout` component with left sidebar, main content area (Router Outlet), and collapsible right chat panel in `genai-database-explorer-frontend/src/components/layout/AppLayout.tsx`
+- [X] T017 [P] Implement `Sidebar` component with navigation links (Dashboard, Tables, Views, Stored Procedures) using FluentUI `NavDrawer`/`Nav` in `genai-database-explorer-frontend/src/components/layout/Sidebar.tsx`
+- [X] T018 [P] Implement `LoadingSpinner` component in `genai-database-explorer-frontend/src/components/common/LoadingSpinner.tsx` using FluentUI `Spinner`
+- [X] T019 [P] Implement `ErrorBanner` component in `genai-database-explorer-frontend/src/components/common/ErrorBanner.tsx` using FluentUI `MessageBar`
+- [X] T020 [P] Implement `EmptyState` component in `genai-database-explorer-frontend/src/components/common/EmptyState.tsx`
+- [X] T021 Define all routes in `genai-database-explorer-frontend/src/App.tsx`: `/` (Dashboard), `/tables`, `/tables/:schema/:name`, `/views`, `/views/:schema/:name`, `/stored-procedures`, `/stored-procedures/:schema/:name`
+- [X] T022 Add `Aspire.Hosting.JavaScript` NuGet package to `genai-database-explorer-service/src/GenAIDBExplorer.AppHost/GenAIDBExplorer.AppHost.csproj`
+- [X] T023 Wire frontend into Aspire AppHost using `AddViteApp()` with `WithReference(api).WaitFor(api)` in `genai-database-explorer-service/src/GenAIDBExplorer.AppHost/Program.cs`
 
 **Checkpoint**: Foundation ready — layout renders with sidebar navigation and routing. API client layer is complete. Aspire orchestration starts both frontend and backend.
 
@@ -69,9 +69,9 @@
 
 **Independent Test**: Open the app → dashboard shows model name, source, description, table/view/stored procedure counts, and persistence strategy. If API is down, an error message is displayed.
 
-- [ ] T024 [P] [US1] Implement `useProject` React Query hook in `genai-database-explorer-frontend/src/hooks/useProject.ts`
-- [ ] T025 [P] [US1] Implement `useModel` React Query hook (query + reload mutation) in `genai-database-explorer-frontend/src/hooks/useModel.ts`
-- [ ] T026 [US1] Implement `DashboardPage` with `ProjectInfoCard` and `ModelSummaryCard` sections displaying project path, model name, source, description, persistence strategy, and entity counts in `genai-database-explorer-frontend/src/pages/DashboardPage.tsx`
+- [X] T024 [P] [US1] Implement `useProject` React Query hook in `genai-database-explorer-frontend/src/hooks/useProject.ts`
+- [X] T025 [P] [US1] Implement `useModel` React Query hook (query + reload mutation) in `genai-database-explorer-frontend/src/hooks/useModel.ts`
+- [X] T026 [US1] Implement `DashboardPage` with `ProjectInfoCard` and `ModelSummaryCard` sections displaying project path, model name, source, description, persistence strategy, and entity counts in `genai-database-explorer-frontend/src/pages/DashboardPage.tsx`
 
 **Checkpoint**: User Story 1 is fully functional. Dashboard displays model overview with loading and error states.
 
@@ -83,15 +83,15 @@
 
 **Independent Test**: Navigate to Tables → see paginated list → search filters correctly → click table → detail view shows columns, indexes, NotUsed badge.
 
-- [ ] T027 [P] [US2] Implement `SearchInput` component in `genai-database-explorer-frontend/src/components/common/SearchInput.tsx` using FluentUI `SearchBox`
-- [ ] T028 [P] [US2] Implement `Pagination` component with offset/limit controls in `genai-database-explorer-frontend/src/components/common/Pagination.tsx`
-- [ ] T029 [P] [US2] Implement `EntityList` generic component rendering `EntitySummary` items with schema, name, description, NotUsed badge in `genai-database-explorer-frontend/src/components/entities/EntityList.tsx`
-- [ ] T030 [P] [US2] Implement `EntityHeader` component showing `Schema.Name` heading with NotUsed badge in `genai-database-explorer-frontend/src/components/entities/EntityHeader.tsx`
-- [ ] T031 [P] [US2] Implement `ColumnsTable` read-only component displaying column name, type, description, isPrimaryKey, isNullable, etc. in `genai-database-explorer-frontend/src/components/entities/ColumnsTable.tsx`
-- [ ] T032 [P] [US2] Implement `IndexesTable` read-only component displaying index name, type, columns, isUnique, isPrimaryKey in `genai-database-explorer-frontend/src/components/entities/IndexesTable.tsx`
-- [ ] T033 [US2] Implement `useTables` React Query hooks (list query with pagination params, detail query by schema/name) in `genai-database-explorer-frontend/src/hooks/useTables.ts`
-- [ ] T034 [US2] Implement `TablesListPage` with `SearchInput`, `EntityList`, and `Pagination` wired to `useTables` list hook with client-side search filtering in `genai-database-explorer-frontend/src/pages/TablesListPage.tsx`
-- [ ] T035 [US2] Implement `TableDetailPage` with `EntityHeader`, description fields, `ColumnsTable`, and `IndexesTable` wired to `useTables` detail hook in `genai-database-explorer-frontend/src/pages/TableDetailPage.tsx`
+- [X] T027 [P] [US2] Implement `SearchInput` component in `genai-database-explorer-frontend/src/components/common/SearchInput.tsx` using FluentUI `SearchBox`
+- [X] T028 [P] [US2] Implement `Pagination` component with offset/limit controls in `genai-database-explorer-frontend/src/components/common/Pagination.tsx`
+- [X] T029 [P] [US2] Implement `EntityList` generic component rendering `EntitySummary` items with schema, name, description, NotUsed badge in `genai-database-explorer-frontend/src/components/entities/EntityList.tsx`
+- [X] T030 [P] [US2] Implement `EntityHeader` component showing `Schema.Name` heading with NotUsed badge in `genai-database-explorer-frontend/src/components/entities/EntityHeader.tsx`
+- [X] T031 [P] [US2] Implement `ColumnsTable` read-only component displaying column name, type, description, isPrimaryKey, isNullable, etc. in `genai-database-explorer-frontend/src/components/entities/ColumnsTable.tsx`
+- [X] T032 [P] [US2] Implement `IndexesTable` read-only component displaying index name, type, columns, isUnique, isPrimaryKey in `genai-database-explorer-frontend/src/components/entities/IndexesTable.tsx`
+- [X] T033 [US2] Implement `useTables` React Query hooks (list query with pagination params, detail query by schema/name) in `genai-database-explorer-frontend/src/hooks/useTables.ts`
+- [X] T034 [US2] Implement `TablesListPage` with `SearchInput`, `EntityList`, and `Pagination` wired to `useTables` list hook with client-side search filtering in `genai-database-explorer-frontend/src/pages/TablesListPage.tsx`
+- [X] T035 [US2] Implement `TableDetailPage` with `EntityHeader`, description fields, `ColumnsTable`, and `IndexesTable` wired to `useTables` detail hook in `genai-database-explorer-frontend/src/pages/TableDetailPage.tsx`
 
 **Checkpoint**: User Story 2 is fully functional. Tables list is browsable, searchable, paginated. Table detail displays all columns and indexes.
 
@@ -103,10 +103,10 @@
 
 **Independent Test**: Navigate to Views → see paginated list → search filters correctly → click view → detail shows columns and SQL definition.
 
-- [ ] T036 [P] [US3] Implement `DefinitionViewer` component displaying SQL definition text with code formatting in `genai-database-explorer-frontend/src/components/entities/DefinitionViewer.tsx`
-- [ ] T037 [US3] Implement `useViews` React Query hooks (list query with pagination, detail query by schema/name) in `genai-database-explorer-frontend/src/hooks/useViews.ts`
-- [ ] T038 [US3] Implement `ViewsListPage` with `SearchInput`, `EntityList`, and `Pagination` wired to `useViews` list hook in `genai-database-explorer-frontend/src/pages/ViewsListPage.tsx`
-- [ ] T039 [US3] Implement `ViewDetailPage` with `EntityHeader`, description fields, `ColumnsTable`, and `DefinitionViewer` wired to `useViews` detail hook in `genai-database-explorer-frontend/src/pages/ViewDetailPage.tsx`
+- [X] T036 [P] [US3] Implement `DefinitionViewer` component displaying SQL definition text with code formatting in `genai-database-explorer-frontend/src/components/entities/DefinitionViewer.tsx`
+- [X] T037 [US3] Implement `useViews` React Query hooks (list query with pagination, detail query by schema/name) in `genai-database-explorer-frontend/src/hooks/useViews.ts`
+- [X] T038 [US3] Implement `ViewsListPage` with `SearchInput`, `EntityList`, and `Pagination` wired to `useViews` list hook in `genai-database-explorer-frontend/src/pages/ViewsListPage.tsx`
+- [X] T039 [US3] Implement `ViewDetailPage` with `EntityHeader`, description fields, `ColumnsTable`, and `DefinitionViewer` wired to `useViews` detail hook in `genai-database-explorer-frontend/src/pages/ViewDetailPage.tsx`
 
 **Checkpoint**: User Story 3 is fully functional. Views browsing, search, and detail with SQL definition work independently.
 
@@ -118,10 +118,10 @@
 
 **Independent Test**: Navigate to Stored Procedures → paginated list → click one → detail shows parameters, definition, and metadata.
 
-- [ ] T040 [P] [US4] Implement `ParametersDisplay` component showing stored procedure parameters text in `genai-database-explorer-frontend/src/components/entities/ParametersDisplay.tsx`
-- [ ] T041 [US4] Implement `useStoredProcedures` React Query hooks (list query with pagination, detail query by schema/name) in `genai-database-explorer-frontend/src/hooks/useStoredProcedures.ts`
-- [ ] T042 [US4] Implement `StoredProceduresListPage` with `SearchInput`, `EntityList`, and `Pagination` wired to `useStoredProcedures` list hook in `genai-database-explorer-frontend/src/pages/StoredProceduresListPage.tsx`
-- [ ] T043 [US4] Implement `StoredProcedureDetailPage` with `EntityHeader`, description fields, `ParametersDisplay`, and `DefinitionViewer` wired to `useStoredProcedures` detail hook in `genai-database-explorer-frontend/src/pages/StoredProcedureDetailPage.tsx`
+- [X] T040 [P] [US4] Implement `ParametersDisplay` component showing stored procedure parameters text in `genai-database-explorer-frontend/src/components/entities/ParametersDisplay.tsx`
+- [X] T041 [US4] Implement `useStoredProcedures` React Query hooks (list query with pagination, detail query by schema/name) in `genai-database-explorer-frontend/src/hooks/useStoredProcedures.ts`
+- [X] T042 [US4] Implement `StoredProceduresListPage` with `SearchInput`, `EntityList`, and `Pagination` wired to `useStoredProcedures` list hook in `genai-database-explorer-frontend/src/pages/StoredProceduresListPage.tsx`
+- [X] T043 [US4] Implement `StoredProcedureDetailPage` with `EntityHeader`, description fields, `ParametersDisplay`, and `DefinitionViewer` wired to `useStoredProcedures` detail hook in `genai-database-explorer-frontend/src/pages/StoredProcedureDetailPage.tsx`
 
 **Checkpoint**: User Story 4 is fully functional. All three entity types (tables, views, stored procedures) are browsable.
 
@@ -135,26 +135,26 @@
 
 ### Backend API Extensions
 
-- [ ] T044 [US5] Extend `UpdateEntityDescriptionRequest` record to add `bool? NotUsed` and `string? NotUsedReason` properties in `genai-database-explorer-service/src/GenAIDBExplorer.Api/Models/UpdateEntityDescriptionRequest.cs`
-- [ ] T045 [US5] Update PATCH validation and handler in `TableEndpoints.cs` to apply `NotUsed` and `NotUsedReason` fields when provided in `genai-database-explorer-service/src/GenAIDBExplorer.Api/Endpoints/TableEndpoints.cs`
-- [ ] T046 [P] [US5] Update PATCH validation and handler in `ViewEndpoints.cs` to apply `NotUsed` and `NotUsedReason` fields when provided in `genai-database-explorer-service/src/GenAIDBExplorer.Api/Endpoints/ViewEndpoints.cs`
-- [ ] T047 [P] [US5] Update PATCH validation and handler in `StoredProcedureEndpoints.cs` to apply `NotUsed` and `NotUsedReason` fields when provided in `genai-database-explorer-service/src/GenAIDBExplorer.Api/Endpoints/StoredProcedureEndpoints.cs`
-- [ ] T048 [US5] Create `UpdateColumnDescriptionRequest` record with `string? Description` and `string? SemanticDescription` in `genai-database-explorer-service/src/GenAIDBExplorer.Api/Models/UpdateColumnDescriptionRequest.cs`
-- [ ] T049 [US5] Add `PATCH /{schema}/{name}/columns/{columnName}` endpoint to `TableEndpoints.cs` that finds a column by name and updates its Description/SemanticDescription in `genai-database-explorer-service/src/GenAIDBExplorer.Api/Endpoints/TableEndpoints.cs`
-- [ ] T050 [US5] Add `PATCH /{schema}/{name}/columns/{columnName}` endpoint to `ViewEndpoints.cs` that finds a column by name and updates its Description/SemanticDescription in `genai-database-explorer-service/src/GenAIDBExplorer.Api/Endpoints/ViewEndpoints.cs`
-- [ ] T051 [US5] Run `dotnet format` on changed backend files and verify `dotnet build` succeeds for `genai-database-explorer-service/GenAIDBExplorer.slnx`
+- [X] T044 [US5] Extend `UpdateEntityDescriptionRequest` record to add `bool? NotUsed` and `string? NotUsedReason` properties in `genai-database-explorer-service/src/GenAIDBExplorer.Api/Models/UpdateEntityDescriptionRequest.cs`
+- [X] T045 [US5] Update PATCH validation and handler in `TableEndpoints.cs` to apply `NotUsed` and `NotUsedReason` fields when provided in `genai-database-explorer-service/src/GenAIDBExplorer.Api/Endpoints/TableEndpoints.cs`
+- [X] T046 [P] [US5] Update PATCH validation and handler in `ViewEndpoints.cs` to apply `NotUsed` and `NotUsedReason` fields when provided in `genai-database-explorer-service/src/GenAIDBExplorer.Api/Endpoints/ViewEndpoints.cs`
+- [X] T047 [P] [US5] Update PATCH validation and handler in `StoredProcedureEndpoints.cs` to apply `NotUsed` and `NotUsedReason` fields when provided in `genai-database-explorer-service/src/GenAIDBExplorer.Api/Endpoints/StoredProcedureEndpoints.cs`
+- [X] T048 [US5] Create `UpdateColumnDescriptionRequest` record with `string? Description` and `string? SemanticDescription` in `genai-database-explorer-service/src/GenAIDBExplorer.Api/Models/UpdateColumnDescriptionRequest.cs`
+- [X] T049 [US5] Add `PATCH /{schema}/{name}/columns/{columnName}` endpoint to `TableEndpoints.cs` that finds a column by name and updates its Description/SemanticDescription in `genai-database-explorer-service/src/GenAIDBExplorer.Api/Endpoints/TableEndpoints.cs`
+- [X] T050 [US5] Add `PATCH /{schema}/{name}/columns/{columnName}` endpoint to `ViewEndpoints.cs` that finds a column by name and updates its Description/SemanticDescription in `genai-database-explorer-service/src/GenAIDBExplorer.Api/Endpoints/ViewEndpoints.cs`
+- [X] T051 [US5] Run `dotnet format` on changed backend files and verify `dotnet build` succeeds for `genai-database-explorer-service/GenAIDBExplorer.slnx`
 
 ### Frontend Editing Components
 
-- [ ] T052 [P] [US5] Implement `EditableField` component with view/edit modes, save/cancel buttons, multiline support using FluentUI `Textarea`/`Input` in `genai-database-explorer-frontend/src/components/common/EditableField.tsx`
-- [ ] T053 [P] [US5] Implement `NotUsedEditor` component with FluentUI `Switch` for NotUsed flag and conditional `Input` for NotUsedReason in `genai-database-explorer-frontend/src/components/common/NotUsedEditor.tsx`
-- [ ] T054 [US5] Add mutation hooks to `useTables` for entity PATCH (`patchTable`) and column PATCH (`patchTableColumn`) with query invalidation in `genai-database-explorer-frontend/src/hooks/useTables.ts`
-- [ ] T055 [P] [US5] Add mutation hooks to `useViews` for entity PATCH (`patchView`) and column PATCH (`patchViewColumn`) with query invalidation in `genai-database-explorer-frontend/src/hooks/useViews.ts`
-- [ ] T056 [P] [US5] Add mutation hook to `useStoredProcedures` for entity PATCH (`patchStoredProcedure`) with query invalidation in `genai-database-explorer-frontend/src/hooks/useStoredProcedures.ts`
-- [ ] T057 [US5] Update `TableDetailPage` to use `EditableField` for description/semanticDescription, `NotUsedEditor` for NotUsed, and `EditableColumnRow` in `ColumnsTable` for column-level editing in `genai-database-explorer-frontend/src/pages/TableDetailPage.tsx`
-- [ ] T058 [US5] Update `ViewDetailPage` to use `EditableField`, `NotUsedEditor`, and column-level editing in `genai-database-explorer-frontend/src/pages/ViewDetailPage.tsx`
-- [ ] T059 [US5] Update `StoredProcedureDetailPage` to use `EditableField` and `NotUsedEditor` in `genai-database-explorer-frontend/src/pages/StoredProcedureDetailPage.tsx`
-- [ ] T060 [US5] Add error handling and success feedback (FluentUI `Toast`) for all PATCH mutations across detail pages
+- [X] T052 [P] [US5] Implement `EditableField` component with view/edit modes, save/cancel buttons, multiline support using FluentUI `Textarea`/`Input` in `genai-database-explorer-frontend/src/components/common/EditableField.tsx`
+- [X] T053 [P] [US5] Implement `NotUsedEditor` component with FluentUI `Switch` for NotUsed flag and conditional `Input` for NotUsedReason in `genai-database-explorer-frontend/src/components/common/NotUsedEditor.tsx`
+- [X] T054 [US5] Add mutation hooks to `useTables` for entity PATCH (`patchTable`) and column PATCH (`patchTableColumn`) with query invalidation in `genai-database-explorer-frontend/src/hooks/useTables.ts`
+- [X] T055 [P] [US5] Add mutation hooks to `useViews` for entity PATCH (`patchView`) and column PATCH (`patchViewColumn`) with query invalidation in `genai-database-explorer-frontend/src/hooks/useViews.ts`
+- [X] T056 [P] [US5] Add mutation hook to `useStoredProcedures` for entity PATCH (`patchStoredProcedure`) with query invalidation in `genai-database-explorer-frontend/src/hooks/useStoredProcedures.ts`
+- [X] T057 [US5] Update `TableDetailPage` to use `EditableField` for description/semanticDescription, `NotUsedEditor` for NotUsed, and `EditableColumnRow` in `ColumnsTable` for column-level editing in `genai-database-explorer-frontend/src/pages/TableDetailPage.tsx`
+- [X] T058 [US5] Update `ViewDetailPage` to use `EditableField`, `NotUsedEditor`, and column-level editing in `genai-database-explorer-frontend/src/pages/ViewDetailPage.tsx`
+- [X] T059 [US5] Update `StoredProcedureDetailPage` to use `EditableField` and `NotUsedEditor` in `genai-database-explorer-frontend/src/pages/StoredProcedureDetailPage.tsx`
+- [X] T060 [US5] Add error handling and success feedback (FluentUI `Toast`) for all PATCH mutations across detail pages
 
 **Checkpoint**: User Story 5 is fully functional. Entity and column descriptions are editable, NotUsed flag is toggleable, changes persist via API.
 
@@ -166,8 +166,8 @@
 
 **Independent Test**: Open app → toggle chat panel → panel slides in → type message → "coming soon" response appears.
 
-- [ ] T061 [US6] Implement `ChatPanel` component with collapsible panel, message display area, message input (disabled), and "Agentic chat capabilities coming soon" placeholder in `genai-database-explorer-frontend/src/components/layout/ChatPanel.tsx`
-- [ ] T062 [US6] Add chat panel toggle button to `AppLayout` header/toolbar area and wire to `AppUIContext.chatPanelOpen` state in `genai-database-explorer-frontend/src/components/layout/AppLayout.tsx`
+- [X] T061 [US6] Implement `ChatPanel` component with collapsible panel, message display area, message input (disabled), and "Agentic chat capabilities coming soon" placeholder in `genai-database-explorer-frontend/src/components/layout/ChatPanel.tsx`
+- [X] T062 [US6] Add chat panel toggle button to `AppLayout` header/toolbar area and wire to `AppUIContext.chatPanelOpen` state in `genai-database-explorer-frontend/src/components/layout/AppLayout.tsx`
 
 **Checkpoint**: User Story 6 is fully functional. Chat panel is visible, collapsible, and shows placeholder message.
 
@@ -179,7 +179,7 @@
 
 **Independent Test**: Click reload → loading indicator appears → model refreshes → dashboard updates with new counts.
 
-- [ ] T063 [US7] Add `ModelReloadButton` to `Sidebar` component that triggers `useModel` reload mutation, invalidates all React Query caches (`queryClient.invalidateQueries()`), and shows loading indicator in `genai-database-explorer-frontend/src/components/layout/Sidebar.tsx`
+- [X] T063 [US7] Add `ModelReloadButton` to `Sidebar` component that triggers `useModel` reload mutation, invalidates all React Query caches (`queryClient.invalidateQueries()`), and shows loading indicator in `genai-database-explorer-frontend/src/components/layout/Sidebar.tsx`
 
 **Checkpoint**: User Story 7 is fully functional. Model can be reloaded from persistence store without restarting the application.
 
@@ -189,13 +189,13 @@
 
 **Purpose**: Improvements that affect multiple user stories.
 
-- [ ] T064 [P] Add handling for edge cases: empty entity lists (empty state messages per FR-014), tables with no columns, not-found entities after reload (404 → redirect to list) across all detail pages
-- [ ] T065 [P] Add handling for long text overflow in description/semanticDescription fields (scrolling or truncation with expand) across all detail and list components
-- [ ] T066 [P] Add responsive layout handling for sidebar collapse on small viewports in `genai-database-explorer-frontend/src/components/layout/AppLayout.tsx`
-- [ ] T067 Validate `aspire run` starts both frontend and backend, service discovery injects API URL correctly, and end-to-end browsing and editing workflow completes successfully
-- [ ] T068 Run ESLint and Prettier on all frontend files, fix any issues
-- [ ] T069 Run `dotnet format` on all modified backend C# files via `format-fix-whitespace-only` task
-- [ ] T070 Verify `pnpm build` produces a production build without errors in `genai-database-explorer-frontend/`
+- [X] T064 [P] Add handling for edge cases: empty entity lists (empty state messages per FR-014), tables with no columns, not-found entities after reload (404 → redirect to list) across all detail pages
+- [X] T065 [P] Add handling for long text overflow in description/semanticDescription fields (scrolling or truncation with expand) across all detail and list components
+- [X] T066 [P] Add responsive layout handling for sidebar collapse on small viewports in `genai-database-explorer-frontend/src/components/layout/AppLayout.tsx`
+- [X] T067 Validate `aspire run` starts both frontend and backend, service discovery injects API URL correctly, and end-to-end browsing and editing workflow completes successfully
+- [X] T068 Run ESLint and Prettier on all frontend files, fix any issues
+- [X] T069 Run `dotnet format` on all modified backend C# files via `format-fix-whitespace-only` task
+- [X] T070 Verify `pnpm build` produces a production build without errors in `genai-database-explorer-frontend/`
 
 ---
 
