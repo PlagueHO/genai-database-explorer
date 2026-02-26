@@ -176,3 +176,43 @@ jobs:
           name: console-app-published
           path: ./publish/
           retention-days: 1
+
+  publish-api-app:
+    name: Publish API Application
+    runs-on: ubuntu-latest
+    needs: dotnet-build-test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v5
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json', '**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore dependencies
+        run: dotnet restore genai-database-explorer-service/GenAIDBExplorer.slnx
+
+      - name: Publish API Application
+        run: |
+          dotnet publish genai-database-explorer-service/src/GenAIDBExplorer.Api \
+            --configuration Release \
+            --output ./publish \
+            --no-restore \
+            --self-contained false \
+            --framework net10.0
+
+      - name: Upload API Application Artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: api-app-published
+          path: ./publish/
+          retention-days: 1
