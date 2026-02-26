@@ -41,126 +41,21 @@ $script:NoAzureMode = (Get-Variable -Name 'NoAzureMode' -Scope Script -ValueOnly
 
 Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
     BeforeAll {
-        function Get-ParameterOrEnvironment {
-            param(
-                [string]$ParameterValue,
-                [string]$EnvironmentName,
-                [string]$DefaultValue = $null
-            )
-            
-            if (-not [string]::IsNullOrEmpty($ParameterValue)) {
-                return $ParameterValue
-            }
-            
-            $envValue = Get-Item -Path "Env:$EnvironmentName" -ErrorAction SilentlyContinue
-            if ($envValue -and -not [string]::IsNullOrEmpty($envValue.Value)) {
-                return $envValue.Value
-            }
-            
-            return $DefaultValue
-        }
+        # Initialize test configuration using shared helpers
+        $testConfig = Initialize-TestEnvironment -PersistenceStrategy 'AzureBlob' -TestFilter $TestFilter
 
-        function Initialize-TestEnvironment {
-            param(
-                [string]$TestFilter
-            )
-            
-            $resolvedFilter = Get-ParameterOrEnvironment -ParameterValue $TestFilter -EnvironmentName 'TEST_FILTER'
-            
-            $noAzureMode = ($resolvedFilter -and ($resolvedFilter.ToString().Trim().ToLower() -eq 'no-azure')) -or 
-                          ($env:NO_AZURE_MODE -and ($env:NO_AZURE_MODE.ToString().Trim().ToLower() -in @('true', '1', 'yes')))
-            
-            $environmentVars = @{
-                SQL_CONNECTION_STRING = $env:SQL_CONNECTION_STRING
-                DATABASE_SCHEMA = $env:DATABASE_SCHEMA
-                AZURE_OPENAI_ENDPOINT = $env:AZURE_OPENAI_ENDPOINT
-                AZURE_OPENAI_API_KEY = $env:AZURE_OPENAI_API_KEY
-                AZURE_STORAGE_ACCOUNT_ENDPOINT = $env:SemanticModelRepository__AzureBlob__AccountEndpoint
-                AZURE_STORAGE_CONTAINER = $env:SemanticModelRepository__AzureBlob__ContainerName
-                AZURE_STORAGE_BLOB_PREFIX = $env:SemanticModelRepository__AzureBlob__BlobPrefix
-            }
-            
-            return @{
-                TestFilter = $resolvedFilter
-                NoAzureMode = $noAzureMode
-                Environment = $environmentVars
-            }
-        }
-
-        function Test-RequiredEnvironmentVariables {
-            param(
-                [hashtable]$Environment,
-                [bool]$NoAzureMode
-            )
-            
-            $requiredVars = @('SQL_CONNECTION_STRING', 'AZURE_OPENAI_ENDPOINT', 'AZURE_OPENAI_API_KEY', 'AZURE_STORAGE_ACCOUNT_ENDPOINT')
-            $missingVars = @($requiredVars | Where-Object { [string]::IsNullOrEmpty($Environment[$_]) })
-
-            if ($missingVars -and $missingVars.Count -gt 0) {
-                if ($NoAzureMode) {
-                    Write-Verbose "NoAzure mode active: skipping required env var enforcement" -Verbose
-                    return $true
-                } else {
-                    Write-Warning "Missing required environment variables for AzureBlob: $($missingVars -join ', ')"
-                    throw "Missing required environment variables for AzureBlob: $($missingVars -join ', ')"
-                }
-            }
-            
-            return $true
-        }
-
-        function Initialize-TestWorkspace {
-            param(
-                [string]$TestDriveRoot,
-                [string]$ConsoleAppPath
-            )
-
-            if (-not (Test-Path -LiteralPath $TestDriveRoot)) {
-                $tempRoot = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ("genaidb-azureblob-test-" + [Guid]::NewGuid().ToString('N'))
-                New-Item -ItemType Directory -Path $tempRoot -Force | Out-Null
-                $TestDriveRoot = $tempRoot
-            }
-
-            $testWorkspacePath = Join-Path -Path $TestDriveRoot -ChildPath 'workspace'
-            New-Item -ItemType Directory -Path $testWorkspacePath -Force | Out-Null
-
-            $baseProjectPath = Join-Path -Path $testWorkspacePath -ChildPath 'projects'
-            New-Item -ItemType Directory -Path $baseProjectPath -Force | Out-Null
-
-            if (-not (Test-Path -Path $ConsoleAppPath)) {
-                throw "Console application not found at: $ConsoleAppPath"
-            }
-
-            if (-not $IsWindows) {
-                & chmod +x $ConsoleAppPath 2>&1 | Out-Null
-            }
-
-            return @{
-                TestWorkspace  = (Get-Item -LiteralPath $testWorkspacePath)
-                BaseProjectPath = $baseProjectPath
-                ConsoleAppPath  = $ConsoleAppPath
-            }
-        }
-
-        # Initialize test configuration
-        $testConfig = Initialize-TestEnvironment -TestFilter $TestFilter
-        
         $script:NoAzureMode = $testConfig.NoAzureMode
         $script:TestEnv = $testConfig.Environment
-        
+
         Write-Host "AzureBlob Tests - Testing Azure Blob Storage persistence" -ForegroundColor Cyan
         Write-Host "Storage Endpoint: $($script:TestEnv.AZURE_STORAGE_ACCOUNT_ENDPOINT)" -ForegroundColor Cyan
         Write-Host "Container: $($script:TestEnv.AZURE_STORAGE_CONTAINER ?? 'semantic-models (default)')" -ForegroundColor Cyan
-        
-        Test-RequiredEnvironmentVariables -Environment $script:TestEnv -NoAzureMode $script:NoAzureMode
-        
-        $consoleAppPath = if ($env:CONSOLE_APP_PATH -and -not [string]::IsNullOrEmpty($env:CONSOLE_APP_PATH)) {
-            $env:CONSOLE_APP_PATH
-        } else {
-            "./src/GenAIDBExplorer/GenAIDBExplorer.Console/bin/Debug/net10.0/GenAIDBExplorer.Console.exe"
-        }
 
-        $workspaceConfig = Initialize-TestWorkspace -TestDriveRoot $TestDrive -ConsoleAppPath $consoleAppPath
+        Test-RequiredEnvironmentVariables -Environment $script:TestEnv -NoAzureMode $script:NoAzureMode -PersistenceStrategy 'AzureBlob'
+
+        $consoleAppPath = Resolve-ConsoleAppPath
+
+        $workspaceConfig = Initialize-TestWorkspace -TestDriveRoot $TestDrive -ConsoleAppPath $consoleAppPath -TempDirPrefix 'genaidb-azureblob-test'
         $script:TestWorkspace = $workspaceConfig.TestWorkspace
         $script:BaseProjectPath = $workspaceConfig.BaseProjectPath
         $script:ConsoleAppPath = $workspaceConfig.ConsoleAppPath

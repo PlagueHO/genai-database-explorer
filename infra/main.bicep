@@ -96,7 +96,7 @@ module rg 'br/public:avm/res/resources/resource-group:0.4.3' = {
 }
 
 // --------- MONITORING RESOURCES ---------
-module logAnalyticsWorkspace 'br/public:avm/res/operational-insights/workspace:0.14.2' = {
+module logAnalyticsWorkspace 'br/public:avm/res/operational-insights/workspace:0.15.0' = {
   name: 'log-analytics-workspace-deployment-${resourceToken}'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [
@@ -302,7 +302,7 @@ module sqlServer 'br/public:avm/res/sql/server:0.21.1' = {
 }
 
 // --------- COSMOS DB ---------
-module cosmosDbAccount 'br/public:avm/res/document-db/database-account:0.18.0' = if (cosmosDbDeploy) {
+module cosmosDbAccount 'br/public:avm/res/document-db/database-account:0.19.0' = if (cosmosDbDeploy) {
   name: 'cosmos-db-account-deployment-${resourceToken}'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [
@@ -367,7 +367,7 @@ module cosmosDbAccount 'br/public:avm/res/document-db/database-account:0.18.0' =
 }
 
 // --------- STORAGE ACCOUNT ---------
-module storageAccount 'br/public:avm/res/storage/storage-account:0.30.0' = if (storageAccountDeploy) {
+module storageAccount 'br/public:avm/res/storage/storage-account:0.31.1' = if (storageAccountDeploy) {
   name: 'storage-account-deployment-${resourceToken}'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [

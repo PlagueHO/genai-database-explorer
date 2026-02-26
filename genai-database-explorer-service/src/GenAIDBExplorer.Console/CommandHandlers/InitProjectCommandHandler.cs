@@ -131,7 +131,7 @@ public class InitProjectCommandHandler(
         initCommand.Options.Add(vectorIndexProviderOption);
         initCommand.Options.Add(vectorIndexCollectionNameOption);
 
-        initCommand.SetAction(async (parseResult) =>
+        initCommand.SetAction(async (parseResult, cancellationToken) =>
         {
             var projectPath = parseResult.GetValue(projectPathOption)!;
             var handler = host.Services.GetRequiredService<InitProjectCommandHandler>();
@@ -150,7 +150,7 @@ public class InitProjectCommandHandler(
                 vectorIndexProvider: parseResult.GetValue(vectorIndexProviderOption),
                 vectorIndexCollectionName: parseResult.GetValue(vectorIndexCollectionNameOption)
             );
-            await handler.HandleAsync(options);
+            return await handler.HandleWithExitCodeAsync(options);
         });
 
         return initCommand;
@@ -161,6 +161,16 @@ public class InitProjectCommandHandler(
     /// </summary>
     /// <param name="commandOptions">The options for the command.</param>
     public override async Task HandleAsync(InitProjectCommandHandlerOptions commandOptions)
+    {
+        await HandleWithExitCodeAsync(commandOptions);
+    }
+
+    /// <summary>
+    /// Handles the initialization command and returns an exit code.
+    /// </summary>
+    /// <param name="commandOptions">The options for the command.</param>
+    /// <returns>0 on success, 1 on failure.</returns>
+    internal async Task<int> HandleWithExitCodeAsync(InitProjectCommandHandlerOptions commandOptions)
     {
         AssertCommandOptionsValid(commandOptions);
 
@@ -180,7 +190,7 @@ public class InitProjectCommandHandler(
             catch (ArgumentException ex)
             {
                 OutputStopError(ex.Message);
-                return;
+                return 1;
             }
         }
 
@@ -192,7 +202,7 @@ public class InitProjectCommandHandler(
         catch (Exception ex)
         {
             OutputStopError(ex.Message);
-            return;
+            return 1;
         }
 
         // Apply settings overrides if any were provided
@@ -206,12 +216,13 @@ public class InitProjectCommandHandler(
             catch (Exception ex)
             {
                 OutputStopError($"Failed to apply settings overrides: {ex.Message}");
-                return;
+                return 1;
             }
         }
 
         _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("InitializeProjectComplete"), projectPath.FullName);
         await Task.CompletedTask;
+        return 0;
     }
 
     /// <summary>

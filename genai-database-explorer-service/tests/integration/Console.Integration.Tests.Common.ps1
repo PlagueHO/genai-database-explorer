@@ -42,138 +42,18 @@ $script:PersistenceStrategy = (Get-Variable -Name 'PersistenceStrategy' -Scope S
 
 Describe 'GenAI Database Explorer Console Application - Common Tests' {
     BeforeAll {
-        function Get-ParameterOrEnvironment {
-            param(
-                [string]$ParameterValue,
-                [string]$EnvironmentName,
-                [string]$DefaultValue = $null
-            )
-            
-            if (-not [string]::IsNullOrEmpty($ParameterValue)) {
-                return $ParameterValue
-            }
-            
-            $envValue = Get-Item -Path "Env:$EnvironmentName" -ErrorAction SilentlyContinue
-            if ($envValue -and -not [string]::IsNullOrEmpty($envValue.Value)) {
-                return $envValue.Value
-            }
-            
-            return $DefaultValue
-        }
-
-        function Initialize-TestEnvironment {
-            param(
-                [string]$PersistenceStrategy,
-                [string]$TestFilter
-            )
-            
-            $resolvedStrategy = Get-ParameterOrEnvironment -ParameterValue $PersistenceStrategy -EnvironmentName 'PERSISTENCE_STRATEGY' -DefaultValue 'LocalDisk'
-            $resolvedFilter = Get-ParameterOrEnvironment -ParameterValue $TestFilter -EnvironmentName 'TEST_FILTER'
-            
-            $noAzureMode = ($resolvedFilter -and ($resolvedFilter.ToString().Trim().ToLower() -eq 'no-azure')) -or 
-                          ($env:NO_AZURE_MODE -and ($env:NO_AZURE_MODE.ToString().Trim().ToLower() -in @('true', '1', 'yes')))
-            
-            $environmentVars = @{
-                SQL_CONNECTION_STRING = $env:SQL_CONNECTION_STRING
-                DATABASE_SCHEMA = $env:DATABASE_SCHEMA
-                AZURE_OPENAI_ENDPOINT = $env:AZURE_OPENAI_ENDPOINT
-                AZURE_OPENAI_API_KEY = $env:AZURE_OPENAI_API_KEY
-                AZURE_STORAGE_ACCOUNT_ENDPOINT = $env:SemanticModelRepository__AzureBlob__AccountEndpoint
-                AZURE_STORAGE_CONTAINER = $env:SemanticModelRepository__AzureBlob__ContainerName
-                AZURE_STORAGE_BLOB_PREFIX = $env:SemanticModelRepository__AzureBlob__BlobPrefix
-                AZURE_COSMOS_DB_ACCOUNT_ENDPOINT = $env:AZURE_COSMOS_DB_ACCOUNT_ENDPOINT
-                AZURE_COSMOS_DB_DATABASE_NAME = $env:AZURE_COSMOS_DB_DATABASE_NAME
-                AZURE_COSMOS_DB_MODELS_CONTAINER = $env:AZURE_COSMOS_DB_MODELS_CONTAINER
-                AZURE_COSMOS_DB_ENTITIES_CONTAINER = $env:AZURE_COSMOS_DB_ENTITIES_CONTAINER
-                PERSISTENCE_STRATEGY = $resolvedStrategy
-            }
-            
-            $optionalVars = $environmentVars.Keys
-            foreach ($varName in $optionalVars) {
-                if ([string]::IsNullOrEmpty($environmentVars[$varName])) {
-                    Write-Verbose "Environment variable not set: $varName" -Verbose
-                }
-            }
-            
-            return @{
-                PersistenceStrategy = $resolvedStrategy
-                TestFilter = $resolvedFilter
-                NoAzureMode = $noAzureMode
-                Environment = $environmentVars
-            }
-        }
-
-        function Test-RequiredEnvironmentVariables {
-            param(
-                [hashtable]$Environment,
-                [bool]$NoAzureMode
-            )
-            
-            $requiredVars = @('SQL_CONNECTION_STRING', 'AZURE_OPENAI_ENDPOINT', 'AZURE_OPENAI_API_KEY')
-            $missingVars = @($requiredVars | Where-Object { [string]::IsNullOrEmpty($Environment[$_]) })
-
-            if ($missingVars -and $missingVars.Count -gt 0) {
-                if ($NoAzureMode) {
-                    Write-Verbose "NoAzure mode active: skipping required env var enforcement" -Verbose
-                    return $true
-                } else {
-                    Write-Warning "Missing required environment variables: $($missingVars -join ', ')"
-                    throw "Missing required environment variables: $($missingVars -join ', ')"
-                }
-            }
-            
-            return $true
-        }
-
-        function Initialize-TestWorkspace {
-            param(
-                [string]$TestDriveRoot,
-                [string]$ConsoleAppPath
-            )
-
-            if (-not (Test-Path -LiteralPath $TestDriveRoot)) {
-                $tempRoot = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ("genaidb-integration-test-" + [Guid]::NewGuid().ToString('N'))
-                New-Item -ItemType Directory -Path $tempRoot -Force | Out-Null
-                $TestDriveRoot = $tempRoot
-            }
-
-            $testWorkspacePath = Join-Path -Path $TestDriveRoot -ChildPath 'workspace'
-            New-Item -ItemType Directory -Path $testWorkspacePath -Force | Out-Null
-
-            $baseProjectPath = Join-Path -Path $testWorkspacePath -ChildPath 'projects'
-            New-Item -ItemType Directory -Path $baseProjectPath -Force | Out-Null
-
-            if (-not (Test-Path -Path $ConsoleAppPath)) {
-                throw "Console application not found at: $ConsoleAppPath"
-            }
-
-            if (-not $IsWindows) {
-                & chmod +x $ConsoleAppPath 2>&1 | Out-Null
-            }
-
-            return @{
-                TestWorkspace  = (Get-Item -LiteralPath $testWorkspacePath)
-                BaseProjectPath = $baseProjectPath
-                ConsoleAppPath  = $ConsoleAppPath
-            }
-        }
-
-        # Initialize test configuration
+        # Initialize test configuration using shared helpers
         $testConfig = Initialize-TestEnvironment -PersistenceStrategy $PersistenceStrategy -TestFilter $TestFilter
-        
+
         $script:PersistenceStrategy = $testConfig.PersistenceStrategy
         $script:NoAzureMode = $testConfig.NoAzureMode
         $script:TestEnv = $testConfig.Environment
-        
+
         Write-Host "Common Tests - Using persistence strategy: $($script:PersistenceStrategy)" -ForegroundColor Cyan
-        
-        Test-RequiredEnvironmentVariables -Environment $script:TestEnv -NoAzureMode $script:NoAzureMode
-        
-        $consoleAppPath = if ($env:CONSOLE_APP_PATH -and -not [string]::IsNullOrEmpty($env:CONSOLE_APP_PATH)) {
-            $env:CONSOLE_APP_PATH
-        } else {
-            "./src/GenAIDBExplorer/GenAIDBExplorer.Console/bin/Debug/net10.0/GenAIDBExplorer.Console.exe"
-        }
+
+        Test-RequiredEnvironmentVariables -Environment $script:TestEnv -NoAzureMode $script:NoAzureMode -PersistenceStrategy $script:PersistenceStrategy
+
+        $consoleAppPath = Resolve-ConsoleAppPath
 
         $workspaceConfig = Initialize-TestWorkspace -TestDriveRoot $TestDrive -ConsoleAppPath $consoleAppPath
         $script:TestWorkspace = $workspaceConfig.TestWorkspace
@@ -206,7 +86,7 @@ Describe 'GenAI Database Explorer Console Application - Common Tests' {
                     $settings = Get-Content -Path $settingsPath | ConvertFrom-Json
                     $settings.SettingsVersion | Should -Not -BeNullOrEmpty -Because 'Settings should have version'
                     $settings.Database | Should -Not -BeNullOrEmpty -Because 'Settings should have Database section'
-                    $settings.OpenAIService | Should -Not -BeNullOrEmpty -Because 'Settings should have OpenAIService section'
+                    $settings.FoundryModels | Should -Not -BeNullOrEmpty -Because 'Settings should have FoundryModels section'
                 }
             }
 

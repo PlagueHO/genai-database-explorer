@@ -459,4 +459,286 @@ function Set-TestProjectConfiguration {
     Set-ProjectSettings -ProjectPath $ProjectPath -Database $dbConfig -OpenAIService $openAIConfig -SemanticModelRepository $repoConfig -PersistenceStrategy $PersistenceStrategy
 }
 
-Export-ModuleMember -Function Initialize-TestProject, Set-ProjectSettings, Invoke-ConsoleCommand, New-TestDataDictionary, Set-TestProjectConfiguration
+<#
+    .SYNOPSIS
+        Resolves a value from a parameter, environment variable, or default.
+
+    .DESCRIPTION
+        This function checks the parameter value first, then the environment variable,
+        and finally falls back to the default value.
+
+    .PARAMETER ParameterValue
+        The value passed as a parameter.
+
+    .PARAMETER EnvironmentName
+        The name of the environment variable to check.
+
+    .PARAMETER DefaultValue
+        The default value to return if neither parameter nor environment variable is set.
+
+    .OUTPUTS
+        Returns the resolved string value.
+
+    .EXAMPLE
+        $strategy = Get-ParameterOrEnvironment -ParameterValue '' -EnvironmentName 'PERSISTENCE_STRATEGY' -DefaultValue 'LocalDisk'
+#>
+function Get-ParameterOrEnvironment {
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter()]
+        [string]$ParameterValue,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$EnvironmentName,
+
+        [Parameter()]
+        [string]$DefaultValue = $null
+    )
+
+    if (-not [string]::IsNullOrEmpty($ParameterValue)) {
+        return $ParameterValue
+    }
+
+    $envValue = Get-Item -Path "Env:$EnvironmentName" -ErrorAction SilentlyContinue
+    if ($envValue -and -not [string]::IsNullOrEmpty($envValue.Value)) {
+        return $envValue.Value
+    }
+
+    return $DefaultValue
+}
+
+<#
+    .SYNOPSIS
+        Collects environment variables into a hashtable for a given persistence strategy.
+
+    .DESCRIPTION
+        This function reads all relevant environment variables and returns them in a
+        structured hashtable. The variables collected depend on the persistence strategy.
+
+    .PARAMETER PersistenceStrategy
+        The persistence strategy to collect environment variables for.
+        Valid values: 'LocalDisk', 'AzureBlob', 'CosmosDb'.
+
+    .PARAMETER TestFilter
+        The test filter string, resolved from parameter or environment variable.
+
+    .OUTPUTS
+        Returns a hashtable with PersistenceStrategy, TestFilter, NoAzureMode, and
+        Environment keys.
+
+    .EXAMPLE
+        $testConfig = Initialize-TestEnvironment -PersistenceStrategy 'LocalDisk'
+#>
+function Initialize-TestEnvironment {
+    [CmdletBinding()]
+    [OutputType([hashtable])]
+    param(
+        [Parameter()]
+        [ValidateSet('LocalDisk', 'AzureBlob', 'CosmosDb')]
+        [string]$PersistenceStrategy,
+
+        [Parameter()]
+        [string]$TestFilter
+    )
+
+    $resolvedStrategy = Get-ParameterOrEnvironment -ParameterValue $PersistenceStrategy -EnvironmentName 'PERSISTENCE_STRATEGY' -DefaultValue 'LocalDisk'
+    $resolvedFilter = Get-ParameterOrEnvironment -ParameterValue $TestFilter -EnvironmentName 'TEST_FILTER'
+
+    $noAzureMode = ($resolvedFilter -and ($resolvedFilter.ToString().Trim().ToLower() -eq 'no-azure')) -or
+                  ($env:NO_AZURE_MODE -and ($env:NO_AZURE_MODE.ToString().Trim().ToLower() -in @('true', '1', 'yes')))
+
+    # Core environment variables (needed by all strategies)
+    $environmentVars = @{
+        SQL_CONNECTION_STRING  = $env:SQL_CONNECTION_STRING
+        DATABASE_SCHEMA        = $env:DATABASE_SCHEMA
+        AZURE_OPENAI_ENDPOINT  = $env:AZURE_OPENAI_ENDPOINT
+        AZURE_OPENAI_API_KEY   = $env:AZURE_OPENAI_API_KEY
+        PERSISTENCE_STRATEGY   = $resolvedStrategy
+    }
+
+    # Add AzureBlob-specific variables
+    if ($resolvedStrategy -eq 'AzureBlob' -or -not $PersistenceStrategy) {
+        $environmentVars.AZURE_STORAGE_ACCOUNT_ENDPOINT = $env:SemanticModelRepository__AzureBlob__AccountEndpoint
+        $environmentVars.AZURE_STORAGE_CONTAINER         = $env:SemanticModelRepository__AzureBlob__ContainerName
+        $environmentVars.AZURE_STORAGE_BLOB_PREFIX       = $env:SemanticModelRepository__AzureBlob__BlobPrefix
+    }
+
+    # Add CosmosDb-specific variables
+    if ($resolvedStrategy -eq 'CosmosDb' -or -not $PersistenceStrategy) {
+        $environmentVars.AZURE_COSMOS_DB_ACCOUNT_ENDPOINT  = $env:AZURE_COSMOS_DB_ACCOUNT_ENDPOINT
+        $environmentVars.AZURE_COSMOS_DB_DATABASE_NAME     = $env:AZURE_COSMOS_DB_DATABASE_NAME
+        $environmentVars.AZURE_COSMOS_DB_MODELS_CONTAINER  = $env:AZURE_COSMOS_DB_MODELS_CONTAINER
+        $environmentVars.AZURE_COSMOS_DB_ENTITIES_CONTAINER = $env:AZURE_COSMOS_DB_ENTITIES_CONTAINER
+    }
+
+    foreach ($varName in $environmentVars.Keys) {
+        if ([string]::IsNullOrEmpty($environmentVars[$varName])) {
+            Write-Verbose "Environment variable not set: $varName" -Verbose
+        }
+    }
+
+    return @{
+        PersistenceStrategy = $resolvedStrategy
+        TestFilter          = $resolvedFilter
+        NoAzureMode         = $noAzureMode
+        Environment         = $environmentVars
+    }
+}
+
+<#
+    .SYNOPSIS
+        Validates that required environment variables are present.
+
+    .DESCRIPTION
+        Checks that the required environment variables for the given persistence strategy
+        are set. If NoAzureMode is active, missing variables are tolerated.
+
+    .PARAMETER Environment
+        A hashtable of environment variable names to values.
+
+    .PARAMETER NoAzureMode
+        When true, missing variables are logged but do not cause a failure.
+
+    .PARAMETER PersistenceStrategy
+        The persistence strategy, used to determine additional required variables.
+
+    .OUTPUTS
+        Returns $true if validation passes.
+
+    .EXAMPLE
+        Test-RequiredEnvironmentVariables -Environment $env -NoAzureMode $false -PersistenceStrategy 'AzureBlob'
+#>
+function Test-RequiredEnvironmentVariables {
+    [CmdletBinding()]
+    [OutputType([bool])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNull()]
+        [hashtable]$Environment,
+
+        [Parameter()]
+        [bool]$NoAzureMode = $false,
+
+        [Parameter()]
+        [ValidateSet('LocalDisk', 'AzureBlob', 'CosmosDb')]
+        [string]$PersistenceStrategy = 'LocalDisk'
+    )
+
+    $requiredVars = @('SQL_CONNECTION_STRING', 'AZURE_OPENAI_ENDPOINT', 'AZURE_OPENAI_API_KEY')
+    switch ($PersistenceStrategy) {
+        'AzureBlob' { $requiredVars += 'AZURE_STORAGE_ACCOUNT_ENDPOINT' }
+        'CosmosDb'  { $requiredVars += 'AZURE_COSMOS_DB_ACCOUNT_ENDPOINT' }
+    }
+
+    $missingVars = @($requiredVars | Where-Object { [string]::IsNullOrEmpty($Environment[$_]) })
+
+    if ($missingVars -and $missingVars.Count -gt 0) {
+        if ($NoAzureMode) {
+            Write-Verbose "NoAzure mode active: skipping required env var enforcement" -Verbose
+            return $true
+        } else {
+            Write-Warning "Missing required environment variables: $($missingVars -join ', ')"
+            throw "Missing required environment variables: $($missingVars -join ', ')"
+        }
+    }
+
+    return $true
+}
+
+<#
+    .SYNOPSIS
+        Creates a temporary workspace directory structure and validates the console app path.
+
+    .DESCRIPTION
+        This function prepares a clean test workspace with subdirectories for projects
+        and validates that the console application executable exists.
+
+    .PARAMETER TestDriveRoot
+        The root directory for the test drive (typically Pester's $TestDrive).
+
+    .PARAMETER ConsoleAppPath
+        The path to the console application executable.
+
+    .PARAMETER TempDirPrefix
+        An optional prefix for the temp directory name when TestDrive is unavailable.
+        Defaults to 'genaidb-integration-test'.
+
+    .OUTPUTS
+        Returns a hashtable with TestWorkspace, BaseProjectPath, and ConsoleAppPath.
+
+    .EXAMPLE
+        $workspace = Initialize-TestWorkspace -TestDriveRoot $TestDrive -ConsoleAppPath './app.exe'
+#>
+function Initialize-TestWorkspace {
+    [CmdletBinding()]
+    [OutputType([hashtable])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$TestDriveRoot,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ConsoleAppPath,
+
+        [Parameter()]
+        [string]$TempDirPrefix = 'genaidb-integration-test'
+    )
+
+    if (-not (Test-Path -LiteralPath $TestDriveRoot)) {
+        $tempRoot = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ("$TempDirPrefix-" + [Guid]::NewGuid().ToString('N'))
+        New-Item -ItemType Directory -Path $tempRoot -Force | Out-Null
+        $TestDriveRoot = $tempRoot
+    }
+
+    $testWorkspacePath = Join-Path -Path $TestDriveRoot -ChildPath 'workspace'
+    New-Item -ItemType Directory -Path $testWorkspacePath -Force | Out-Null
+
+    $baseProjectPath = Join-Path -Path $testWorkspacePath -ChildPath 'projects'
+    New-Item -ItemType Directory -Path $baseProjectPath -Force | Out-Null
+
+    if (-not (Test-Path -Path $ConsoleAppPath)) {
+        throw "Console application not found at: $ConsoleAppPath"
+    }
+
+    if (-not $IsWindows) {
+        & chmod +x $ConsoleAppPath 2>&1 | Out-Null
+    }
+
+    return @{
+        TestWorkspace   = (Get-Item -LiteralPath $testWorkspacePath)
+        BaseProjectPath = $baseProjectPath
+        ConsoleAppPath  = $ConsoleAppPath
+    }
+}
+
+<#
+    .SYNOPSIS
+        Resolves the console application path from environment or default.
+
+    .DESCRIPTION
+        Returns the path to the console application executable, checking the
+        CONSOLE_APP_PATH environment variable first, then falling back to the
+        default build output path.
+
+    .OUTPUTS
+        Returns the resolved console application path string.
+
+    .EXAMPLE
+        $appPath = Resolve-ConsoleAppPath
+#>
+function Resolve-ConsoleAppPath {
+    [CmdletBinding()]
+    [OutputType([string])]
+    param()
+
+    if ($env:CONSOLE_APP_PATH -and -not [string]::IsNullOrEmpty($env:CONSOLE_APP_PATH)) {
+        return $env:CONSOLE_APP_PATH
+    }
+
+    return "./src/GenAIDBExplorer/GenAIDBExplorer.Console/bin/Debug/net10.0/GenAIDBExplorer.Console.exe"
+}
+
+Export-ModuleMember -Function Initialize-TestProject, Set-ProjectSettings, Invoke-ConsoleCommand, New-TestDataDictionary, Set-TestProjectConfiguration, Get-ParameterOrEnvironment, Initialize-TestEnvironment, Test-RequiredEnvironmentVariables, Initialize-TestWorkspace, Resolve-ConsoleAppPath

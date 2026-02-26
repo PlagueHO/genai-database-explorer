@@ -13,11 +13,16 @@
 
     # Functions to export from this module
     FunctionsToExport = @(
+        'Get-ParameterOrEnvironment',
+        'Initialize-TestEnvironment',
         'Initialize-TestProject',
-        'Set-ProjectSettings',
+        'Initialize-TestWorkspace',
         'Invoke-ConsoleCommand',
         'New-TestDataDictionary',
-        'Set-TestProjectConfiguration'
+        'Resolve-ConsoleAppPath',
+        'Set-ProjectSettings',
+        'Set-TestProjectConfiguration',
+        'Test-RequiredEnvironmentVariables'
     )
 
     # Cmdlets to export from this module
