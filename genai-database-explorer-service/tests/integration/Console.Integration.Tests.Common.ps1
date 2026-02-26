@@ -227,6 +227,112 @@ Describe 'GenAI Database Explorer Console Application - Common Tests' {
                     $result.ExitCode | Should -Be 0 -Because 'init-project should succeed for empty existing directory'
                 }
             }
+
+            Context 'When initializing a new project with database settings overrides' {
+                BeforeAll {
+                    $script:DbOverridePath = Join-Path -Path $script:BaseProjectPath -ChildPath 'db-override-test'
+                    $script:DbOverrideResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
+                        'init-project',
+                        '--project', $script:DbOverridePath,
+                        '--database-name', 'TestDatabase',
+                        '--database-connection-string', 'Server=testserver;Database=TestDB;Trusted_Connection=True;',
+                        '--database-schema', 'SalesLT'
+                    )
+                }
+
+                AfterAll {
+                    if (Test-Path -Path $script:DbOverridePath) {
+                        Remove-Item -Path $script:DbOverridePath -Recurse -Force
+                    }
+                }
+
+                It 'Should succeed and create project with overridden database settings' {
+                    $script:DbOverrideResult.ExitCode | Should -Be 0 -Because 'init-project with database overrides should succeed'
+
+                    $settingsPath = Join-Path -Path $script:DbOverridePath -ChildPath 'settings.json'
+                    Test-Path -Path $settingsPath | Should -BeTrue -Because 'settings.json should be created'
+
+                    $settings = Get-Content -Path $settingsPath -Raw | ConvertFrom-Json
+                    $settings.Database.Name | Should -Be 'TestDatabase' -Because 'Database name should be overridden'
+                    $settings.Database.ConnectionString | Should -Be 'Server=testserver;Database=TestDB;Trusted_Connection=True;' -Because 'Connection string should be overridden'
+                    $settings.Database.Schema | Should -Be 'SalesLT' -Because 'Schema should be overridden'
+                }
+            }
+
+            Context 'When initializing a new project with foundry settings overrides' {
+                BeforeAll {
+                    $script:FoundryOverridePath = Join-Path -Path $script:BaseProjectPath -ChildPath 'foundry-override-test'
+                    $script:FoundryOverrideResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
+                        'init-project',
+                        '--project', $script:FoundryOverridePath,
+                        '--foundry-endpoint', 'https://mytest.services.ai.azure.com/',
+                        '--foundry-chat-deployment', 'gpt-5-2-chat',
+                        '--foundry-embedding-deployment', 'text-embedding-3-large'
+                    )
+                }
+
+                AfterAll {
+                    if (Test-Path -Path $script:FoundryOverridePath) {
+                        Remove-Item -Path $script:FoundryOverridePath -Recurse -Force
+                    }
+                }
+
+                It 'Should succeed and create project with overridden foundry settings' {
+                    $script:FoundryOverrideResult.ExitCode | Should -Be 0 -Because 'init-project with foundry overrides should succeed'
+
+                    $settingsPath = Join-Path -Path $script:FoundryOverridePath -ChildPath 'settings.json'
+                    $settings = Get-Content -Path $settingsPath -Raw | ConvertFrom-Json
+                    $settings.FoundryModels.Default.Endpoint | Should -Be 'https://mytest.services.ai.azure.com/' -Because 'Foundry endpoint should be overridden'
+                    $settings.FoundryModels.ChatCompletion.DeploymentName | Should -Be 'gpt-5-2-chat' -Because 'Chat deployment should be overridden'
+                    $settings.FoundryModels.Embedding.DeploymentName | Should -Be 'text-embedding-3-large' -Because 'Embedding deployment should be overridden'
+                }
+            }
+
+            Context 'When initializing a new project with persistence strategy override' {
+                BeforeAll {
+                    $script:PersistenceOverridePath = Join-Path -Path $script:BaseProjectPath -ChildPath 'persistence-override-test'
+                    $script:PersistenceOverrideResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
+                        'init-project',
+                        '--project', $script:PersistenceOverridePath,
+                        '--persistence-strategy', 'AzureBlob'
+                    )
+                }
+
+                AfterAll {
+                    if (Test-Path -Path $script:PersistenceOverridePath) {
+                        Remove-Item -Path $script:PersistenceOverridePath -Recurse -Force
+                    }
+                }
+
+                It 'Should succeed and create project with overridden persistence strategy' {
+                    $script:PersistenceOverrideResult.ExitCode | Should -Be 0 -Because 'init-project with persistence strategy override should succeed'
+
+                    $settingsPath = Join-Path -Path $script:PersistenceOverridePath -ChildPath 'settings.json'
+                    $settings = Get-Content -Path $settingsPath -Raw | ConvertFrom-Json
+                    $settings.SemanticModel.PersistenceStrategy | Should -Be 'AzureBlob' -Because 'Persistence strategy should be overridden'
+                }
+            }
+
+            Context 'When initializing a new project with invalid settings overrides' {
+                BeforeAll {
+                    $script:InvalidOverridePath = Join-Path -Path $script:BaseProjectPath -ChildPath 'invalid-override-test'
+                    $script:InvalidOverrideResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
+                        'init-project',
+                        '--project', $script:InvalidOverridePath,
+                        '--persistence-strategy', 'InvalidStrategy'
+                    )
+                }
+
+                AfterAll {
+                    if (Test-Path -Path $script:InvalidOverridePath) {
+                        Remove-Item -Path $script:InvalidOverridePath -Recurse -Force
+                    }
+                }
+
+                It 'Should return non-zero exit code for invalid settings override' {
+                    $script:InvalidOverrideResult.ExitCode | Should -Not -Be 0 -Because 'init-project with invalid persistence strategy should fail'
+                }
+            }
         }
     }
 

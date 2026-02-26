@@ -9,24 +9,49 @@ Initializes a new GenAI Database Explorer project.
 ### Usage
 
 ```bash
-gaidbexp init-project --project <project path>
+gaidbexp init-project --project <project path> [options]
 ```
 
 ### Options
 
 - `--project`, `-p` (required): Specifies the path to the GenAI Database Explorer project directory.
+- `--database-name`: The display name of the database.
+- `--database-connection-string`: The SQL Server connection string for the database.
+- `--database-auth-type`: The database authentication type (`SqlAuthentication` or `EntraIdAuthentication`).
+- `--database-schema`: The database schema to extract. If omitted, all schemas will be extracted.
+- `--foundry-endpoint`: The Foundry Models endpoint URL (e.g., `https://your-resource.services.ai.azure.com/`).
+- `--foundry-auth-type`: The Foundry Models authentication type (`EntraIdAuthentication` or `ApiKey`).
+- `--foundry-api-key`: The Foundry Models API key (required when using `ApiKey` authentication).
+- `--foundry-chat-deployment`: The chat completion model deployment name.
+- `--foundry-embedding-deployment`: The embedding model deployment name.
+- `--persistence-strategy`: The semantic model persistence strategy (`LocalDisk`, `AzureBlob`, or `CosmosDB`).
+- `--vector-index-provider`: The vector index provider (`Auto`, `AzureAISearch`, `CosmosDB`, or `InMemory`).
+- `--vector-index-collection-name`: The vector index collection name.
 
 ### Description
 
 The `init-project` command initializes a new GenAI Database Explorer project at the specified path. If the directory does not exist, it will be created. If the directory exists and is not empty, the command will fail with an error. This ensures that the project directory is properly set up and ready for further development and usage.
 
-### Example
+Optional settings parameters allow you to pre-configure the project's `settings.json` during initialization, avoiding the need to manually edit the file afterward.
+
+### Examples
 
 ```bash
+# Initialize with defaults
 gaidbexp init-project --project /path/to/project
-```
 
-This example initializes a new GenAI Database Explorer project in the directory `/path/to/project`.
+# Initialize with database and foundry configuration
+gaidbexp init-project --project /path/to/project \
+  --database-name MyDatabase \
+  --database-connection-string "Server=myserver;Database=MyDB;Trusted_Connection=True;" \
+  --database-schema SalesLT \
+  --foundry-endpoint https://myresource.services.ai.azure.com/ \
+  --foundry-chat-deployment gpt-5-2-chat \
+  --foundry-embedding-deployment text-embedding-3-large
+
+# Initialize with a specific persistence strategy
+gaidbexp init-project --project /path/to/project --persistence-strategy AzureBlob
+```
 
 ---
 
