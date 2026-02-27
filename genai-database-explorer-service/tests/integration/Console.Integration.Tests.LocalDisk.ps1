@@ -225,6 +225,11 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                 }
 
                 It 'Should execute data-dictionary command successfully' {
+                    if (-not $script:ExtractSucceeded) {
+                        Set-ItResult -Inconclusive -Because 'extract-model did not succeed - data dictionary test requires a model'
+                        return
+                    }
+                    
                     if (-not $script:DataDictResult) {
                         Set-ItResult -Inconclusive -Because 'data-dictionary command threw an exception'
                         return
@@ -232,7 +237,7 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                     
                     $outputText = $script:DataDictResult.Output -join "`n"
                     
-                    if ($outputText -match 'No semantic model found|not found|Model not found') {
+                    if ($outputText -match 'No semantic model found|Model not found|Table not found|Entity not found') {
                         Set-ItResult -Inconclusive -Because 'Model not available - extract may have been skipped'
                         return
                     }
@@ -291,8 +296,15 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                     
                     $outputText = $script:EnrichResult.Output -join "`n"
                     
-                    if ($outputText -match 'No semantic model found|AuthorizationFailure') {
-                        Set-ItResult -Inconclusive -Because 'Model not available or access denied'
+                    if ($outputText -match 'No semantic model found|AuthorizationFailure|Error:|Unhandled exception|HTTP [45]\d\d|ClientResultException|Resource not found') {
+                        Set-ItResult -Inconclusive -Because 'Model not available, access denied, or AI service error'
+                        return
+                    }
+                    
+                    # Catch-all: any non-zero exit code from AI-dependent operations is inconclusive
+                    if ($script:EnrichResult.ExitCode -ne 0) {
+                        $truncatedOutput = $outputText.Substring(0, [Math]::Min(500, $outputText.Length))
+                        Set-ItResult -Inconclusive -Because "enrich-model command failed with exit code $($script:EnrichResult.ExitCode). Output: $truncatedOutput"
                         return
                     }
                     

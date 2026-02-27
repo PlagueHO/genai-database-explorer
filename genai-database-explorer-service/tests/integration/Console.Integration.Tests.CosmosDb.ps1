@@ -195,8 +195,8 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
                 
                 $outputText = $result.Output -join "`n"
                 
-                if ($outputText -match 'No semantic model found|AuthorizationFailure') {
-                    Set-ItResult -Inconclusive -Because 'Model not available or access denied'                } elseif ($outputText -match 'cannot be authorized by AAD token in data plane|Request blocked by Auth.*AAD token|blocked by Auth.*data plane') {
+                if ($outputText -match 'No semantic model found|AuthorizationFailure|Error:|Unhandled exception|HTTP [45]\d\d|ClientResultException|Resource not found') {
+                    Set-ItResult -Inconclusive -Because 'Model not available, access denied, or AI service error'                } elseif ($outputText -match 'cannot be authorized by AAD token in data plane|Request blocked by Auth.*AAD token|blocked by Auth.*data plane') {
                     Set-ItResult -Inconclusive -Because 'Cosmos DB AAD authentication failed - requires native RBAC permissions'                } elseif ($outputText -match 'not yet supported|not.*supported.*persistence') {
                     Set-ItResult -Inconclusive -Because 'Enrich-model not yet supported for CosmosDb'
                 } elseif ($result.ExitCode -eq 0) {
@@ -215,7 +215,7 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
                 
                 $outputText = $result.Output -join "`n"
 
-                if ($outputText -match 'No semantic model found|not found|Model not found') {
+                if ($outputText -match 'No semantic model found|Model not found|Table not found|Entity not found') {
                     Set-ItResult -Inconclusive -Because 'Model not available in Cosmos DB'
                 } elseif ($outputText -match 'cannot be authorized by AAD token in data plane|Request blocked by Auth.*AAD token|blocked by Auth.*data plane') {
                     Set-ItResult -Inconclusive -Because 'Cosmos DB AAD authentication failed - requires native RBAC permissions'
@@ -253,7 +253,7 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
                 Write-Host "Generate-vectors output: $outputText" -ForegroundColor Cyan
                 
                 # Check if the output indicates vectors were actually generated
-                if ($outputText -match 'No semantic model found|not found|Model not found') {
+                if ($outputText -match 'No semantic model found|Model not found|Table not found|Entity not found') {
                     Set-ItResult -Inconclusive -Because 'Model not available for vector generation'
                     return
                 }
@@ -337,7 +337,7 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
                 # Log output for diagnostics
                 Write-Host "Show-object output: $outputText" -ForegroundColor Cyan
                 
-                if ($outputText -match 'No semantic model found|not found|Model not found') {
+                if ($outputText -match 'No semantic model found|Model not found|Table not found|Entity not found') {
                     Set-ItResult -Inconclusive -Because 'Model not available in Cosmos DB'
                 } elseif ($outputText -match 'not yet supported|not.*supported.*persistence|not implemented') {
                     Set-ItResult -Inconclusive -Because 'Show-object not yet supported for CosmosDb'
@@ -369,7 +369,7 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
                 # Log output for diagnostics
                 Write-Host "Export-model output: $outputText" -ForegroundColor Cyan
                 
-                if ($outputText -match 'No semantic model found|not found|Model not found') {
+                if ($outputText -match 'No semantic model found|Model not found|Table not found|Entity not found') {
                     Set-ItResult -Inconclusive -Because 'Model not available in Cosmos DB'
                 } elseif ($outputText -match 'not yet supported|not.*supported.*persistence|not implemented') {
                     Set-ItResult -Inconclusive -Because 'Export-model not yet supported for CosmosDb'

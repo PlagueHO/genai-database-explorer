@@ -60,7 +60,15 @@ public sealed class GenerateVectorsCommandHandler(
                 objectType: "table",
                 schemaName: pr.GetValue(schemaOption),
                 objectName: pr.GetValue(nameOption));
-            await handler.HandleAsync(opt);
+            try
+            {
+                await handler.HandleAsync(opt);
+            }
+            catch (Exception ex)
+            {
+                System.Console.Error.WriteLine($"Error: {ex.Message}");
+                Environment.Exit(1);
+            }
         });
         cmd.Subcommands.Add(table);
 
@@ -81,7 +89,15 @@ public sealed class GenerateVectorsCommandHandler(
                 objectType: "view",
                 schemaName: pr.GetValue(schemaOption),
                 objectName: pr.GetValue(nameOption));
-            await handler.HandleAsync(opt);
+            try
+            {
+                await handler.HandleAsync(opt);
+            }
+            catch (Exception ex)
+            {
+                System.Console.Error.WriteLine($"Error: {ex.Message}");
+                Environment.Exit(1);
+            }
         });
         cmd.Subcommands.Add(view);
 
@@ -102,7 +118,15 @@ public sealed class GenerateVectorsCommandHandler(
                 objectType: "storedprocedure",
                 schemaName: pr.GetValue(schemaOption),
                 objectName: pr.GetValue(nameOption));
-            await handler.HandleAsync(opt);
+            try
+            {
+                await handler.HandleAsync(opt);
+            }
+            catch (Exception ex)
+            {
+                System.Console.Error.WriteLine($"Error: {ex.Message}");
+                Environment.Exit(1);
+            }
         });
         cmd.Subcommands.Add(sp);
 
@@ -116,7 +140,15 @@ public sealed class GenerateVectorsCommandHandler(
                 pr.GetValue(skipTablesOption),
                 pr.GetValue(skipViewsOption),
                 pr.GetValue(skipStoredProceduresOption));
-            await handler.HandleAsync(opt);
+            try
+            {
+                await handler.HandleAsync(opt);
+            }
+            catch (Exception ex)
+            {
+                System.Console.Error.WriteLine($"Error: {ex.Message}");
+                Environment.Exit(1);
+            }
         });
 
         return cmd;

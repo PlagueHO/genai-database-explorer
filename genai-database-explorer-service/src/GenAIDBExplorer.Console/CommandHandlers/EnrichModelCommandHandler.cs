@@ -109,7 +109,15 @@ public class EnrichModelCommandHandler(
                 objectName: name,
                 show: show
             );
-            await handler.HandleAsync(options);
+            try
+            {
+                await handler.HandleAsync(options);
+            }
+            catch (Exception ex)
+            {
+                System.Console.Error.WriteLine($"Error: {ex.Message}");
+                Environment.Exit(1);
+            }
         });
 
         var viewCommand = new Command("view", "Enrich a specific view.");
@@ -136,7 +144,15 @@ public class EnrichModelCommandHandler(
                 objectName: name,
                 show: show
             );
-            await handler.HandleAsync(options);
+            try
+            {
+                await handler.HandleAsync(options);
+            }
+            catch (Exception ex)
+            {
+                System.Console.Error.WriteLine($"Error: {ex.Message}");
+                Environment.Exit(1);
+            }
         });
 
         var storedProcedureCommand = new Command("storedprocedure", "Enrich a specific stored procedure.");
@@ -163,7 +179,15 @@ public class EnrichModelCommandHandler(
                 objectName: name,
                 show: show
             );
-            await handler.HandleAsync(options);
+            try
+            {
+                await handler.HandleAsync(options);
+            }
+            catch (Exception ex)
+            {
+                System.Console.Error.WriteLine($"Error: {ex.Message}");
+                Environment.Exit(1);
+            }
         });
 
         // Add subcommands to the 'enrich-model' command
@@ -181,7 +205,15 @@ public class EnrichModelCommandHandler(
 
             var handler = host.Services.GetRequiredService<EnrichModelCommandHandler>();
             var options = new EnrichModelCommandHandlerOptions(projectPath, skipTables, skipViews, skipStoredProcedures);
-            await handler.HandleAsync(options);
+            try
+            {
+                await handler.HandleAsync(options);
+            }
+            catch (Exception ex)
+            {
+                System.Console.Error.WriteLine($"Error: {ex.Message}");
+                Environment.Exit(1);
+            }
         });
 
         return enrichModelCommand;

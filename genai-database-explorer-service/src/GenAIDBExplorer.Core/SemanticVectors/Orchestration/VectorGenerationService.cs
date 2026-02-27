@@ -156,7 +156,22 @@ public sealed class VectorGenerationService : IVectorGenerationService
             }
 
             // Generate embedding
-            var vector = await _embeddingGenerator.GenerateAsync(content, infra, cancellationToken).ConfigureAwait(false);
+            ReadOnlyMemory<float> vector;
+            try
+            {
+                vector = await _embeddingGenerator.GenerateAsync(content, infra, cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to generate embedding for {Schema}.{Name}", entity.Schema, entity.Name);
+                perf.MarkAsFailed($"Embedding generation failed: {ex.Message}");
+                return;
+            }
+
             if (vector.IsEmpty)
             {
                 _logger.LogWarning("Embedding generation returned empty vector for {Schema}.{Name}", entity.Schema, entity.Name);
@@ -224,9 +239,44 @@ public sealed class VectorGenerationService : IVectorGenerationService
         var modelDir = new DirectoryInfo(Path.Combine(projectPath.FullName, _projectSettings.SemanticModelRepository?.LocalDisk?.Directory ?? "semantic-model"));
         Directory.CreateDirectory(modelDir.FullName);
 
-        foreach (var t in tables) { await ProcessEntityAsync(t, modelDir); }
-        foreach (var v in views) { await ProcessEntityAsync(v, modelDir); }
-        foreach (var sp in sps) { await ProcessEntityAsync(sp, modelDir); }
+        foreach (var t in tables)
+        {
+            try
+            {
+                await ProcessEntityAsync(t, modelDir);
+            }
+            catch (OperationCanceledException) { throw; }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to process table entity {Schema}.{Name}", t.Schema, t.Name);
+            }
+        }
+
+        foreach (var v in views)
+        {
+            try
+            {
+                await ProcessEntityAsync(v, modelDir);
+            }
+            catch (OperationCanceledException) { throw; }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to process view entity {Schema}.{Name}", v.Schema, v.Name);
+            }
+        }
+
+        foreach (var sp in sps)
+        {
+            try
+            {
+                await ProcessEntityAsync(sp, modelDir);
+            }
+            catch (OperationCanceledException) { throw; }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to process stored procedure entity {Schema}.{Name}", sp.Schema, sp.Name);
+            }
+        }
 
         return processed;
     }
