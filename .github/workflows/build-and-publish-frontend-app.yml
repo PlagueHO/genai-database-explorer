@@ -59,7 +59,7 @@ jobs:
 
       - name: Upload Test Results
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: frontend-vitest-test-results
           path: genai-database-explorer-frontend/test-results/**/*.xml
@@ -67,7 +67,7 @@ jobs:
 
       - name: Upload Coverage Report (HTML)
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: frontend-coverage-report-html
           path: genai-database-explorer-frontend/coverage/
@@ -75,14 +75,14 @@ jobs:
 
       - name: Upload Code Coverage (Cobertura)
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: frontend-code-coverage-cobertura
           path: genai-database-explorer-frontend/coverage/coverage-final.json
           retention-days: 7
 
       - name: Upload Build Artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: genai-database-explorer-frontend
           path: genai-database-explorer-frontend/dist
