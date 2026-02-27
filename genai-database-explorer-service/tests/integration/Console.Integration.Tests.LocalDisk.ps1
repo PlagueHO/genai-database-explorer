@@ -69,8 +69,8 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                 ProjectPath = $script:DbProjectPath
                 ConnectionString = $script:TestEnv.SQL_CONNECTION_STRING
                 DatabaseSchema = $script:TestEnv.DATABASE_SCHEMA
-                AzureOpenAIEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
-                AzureOpenAIApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
+                FoundryModelsEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
+                FoundryModelsApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
                 PersistenceStrategy = 'LocalDisk'
                 NoAzureMode = $script:NoAzureMode
             }
@@ -256,8 +256,8 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                 ProjectPath = $script:AiProjectPath
                 ConnectionString = $script:TestEnv.SQL_CONNECTION_STRING
                 DatabaseSchema = $script:TestEnv.DATABASE_SCHEMA
-                AzureOpenAIEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
-                AzureOpenAIApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
+                FoundryModelsEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
+                FoundryModelsApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
                 PersistenceStrategy = 'LocalDisk'
                 NoAzureMode = $script:NoAzureMode
             }
@@ -400,8 +400,8 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                 ProjectPath = $script:DisplayProjectPath
                 ConnectionString = $script:TestEnv.SQL_CONNECTION_STRING
                 DatabaseSchema = $script:TestEnv.DATABASE_SCHEMA
-                AzureOpenAIEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
-                AzureOpenAIApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
+                FoundryModelsEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
+                FoundryModelsApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
                 PersistenceStrategy = 'LocalDisk'
                 NoAzureMode = $script:NoAzureMode
             }

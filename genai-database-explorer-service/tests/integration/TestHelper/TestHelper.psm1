@@ -199,8 +199,8 @@ function New-TestDataDictionary {
         A hashtable containing database configuration including connectionString,
         schema, and other database-related settings.
 
-    .PARAMETER OpenAIService
-        A hashtable containing OpenAI service configuration including authentication
+    .PARAMETER FoundryModels
+        A hashtable containing Foundry Models configuration including authentication
         and model deployment settings.
 
     .PARAMETER SemanticModelRepository
@@ -212,9 +212,9 @@ function New-TestDataDictionary {
 
     .EXAMPLE
         $dbConfig = @{ connectionString = "Server=.;Database=Test"; schema = "dbo" }
-        $aiConfig = @{ authType = "Key"; apiKey = "test-key" }
+        $foundryConfig = @{ Default = @{ Endpoint = "https://test.services.ai.azure.com/"; AuthenticationType = "ApiKey"; ApiKey = "test-key" } }
         $repoConfig = @{ provider = "LocalDisk" }
-        Set-ProjectSettings -ProjectPath "C:\temp\project" -Database $dbConfig -OpenAIService $aiConfig -SemanticModelRepository $repoConfig
+        Set-ProjectSettings -ProjectPath "C:\temp\project" -Database $dbConfig -FoundryModels $foundryConfig -SemanticModelRepository $repoConfig
 
     .NOTES
         This function creates a complete settings.json file with all required sections
@@ -233,7 +233,7 @@ function Set-ProjectSettings {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNull()]
-        [hashtable]$OpenAIService,
+        [hashtable]$FoundryModels,
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNull()]
@@ -259,7 +259,7 @@ function Set-ProjectSettings {
             MaxDegreeOfParallelism = 1
         }
         SemanticModelRepository = $SemanticModelRepository
-        OpenAIService           = $OpenAIService
+        FoundryModels           = $FoundryModels
         VectorIndex            = @{
             Provider = 'Auto'
             CollectionName = 'genaide-entities'
@@ -289,20 +289,20 @@ function Set-ProjectSettings {
     .PARAMETER ConnectionString
         The database connection string for connecting to the test database.
 
-    .PARAMETER AzureOpenAIEndpoint
-        The Azure OpenAI service endpoint URL.
+    .PARAMETER FoundryModelsEndpoint
+        The Foundry Models endpoint URL (e.g., https://<resource>.services.ai.azure.com/).
 
-    .PARAMETER AzureOpenAIApiKey
-        The API key for authenticating with Azure OpenAI service.
+    .PARAMETER FoundryModelsApiKey
+        The API key for authenticating with Foundry Models service.
 
     .PARAMETER NoAzureMode
         Switch to enable no-azure mode, which uses mock/local configurations instead of Azure services.
 
-    .PARAMETER ChatCompletionDeploymentId
-        The deployment ID for the chat completion model (default: 'gpt-5-2-chat').
+    .PARAMETER ChatCompletionDeploymentName
+        The deployment name for the chat completion model (default: 'gpt-5-2-chat').
 
-    .PARAMETER EmbeddingDeploymentId
-        The deployment ID for the text embedding model (default: 'text-embedding-ada-002').
+    .PARAMETER EmbeddingDeploymentName
+        The deployment name for the text embedding model (default: 'text-embedding-3-large').
     .PARAMETER PersistenceStrategy
         The persistence strategy for semantic model storage. Valid values: 'LocalDisk', 'AzureBlob', 'CosmosDb'.
 
@@ -334,7 +334,7 @@ function Set-ProjectSettings {
         This function does not return output but creates a settings.json file in the project directory.
 
     .EXAMPLE
-        Set-TestProjectConfiguration -ProjectPath "C:\temp\project" -ConnectionString "Server=.;Database=Test" -AzureOpenAIEndpoint "https://test.openai.azure.com" -AzureOpenAIApiKey "test-key"
+        Set-TestProjectConfiguration -ProjectPath "C:\temp\project" -ConnectionString "Server=.;Database=Test" -FoundryModelsEndpoint "https://test.services.ai.azure.com/" -FoundryModelsApiKey "test-key"
 
     .EXAMPLE
         Set-TestProjectConfiguration -ProjectPath "C:\temp\project" -ConnectionString "Server=.;Database=Test" -NoAzureMode -PersistenceStrategy "LocalDisk"
@@ -357,19 +357,19 @@ function Set-TestProjectConfiguration {
         [string]$DatabaseSchema = 'SalesLT',
 
         [Parameter()]
-        [string]$AzureOpenAIEndpoint,
+        [string]$FoundryModelsEndpoint,
 
         [Parameter()]
-        [string]$AzureOpenAIApiKey,
+        [string]$FoundryModelsApiKey,
 
         [Parameter()]
         [bool]$NoAzureMode = $false,
 
         [Parameter()]
-        [string]$ChatCompletionDeploymentId = 'gpt-5-2-chat',
+        [string]$ChatCompletionDeploymentName = 'gpt-5-2-chat',
 
         [Parameter()]
-        [string]$EmbeddingDeploymentId = 'text-embedding-ada-002',
+        [string]$EmbeddingDeploymentName = 'text-embedding-3-large',
 
         [Parameter()]
         [ValidateSet('LocalDisk', 'AzureBlob', 'CosmosDb')]
@@ -412,21 +412,18 @@ function Set-TestProjectConfiguration {
         $dbConfig.Schema = $DatabaseSchema
     }
 
-    # Build OpenAI service configuration
-    $openAIConfig = @{
+    # Build Foundry Models configuration
+    $foundryModelsConfig = @{
         Default = @{
-            ServiceType = ($NoAzureMode) ? 'OpenAI' : 'AzureOpenAI'
-            AzureOpenAIEndpoint = ($NoAzureMode) ? $null : $AzureOpenAIEndpoint
-            AzureOpenAIKey = ($NoAzureMode) ? $null : $AzureOpenAIApiKey
-            OpenAIKey = ($NoAzureMode) ? 'dummy-openai-key' : $null
+            AuthenticationType = ($NoAzureMode) ? 'ApiKey' : 'ApiKey'
+            Endpoint = ($NoAzureMode) ? 'https://dummy.services.ai.azure.com/' : $FoundryModelsEndpoint
+            ApiKey = ($NoAzureMode) ? 'dummy-api-key' : $FoundryModelsApiKey
         }
         ChatCompletion = @{
-            AzureOpenAIDeploymentId = ($NoAzureMode) ? $null : $ChatCompletionDeploymentId
-            ModelId = ($NoAzureMode) ? 'gpt-4o-mini' : $null
+            DeploymentName = ($NoAzureMode) ? 'gpt-4o-mini' : $ChatCompletionDeploymentName
         }
         Embedding = @{
-            AzureOpenAIDeploymentId = ($NoAzureMode) ? $null : $EmbeddingDeploymentId
-            ModelId = ($NoAzureMode) ? 'text-embedding-3-small' : $null
+            DeploymentName = ($NoAzureMode) ? 'text-embedding-3-small' : $EmbeddingDeploymentName
         }
     }
 
@@ -456,7 +453,7 @@ function Set-TestProjectConfiguration {
     }
 
     # Call the core settings function with properly structured configurations
-    Set-ProjectSettings -ProjectPath $ProjectPath -Database $dbConfig -OpenAIService $openAIConfig -SemanticModelRepository $repoConfig -PersistenceStrategy $PersistenceStrategy
+    Set-ProjectSettings -ProjectPath $ProjectPath -Database $dbConfig -FoundryModels $foundryModelsConfig -SemanticModelRepository $repoConfig -PersistenceStrategy $PersistenceStrategy
 }
 
 <#

@@ -74,8 +74,8 @@ Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
                 ProjectPath = $script:DbProjectPath
                 ConnectionString = $script:TestEnv.SQL_CONNECTION_STRING
                 DatabaseSchema = $script:TestEnv.DATABASE_SCHEMA
-                AzureOpenAIEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
-                AzureOpenAIApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
+                FoundryModelsEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
+                FoundryModelsApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
                 PersistenceStrategy = 'AzureBlob'
                 AzureStorageAccountEndpoint = $script:TestEnv.AZURE_STORAGE_ACCOUNT_ENDPOINT
                 AzureStorageContainer = $script:TestEnv.AZURE_STORAGE_CONTAINER
@@ -90,6 +90,14 @@ Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
             BeforeAll {
                 $script:ExtractSucceeded = $false
                 $script:ExtractCommandResult = $null
+
+                # Diagnostic: dump settings.json content for CI debugging
+                $settingsFile = Join-Path -Path $script:DbProjectPath -ChildPath 'settings.json'
+                if (Test-Path -Path $settingsFile) {
+                    $settingsContent = Get-Content -Path $settingsFile -Raw
+                    Write-Host "settings.json content ($settingsFile):" -ForegroundColor Cyan
+                    Write-Host $settingsContent -ForegroundColor Gray
+                }
                 
                 # Execute extract-model command once for all tests in this context
                 try {
@@ -104,10 +112,14 @@ Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
                     if ($script:ExtractCommandResult.ExitCode -eq 0) {
                         $script:ExtractSucceeded = $true
                         Write-Host "Extract-model command succeeded with Azure Blob Storage" -ForegroundColor Green
-                    } elseif ($outputText -match 'ContainerNotFound|The specified container does not exist|404.*container') {
-                        Write-Host "Azure Blob container not found - infrastructure may not be fully provisioned" -ForegroundColor Yellow
-                    } elseif ($outputText -match 'BlobServiceClient initialization|Failed to initialize Azure Blob Storage') {
-                        Write-Host "Azure Blob Storage initialization failed: $outputText" -ForegroundColor Yellow
+                    } else {
+                        Write-Host "Extract-model command failed with exit code $($script:ExtractCommandResult.ExitCode)" -ForegroundColor Yellow
+                        Write-Host "Command output: $outputText" -ForegroundColor Yellow
+                        if ($outputText -match 'ContainerNotFound|The specified container does not exist|404.*container') {
+                            Write-Host "Azure Blob container not found - infrastructure may not be fully provisioned" -ForegroundColor Yellow
+                        } elseif ($outputText -match 'BlobServiceClient initialization|Failed to initialize Azure Blob Storage') {
+                            Write-Host "Azure Blob Storage initialization failed" -ForegroundColor Yellow
+                        }
                     }
                 } catch {
                     Write-Host "Extract-model command failed: $_" -ForegroundColor Yellow
@@ -375,8 +387,8 @@ Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
                 ProjectPath = $script:AiProjectPath
                 ConnectionString = $script:TestEnv.SQL_CONNECTION_STRING
                 DatabaseSchema = $script:TestEnv.DATABASE_SCHEMA
-                AzureOpenAIEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
-                AzureOpenAIApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
+                FoundryModelsEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
+                FoundryModelsApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
                 PersistenceStrategy = 'AzureBlob'
                 AzureStorageAccountEndpoint = $script:TestEnv.AZURE_STORAGE_ACCOUNT_ENDPOINT
                 AzureStorageContainer = $script:TestEnv.AZURE_STORAGE_CONTAINER
@@ -386,7 +398,11 @@ Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
 
             Set-TestProjectConfiguration @aiConfig
 
-            Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $script:AiProjectPath) | Out-Null
+            $aiExtractResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $script:AiProjectPath)
+            if ($aiExtractResult.ExitCode -ne 0) {
+                $aiOutputText = if ($aiExtractResult.Output -is [array]) { $aiExtractResult.Output -join "`n" } else { $aiExtractResult.Output }
+                Write-Host "AI test extract-model failed with exit code $($aiExtractResult.ExitCode): $aiOutputText" -ForegroundColor Yellow
+            }
         }
 
         Context 'enrich-model command' {
@@ -643,8 +659,8 @@ Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
                 ProjectPath = $script:DisplayProjectPath
                 ConnectionString = $script:TestEnv.SQL_CONNECTION_STRING
                 DatabaseSchema = $script:TestEnv.DATABASE_SCHEMA
-                AzureOpenAIEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
-                AzureOpenAIApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
+                FoundryModelsEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
+                FoundryModelsApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
                 PersistenceStrategy = 'AzureBlob'
                 AzureStorageAccountEndpoint = $script:TestEnv.AZURE_STORAGE_ACCOUNT_ENDPOINT
                 AzureStorageContainer = $script:TestEnv.AZURE_STORAGE_CONTAINER
@@ -654,7 +670,11 @@ Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
 
             Set-TestProjectConfiguration @displayConfig
 
-            Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $script:DisplayProjectPath) | Out-Null
+            $displayExtractResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @('extract-model', '--project', $script:DisplayProjectPath)
+            if ($displayExtractResult.ExitCode -ne 0) {
+                $displayOutputText = if ($displayExtractResult.Output -is [array]) { $displayExtractResult.Output -join "`n" } else { $displayExtractResult.Output }
+                Write-Host "Display test extract-model failed with exit code $($displayExtractResult.ExitCode): $displayOutputText" -ForegroundColor Yellow
+            }
         }
 
         Context 'show-object command' {
@@ -881,8 +901,8 @@ Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
             $config = @{
                 ProjectPath = $script:PrefixProjectPath
                 ConnectionString = $script:TestEnv.SQL_CONNECTION_STRING
-                AzureOpenAIEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
-                AzureOpenAIApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
+                FoundryModelsEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
+                FoundryModelsApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
                 PersistenceStrategy = 'AzureBlob'
                 AzureStorageAccountEndpoint = $script:TestEnv.AZURE_STORAGE_ACCOUNT_ENDPOINT
                 AzureStorageContainer = $script:TestEnv.AZURE_STORAGE_CONTAINER

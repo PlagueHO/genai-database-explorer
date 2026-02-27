@@ -217,12 +217,27 @@ public class Project(
     /// </summary>
     private void ValidateFoundryModelsConfiguration()
     {
-        // Detect old OpenAIService section and provide migration guidance
-        if (_configuration?.GetSection("OpenAIService").Exists() == true)
+        // Detect old OpenAIService section and provide migration guidance.
+        // Use GetChildren().Any() to check for actual child configuration keys,
+        // avoiding false positives from IConfigurationSection.Exists() when the section
+        // has no real content.
+        var openAiSection = _configuration?.GetSection("OpenAIService");
+        if (openAiSection?.GetChildren()?.Any() == true)
         {
-            throw new ValidationException(
-                "The 'OpenAIService' configuration section has been replaced by 'FoundryModels'. " +
-                "Please update your settings.json file. See documentation for the new configuration format.");
+            // If FoundryModels is already properly configured, log a warning instead of throwing.
+            // This allows partial migration scenarios where both sections exist.
+            if (Settings.FoundryModels?.Default?.Endpoint is not null)
+            {
+                logger.LogWarning(
+                    "Found legacy 'OpenAIService' configuration section alongside 'FoundryModels'. " +
+                    "Using 'FoundryModels' configuration. Please remove the 'OpenAIService' section from your settings.json.");
+            }
+            else
+            {
+                throw new ValidationException(
+                    "The 'OpenAIService' configuration section has been replaced by 'FoundryModels'. " +
+                    "Please update your settings.json file. See documentation for the new configuration format.");
+            }
         }
 
         var foundrySettings = Settings.FoundryModels?.Default;

@@ -235,9 +235,9 @@ public class ProjectSettingsIntegrationTests
     }
 
     [TestMethod]
-    public void LoadProjectConfiguration_OldOpenAIServiceSection_ShouldThrowValidationExceptionWithMigrationMessage()
+    public void LoadProjectConfiguration_OldOpenAIServiceWithValidFoundryModels_ShouldWarnNotThrow()
     {
-        // Arrange
+        // Arrange - both FoundryModels (valid) and OpenAIService exist
         var settingsJson = """
             {
                 "SettingsVersion": "1.0.0",
@@ -282,7 +282,52 @@ public class ProjectSettingsIntegrationTests
         var settingsPath = Path.Combine(_testDirectory.FullName, "settings.json");
         File.WriteAllText(settingsPath, settingsJson);
 
-        // Act & Assert
+        // Act & Assert - should NOT throw when FoundryModels is properly configured
+        FluentActions.Invoking(() => _project.LoadProjectConfiguration(_testDirectory))
+            .Should().NotThrow("FoundryModels is properly configured, so legacy OpenAIService section should only produce a warning");
+    }
+
+    [TestMethod]
+    public void LoadProjectConfiguration_OldOpenAIServiceWithoutValidFoundryModels_ShouldThrowValidationException()
+    {
+        // Arrange - OpenAIService exists but FoundryModels.Default.Endpoint is not set
+        var settingsJson = """
+            {
+                "SettingsVersion": "1.0.0",
+                "Database": {
+                    "Name": "TestDB",
+                    "ConnectionString": "Server=.;Database=Test;Integrated Security=true;",
+                    "Description": "Test database"
+                },
+                "DataDictionary": {
+                    "ColumnTypeMapping": []
+                },
+                "SemanticModel": {
+                    "PersistenceStrategy": "LocalDisk",
+                    "MaxDegreeOfParallelism": 4
+                },
+                "SemanticModelRepository": {
+                    "LocalDisk": {
+                        "Directory": "TestSemanticModel"
+                    }
+                },
+                "FoundryModels": {
+                    "Default": {
+                        "AuthenticationType": "ApiKey"
+                    }
+                },
+                "OpenAIService": {
+                    "Default": {
+                        "ServiceType": "AzureOpenAI"
+                    }
+                }
+            }
+            """;
+
+        var settingsPath = Path.Combine(_testDirectory.FullName, "settings.json");
+        File.WriteAllText(settingsPath, settingsJson);
+
+        // Act & Assert - should throw because FoundryModels.Default.Endpoint is not configured
         FluentActions.Invoking(() => _project.LoadProjectConfiguration(_testDirectory))
             .Should().Throw<ValidationException>()
             .WithMessage("*'OpenAIService'*has been replaced by 'FoundryModels'*");
