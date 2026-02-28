@@ -68,16 +68,36 @@ public class ExtractModelCommandHandler : CommandHandler<ExtractModelCommandHand
 # VS Code tasks (preferred)
 Ctrl+Shift+P → "Tasks: Run Task" → build/watch/test/publish
 
-# Direct commands
-dotnet build genai-database-explorer-service/src/GenAIDBExplorer.Console/
+# Build (always target the solution file)
+dotnet build genai-database-explorer-service/GenAIDBExplorer.slnx
+
+# Watch mode
 dotnet watch run --project genai-database-explorer-service/src/GenAIDBExplorer.Console/
-dotnet test  # From solution root
+
+# Format
+dotnet format genai-database-explorer-service/GenAIDBExplorer.slnx
 
 # CLI operations (require project folder)
-dotnet run --project src/GenAIDBExplorer.Console/ -- init-project -p d:/temp
-dotnet run --project src/GenAIDBExplorer.Console/ -- extract-model -p d:/temp
-dotnet run --project src/GenAIDBExplorer.Console/ -- enrich-model -p d:/temp
+dotnet run --project genai-database-explorer-service/src/GenAIDBExplorer.Console/ -- init-project -p d:/temp
+dotnet run --project genai-database-explorer-service/src/GenAIDBExplorer.Console/ -- extract-model -p d:/temp
+dotnet run --project genai-database-explorer-service/src/GenAIDBExplorer.Console/ -- enrich-model -p d:/temp
 ```
+
+### Running Tests (.NET 10 SDK)
+
+**IMPORTANT**: `dotnet test` does NOT work with .NET 10 SDK due to VSTest deprecation. Use `dotnet exec` on the compiled test DLLs:
+
+```bash
+# Run all tests for a project
+dotnet exec genai-database-explorer-service/tests/unit/GenAIDBExplorer.Core.Test/bin/Debug/net10.0/GenAIDBExplorer.Core.Test.dll
+dotnet exec genai-database-explorer-service/tests/unit/GenAIDBExplorer.Console.Test/bin/Debug/net10.0/GenAIDBExplorer.Console.Test.dll
+dotnet exec genai-database-explorer-service/tests/unit/GenAIDBExplorer.Api.Test/bin/Debug/net10.0/GenAIDBExplorer.Api.Test.dll
+
+# Run filtered tests
+dotnet exec <test-dll-path> --filter "FullyQualifiedName~MyTestClass"
+```
+
+Build the solution first (`dotnet build`) before running tests via `dotnet exec`.
 
 ## Project Structure Conventions
 
@@ -125,7 +145,7 @@ samples/AdventureWorksLT/
 
 ## Test
 
-- Use `dotnet test` to run all tests
+- **`dotnet test` does NOT work** on .NET 10 SDK — use `dotnet exec <test-dll>` instead (see Development Commands above)
 - Test files should be named `*Tests.cs` and located in `genai-database-explorer-service/tests/unit/GenAIDBExplorer.*.Test/`
 - Use MSTest, FluentAssertions, and Moq for unit tests
 - Use AAA pattern for test structure: Arrange, Act, Assert
@@ -151,6 +171,16 @@ Key pattern: `IProject.Settings` provides strongly-typed access to all configura
 - Use `ChatResponseFormat.ForJsonSchema<T>()` for structured output
 - Use structured logging with scopes for AI operations
 - Follow SemanticDescriptionProvider pattern for prompt execution
+
+### Agent Framework (Microsoft.Agents.AI.OpenAI)
+
+For agent-based features using the Microsoft Agent Framework:
+
+- **`AsAIAgent` requires `OpenAI.Chat.ChatClient`**, not `IChatClient`. Get it via: `chatClient.GetService<OpenAI.Chat.ChatClient>()`
+- **Function tools**: Use `AIFunctionFactory.Create((string query, int topK = 5) => ..., "toolName", "description")` — attribute decorations on lambda params don't work in C# 14
+- **Streaming**: `agent.RunStreamingAsync()` returns `IAsyncEnumerable<AgentResponseUpdate>`. C# does NOT allow `yield return` inside try-catch (CS1626) — use `System.Threading.Channels.Channel<T>` as a workaround
+- **Token tracking**: Check `update.Contents` for `UsageContent` items with `.Details.InputTokenCount` / `.OutputTokenCount`
+- **Round counting**: Count `FunctionCallContent` items in `update.Contents` to track agent reasoning rounds
 
 ## Infrastructure & Deployment
 
