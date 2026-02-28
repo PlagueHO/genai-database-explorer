@@ -36,7 +36,16 @@ public sealed class SemanticModelQueryService(
 
     private AIAgent? _agent;
     private readonly SemaphoreSlim _initLock = new(1, 1);
-    private volatile List<SemanticModelSearchResult>? _currentQueryEntities;
+    private static readonly AsyncLocal<QueryContext?> _queryContext = new();
+
+    /// <summary>
+    /// Per-query state flowed via AsyncLocal so concurrent queries don't interfere.
+    /// </summary>
+    private sealed class QueryContext
+    {
+        public List<SemanticModelSearchResult> ReferencedEntities { get; } = [];
+        public int DefaultTopK { get; init; }
+    }
 
     /// <inheritdoc />
     public async Task<SemanticModelQueryResult> QueryAsync(
@@ -88,8 +97,11 @@ public sealed class SemanticModelQueryService(
     {
         var stopwatch = Stopwatch.StartNew();
         var answerBuilder = new StringBuilder();
-        var referencedEntities = new List<SemanticModelSearchResult>();
-        _currentQueryEntities = referencedEntities;
+        var context = new QueryContext
+        {
+            DefaultTopK = request.TopK ?? settings.DefaultTopK
+        };
+        _queryContext.Value = context;
         var responseRounds = 0;
         long inputTokens = 0;
         long outputTokens = 0;
@@ -162,7 +174,7 @@ public sealed class SemanticModelQueryService(
         }
         finally
         {
-            _currentQueryEntities = null;
+            _queryContext.Value = null;
             writer.Complete();
         }
 
@@ -170,7 +182,7 @@ public sealed class SemanticModelQueryService(
         var totalTokensFinal = inputTokens + outputTokens;
 
         // Deduplicate referenced entities by schema + name + entity type
-        var distinctEntities = referencedEntities
+        var distinctEntities = context.ReferencedEntities
             .GroupBy(e => $"{e.EntityType}|{e.SchemaName}|{e.EntityName}".ToUpperInvariant())
             .Select(g => g.OrderByDescending(e => e.Score).First())
             .ToList()
@@ -227,23 +239,22 @@ public sealed class SemanticModelQueryService(
     private AIAgent CreateAgent()
     {
         var settings = _project.Settings.QueryModel;
-        var defaultTopK = settings.DefaultTopK;
 
         // Create function tools that capture the search service
         var tools = new List<AITool>
         {
             AIFunctionFactory.Create(
-                (string query, int topK = 5) => SearchAndTrackAsync("Table", query, topK > 0 ? topK : defaultTopK),
+                (string query, int topK = 0) => SearchAndTrackAsync("Table", query, topK),
                 "searchTables",
                 "Search for database tables matching the query using vector similarity. Returns JSON array of matching tables with schema, name, content, and similarity score."),
 
             AIFunctionFactory.Create(
-                (string query, int topK = 5) => SearchAndTrackAsync("View", query, topK > 0 ? topK : defaultTopK),
+                (string query, int topK = 0) => SearchAndTrackAsync("View", query, topK),
                 "searchViews",
                 "Search for database views matching the query using vector similarity. Returns JSON array of matching views with schema, name, content, and similarity score."),
 
             AIFunctionFactory.Create(
-                (string query, int topK = 5) => SearchAndTrackAsync("StoredProcedure", query, topK > 0 ? topK : defaultTopK),
+                (string query, int topK = 0) => SearchAndTrackAsync("StoredProcedure", query, topK),
                 "searchStoredProcedures",
                 "Search for stored procedures matching the query using vector similarity. Returns JSON array of matching stored procedures with schema, name, content, and similarity score."),
         };
@@ -302,19 +313,22 @@ public sealed class SemanticModelQueryService(
 
     private async Task<string> SearchAndTrackAsync(string entityType, string query, int topK)
     {
+        var context = _queryContext.Value;
+        var effectiveTopK = topK > 0 ? topK : (context?.DefaultTopK ?? _project.Settings.QueryModel.DefaultTopK);
+
         _logger.LogDebug("Search tool called: EntityType={EntityType}, Query={Query}, TopK={TopK}",
-            entityType, query, topK);
+            entityType, query, effectiveTopK);
 
         IReadOnlyList<SemanticModelSearchResult> results = entityType switch
         {
-            "Table" => await _searchService.SearchTablesAsync(query, topK),
-            "View" => await _searchService.SearchViewsAsync(query, topK),
-            "StoredProcedure" => await _searchService.SearchStoredProceduresAsync(query, topK),
+            "Table" => await _searchService.SearchTablesAsync(query, effectiveTopK),
+            "View" => await _searchService.SearchViewsAsync(query, effectiveTopK),
+            "StoredProcedure" => await _searchService.SearchStoredProceduresAsync(query, effectiveTopK),
             _ => []
         };
 
         // Track referenced entities for the current query
-        _currentQueryEntities?.AddRange(results);
+        context?.ReferencedEntities.AddRange(results);
 
         // Return results as JSON for the agent to process
         var resultData = results.Select(r => new

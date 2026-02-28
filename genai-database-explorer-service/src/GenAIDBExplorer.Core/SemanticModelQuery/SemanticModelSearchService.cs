@@ -53,6 +53,9 @@ public sealed class SemanticModelSearchService(
     private async Task<IReadOnlyList<SemanticModelSearchResult>> SearchByEntityTypeAsync(
         string query, string entityType, int topK, CancellationToken cancellationToken)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(query);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(topK);
+
         var infrastructure = _vectorInfrastructureFactory.Create(
             _project.Settings.VectorIndex,
             _project.Settings.SemanticModel.PersistenceStrategy);

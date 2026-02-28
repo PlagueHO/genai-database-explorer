@@ -80,7 +80,7 @@ public class QueryModelCommandHandler(
             return;
         }
 
-        var semanticModel = await LoadSemanticModelAsync(projectPath);
+        _ = await LoadSemanticModelAsync(projectPath);
 
         _logger.LogInformation("{Message} '{ProjectPath}'",
             _resourceManagerLogMessages.GetString("QueryingProject"), projectPath.FullName);
