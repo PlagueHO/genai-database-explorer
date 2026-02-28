@@ -14,6 +14,7 @@ Auto-generated from all feature plans. Last updated: 2026-02-20
 - [if applicable, e.g., PostgreSQL, CoreData, files or N/A] (004-frontend-semantic-explorer)
 - TypeScript 5.x targeting ES2022, React 19, Node.js 22 LTS + React 19, Vite 6, @fluentui/react-components v9, tailwindcss v4, @tanstack/react-query v5, react-router v7 (004-frontend-semantic-explorer)
 - N/A (frontend consumes REST API; backend handles persistence) (004-frontend-semantic-explorer)
+- Existing vector index (InMemory, CosmosDB, or Azure AI Search via `IVectorSearchService`) (005-query-model-agent)
 
 - C# 14 / .NET 10 (001-migrate-agent-framework)
 
@@ -33,9 +34,9 @@ tests/
 C# 14 / .NET 10: Follow standard conventions
 
 ## Recent Changes
+- 005-query-model-agent: Added .NET 10 / C# 14
 - 004-frontend-semantic-explorer: Added TypeScript 5.x targeting ES2022, React 19, Node.js 22 LTS + React 19, Vite 6, @fluentui/react-components v9, tailwindcss v4, @tanstack/react-query v5, react-router v7
 - 004-frontend-semantic-explorer: Added [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION] + [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]
-- 003-api-semantic-model: Added .NET 10 / C# 14 + ASP.NET Core Minimal APIs, `GenAIDBExplorer.Core`, `GenAIDBExplorer.ServiceDefaults`
 
 
 <!-- MANUAL ADDITIONS START -->
