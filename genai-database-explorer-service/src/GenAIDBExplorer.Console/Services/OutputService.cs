@@ -5,6 +5,11 @@ namespace GenAIDBExplorer.Console.Services;
 /// </summary>
 public class OutputService : IOutputService
 {
+    public void Write(string message)
+    {
+        System.Console.Write(message);
+    }
+
     public void WriteLine(string message)
     {
         System.Console.WriteLine(message);

@@ -643,20 +643,24 @@ Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
                 $script:QueryResult.ExitCode | Should -Be 0 -Because 'query-model should complete successfully with AzureBlob'
             }
             
-            It 'Should generate SQL from natural language' {
+            It 'Should display query statistics in output' {
                 if (-not $script:QuerySucceeded) {
                     Set-ItResult -Inconclusive -Because 'query-model did not succeed'
                     return
                 }
-                
+
                 $outputText = $script:QueryResult.Output -join "`n"
-                
-                # Check if the output contains SQL-like keywords
-                if ($outputText -match 'SELECT|FROM|WHERE|JOIN') {
-                    $true | Should -BeTrue -Because 'Output should contain generated SQL from natural language question'
-                } else {
-                    Set-ItResult -Inconclusive -Because 'Could not verify SQL generation in output'
+                $outputText | Should -Match 'Query Statistics' -Because 'Output should contain query statistics section'
+            }
+
+            It 'Should display termination reason in output' {
+                if (-not $script:QuerySucceeded) {
+                    Set-ItResult -Inconclusive -Because 'query-model did not succeed'
+                    return
                 }
+
+                $outputText = $script:QueryResult.Output -join "`n"
+                $outputText | Should -Match 'Termination' -Because 'Output should contain termination reason'
             }
         }
     }

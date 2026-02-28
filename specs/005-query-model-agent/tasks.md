@@ -26,15 +26,15 @@
 
 **Purpose**: Add NuGet package, create settings, DTOs, and enum types needed by all user stories
 
-- [ ] T001 Add `Microsoft.Agents.AI.OpenAI` NuGet package (prerelease) to `genai-database-explorer-service/src/GenAIDBExplorer.Core/GenAIDBExplorer.Core.csproj`
-- [ ] T002 [P] Create `QueryModelSettings` class with `AgentName`, `AgentInstructions`, `MaxResponseRounds`, `MaxTokenBudget`, `TimeoutSeconds`, `DefaultTopK` properties in `genai-database-explorer-service/src/GenAIDBExplorer.Core/Models/Project/QueryModelSettings.cs`
-- [ ] T003 [P] Write unit tests for `QueryModelSettings` defaults (`AgentName="genaidb-query-agent"`, `AgentInstructions=null`, `MaxResponseRounds=10`, `MaxTokenBudget=100000`, `TimeoutSeconds=60`, `DefaultTopK=5`) in `genai-database-explorer-service/tests/unit/GenAIDBExplorer.Core.Test/SemanticModelQuery/QueryModelSettingsTests.cs`
-- [ ] T004 [P] Add `QueryModel` property of type `QueryModelSettings` to `ProjectSettings` in `genai-database-explorer-service/src/GenAIDBExplorer.Core/Models/Project/ProjectSettings.cs`
-- [ ] T005 [P] Add `QueryModel` section with defaults (including `AgentInstructions: null`) to `genai-database-explorer-service/src/GenAIDBExplorer.Core/DefaultProject/settings.json`
-- [ ] T006 [P] Create `QueryTerminationReason` enum (`Completed`, `MaxRoundsReached`, `TokenBudgetExceeded`, `TimeLimitExceeded`, `Error`) in `genai-database-explorer-service/src/GenAIDBExplorer.Core/SemanticModelQuery/QueryTerminationReason.cs`
-- [ ] T007 [P] Create `SemanticModelSearchResult` record (`EntityType`, `SchemaName`, `EntityName`, `Content`, `Score`) in `genai-database-explorer-service/src/GenAIDBExplorer.Core/SemanticModelQuery/SemanticModelSearchResult.cs`
-- [ ] T008 [P] Create `SemanticModelQueryRequest` record (`Question`, `TopK?`) in `genai-database-explorer-service/src/GenAIDBExplorer.Core/SemanticModelQuery/SemanticModelQueryRequest.cs`
-- [ ] T009 [P] Create `SemanticModelQueryResult` record (`Answer`, `ReferencedEntities`, `ResponseRounds`, `InputTokens`, `OutputTokens`, `TotalTokens`, `Duration`, `TerminationReason`) in `genai-database-explorer-service/src/GenAIDBExplorer.Core/SemanticModelQuery/SemanticModelQueryResult.cs`
+- [x] T001 Add `Microsoft.Agents.AI.OpenAI` NuGet package (prerelease) to `genai-database-explorer-service/src/GenAIDBExplorer.Core/GenAIDBExplorer.Core.csproj`
+- [x] T002 [P] Create `QueryModelSettings` class with `AgentName`, `AgentInstructions`, `MaxResponseRounds`, `MaxTokenBudget`, `TimeoutSeconds`, `DefaultTopK` properties in `genai-database-explorer-service/src/GenAIDBExplorer.Core/Models/Project/QueryModelSettings.cs`
+- [x] T003 [P] Write unit tests for `QueryModelSettings` defaults (`AgentName="genaidb-query-agent"`, `AgentInstructions=null`, `MaxResponseRounds=10`, `MaxTokenBudget=100000`, `TimeoutSeconds=60`, `DefaultTopK=5`) in `genai-database-explorer-service/tests/unit/GenAIDBExplorer.Core.Test/SemanticModelQuery/QueryModelSettingsTests.cs`
+- [x] T004 [P] Add `QueryModel` property of type `QueryModelSettings` to `ProjectSettings` in `genai-database-explorer-service/src/GenAIDBExplorer.Core/Models/Project/ProjectSettings.cs`
+- [x] T005 [P] Add `QueryModel` section with defaults (including `AgentInstructions: null`) to `genai-database-explorer-service/src/GenAIDBExplorer.Core/DefaultProject/settings.json`
+- [x] T006 [P] Create `QueryTerminationReason` enum (`Completed`, `MaxRoundsReached`, `TokenBudgetExceeded`, `TimeLimitExceeded`, `Error`) in `genai-database-explorer-service/src/GenAIDBExplorer.Core/SemanticModelQuery/QueryTerminationReason.cs`
+- [x] T007 [P] Create `SemanticModelSearchResult` record (`EntityType`, `SchemaName`, `EntityName`, `Content`, `Score`) in `genai-database-explorer-service/src/GenAIDBExplorer.Core/SemanticModelQuery/SemanticModelSearchResult.cs`
+- [x] T008 [P] Create `SemanticModelQueryRequest` record (`Question`, `TopK?`) in `genai-database-explorer-service/src/GenAIDBExplorer.Core/SemanticModelQuery/SemanticModelQueryRequest.cs`
+- [x] T009 [P] Create `SemanticModelQueryResult` record (`Answer`, `ReferencedEntities`, `ResponseRounds`, `InputTokens`, `OutputTokens`, `TotalTokens`, `Duration`, `TerminationReason`) in `genai-database-explorer-service/src/GenAIDBExplorer.Core/SemanticModelQuery/SemanticModelQueryResult.cs`
 
 ---
 
@@ -44,8 +44,8 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T010 Create `QueryModelAgent.prompt` template with system instructions for the database schema assistant agent (search tools usage, multi-step reasoning instructions, database context variables, `{{ database_name }}` and `{{ database_description }}` sourced from `SemanticModel` metadata) in `genai-database-explorer-service/src/GenAIDBExplorer.Core/PromptTemplates/QueryModelAgent.prompt`
-- [ ] T011 [P] Add query-model log messages (query started, query completed, agent created, agent disposed, guardrail triggered, search executed) to `genai-database-explorer-service/src/GenAIDBExplorer.Console/Resources/LogMessages.resx`
+- [x] T010 Create `QueryModelAgent.prompt` template with system instructions for the database schema assistant agent (search tools usage, multi-step reasoning instructions, database context variables, `{{ database_name }}` and `{{ database_description }}` sourced from `SemanticModel` metadata) in `genai-database-explorer-service/src/GenAIDBExplorer.Core/PromptTemplates/QueryModelAgent.prompt`
+- [x] T011 [P] Add query-model log messages (query started, query completed, agent created, agent disposed, guardrail triggered, search executed) to `genai-database-explorer-service/src/GenAIDBExplorer.Console/Resources/LogMessages.resx`
 
 **Checkpoint**: Foundation ready — user story implementation can now begin
 
@@ -59,12 +59,12 @@
 
 ### Tests for User Story 4
 
-- [ ] T012 [P] [US4] Write unit tests for `SemanticModelSearchService` covering: search returns filtered results by entity type, embedding generation is called, empty results handled, no-embeddings error case in `genai-database-explorer-service/tests/unit/GenAIDBExplorer.Core.Test/SemanticModelQuery/SemanticModelSearchServiceTests.cs`
+- [x] T012 [P] [US4] Write unit tests for `SemanticModelSearchService` covering: search returns filtered results by entity type, embedding generation is called, empty results handled, no-embeddings error case in `genai-database-explorer-service/tests/unit/GenAIDBExplorer.Core.Test/SemanticModelQuery/SemanticModelSearchServiceTests.cs`
 
 ### Implementation for User Story 4
 
-- [ ] T013 [P] [US4] Create `ISemanticModelSearchService` interface with `SearchTablesAsync`, `SearchViewsAsync`, `SearchStoredProceduresAsync` methods in `genai-database-explorer-service/src/GenAIDBExplorer.Core/SemanticModelQuery/ISemanticModelSearchService.cs`
-- [ ] T014 [US4] Implement `SemanticModelSearchService` that generates embeddings via `IEmbeddingGenerator`, performs vector search via `IVectorSearchService` with over-fetch, filters by `EntityType`, maps `EntityVectorRecord` to `SemanticModelSearchResult`, returns top-K results in `genai-database-explorer-service/src/GenAIDBExplorer.Core/SemanticModelQuery/SemanticModelSearchService.cs`
+- [x] T013 [P] [US4] Create `ISemanticModelSearchService` interface with `SearchTablesAsync`, `SearchViewsAsync`, `SearchStoredProceduresAsync` methods in `genai-database-explorer-service/src/GenAIDBExplorer.Core/SemanticModelQuery/ISemanticModelSearchService.cs`
+- [x] T014 [US4] Implement `SemanticModelSearchService` that generates embeddings via `IEmbeddingGenerator`, performs vector search via `IVectorSearchService` with over-fetch, filters by `EntityType`, maps `EntityVectorRecord` to `SemanticModelSearchResult`, returns top-K results in `genai-database-explorer-service/src/GenAIDBExplorer.Core/SemanticModelQuery/SemanticModelSearchService.cs`
 
 **Checkpoint**: Search service can independently find and rank semantic model entities by type
 
@@ -78,12 +78,12 @@
 
 ### Tests for User Story 1
 
-- [ ] T015 [P] [US1] Write unit tests for `SemanticModelQueryService` covering: agent creation with function tools, basic query returns answer, streaming yields tokens, dispose cleans up agent, missing embeddings throws error, edge cases (empty question, unreachable endpoint, mid-loop error returns partial results) in `genai-database-explorer-service/tests/unit/GenAIDBExplorer.Core.Test/SemanticModelQuery/SemanticModelQueryServiceTests.cs`
+- [x] T015 [P] [US1] Write unit tests for `SemanticModelQueryService` covering: agent creation with function tools, basic query returns answer, streaming yields tokens, dispose cleans up agent, missing embeddings throws error, edge cases (empty question, unreachable endpoint, mid-loop error returns partial results) in `genai-database-explorer-service/tests/unit/GenAIDBExplorer.Core.Test/SemanticModelQuery/SemanticModelQueryServiceTests.cs`
 
 ### Implementation for User Story 1
 
-- [ ] T016 [P] [US1] Create `ISemanticModelQueryService` interface with `QueryAsync` and `QueryStreamingAsync` methods, `SemanticModelStreamingQueryResult` wrapper class (exposes `Tokens` stream + `GetMetadataAsync()`), implementing `IAsyncDisposable` in `genai-database-explorer-service/src/GenAIDBExplorer.Core/SemanticModelQuery/ISemanticModelQueryService.cs`
-- [ ] T017 [US1] Implement `SemanticModelQueryService`: create `AIProjectClient` from `FoundryModelsSettings`, define three function tools via `AIFunctionFactory.Create()` capturing `ISemanticModelSearchService`, create agent via `CreateAIAgentAsync()`, implement `QueryStreamingAsync` returning `SemanticModelStreamingQueryResult` (backed by `TaskCompletionSource<SemanticModelQueryResult>`) using `agent.RunStreamingAsync()`, implement `QueryAsync` that collects streamed tokens into a complete result, implement `DisposeAsync` to delete agent version in `genai-database-explorer-service/src/GenAIDBExplorer.Core/SemanticModelQuery/SemanticModelQueryService.cs`
+- [x] T016 [P] [US1] Create `ISemanticModelQueryService` interface with `QueryAsync` and `QueryStreamingAsync` methods, `SemanticModelStreamingQueryResult` wrapper class (exposes `Tokens` stream + `GetMetadataAsync()`), implementing `IAsyncDisposable` in `genai-database-explorer-service/src/GenAIDBExplorer.Core/SemanticModelQuery/ISemanticModelQueryService.cs`
+- [x] T017 [US1] Implement `SemanticModelQueryService`: create `AIProjectClient` from `FoundryModelsSettings`, define three function tools via `AIFunctionFactory.Create()` capturing `ISemanticModelSearchService`, create agent via `CreateAIAgentAsync()`, implement `QueryStreamingAsync` returning `SemanticModelStreamingQueryResult` (backed by `TaskCompletionSource<SemanticModelQueryResult>`) using `agent.RunStreamingAsync()`, implement `QueryAsync` that collects streamed tokens into a complete result, implement `DisposeAsync` to delete agent version in `genai-database-explorer-service/src/GenAIDBExplorer.Core/SemanticModelQuery/SemanticModelQueryService.cs`
 
 **Checkpoint**: Core query service can accept a question, use the agent to search the semantic model, and return a structured answer
 
@@ -97,12 +97,12 @@
 
 ### Tests for User Story 2
 
-- [ ] T018 [P] [US2] Write multi-round reasoning test scenarios: verify `ResponseRounds > 1` for complex questions, verify follow-up searches when initial results suggest related entities, verify partial answer returned when no more rounds possible in `genai-database-explorer-service/tests/unit/GenAIDBExplorer.Core.Test/SemanticModelQuery/SemanticModelQueryServiceTests.cs`
+- [x] T018 [P] [US2] Write multi-round reasoning test scenarios: verify `ResponseRounds > 1` for complex questions, verify follow-up searches when initial results suggest related entities, verify partial answer returned when no more rounds possible in `genai-database-explorer-service/tests/unit/GenAIDBExplorer.Core.Test/SemanticModelQuery/SemanticModelQueryServiceTests.cs`
 
 ### Implementation for User Story 2
 
-- [ ] T019 [US2] Ensure `SemanticModelQueryService` correctly tracks `ResponseRounds` by counting `FunctionCallContent` items in the `AgentResponseUpdate` stream and populating `SemanticModelQueryResult.ResponseRounds` in `genai-database-explorer-service/src/GenAIDBExplorer.Core/SemanticModelQuery/SemanticModelQueryService.cs`
-- [ ] T020 [US2] Ensure `SemanticModelQueryService` collects all `SemanticModelSearchResult` items from function tool executions into `SemanticModelQueryResult.ReferencedEntities` (deduplicated by schema + name) in `genai-database-explorer-service/src/GenAIDBExplorer.Core/SemanticModelQuery/SemanticModelQueryService.cs`
+- [x] T019 [US2] Ensure `SemanticModelQueryService` correctly tracks `ResponseRounds` by counting `FunctionCallContent` items in the `AgentResponseUpdate` stream and populating `SemanticModelQueryResult.ResponseRounds` in `genai-database-explorer-service/src/GenAIDBExplorer.Core/SemanticModelQuery/SemanticModelQueryService.cs`
+- [x] T020 [US2] Ensure `SemanticModelQueryService` collects all `SemanticModelSearchResult` items from function tool executions into `SemanticModelQueryResult.ReferencedEntities` (deduplicated by schema + name) in `genai-database-explorer-service/src/GenAIDBExplorer.Core/SemanticModelQuery/SemanticModelQueryService.cs`
 
 **Checkpoint**: Agent performs multi-round reasoning and results include accurate round counts and referenced entities
 
@@ -116,12 +116,12 @@
 
 ### Tests for User Story 3
 
-- [ ] T021 [P] [US3] Write unit tests for `QueryModelCommandHandler` verifying it delegates to `ISemanticModelQueryService`, formats streaming output, displays metadata (entities, rounds, tokens), and handles edge cases (empty question, service unavailable) in `genai-database-explorer-service/tests/unit/GenAIDBExplorer.Console.Test/CommandHandlers/QueryModelCommandHandlerTests.cs`
+- [x] T021 [P] [US3] Write unit tests for `QueryModelCommandHandler` verifying it delegates to `ISemanticModelQueryService`, formats streaming output, displays metadata (entities, rounds, tokens), and handles edge cases (empty question, service unavailable) in `genai-database-explorer-service/tests/unit/GenAIDBExplorer.Console.Test/CommandHandlers/QueryModelCommandHandlerTests.cs`
 
 ### Implementation for User Story 3
 
-- [ ] T022 [US3] Register `ISemanticModelSearchService` as `SemanticModelSearchService` and `ISemanticModelQueryService` as `SemanticModelQueryService` (singletons) in DI container in `genai-database-explorer-service/src/GenAIDBExplorer.Console/Extensions/HostBuilderExtensions.cs`
-- [ ] T023 [US3] Update `QueryModelCommandHandler.HandleAsync` to: validate question input, call `ISemanticModelQueryService.QueryStreamingAsync`, iterate `result.Tokens` to stream answer to console, then `await result.GetMetadataAsync()` to display referenced entities and query statistics (rounds, tokens, duration, termination reason) in `genai-database-explorer-service/src/GenAIDBExplorer.Console/CommandHandlers/QueryModelCommandHandler.cs`
+- [x] T022 [US3] Register `ISemanticModelSearchService` as `SemanticModelSearchService` and `ISemanticModelQueryService` as `SemanticModelQueryService` (singletons) in DI container in `genai-database-explorer-service/src/GenAIDBExplorer.Console/Extensions/HostBuilderExtensions.cs`
+- [x] T023 [US3] Update `QueryModelCommandHandler.HandleAsync` to: validate question input, call `ISemanticModelQueryService.QueryStreamingAsync`, iterate `result.Tokens` to stream answer to console, then `await result.GetMetadataAsync()` to display referenced entities and query statistics (rounds, tokens, duration, termination reason) in `genai-database-explorer-service/src/GenAIDBExplorer.Console/CommandHandlers/QueryModelCommandHandler.cs`
 
 **Checkpoint**: CLI command works end-to-end, and Console project contains no query logic — only UI formatting and service delegation
 
@@ -135,13 +135,13 @@
 
 ### Tests for User Story 5
 
-- [ ] T024 [P] [US5] Write guardrail enforcement tests: timeout triggers `TimeLimitExceeded`, token budget triggers `TokenBudgetExceeded`, max rounds triggers `MaxRoundsReached`, partial results returned for all guardrail scenarios in `genai-database-explorer-service/tests/unit/GenAIDBExplorer.Core.Test/SemanticModelQuery/SemanticModelQueryServiceTests.cs`
+- [x] T024 [P] [US5] Write guardrail enforcement tests: timeout triggers `TimeLimitExceeded`, token budget triggers `TokenBudgetExceeded`, max rounds triggers `MaxRoundsReached`, partial results returned for all guardrail scenarios in `genai-database-explorer-service/tests/unit/GenAIDBExplorer.Core.Test/SemanticModelQuery/SemanticModelQueryServiceTests.cs`
 
 ### Implementation for User Story 5
 
-- [ ] T025 [US5] Implement time limit via `CancellationTokenSource.CreateLinkedTokenSource()` with `CancelAfter(TimeoutSeconds)` in `SemanticModelQueryService` in `genai-database-explorer-service/src/GenAIDBExplorer.Core/SemanticModelQuery/SemanticModelQueryService.cs`
-- [ ] T026 [US5] Implement token budget tracking by accumulating tokens from `AgentResponseUpdate` metadata and breaking the streaming loop when `MaxTokenBudget` exceeded in `SemanticModelQueryService` in `genai-database-explorer-service/src/GenAIDBExplorer.Core/SemanticModelQuery/SemanticModelQueryService.cs`
-- [ ] T027 [US5] Implement max rounds enforcement by counting `FunctionCallContent` response round cycles and breaking when `MaxResponseRounds` exceeded in `SemanticModelQueryService` in `genai-database-explorer-service/src/GenAIDBExplorer.Core/SemanticModelQuery/SemanticModelQueryService.cs`
+- [x] T025 [US5] Implement time limit via `CancellationTokenSource.CreateLinkedTokenSource()` with `CancelAfter(TimeoutSeconds)` in `SemanticModelQueryService` in `genai-database-explorer-service/src/GenAIDBExplorer.Core/SemanticModelQuery/SemanticModelQueryService.cs`
+- [x] T026 [US5] Implement token budget tracking by accumulating tokens from `AgentResponseUpdate` metadata and breaking the streaming loop when `MaxTokenBudget` exceeded in `SemanticModelQueryService` in `genai-database-explorer-service/src/GenAIDBExplorer.Core/SemanticModelQuery/SemanticModelQueryService.cs`
+- [x] T027 [US5] Implement max rounds enforcement by counting `FunctionCallContent` response round cycles and breaking when `MaxResponseRounds` exceeded in `SemanticModelQueryService` in `genai-database-explorer-service/src/GenAIDBExplorer.Core/SemanticModelQuery/SemanticModelQueryService.cs`
 
 **Checkpoint**: All guardrails enforced; agent terminates gracefully within configured limits with correct termination reason
 
@@ -151,12 +151,12 @@
 
 **Purpose**: Build verification, formatting, documentation, and final validation
 
-- [ ] T028 [P] Run `dotnet build` on solution and fix any compilation errors in `genai-database-explorer-service/GenAIDBExplorer.slnx`
-- [ ] T029 Run `dotnet format` (VS Code task `format-fix-whitespace-only`) across all changed `.cs` files
-- [ ] T030 Run `dotnet test` to verify all unit tests pass across solution in `genai-database-explorer-service/GenAIDBExplorer.slnx`
-- [ ] T031 [P] Create Pester integration tests for the `query-model` CLI command covering: basic question, missing project, missing embeddings error in `genai-database-explorer-service/tests/integration/`
-- [ ] T032 [P] Update CLI documentation with `query-model` command usage, options, and examples in `docs/cli/README.md`
-- [ ] T033 Validate quickstart.md scenarios: basic question, complex question, error scenarios (no embeddings, empty question) per `specs/005-query-model-agent/quickstart.md`
+- [x] T028 [P] Run `dotnet build` on solution and fix any compilation errors in `genai-database-explorer-service/GenAIDBExplorer.slnx`
+- [x] T029 Run `dotnet format` (VS Code task `format-fix-whitespace-only`) across all changed `.cs` files
+- [x] T030 Run `dotnet test` to verify all unit tests pass across solution in `genai-database-explorer-service/GenAIDBExplorer.slnx`
+- [x] T031 [P] Create Pester integration tests for the `query-model` CLI command covering: basic question, missing project, missing embeddings error in `genai-database-explorer-service/tests/integration/`
+- [x] T032 [P] Update CLI documentation with `query-model` command usage, options, and examples in `docs/cli/README.md`
+- [x] T033 Validate quickstart.md scenarios: basic question, complex question, error scenarios (no embeddings, empty question) per `specs/005-query-model-agent/quickstart.md`
 
 ---
 

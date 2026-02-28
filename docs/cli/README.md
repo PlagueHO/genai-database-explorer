@@ -138,7 +138,9 @@ gaidbexp show-object storedprocedure --project <path> --schema-name <name> --nam
 
 ### query-model
 
-Generates SQL or answers questions against the semantic model.
+Answers natural language questions about the database using an AI agent backed by vector search over the semantic model.
+
+The agent uses a ReAct-style loop with three search tools (tables, views, stored procedures) to iteratively gather information before composing an answer. The answer is streamed to the console in real-time, followed by a summary of referenced entities and query statistics.
 
 **Usage:**
 
@@ -149,7 +151,53 @@ gaidbexp query-model --project <path> --question <text>
 **Options:**
 
 - `--project`, `-p` (required): Path to the project directory.
-- `--question`, `-q` (required): The question to ask the model.
+- `--question`, `-q` (required): The natural language question to ask about the database schema.
+
+**Prerequisites:**
+
+The project must have:
+
+1. An extracted semantic model (`extract-model`)
+2. Generated vector embeddings (`generate-vectors`)
+3. A configured vector index and Foundry Models endpoint in `settings.json`
+
+**Output:**
+
+- Streamed answer text
+- Referenced entities (tables, views, stored procedures discovered during search)
+- Query statistics: response rounds, token usage, duration, termination reason
+
+**Configuration (`settings.json` → `QueryModel` section):**
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `AgentName` | `genaidb-query-agent` | Name of the AI agent |
+| `AgentInstructions` | `null` | Custom system instructions (overrides prompt template) |
+| `MaxResponseRounds` | `10` | Maximum function call rounds before termination |
+| `MaxTokenBudget` | `100000` | Maximum total tokens before termination |
+| `TimeoutSeconds` | `60` | Maximum wall-clock seconds before termination |
+| `DefaultTopK` | `5` | Default number of results per search |
+
+**Termination Reasons:**
+
+- `Completed` — Agent finished answering naturally
+- `MaxRoundsReached` — Hit the configured round limit
+- `TokenBudgetExceeded` — Hit the configured token limit
+- `TimeLimitExceeded` — Hit the configured timeout
+- `Error` — An unexpected error occurred
+
+**Examples:**
+
+```bash
+# Ask about customer-related tables
+gaidbexp query-model --project d:/temp --question "What tables store customer information?"
+
+# Ask a complex cross-entity question
+gaidbexp query-model --project d:/temp --question "Explain the complete order management workflow including related stored procedures"
+
+# Short form
+gaidbexp query-model -p d:/temp -q "How are products categorized?"
+```
 
 ### export-model
 

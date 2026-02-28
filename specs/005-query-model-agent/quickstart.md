@@ -82,9 +82,16 @@ Console.WriteLine($"Found {result.ReferencedEntities.Count} entities");
 Console.WriteLine($"Rounds: {result.ResponseRounds}, Tokens: {result.TotalTokens}");
 
 // Or use streaming
-await foreach (var token in queryService.QueryStreamingAsync(request))
+var streamingResult = await queryService.QueryStreamingAsync(request);
+await using (streamingResult)
 {
-    Console.Write(token);
+    await foreach (var token in streamingResult.Tokens)
+    {
+        Console.Write(token);
+    }
+
+    var metadata = await streamingResult.GetMetadataAsync();
+    Console.WriteLine($"\nRounds: {metadata.ResponseRounds}, Tokens: {metadata.TotalTokens}");
 }
 ```
 
@@ -110,8 +117,7 @@ CLI (QueryModelCommandHandler)
         ▼
 Core (SemanticModelQueryService : IAsyncDisposable)
   │
-  ├── Creates AIProjectClient (once, on init)
-  ├── Creates AIAgent with function tools (once, on init)
+  ├── Creates AIAgent via IChatClientFactory → OpenAI ChatClient (once, on init)
   │     ├── searchTables
   │     ├── searchViews
   │     └── searchStoredProcedures
@@ -120,14 +126,14 @@ Core (SemanticModelQueryService : IAsyncDisposable)
   │     ├── Creates AgentSession
   │     ├── Calls agent.RunStreamingAsync(question, session)
   │     ├── Monitors guardrails (time, tokens, rounds)
-  │     └── Collects answer + referenced entities
+  │     └── Collects answer + referenced entities (deduplicated)
   │
-  └── On dispose: deletes agent version
+  └── On dispose: releases agent reference
         │
         ▼
 Core (SemanticModelSearchService)
   │
   ├── IEmbeddingGenerator → embedding vector
-  ├── IVectorSearchService → ranked results
+  ├── IVectorSearchService → ranked results (3x over-fetch)
   └── Entity type filtering → typed results
 ```

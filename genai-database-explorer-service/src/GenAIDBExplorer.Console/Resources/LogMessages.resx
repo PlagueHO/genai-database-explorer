@@ -180,4 +180,22 @@
   <data name="ExportSemanticModelComplete" xml:space="preserve">
     <value>Semantic model export complete.</value>
   </data>
+  <data name="QueryModelStarted" xml:space="preserve">
+    <value>Query model started.</value>
+  </data>
+  <data name="QueryModelCompleted" xml:space="preserve">
+    <value>Query model completed.</value>
+  </data>
+  <data name="QueryModelAgentCreated" xml:space="preserve">
+    <value>Query model agent created.</value>
+  </data>
+  <data name="QueryModelAgentDisposed" xml:space="preserve">
+    <value>Query model agent disposed.</value>
+  </data>
+  <data name="QueryModelGuardrailTriggered" xml:space="preserve">
+    <value>Query model guardrail triggered.</value>
+  </data>
+  <data name="QueryModelSearchExecuted" xml:space="preserve">
+    <value>Query model search executed.</value>
+  </data>
 </root>
