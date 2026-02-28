@@ -25,7 +25,8 @@
         },
         "ghcr.io/devcontainers/features/node:1": {
             "version": "lts",
-            "nodeGypDependencies": true
+            "nodeGypDependencies": true,
+            "pnpmVersion": "latest"
         },
         "ghcr.io/devcontainers/features/docker-in-docker:2": {
             "version": "latest",
@@ -78,8 +79,10 @@
                 "ms-vscode-remote.remote-containers",
                 "redhat.vscode-yaml",
                 "ms-vscode.vscode-json",
+                "dbaeumer.vscode-eslint",
                 "bradlc.vscode-tailwindcss",
                 "esbenp.prettier-vscode",
+                "ms-playwright.playwright",
                 "ms-vsliveshare.vsliveshare",
                 "microsoft-aspire.aspire-vscode",
                 "github.vscode-github-actions",
@@ -93,8 +96,8 @@
     
     // Add additional configuration
     "remoteUser": "vscode",
-    "postCreateCommand": "dotnet restore genai-database-explorer-service/",
-    "forwardPorts": [5000, 5001, 7071],
+    "postCreateCommand": "corepack enable && dotnet restore genai-database-explorer-service/ && cd genai-database-explorer-frontend && pnpm install",
+    "forwardPorts": [5000, 5001, 5173, 7071, 15116, 17106],
     "portsAttributes": {
         "5000": {
             "label": "HTTP",
@@ -104,9 +107,21 @@
             "label": "HTTPS",
             "protocol": "https"
         },
+        "5173": {
+            "label": "Vite Dev Server",
+            "protocol": "http"
+        },
         "7071": {
             "label": "Azure Functions",
             "protocol": "http"
+        },
+        "15116": {
+            "label": "Aspire Dashboard (HTTP)",
+            "protocol": "http"
+        },
+        "17106": {
+            "label": "Aspire Dashboard (HTTPS)",
+            "protocol": "https"
         }
     }
   }

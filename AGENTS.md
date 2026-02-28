@@ -11,8 +11,10 @@ dotnet build genai-database-explorer-service/GenAIDBExplorer.slnx
 # Watch mode for development
 dotnet watch run --project genai-database-explorer-service/src/GenAIDBExplorer.Console/
 
-# Run unit tests
-dotnet test --solution .\genai-database-explorer-service\GenAIDBExplorer.slnx
+# Run unit tests (.NET 10 SDK — `dotnet test` does NOT work, use `dotnet exec`)
+dotnet exec genai-database-explorer-service/tests/unit/GenAIDBExplorer.Core.Test/bin/Debug/net10.0/GenAIDBExplorer.Core.Test.dll
+dotnet exec genai-database-explorer-service/tests/unit/GenAIDBExplorer.Console.Test/bin/Debug/net10.0/GenAIDBExplorer.Console.Test.dll
+dotnet exec genai-database-explorer-service/tests/unit/GenAIDBExplorer.Api.Test/bin/Debug/net10.0/GenAIDBExplorer.Api.Test.dll
 
 # Run integration tests  
 pwsh -Command "New-Item -ItemType Directory -Path './test-results' -Force | Out-Null; & ./.github/scripts/Invoke-IntegrationTests.ps1"
@@ -126,17 +128,14 @@ public class SemanticDescriptionProvider(
 ## Testing instructions
 
 ```bash
-# Run all tests
-dotnet test --solution .\genai-database-explorer-service\GenAIDBExplorer.slnx
+# IMPORTANT: `dotnet test` does NOT work on .NET 10 SDK. Use `dotnet exec` on compiled test DLLs.
+# Build first, then run:
+dotnet exec genai-database-explorer-service/tests/unit/GenAIDBExplorer.Core.Test/bin/Debug/net10.0/GenAIDBExplorer.Core.Test.dll
+dotnet exec genai-database-explorer-service/tests/unit/GenAIDBExplorer.Console.Test/bin/Debug/net10.0/GenAIDBExplorer.Console.Test.dll
+dotnet exec genai-database-explorer-service/tests/unit/GenAIDBExplorer.Api.Test/bin/Debug/net10.0/GenAIDBExplorer.Api.Test.dll
 
-# Run specific test project
-dotnet test --project genai-database-explorer-service\tests\unit\GenAIDBExplorer.Core.Test
-
-# Run with coverage
-dotnet test --solution .\genai-database-explorer-service\GenAIDBExplorer.slnx -- --coverage
-
-# Run with coverage (Cobertura format)
-dotnet test --solution .\genai-database-explorer-service\GenAIDBExplorer.slnx -- --coverage --coverage-output-format cobertura
+# Run filtered tests
+dotnet exec <test-dll-path> --filter "FullyQualifiedName~MyTestClass"
 
 # Integration tests (requires PowerShell)
 pwsh .\.github\scripts\Invoke-IntegrationTests.ps1

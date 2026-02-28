@@ -29,6 +29,7 @@
     <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="10.2.0" />
     <PackageReference Include="Azure.AI.Projects" Version="1.0.0-beta.5" />
     <PackageReference Include="Azure.AI.Projects.OpenAI" Version="1.0.0-beta.5" />
+    <PackageReference Include="Microsoft.Agents.AI.OpenAI" Version="*-*" />
     <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="10.3.0" />
     <PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" />
     <PackageReference Include="Scriban" Version="6.2.1" />
@@ -93,6 +94,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="PromptTemplates\get_tables_from_storedprocedure_definition.prompt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="PromptTemplates\QueryModelAgent.prompt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

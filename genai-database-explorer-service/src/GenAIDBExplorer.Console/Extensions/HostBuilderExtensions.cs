@@ -17,6 +17,7 @@ using GenAIDBExplorer.Core.SemanticVectors.Indexing;
 using GenAIDBExplorer.Core.SemanticVectors.Search;
 using GenAIDBExplorer.Core.SemanticVectors.Keys;
 using GenAIDBExplorer.Core.SemanticVectors.Orchestration;
+using GenAIDBExplorer.Core.SemanticModelQuery;
 using GenAIDBExplorer.Core.Repository;
 using GenAIDBExplorer.Core.Repository.Performance;
 using GenAIDBExplorer.Core.Repository.Security;
@@ -168,6 +169,10 @@ public static class HostBuilderExtensions
         );
 
         services.AddSingleton<IVectorOrchestrator, VectorOrchestrator>();
+
+        // Query model services
+        services.AddSingleton<ISemanticModelSearchService, SemanticModelSearchService>();
+        services.AddSingleton<ISemanticModelQueryService, SemanticModelQueryService>();
 
         // SK InMemory vector store for local/dev and tests
         services.AddSingleton<Microsoft.SemanticKernel.Connectors.InMemory.InMemoryVectorStore>();

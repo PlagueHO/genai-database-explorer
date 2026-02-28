@@ -5,6 +5,7 @@ namespace GenAIDBExplorer.Console.Services;
 /// </summary>
 public interface IOutputService
 {
+    void Write(string message);
     void WriteLine(string message);
     void WriteWarning(string message);
     void WriteError(string message);
