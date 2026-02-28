@@ -2,31 +2,32 @@
 =============================================================================
 SYNC IMPACT REPORT
 =============================================================================
-Version Change: 1.1.0 → 1.2.0
-Rationale: Updated technology stack from .NET 9 / C# 11+ to .NET 10 / C# 14 to reflect actual project target framework
+Version Change: 1.2.0 → 1.3.0
+Rationale: Replaced Semantic Kernel with Microsoft.Extensions.AI and Microsoft Agent Framework to reflect actual project state after migration
 
-Modified Principles: None
+Modified Principles:
+- II. AI Integration via Semantic Kernel → II. AI Integration via Microsoft.Extensions.AI
 
 Modified Sections:
-- Technology Stack & Standards → Required Technologies updated from .NET 9 / C# 11+ to .NET 10 / C# 14
+- Principle II: Replaced ISemanticKernelFactory with IChatClientFactory/AIAgent, .prompty with .prompt, Core/Prompty with Core/PromptTemplates
+- Principle VII: Replaced ISemanticKernelFactory reference with IChatClientFactory
+- Technology Stack & Standards → Required Technologies: Replaced Semantic Kernel with Microsoft.Extensions.AI + Microsoft Agent Framework
 
 Added Sections: None
 
 Removed Sections: None
 
 Templates Status:
-✅ plan-template.md - No updates required
-✅ spec-template.md - No updates required
-✅ tasks-template.md - No updates required
-✅ .github/copilot-instructions.md - Updated C# version reference
-✅ AGENTS.md - Updated C# version reference
+⚠️ .github/copilot-instructions.md - Should be verified for SK references
+⚠️ AGENTS.md - Should be verified for SK references
 
-Code Impact: None (all .csproj files already target net10.0)
+Code Impact: None (project already migrated from SK to M.E.AI)
 
-Follow-up TODOs: None
+Follow-up TODOs:
+- Verify .github/copilot-instructions.md and AGENTS.md have no stale Semantic Kernel references
 
-Generated: 2026-02-23
-Previous Version Generated: 2025-12-21
+Generated: 2026-02-28
+Previous Version Generated: 2026-02-23
 =============================================================================
 -->
 
@@ -46,17 +47,18 @@ The semantic model is the central artifact of this project and MUST maintain con
 
 **Rationale**: The semantic model is the core value proposition - it enables database understanding without direct access, supports versioning of database documentation, and provides a foundation for natural language queries. Integrity violations would undermine the entire tool's purpose.
 
-### II. AI Integration via Semantic Kernel
+### II. AI Integration via Microsoft.Extensions.AI
 
-ALL AI operations MUST use `ISemanticKernelFactory.CreateSemanticKernel()` for consistency and observability.
+ALL AI operations MUST use `IChatClientFactory` for direct AI operations (chat completion, embeddings) and `AIAgent` from the Microsoft Agent Framework for agent orchestration.
 
-- **AI prompts MUST be stored in `.prompty` files** under `Core/Prompty/` directory
-- **Token usage MUST be tracked** via `result.Metadata?["Usage"] as ChatTokenUsage` for cost management
+- **AI prompts MUST be stored in `.prompt` files** under `Core/PromptTemplates/` directory
+- **Token usage MUST be tracked** via `response.Usage` (`UsageDetails` with `long?` properties) for cost management
 - **AI operations MUST use structured logging** with appropriate scopes for debugging
-- **Prompty pattern MUST follow SemanticDescriptionProvider implementation** for consistency
-- **AI service configuration MUST support multiple providers** (Azure OpenAI, OpenAI) via settings
+- **Prompt template pattern MUST follow existing provider implementations** using `IPromptTemplateParser` and `ILiquidTemplateRenderer` for consistency
+- **AI service configuration MUST support Azure AI Foundry** via `FoundryModels` settings
+- **Agent orchestration MUST use the Microsoft Agent Framework** (`AIAgent`, `AIFunctionFactory`, `RunStreamingAsync`) for multi-step reasoning tasks
 
-**Rationale**: Centralized AI integration ensures consistent error handling, token tracking, cost management, and testability. The SemanticKernelFactory abstraction enables testing without live AI calls and supports multiple AI providers.
+**Rationale**: Centralized AI integration via `IChatClientFactory` ensures consistent error handling, token tracking, cost management, and testability. The Agent Framework provides managed ReAct loops for agent scenarios, abstracting the tool-call orchestration cycle. Both patterns coexist: `IChatClientFactory` for direct AI calls (enrichment, embeddings), `AIAgent` for autonomous agent workflows (query-model).
 
 ### III. Repository Pattern for Persistence
 
@@ -111,7 +113,7 @@ Functionality MUST be exposed via System.CommandLine with clear, composable comm
 
 All services MUST be registered via `HostBuilderExtensions.ConfigureHost()` for consistency.
 
-- **Singletons MUST be used** for core services (`ISemanticKernelFactory`, `IProject`)
+- **Singletons MUST be used** for core services (`IChatClientFactory`, `IProject`)
 - **Decorators MUST be used** for cross-cutting concerns (caching, performance monitoring)
 - **Configuration MUST load from** `appsettings.json` in console project
 - **Options pattern MUST be used** via `IOptions<T>` for configuration sections
@@ -124,7 +126,8 @@ All services MUST be registered via `HostBuilderExtensions.ConfigureHost()` for 
 ### Required Technologies
 
 - **.NET 10** with C# 14 features (async/await, records, pattern matching, primary constructors, collection expressions)
-- **Semantic Kernel** for AI integration
+- **Microsoft.Extensions.AI** (`IChatClient`, `IEmbeddingGenerator`) for AI integration
+- **Microsoft Agent Framework** (`Microsoft.Agents.AI`) for agent orchestration
 - **System.CommandLine** (migrating to Beta5) for CLI
 - **Microsoft.Extensions.** libraries for DI, Configuration, Logging
 - **MSTest + FluentAssertions + Moq** for testing
