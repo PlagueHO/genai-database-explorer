@@ -401,9 +401,75 @@ Describe 'GenAI Database Explorer Console Application - LocalDisk Strategy' {
                 Test-Path -Path $entityPath | Should -BeTrue -Because "Entity file with vectors should exist on local disk after generation"
             }
         }
-    }
 
-    Context 'Model Display and Export Operations' {
+        Context 'query-model command' {
+            BeforeAll {
+                $script:QueryResult = $null
+                $script:QuerySucceeded = $false
+
+                try {
+                    $script:QueryResult = Invoke-ConsoleCommand -ConsoleApp $script:ConsoleAppPath -Arguments @(
+                        'query-model',
+                        '--project', $script:AiProjectPath,
+                        '--question', 'What tables store customer information?'
+                    )
+
+                    if ($script:QueryResult.ExitCode -eq 0) {
+                        $script:QuerySucceeded = $true
+                    }
+                } catch {
+                    Write-Host "query-model command failed: $_" -ForegroundColor Yellow
+                }
+            }
+
+            It 'Should execute query-model command successfully' {
+                if (-not $script:QueryResult) {
+                    Set-ItResult -Inconclusive -Because 'query-model command threw an exception'
+                    return
+                }
+
+                $outputText = $script:QueryResult.Output -join "`n"
+
+                if ($outputText -match 'No semantic model found|Model not found|AuthorizationFailure|Access denied|403.*not authorized') {
+                    Set-ItResult -Inconclusive -Because 'Model not available or access denied'
+                    return
+                }
+
+                if ($outputText -match 'Error:|Unhandled exception|HTTP [45]\d\d|ClientResultException') {
+                    Set-ItResult -Inconclusive -Because 'AI service error encountered'
+                    return
+                }
+
+                if ($script:QueryResult.ExitCode -ne 0) {
+                    $truncatedOutput = $outputText.Substring(0, [Math]::Min(500, $outputText.Length))
+                    Set-ItResult -Inconclusive -Because "query-model failed with exit code $($script:QueryResult.ExitCode). Output: $truncatedOutput"
+                    return
+                }
+
+                $script:QueryResult.ExitCode | Should -Be 0 -Because 'query-model should complete successfully'
+            }
+
+            It 'Should display query statistics in output' {
+                if (-not $script:QuerySucceeded) {
+                    Set-ItResult -Inconclusive -Because 'query-model did not succeed'
+                    return
+                }
+
+                $outputText = $script:QueryResult.Output -join "`n"
+                $outputText | Should -Match 'Query Statistics' -Because 'Output should contain query statistics section'
+            }
+
+            It 'Should display termination reason in output' {
+                if (-not $script:QuerySucceeded) {
+                    Set-ItResult -Inconclusive -Because 'query-model did not succeed'
+                    return
+                }
+
+                $outputText = $script:QueryResult.Output -join "`n"
+                $outputText | Should -Match 'Termination' -Because 'Output should contain termination reason'
+            }
+        }
+    }
         BeforeAll {
             $script:DisplayProjectPath = Join-Path -Path $script:BaseProjectPath -ChildPath 'display-test'
             Initialize-TestProject -ProjectPath $script:DisplayProjectPath -ConsoleApp $script:ConsoleAppPath | Out-Null

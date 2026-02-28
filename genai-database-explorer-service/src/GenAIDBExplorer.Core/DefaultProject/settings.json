@@ -111,5 +111,13 @@
         "Hybrid": {
             "Enabled": false
         }
+    },
+    "QueryModel": {
+        "AgentName": "genaidb-query-agent",
+        "AgentInstructions": null,
+        "MaxResponseRounds": 10,
+        "MaxTokenBudget": 100000,
+        "TimeoutSeconds": 60,
+        "DefaultTopK": 5
     }
 }

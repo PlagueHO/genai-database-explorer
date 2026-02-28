@@ -42,4 +42,9 @@ public class ProjectSettings
     /// Gets or sets the vector index settings.
     /// </summary>
     public VectorIndexSettings VectorIndex { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the query model agent settings.
+    /// </summary>
+    public QueryModelSettings QueryModel { get; set; } = new();
 }
