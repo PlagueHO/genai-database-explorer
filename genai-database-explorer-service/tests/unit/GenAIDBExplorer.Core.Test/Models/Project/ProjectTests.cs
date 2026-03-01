@@ -275,6 +275,36 @@ public class ProjectTests
     }
 
     [TestMethod]
+    public void ValidateSettings_MissingSettingsVersion_ReturnsRequiredError()
+    {
+        // Settings without SettingsVersion should return a clear "required" error
+        var settingsJson = """
+            {
+                "Database": { "Name": "TestDB", "ConnectionString": "Server=.;Database=Test;Integrated Security=true;", "Description": "Test" },
+                "DataDictionary": { "ColumnTypeMapping": [] },
+                "SemanticModel": { "PersistenceStrategy": "LocalDisk", "MaxDegreeOfParallelism": 4 },
+                "SemanticModelRepository": { "LocalDisk": { "Directory": "TestSemanticModel" } },
+                "MicrosoftFoundry": {
+                    "Default": {
+                        "AuthenticationType": "ApiKey",
+                        "ApiKey": "test-key",
+                        "Endpoint": "https://test.services.ai.azure.com/api/projects/testproject"
+                    },
+                    "ChatCompletion": { "DeploymentName": "gpt-4o" },
+                    "Embedding": { "DeploymentName": "text-embedding-3-large" }
+                }
+            }
+            """;
+
+        var dir = CreateSettingsFile(settingsJson);
+        var project = CreateProjectForValidation();
+
+        FluentActions.Invoking(() => project.LoadProjectConfiguration(new DirectoryInfo(dir)))
+            .Should().Throw<ValidationException>()
+            .WithMessage("*SettingsVersion*required*2.0.0*");
+    }
+
+    [TestMethod]
     public void ValidateSettings_BothFoundryModelsAndMicrosoftFoundry_ReturnsAmbiguityError()
     {
         // T010: Both sections present should return ambiguity error

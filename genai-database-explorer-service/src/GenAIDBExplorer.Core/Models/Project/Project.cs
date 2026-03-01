@@ -170,7 +170,13 @@ public class Project(
         }
 
         // Check SettingsVersion (T017, FR-021)
-        if (Settings.SettingsVersion is not null && Settings.SettingsVersion < new Version(2, 0))
+        if (Settings.SettingsVersion is null || Settings.SettingsVersion == new Version())
+        {
+            throw new ValidationException(
+                "SettingsVersion is required and must be at least 2.0.0. " +
+                "Please set \"SettingsVersion\": \"2.0.0\" in your settings.json file.");
+        }
+        else if (Settings.SettingsVersion < new Version(2, 0))
         {
             throw new ValidationException(
                 $"Settings version {Settings.SettingsVersion} is no longer supported. Version 2.0.0 is required. " +

@@ -657,7 +657,7 @@ public class InitProjectCommandHandlerTests
 
         var settingsJson = new JsonObject
         {
-            ["SettingsVersion"] = "1.0.0",
+            ["SettingsVersion"] = "2.0.0",
             ["Database"] = new JsonObject
             {
                 ["Name"] = "DefaultDB",
@@ -688,7 +688,7 @@ public class InitProjectCommandHandlerTests
                 ["Default"] = new JsonObject
                 {
                     ["AuthenticationType"] = "EntraIdAuthentication",
-                    ["Endpoint"] = "https://placeholder.services.ai.azure.com/"
+                    ["Endpoint"] = "https://placeholder.services.ai.azure.com/api/projects/placeholder"
                 },
                 ["ChatCompletion"] = new JsonObject
                 {

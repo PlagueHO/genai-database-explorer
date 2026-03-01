@@ -249,7 +249,7 @@ function Set-ProjectSettings {
     }
 
     $settings = [ordered]@{
-        SettingsVersion         = "1.0.0"
+        SettingsVersion         = "2.0.0"
         Database                = $Database
         DataDictionary          = @{
             ColumnTypeMapping = @()
@@ -416,7 +416,7 @@ function Set-TestProjectConfiguration {
     $MicrosoftFoundryConfig = @{
         Default = @{
             AuthenticationType = ($NoAzureMode) ? 'ApiKey' : 'ApiKey'
-            Endpoint = ($NoAzureMode) ? 'https://dummy.services.ai.azure.com/' : $MicrosoftFoundryEndpoint
+            Endpoint = ($NoAzureMode) ? 'https://dummy.services.ai.azure.com/api/projects/test-project' : $MicrosoftFoundryEndpoint
             ApiKey = ($NoAzureMode) ? 'dummy-api-key' : $MicrosoftFoundryApiKey
         }
         ChatCompletion = @{
@@ -548,11 +548,11 @@ function Initialize-TestEnvironment {
 
     # Core environment variables (needed by all strategies)
     $environmentVars = @{
-        SQL_CONNECTION_STRING  = $env:SQL_CONNECTION_STRING
-        DATABASE_SCHEMA        = $env:DATABASE_SCHEMA
-        AZURE_OPENAI_ENDPOINT  = $env:AZURE_OPENAI_ENDPOINT
-        AZURE_OPENAI_API_KEY   = $env:AZURE_OPENAI_API_KEY
-        PERSISTENCE_STRATEGY   = $resolvedStrategy
+        SQL_CONNECTION_STRING              = $env:SQL_CONNECTION_STRING
+        DATABASE_SCHEMA                    = $env:DATABASE_SCHEMA
+        AZURE_AI_FOUNDRY_PROJECT_ENDPOINT  = $env:AZURE_AI_FOUNDRY_PROJECT_ENDPOINT
+        AZURE_OPENAI_API_KEY               = $env:AZURE_OPENAI_API_KEY
+        PERSISTENCE_STRATEGY               = $resolvedStrategy
     }
 
     # Add AzureBlob-specific variables
@@ -623,7 +623,7 @@ function Test-RequiredEnvironmentVariables {
         [string]$PersistenceStrategy = 'LocalDisk'
     )
 
-    $requiredVars = @('SQL_CONNECTION_STRING', 'AZURE_OPENAI_ENDPOINT', 'AZURE_OPENAI_API_KEY')
+    $requiredVars = @('SQL_CONNECTION_STRING', 'AZURE_AI_FOUNDRY_PROJECT_ENDPOINT', 'AZURE_OPENAI_API_KEY')
     switch ($PersistenceStrategy) {
         'AzureBlob' { $requiredVars += 'AZURE_STORAGE_ACCOUNT_ENDPOINT' }
         'CosmosDb'  { $requiredVars += 'AZURE_COSMOS_DB_ACCOUNT_ENDPOINT' }

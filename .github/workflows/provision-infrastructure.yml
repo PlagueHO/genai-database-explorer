@@ -66,6 +66,9 @@ on:
       AZURE_AI_FOUNDRY_RESOURCE_ID:
         description: "The Microsoft Foundry service resource ID"
         value: ${{ jobs.provision-infrastructure.outputs.AZURE_AI_FOUNDRY_RESOURCE_ID }}
+      AZURE_AI_FOUNDRY_PROJECT_ENDPOINT:
+        description: "The Microsoft Foundry project endpoint"
+        value: ${{ jobs.provision-infrastructure.outputs.AZURE_AI_FOUNDRY_PROJECT_ENDPOINT }}
       SQL_SERVER_NAME:
         description: "The SQL Server name"
         value: ${{ jobs.provision-infrastructure.outputs.SQL_SERVER_NAME }}
@@ -145,6 +148,7 @@ jobs:
       AZURE_AI_FOUNDRY_ID: ${{ steps.get_infrastructure_outputs.outputs.AZURE_AI_FOUNDRY_ID }}
       AZURE_AI_FOUNDRY_ENDPOINT: ${{ steps.get_infrastructure_outputs.outputs.AZURE_AI_FOUNDRY_ENDPOINT }}
       AZURE_AI_FOUNDRY_RESOURCE_ID: ${{ steps.get_infrastructure_outputs.outputs.AZURE_AI_FOUNDRY_RESOURCE_ID }}
+      AZURE_AI_FOUNDRY_PROJECT_ENDPOINT: ${{ steps.get_infrastructure_outputs.outputs.AZURE_AI_FOUNDRY_PROJECT_ENDPOINT }}
       SQL_SERVER_NAME: ${{ steps.get_infrastructure_outputs.outputs.SQL_SERVER_NAME }}
       SQL_SERVER_RESOURCE_ID: ${{ steps.get_infrastructure_outputs.outputs.SQL_SERVER_RESOURCE_ID }}
       SQL_DATABASE_ENDPOINT: ${{ steps.get_infrastructure_outputs.outputs.SQL_DATABASE_ENDPOINT }}
@@ -232,6 +236,7 @@ jobs:
             "AZURE_AI_FOUNDRY_ID"
             "AZURE_AI_FOUNDRY_ENDPOINT"
             "AZURE_AI_FOUNDRY_RESOURCE_ID"
+            "AZURE_AI_FOUNDRY_PROJECT_ENDPOINT"
             "SQL_SERVER_NAME"
             "SQL_SERVER_RESOURCE_ID"
             "SQL_DATABASE_ENDPOINT"
