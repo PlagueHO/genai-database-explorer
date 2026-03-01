@@ -279,7 +279,7 @@ public class KeyVaultConfigurationProvider : IDisposable
         try
         {
             using var cts = new CancellationTokenSource(_keyVaultTimeout);
-            var response = await _secretClient.GetSecretAsync(secretName, cancellationToken: cts.Token);
+            var response = await _secretClient.GetSecretAsync(secretName, version: null, cancellationToken: cts.Token);
 
             return response.Value?.Value;
         }
