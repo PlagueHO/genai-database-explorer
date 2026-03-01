@@ -2,13 +2,13 @@ using System.ComponentModel.DataAnnotations;
 
 namespace GenAIDBExplorer.Core.Models.Project;
 
-public class FoundryModelsDefaultSettings
+public class MicrosoftFoundryDefaultSettings
 {
-    // The settings key that contains the Default Foundry Models settings
+    // The settings key that contains the Default Microsoft Foundry settings
     public const string PropertyName = "Default";
 
     /// <summary>
-    /// Specifies the authentication method to use when connecting to Foundry Models endpoints.
+    /// Specifies the authentication method to use when connecting to Microsoft Foundry endpoints.
     /// Defaults to EntraIdAuthentication (managed identity/DefaultAzureCredential).
     /// </summary>
     public AuthenticationType AuthenticationType { get; set; } = AuthenticationType.EntraIdAuthentication;

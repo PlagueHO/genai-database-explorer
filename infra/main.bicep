@@ -71,6 +71,7 @@ var logAnalyticsWorkspaceName = '${abbrs.operationalInsightsWorkspaces}${environ
 var applicationInsightsName = '${abbrs.insightsComponents}${environmentName}'
 var foundryName = '${abbrs.aiFoundryAccounts}${environmentName}'
 var foundryCustomSubDomainName = toLower(replace(environmentName, '-', ''))
+var defaultProjectName = 'genaidbexplorer'
 var aiSearchName = '${abbrs.aiSearchSearchServices}${environmentName}'
 var cosmosDbAccountName = '${abbrs.cosmosDBAccounts}${environmentName}'
 var storageAccountName = '${abbrs.storageStorageAccounts}${toLower(replace(environmentName, '-', ''))}'
@@ -162,6 +163,17 @@ module foundryService './cognitive-services/accounts/main.bicep' = {
     publicNetworkAccess: enablePublicNetworkAccess ? 'Enabled' : 'Disabled'
     sku: 'S0'
     deployments: modelDeployments
+    defaultProject: defaultProjectName
+    projects: [
+      {
+        name: defaultProjectName
+        location: location
+        properties: {
+          displayName: 'GenAI Database Explorer'
+          description: 'Project for GenAI Database Explorer application'
+        }
+      }
+    ]
     tags: tags
   }
 }
@@ -499,6 +511,7 @@ output AZURE_AI_FOUNDRY_NAME string = foundryService.outputs.name
 output AZURE_AI_FOUNDRY_ID string = foundryService.outputs.resourceId
 output AZURE_AI_FOUNDRY_ENDPOINT string = foundryService.outputs.endpoint
 output AZURE_AI_FOUNDRY_RESOURCE_ID string = foundryService.outputs.resourceId
+output AZURE_AI_FOUNDRY_PROJECT_ENDPOINT string = 'https://${foundryCustomSubDomainName}.services.ai.azure.com/api/projects/${defaultProjectName}'
 
 // Output the SQL Server resources
 output SQL_SERVER_NAME string = sqlServer.outputs.name

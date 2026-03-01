@@ -199,7 +199,7 @@ function New-TestDataDictionary {
         A hashtable containing database configuration including connectionString,
         schema, and other database-related settings.
 
-    .PARAMETER FoundryModels
+    .PARAMETER MicrosoftFoundry
         A hashtable containing Foundry Models configuration including authentication
         and model deployment settings.
 
@@ -214,7 +214,7 @@ function New-TestDataDictionary {
         $dbConfig = @{ connectionString = "Server=.;Database=Test"; schema = "dbo" }
         $foundryConfig = @{ Default = @{ Endpoint = "https://test.services.ai.azure.com/"; AuthenticationType = "ApiKey"; ApiKey = "test-key" } }
         $repoConfig = @{ provider = "LocalDisk" }
-        Set-ProjectSettings -ProjectPath "C:\temp\project" -Database $dbConfig -FoundryModels $foundryConfig -SemanticModelRepository $repoConfig
+        Set-ProjectSettings -ProjectPath "C:\temp\project" -Database $dbConfig -MicrosoftFoundry $foundryConfig -SemanticModelRepository $repoConfig
 
     .NOTES
         This function creates a complete settings.json file with all required sections
@@ -233,7 +233,7 @@ function Set-ProjectSettings {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNull()]
-        [hashtable]$FoundryModels,
+        [hashtable]$MicrosoftFoundry,
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNull()]
@@ -249,7 +249,7 @@ function Set-ProjectSettings {
     }
 
     $settings = [ordered]@{
-        SettingsVersion         = "1.0.0"
+        SettingsVersion         = "2.0.0"
         Database                = $Database
         DataDictionary          = @{
             ColumnTypeMapping = @()
@@ -259,7 +259,7 @@ function Set-ProjectSettings {
             MaxDegreeOfParallelism = 1
         }
         SemanticModelRepository = $SemanticModelRepository
-        FoundryModels           = $FoundryModels
+        MicrosoftFoundry           = $MicrosoftFoundry
         VectorIndex            = @{
             Provider = 'Auto'
             CollectionName = 'genaide-entities'
@@ -289,10 +289,10 @@ function Set-ProjectSettings {
     .PARAMETER ConnectionString
         The database connection string for connecting to the test database.
 
-    .PARAMETER FoundryModelsEndpoint
+    .PARAMETER MicrosoftFoundryEndpoint
         The Foundry Models endpoint URL (e.g., https://<resource>.services.ai.azure.com/).
 
-    .PARAMETER FoundryModelsApiKey
+    .PARAMETER MicrosoftFoundryApiKey
         The API key for authenticating with Foundry Models service.
 
     .PARAMETER NoAzureMode
@@ -334,7 +334,7 @@ function Set-ProjectSettings {
         This function does not return output but creates a settings.json file in the project directory.
 
     .EXAMPLE
-        Set-TestProjectConfiguration -ProjectPath "C:\temp\project" -ConnectionString "Server=.;Database=Test" -FoundryModelsEndpoint "https://test.services.ai.azure.com/" -FoundryModelsApiKey "test-key"
+        Set-TestProjectConfiguration -ProjectPath "C:\temp\project" -ConnectionString "Server=.;Database=Test" -MicrosoftFoundryEndpoint "https://test.services.ai.azure.com/" -MicrosoftFoundryApiKey "test-key"
 
     .EXAMPLE
         Set-TestProjectConfiguration -ProjectPath "C:\temp\project" -ConnectionString "Server=.;Database=Test" -NoAzureMode -PersistenceStrategy "LocalDisk"
@@ -357,10 +357,10 @@ function Set-TestProjectConfiguration {
         [string]$DatabaseSchema = 'SalesLT',
 
         [Parameter()]
-        [string]$FoundryModelsEndpoint,
+        [string]$MicrosoftFoundryEndpoint,
 
         [Parameter()]
-        [string]$FoundryModelsApiKey,
+        [string]$MicrosoftFoundryApiKey,
 
         [Parameter()]
         [bool]$NoAzureMode = $false,
@@ -413,11 +413,11 @@ function Set-TestProjectConfiguration {
     }
 
     # Build Foundry Models configuration
-    $foundryModelsConfig = @{
+    $MicrosoftFoundryConfig = @{
         Default = @{
             AuthenticationType = ($NoAzureMode) ? 'ApiKey' : 'ApiKey'
-            Endpoint = ($NoAzureMode) ? 'https://dummy.services.ai.azure.com/' : $FoundryModelsEndpoint
-            ApiKey = ($NoAzureMode) ? 'dummy-api-key' : $FoundryModelsApiKey
+            Endpoint = ($NoAzureMode) ? 'https://dummy.services.ai.azure.com/api/projects/test-project' : $MicrosoftFoundryEndpoint
+            ApiKey = ($NoAzureMode) ? 'dummy-api-key' : $MicrosoftFoundryApiKey
         }
         ChatCompletion = @{
             DeploymentName = ($NoAzureMode) ? 'gpt-4o-mini' : $ChatCompletionDeploymentName
@@ -453,7 +453,7 @@ function Set-TestProjectConfiguration {
     }
 
     # Call the core settings function with properly structured configurations
-    Set-ProjectSettings -ProjectPath $ProjectPath -Database $dbConfig -FoundryModels $foundryModelsConfig -SemanticModelRepository $repoConfig -PersistenceStrategy $PersistenceStrategy
+    Set-ProjectSettings -ProjectPath $ProjectPath -Database $dbConfig -MicrosoftFoundry $MicrosoftFoundryConfig -SemanticModelRepository $repoConfig -PersistenceStrategy $PersistenceStrategy
 }
 
 <#
@@ -548,11 +548,11 @@ function Initialize-TestEnvironment {
 
     # Core environment variables (needed by all strategies)
     $environmentVars = @{
-        SQL_CONNECTION_STRING  = $env:SQL_CONNECTION_STRING
-        DATABASE_SCHEMA        = $env:DATABASE_SCHEMA
-        AZURE_OPENAI_ENDPOINT  = $env:AZURE_OPENAI_ENDPOINT
-        AZURE_OPENAI_API_KEY   = $env:AZURE_OPENAI_API_KEY
-        PERSISTENCE_STRATEGY   = $resolvedStrategy
+        SQL_CONNECTION_STRING              = $env:SQL_CONNECTION_STRING
+        DATABASE_SCHEMA                    = $env:DATABASE_SCHEMA
+        AZURE_AI_FOUNDRY_PROJECT_ENDPOINT  = $env:AZURE_AI_FOUNDRY_PROJECT_ENDPOINT
+        AZURE_OPENAI_API_KEY               = $env:AZURE_OPENAI_API_KEY
+        PERSISTENCE_STRATEGY               = $resolvedStrategy
     }
 
     # Add AzureBlob-specific variables
@@ -623,7 +623,7 @@ function Test-RequiredEnvironmentVariables {
         [string]$PersistenceStrategy = 'LocalDisk'
     )
 
-    $requiredVars = @('SQL_CONNECTION_STRING', 'AZURE_OPENAI_ENDPOINT', 'AZURE_OPENAI_API_KEY')
+    $requiredVars = @('SQL_CONNECTION_STRING', 'AZURE_AI_FOUNDRY_PROJECT_ENDPOINT', 'AZURE_OPENAI_API_KEY')
     switch ($PersistenceStrategy) {
         'AzureBlob' { $requiredVars += 'AZURE_STORAGE_ACCOUNT_ENDPOINT' }
         'CosmosDb'  { $requiredVars += 'AZURE_COSMOS_DB_ACCOUNT_ENDPOINT' }

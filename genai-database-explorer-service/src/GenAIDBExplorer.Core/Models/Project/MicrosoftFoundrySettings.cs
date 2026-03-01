@@ -2,13 +2,13 @@ using System.ComponentModel.DataAnnotations;
 
 namespace GenAIDBExplorer.Core.Models.Project;
 
-public class FoundryModelsSettings()
+public class MicrosoftFoundrySettings()
 {
-    // The settings key that contains the FoundryModels settings
-    public const string PropertyName = "FoundryModels";
+    // The settings key that contains the MicrosoftFoundry settings
+    public const string PropertyName = "MicrosoftFoundry";
 
     [Required]
-    public FoundryModelsDefaultSettings Default { get; set; } = new FoundryModelsDefaultSettings();
+    public MicrosoftFoundryDefaultSettings Default { get; set; } = new MicrosoftFoundryDefaultSettings();
 
     /// <summary>
     /// Gets or sets the chat completion settings.

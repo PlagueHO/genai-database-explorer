@@ -1,16 +1,17 @@
 using System.ClientModel;
 using System.ClientModel.Primitives;
+using Azure.AI.Projects;
+using Azure.AI.Projects.OpenAI;
 using Azure.Identity;
 using GenAIDBExplorer.Core.Models.Project;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
-using OpenAI;
 
 namespace GenAIDBExplorer.Core.ChatClients;
 
 /// <summary>
 /// Factory for creating AI chat clients and embedding generators from project configuration.
-/// Uses <see cref="OpenAIClient"/> with endpoint override for Azure AI Foundry,
+/// Uses <see cref="AIProjectClient"/> to connect through a Microsoft Foundry project endpoint,
 /// supporting both Entra ID and API key authentication.
 /// This approach supports any model hosted in Azure AI Foundry (OpenAI, DeepSeek, Meta, etc.).
 /// </summary>
@@ -22,24 +23,22 @@ public sealed class ChatClientFactory(
     private readonly IProject _project = project;
     private readonly ILogger<ChatClientFactory> _logger = logger;
 
-    /// <summary>
-    /// The Azure AI Foundry token audience scope for Entra ID authentication.
-    /// </summary>
-    private const string FoundryTokenScope = "https://ai.azure.com/.default";
+    private AIProjectClient? _projectClient;
+    private ProjectOpenAIClient? _openAIClient;
+    private readonly object _lock = new();
 
     /// <inheritdoc />
     public IChatClient CreateChatClient()
     {
-        var defaultSettings = _project.Settings.FoundryModels.Default;
-        var chatSettings = _project.Settings.FoundryModels.ChatCompletion;
+        var chatSettings = _project.Settings.MicrosoftFoundry.ChatCompletion;
 
         var deploymentName = chatSettings.DeploymentName
             ?? throw new InvalidOperationException("ChatCompletion deployment name is required.");
 
         _logger.LogDebug("Creating chat client with deployment: {DeploymentName}", deploymentName);
 
-        var client = CreateOpenAIClient(defaultSettings);
-        return client.GetChatClient(deploymentName).AsIChatClient();
+        var openAIClient = GetOrCreateOpenAIClient();
+        return openAIClient.GetChatClient(deploymentName).AsIChatClient();
     }
 
     /// <inheritdoc />
@@ -52,52 +51,75 @@ public sealed class ChatClientFactory(
     /// <inheritdoc />
     public IEmbeddingGenerator<string, Embedding<float>> CreateEmbeddingGenerator()
     {
-        var defaultSettings = _project.Settings.FoundryModels.Default;
-        var embeddingSettings = _project.Settings.FoundryModels.Embedding;
+        var embeddingSettings = _project.Settings.MicrosoftFoundry.Embedding;
 
         var deploymentName = embeddingSettings.DeploymentName
             ?? throw new InvalidOperationException("Embedding deployment name is required.");
 
         _logger.LogDebug("Creating embedding generator with deployment: {DeploymentName}", deploymentName);
 
-        var client = CreateOpenAIClient(defaultSettings);
-        return client.GetEmbeddingClient(deploymentName).AsIEmbeddingGenerator();
+        var openAIClient = GetOrCreateOpenAIClient();
+        return openAIClient.GetEmbeddingClient(deploymentName).AsIEmbeddingGenerator();
     }
 
-    private OpenAIClient CreateOpenAIClient(FoundryModelsDefaultSettings defaultSettings)
+    /// <inheritdoc />
+    public AIProjectClient GetProjectClient()
     {
-        var endpoint = defaultSettings.Endpoint
-            ?? throw new InvalidOperationException("Foundry Models endpoint is required.");
+        GetOrCreateOpenAIClient();
+        return _projectClient
+            ?? throw new InvalidOperationException(
+                "AIProjectClient is only available with Entra ID authentication. " +
+                "API key authentication does not support Foundry project operations such as agent hosting.");
+    }
 
-        var clientOptions = new OpenAIClientOptions { Endpoint = new Uri(endpoint) };
+    private ProjectOpenAIClient GetOrCreateOpenAIClient()
+    {
+        if (_openAIClient is not null) return _openAIClient;
 
-        if (defaultSettings.AuthenticationType == AuthenticationType.EntraIdAuthentication)
+        lock (_lock)
         {
-            var credential = !string.IsNullOrWhiteSpace(defaultSettings.TenantId)
-                ? new DefaultAzureCredential(new DefaultAzureCredentialOptions { TenantId = defaultSettings.TenantId })
-                : new DefaultAzureCredential();
+            if (_openAIClient is not null) return _openAIClient;
 
-            var tenantInfo = !string.IsNullOrWhiteSpace(defaultSettings.TenantId)
-                ? $" for tenant {defaultSettings.TenantId}"
-                : string.Empty;
-            _logger.LogInformation(
-                "Using Microsoft Entra ID Default authentication for Foundry Models{TenantInfo}.",
-                tenantInfo);
+            var defaultSettings = _project.Settings.MicrosoftFoundry.Default;
+            var endpoint = defaultSettings.Endpoint
+                ?? throw new InvalidOperationException("Microsoft Foundry endpoint is required.");
 
-#pragma warning disable OPENAI001 // OpenAIClient(AuthenticationPolicy, OpenAIClientOptions) is experimental; this is the Microsoft-recommended Foundry auth pattern
-            return new OpenAIClient(
-                new BearerTokenPolicy(credential, FoundryTokenScope),
-                clientOptions);
-#pragma warning restore OPENAI001
-        }
-        else
-        {
-            var apiKey = defaultSettings.ApiKey
-                ?? throw new InvalidOperationException("API key is required when using ApiKey authentication.");
+            var endpointUri = new Uri(endpoint);
 
-            _logger.LogInformation("Using API key authentication for Foundry Models.");
+            if (defaultSettings.AuthenticationType == AuthenticationType.EntraIdAuthentication)
+            {
+                var credential = !string.IsNullOrWhiteSpace(defaultSettings.TenantId)
+                    ? new DefaultAzureCredential(new DefaultAzureCredentialOptions { TenantId = defaultSettings.TenantId })
+                    : new DefaultAzureCredential();
 
-            return new OpenAIClient(new ApiKeyCredential(apiKey), clientOptions);
+                var tenantInfo = !string.IsNullOrWhiteSpace(defaultSettings.TenantId)
+                    ? $" for tenant {defaultSettings.TenantId}"
+                    : string.Empty;
+                _logger.LogInformation(
+                    "Creating AIProjectClient with Entra ID authentication for {Endpoint}{TenantInfo}.",
+                    endpoint,
+                    tenantInfo);
+
+                _projectClient = new AIProjectClient(endpointUri, credential);
+                _openAIClient = _projectClient.OpenAI;
+            }
+            else
+            {
+                var apiKey = defaultSettings.ApiKey
+                    ?? throw new InvalidOperationException("API key is required when using ApiKey authentication.");
+
+                _logger.LogInformation(
+                    "Creating ProjectOpenAIClient with API key authentication for {Endpoint}.",
+                    endpoint);
+
+                var apiKeyCred = new ApiKeyCredential(apiKey);
+                var authPolicy = ApiKeyAuthenticationPolicy.CreateBearerAuthorizationPolicy(apiKeyCred);
+                _openAIClient = new ProjectOpenAIClient(
+                    authPolicy,
+                    new ProjectOpenAIClientOptions { Endpoint = endpointUri });
+            }
+
+            return _openAIClient;
         }
     }
 }

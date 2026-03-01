@@ -55,7 +55,7 @@ ALL AI operations MUST use `IChatClientFactory` for direct AI operations (chat c
 - **Token usage MUST be tracked** via `response.Usage` (`UsageDetails` with `long?` properties) for cost management
 - **AI operations MUST use structured logging** with appropriate scopes for debugging
 - **Prompt template pattern MUST follow existing provider implementations** using `IPromptTemplateParser` and `ILiquidTemplateRenderer` for consistency
-- **AI service configuration MUST support Azure AI Foundry** via `FoundryModels` settings
+- **AI service configuration MUST support Azure AI Foundry** via `MicrosoftFoundry` settings with project endpoint format
 - **Agent orchestration MUST use the Microsoft Agent Framework** (`AIAgent`, `AIFunctionFactory`, `RunStreamingAsync`) for multi-step reasoning tasks
 
 **Rationale**: Centralized AI integration via `IChatClientFactory` ensures consistent error handling, token tracking, cost management, and testability. The Agent Framework provides managed ReAct loops for agent scenarios, abstracting the tool-call orchestration cycle. Both patterns coexist: `IChatClientFactory` for direct AI calls (enrichment, embeddings), `AIAgent` for autonomous agent workflows (query-model).

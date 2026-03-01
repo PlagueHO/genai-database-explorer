@@ -400,7 +400,7 @@ public class InitProjectCommandHandlerTests
     }
 
     [TestMethod]
-    public void ApplySettingsOverrides_ShouldUpdateFoundryModelsSettings()
+    public void ApplySettingsOverrides_ShouldUpdateMicrosoftFoundrySettings()
     {
         // Arrange
         var tempDir = CreateTempProjectDirectory();
@@ -419,11 +419,11 @@ public class InitProjectCommandHandlerTests
 
             // Assert
             var settings = ReadSettingsJson(tempDir);
-            settings["FoundryModels"]!["Default"]!["Endpoint"]!.GetValue<string>().Should().Be("https://myresource.services.ai.azure.com/");
-            settings["FoundryModels"]!["Default"]!["AuthenticationType"]!.GetValue<string>().Should().Be("ApiKey");
-            settings["FoundryModels"]!["Default"]!["ApiKey"]!.GetValue<string>().Should().Be("my-api-key-123");
-            settings["FoundryModels"]!["ChatCompletion"]!["DeploymentName"]!.GetValue<string>().Should().Be("gpt-4o-mini");
-            settings["FoundryModels"]!["Embedding"]!["DeploymentName"]!.GetValue<string>().Should().Be("text-embedding-3-small");
+            settings["MicrosoftFoundry"]!["Default"]!["Endpoint"]!.GetValue<string>().Should().Be("https://myresource.services.ai.azure.com/");
+            settings["MicrosoftFoundry"]!["Default"]!["AuthenticationType"]!.GetValue<string>().Should().Be("ApiKey");
+            settings["MicrosoftFoundry"]!["Default"]!["ApiKey"]!.GetValue<string>().Should().Be("my-api-key-123");
+            settings["MicrosoftFoundry"]!["ChatCompletion"]!["DeploymentName"]!.GetValue<string>().Should().Be("gpt-4o-mini");
+            settings["MicrosoftFoundry"]!["Embedding"]!["DeploymentName"]!.GetValue<string>().Should().Be("text-embedding-3-small");
         }
         finally
         {
@@ -562,10 +562,10 @@ public class InitProjectCommandHandlerTests
             settings["Database"]!["ConnectionString"]!.GetValue<string>().Should().Be("Server=prod;Database=FullTestDB;");
             settings["Database"]!["AuthenticationType"]!.GetValue<string>().Should().Be("EntraIdAuthentication");
             settings["Database"]!["Schema"]!.GetValue<string>().Should().Be("Production");
-            settings["FoundryModels"]!["Default"]!["Endpoint"]!.GetValue<string>().Should().Be("https://prod.services.ai.azure.com/");
-            settings["FoundryModels"]!["Default"]!["AuthenticationType"]!.GetValue<string>().Should().Be("EntraIdAuthentication");
-            settings["FoundryModels"]!["ChatCompletion"]!["DeploymentName"]!.GetValue<string>().Should().Be("gpt-5-2-chat");
-            settings["FoundryModels"]!["Embedding"]!["DeploymentName"]!.GetValue<string>().Should().Be("text-embedding-3-large");
+            settings["MicrosoftFoundry"]!["Default"]!["Endpoint"]!.GetValue<string>().Should().Be("https://prod.services.ai.azure.com/");
+            settings["MicrosoftFoundry"]!["Default"]!["AuthenticationType"]!.GetValue<string>().Should().Be("EntraIdAuthentication");
+            settings["MicrosoftFoundry"]!["ChatCompletion"]!["DeploymentName"]!.GetValue<string>().Should().Be("gpt-5-2-chat");
+            settings["MicrosoftFoundry"]!["Embedding"]!["DeploymentName"]!.GetValue<string>().Should().Be("text-embedding-3-large");
             settings["SemanticModel"]!["PersistenceStrategy"]!.GetValue<string>().Should().Be("CosmosDB");
             settings["VectorIndex"]!["Provider"]!.GetValue<string>().Should().Be("AzureAISearch");
             settings["VectorIndex"]!["CollectionName"]!.GetValue<string>().Should().Be("prod-entities");
@@ -621,6 +621,32 @@ public class InitProjectCommandHandlerTests
         _mockOutputService.Verify(o => o.WriteError(It.Is<string>(s => s.Contains("Invalid database authentication type"))), Times.Once);
     }
 
+    [TestMethod]
+    public void InitProject_GeneratesSettings_WithMicrosoftFoundrySection()
+    {
+        // Arrange — verify generated settings.json uses MicrosoftFoundry section, not FoundryModels (T032)
+        var tempDir = CreateTempProjectDirectory();
+
+        try
+        {
+            // Act — read the template settings
+            var settings = ReadSettingsJson(tempDir);
+
+            // Assert
+            settings["MicrosoftFoundry"].Should().NotBeNull("generated settings must contain MicrosoftFoundry section");
+            settings["MicrosoftFoundry"]!["Default"]!["Endpoint"].Should().NotBeNull();
+            settings["MicrosoftFoundry"]!["ChatCompletion"]!["DeploymentName"].Should().NotBeNull();
+            settings["MicrosoftFoundry"]!["Embedding"]!["DeploymentName"].Should().NotBeNull();
+
+            // Verify FoundryModels is NOT present
+            settings["FoundryModels"].Should().BeNull("generated settings must not contain legacy FoundryModels section");
+        }
+        finally
+        {
+            CleanupTempDirectory(tempDir);
+        }
+    }
+
     /// <summary>
     /// Creates a temporary directory with a minimal settings.json for testing ApplySettingsOverrides.
     /// </summary>
@@ -631,7 +657,7 @@ public class InitProjectCommandHandlerTests
 
         var settingsJson = new JsonObject
         {
-            ["SettingsVersion"] = "1.0.0",
+            ["SettingsVersion"] = "2.0.0",
             ["Database"] = new JsonObject
             {
                 ["Name"] = "DefaultDB",
@@ -657,12 +683,12 @@ public class InitProjectCommandHandlerTests
                     ["Directory"] = "semantic-model"
                 }
             },
-            ["FoundryModels"] = new JsonObject
+            ["MicrosoftFoundry"] = new JsonObject
             {
                 ["Default"] = new JsonObject
                 {
                     ["AuthenticationType"] = "EntraIdAuthentication",
-                    ["Endpoint"] = "https://placeholder.services.ai.azure.com/"
+                    ["Endpoint"] = "https://placeholder.services.ai.azure.com/api/projects/placeholder"
                 },
                 ["ChatCompletion"] = new JsonObject
                 {

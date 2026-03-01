@@ -30,7 +30,7 @@ public class VectorGenerationServiceTests
                 SettingsVersion = new Version(1, 0),
                 Database = new DatabaseSettings(),
                 DataDictionary = new DataDictionarySettings(),
-                FoundryModels = new FoundryModelsSettings(),
+                MicrosoftFoundry = new MicrosoftFoundrySettings(),
                 SemanticModel = new SemanticModelSettings { PersistenceStrategy = "LocalDisk" },
                 SemanticModelRepository = new SemanticModelRepositorySettings
                 {

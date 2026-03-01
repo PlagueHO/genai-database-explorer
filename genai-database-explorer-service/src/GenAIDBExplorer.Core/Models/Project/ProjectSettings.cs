@@ -24,9 +24,9 @@ public class ProjectSettings
     public required DataDictionarySettings DataDictionary { get; set; }
 
     /// <summary>
-    /// Gets or sets the Foundry Models settings.
+    /// Gets or sets the Microsoft Foundry settings.
     /// </summary>
-    public required FoundryModelsSettings FoundryModels { get; set; }
+    public required MicrosoftFoundrySettings MicrosoftFoundry { get; set; }
 
     /// <summary>
     /// Gets or sets the semantic model settings.

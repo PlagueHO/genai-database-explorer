@@ -76,17 +76,17 @@ public class InitProjectCommandHandler(
         // Foundry Models settings options
         var foundryEndpointOption = new Option<string?>("--foundry-endpoint")
         {
-            Description = "The Foundry Models endpoint URL (e.g., https://your-resource.services.ai.azure.com/)."
+            Description = "The Microsoft Foundry project endpoint URL (e.g., https://<resource>.services.ai.azure.com/api/projects/<project-name>)."
         };
 
         var foundryAuthTypeOption = new Option<string?>("--foundry-auth-type")
         {
-            Description = "The Foundry Models authentication type (EntraIdAuthentication or ApiKey)."
+            Description = "The Microsoft Foundry authentication type (EntraIdAuthentication or ApiKey)."
         };
 
         var foundryApiKeyOption = new Option<string?>("--foundry-api-key")
         {
-            Description = "The Foundry Models API key (required when using ApiKey authentication)."
+            Description = "The Microsoft Foundry API key (required when using ApiKey authentication)."
         };
 
         var foundryChatDeploymentOption = new Option<string?>("--foundry-chat-deployment")
@@ -309,30 +309,30 @@ public class InitProjectCommandHandler(
             EnsureJsonObject(jsonNode, "Database")["Schema"] = options.DatabaseSchema;
         }
 
-        // Apply FoundryModels settings
+        // Apply MicrosoftFoundry settings
         if (options.FoundryEndpoint is not null)
         {
-            EnsureJsonObject(EnsureJsonObject(jsonNode, "FoundryModels"), "Default")["Endpoint"] = options.FoundryEndpoint;
+            EnsureJsonObject(EnsureJsonObject(jsonNode, "MicrosoftFoundry"), "Default")["Endpoint"] = options.FoundryEndpoint;
         }
 
         if (options.FoundryAuthType is not null)
         {
-            EnsureJsonObject(EnsureJsonObject(jsonNode, "FoundryModels"), "Default")["AuthenticationType"] = options.FoundryAuthType;
+            EnsureJsonObject(EnsureJsonObject(jsonNode, "MicrosoftFoundry"), "Default")["AuthenticationType"] = options.FoundryAuthType;
         }
 
         if (options.FoundryApiKey is not null)
         {
-            EnsureJsonObject(EnsureJsonObject(jsonNode, "FoundryModels"), "Default")["ApiKey"] = options.FoundryApiKey;
+            EnsureJsonObject(EnsureJsonObject(jsonNode, "MicrosoftFoundry"), "Default")["ApiKey"] = options.FoundryApiKey;
         }
 
         if (options.FoundryChatDeployment is not null)
         {
-            EnsureJsonObject(EnsureJsonObject(jsonNode, "FoundryModels"), "ChatCompletion")["DeploymentName"] = options.FoundryChatDeployment;
+            EnsureJsonObject(EnsureJsonObject(jsonNode, "MicrosoftFoundry"), "ChatCompletion")["DeploymentName"] = options.FoundryChatDeployment;
         }
 
         if (options.FoundryEmbeddingDeployment is not null)
         {
-            EnsureJsonObject(EnsureJsonObject(jsonNode, "FoundryModels"), "Embedding")["DeploymentName"] = options.FoundryEmbeddingDeployment;
+            EnsureJsonObject(EnsureJsonObject(jsonNode, "MicrosoftFoundry"), "Embedding")["DeploymentName"] = options.FoundryEmbeddingDeployment;
         }
 
         // Apply SemanticModel settings
