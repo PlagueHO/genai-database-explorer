@@ -86,7 +86,7 @@ Describe 'GenAI Database Explorer Console Application - Common Tests' {
                     $settings = Get-Content -Path $settingsPath | ConvertFrom-Json
                     $settings.SettingsVersion | Should -Not -BeNullOrEmpty -Because 'Settings should have version'
                     $settings.Database | Should -Not -BeNullOrEmpty -Because 'Settings should have Database section'
-                    $settings.FoundryModels | Should -Not -BeNullOrEmpty -Because 'Settings should have FoundryModels section'
+                    $settings.MicrosoftFoundry | Should -Not -BeNullOrEmpty -Because 'Settings should have MicrosoftFoundry section'
                 }
             }
 
@@ -162,9 +162,9 @@ Describe 'GenAI Database Explorer Console Application - Common Tests' {
 
                     $settingsPath = Join-Path -Path $script:FoundryOverridePath -ChildPath 'settings.json'
                     $settings = Get-Content -Path $settingsPath -Raw | ConvertFrom-Json
-                    $settings.FoundryModels.Default.Endpoint | Should -Be 'https://mytest.services.ai.azure.com/' -Because 'Foundry endpoint should be overridden'
-                    $settings.FoundryModels.ChatCompletion.DeploymentName | Should -Be 'gpt-5-2-chat' -Because 'Chat deployment should be overridden'
-                    $settings.FoundryModels.Embedding.DeploymentName | Should -Be 'text-embedding-3-large' -Because 'Embedding deployment should be overridden'
+                    $settings.MicrosoftFoundry.Default.Endpoint | Should -Be 'https://mytest.services.ai.azure.com/' -Because 'Foundry endpoint should be overridden'
+                    $settings.MicrosoftFoundry.ChatCompletion.DeploymentName | Should -Be 'gpt-5-2-chat' -Because 'Chat deployment should be overridden'
+                    $settings.MicrosoftFoundry.Embedding.DeploymentName | Should -Be 'text-embedding-3-large' -Because 'Embedding deployment should be overridden'
                 }
             }
 

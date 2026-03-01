@@ -41,7 +41,7 @@ public class ShowObjectCommandHandlerTests
             {
                 PersistenceStrategy = "LocalDisk"
             },
-            FoundryModels = new FoundryModelsSettings(),
+            MicrosoftFoundry = new MicrosoftFoundrySettings(),
             SemanticModelRepository = new SemanticModelRepositorySettings
             {
                 LocalDisk = new LocalDiskConfiguration

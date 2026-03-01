@@ -1,3 +1,4 @@
+using Azure.AI.Projects;
 using FluentAssertions;
 using GenAIDBExplorer.Core.ChatClients;
 using GenAIDBExplorer.Core.Models.Project;
@@ -12,7 +13,7 @@ public class ChatClientFactoryTests
 {
     private static IProject CreateMockProject(
         AuthenticationType authType = AuthenticationType.ApiKey,
-        string? endpoint = "https://test.openai.azure.com/",
+        string? endpoint = "https://test.services.ai.azure.com/api/projects/testproject",
         string? apiKey = "test-api-key",
         string? chatDeploymentName = "gpt-4o",
         string? embeddingDeploymentName = "text-embedding-3-small",
@@ -21,14 +22,14 @@ public class ChatClientFactoryTests
         var projectMock = new Mock<IProject>();
         var settings = new ProjectSettings
         {
-            SettingsVersion = new Version(1, 0),
+            SettingsVersion = new Version(2, 0),
             Database = new DatabaseSettings(),
             DataDictionary = new DataDictionarySettings(),
             SemanticModel = new SemanticModelSettings(),
             SemanticModelRepository = new SemanticModelRepositorySettings(),
-            FoundryModels = new FoundryModelsSettings
+            MicrosoftFoundry = new MicrosoftFoundrySettings
             {
-                Default = new FoundryModelsDefaultSettings
+                Default = new MicrosoftFoundryDefaultSettings
                 {
                     AuthenticationType = authType,
                     Endpoint = endpoint,
@@ -73,6 +74,24 @@ public class ChatClientFactoryTests
     {
         // Arrange
         var project = CreateMockProject(authType: AuthenticationType.EntraIdAuthentication);
+        var logger = Mock.Of<ILogger<ChatClientFactory>>();
+        var factory = new ChatClientFactory(project, logger);
+
+        // Act
+        var client = factory.CreateChatClient();
+
+        // Assert
+        client.Should().NotBeNull();
+        client.Should().BeAssignableTo<IChatClient>();
+    }
+
+    [TestMethod]
+    public void CreateChatClient_WithProjectEndpoint_ShouldReturnIChatClient()
+    {
+        // Arrange — valid Foundry project endpoint with API key auth (T023)
+        var project = CreateMockProject(
+            authType: AuthenticationType.ApiKey,
+            endpoint: "https://test.services.ai.azure.com/api/projects/testproject");
         var logger = Mock.Of<ILogger<ChatClientFactory>>();
         var factory = new ChatClientFactory(project, logger);
 
@@ -134,6 +153,28 @@ public class ChatClientFactoryTests
             .WithMessage("*API key*");
     }
 
+    [TestMethod]
+    public void CreateChatClient_LogsProjectEndpoint()
+    {
+        // Arrange — verify logging of project endpoint at creation time (T025)
+        var project = CreateMockProject(authType: AuthenticationType.ApiKey);
+        var loggerMock = new Mock<ILogger<ChatClientFactory>>();
+        var factory = new ChatClientFactory(project, loggerMock.Object);
+
+        // Act
+        factory.CreateChatClient();
+
+        // Assert — verify that the factory logged a message containing the endpoint
+        loggerMock.Verify(
+            l => l.Log(
+                LogLevel.Information,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains("test.services.ai.azure.com")),
+                null,
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
     #endregion
 
     #region CreateStructuredOutputChatClient
@@ -191,6 +232,24 @@ public class ChatClientFactoryTests
     }
 
     [TestMethod]
+    public void CreateEmbeddingGenerator_WithProjectEndpoint_ShouldReturnEmbeddingGenerator()
+    {
+        // Arrange — valid Foundry project endpoint (T024)
+        var project = CreateMockProject(
+            authType: AuthenticationType.ApiKey,
+            endpoint: "https://test.services.ai.azure.com/api/projects/testproject");
+        var logger = Mock.Of<ILogger<ChatClientFactory>>();
+        var factory = new ChatClientFactory(project, logger);
+
+        // Act
+        var generator = factory.CreateEmbeddingGenerator();
+
+        // Assert
+        generator.Should().NotBeNull();
+        generator.Should().BeAssignableTo<IEmbeddingGenerator<string, Embedding<float>>>();
+    }
+
+    [TestMethod]
     public void CreateEmbeddingGenerator_MissingDeploymentId_ShouldThrowInvalidOperationException()
     {
         // Arrange
@@ -226,6 +285,42 @@ public class ChatClientFactoryTests
         // Assert
         client.Should().NotBeNull();
         client.Should().BeAssignableTo<IChatClient>();
+    }
+
+    #endregion
+
+    #region GetProjectClient
+
+    [TestMethod]
+    public void GetProjectClient_WithEntraIdAuth_ShouldReturnAIProjectClient()
+    {
+        // Arrange
+        var project = CreateMockProject(authType: AuthenticationType.EntraIdAuthentication);
+        var logger = Mock.Of<ILogger<ChatClientFactory>>();
+        var factory = new ChatClientFactory(project, logger);
+
+        // Act
+        var projectClient = factory.GetProjectClient();
+
+        // Assert
+        projectClient.Should().NotBeNull();
+        projectClient.Should().BeOfType<AIProjectClient>();
+    }
+
+    [TestMethod]
+    public void GetProjectClient_WithApiKeyAuth_ShouldThrowInvalidOperationException()
+    {
+        // Arrange — API key auth does not support AIProjectClient
+        var project = CreateMockProject(authType: AuthenticationType.ApiKey);
+        var logger = Mock.Of<ILogger<ChatClientFactory>>();
+        var factory = new ChatClientFactory(project, logger);
+
+        // Act
+        var act = () => factory.GetProjectClient();
+
+        // Assert
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*Entra ID*");
     }
 
     #endregion

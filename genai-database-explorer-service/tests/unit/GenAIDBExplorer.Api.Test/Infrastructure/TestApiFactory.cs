@@ -33,7 +33,7 @@ public class TestApiFactory : WebApplicationFactory<Program>
             Database = new DatabaseSettings(),
             DataDictionary = new DataDictionarySettings(),
             SemanticModel = new SemanticModelSettings(),
-            FoundryModels = new FoundryModelsSettings(),
+            MicrosoftFoundry = new MicrosoftFoundrySettings(),
             SemanticModelRepository = new SemanticModelRepositorySettings
             {
                 LocalDisk = new LocalDiskConfiguration { Directory = "semantic-model" }

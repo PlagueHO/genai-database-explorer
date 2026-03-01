@@ -49,7 +49,7 @@ public class ProjectSettingsIntegrationTests
         // Arrange
         var settingsJson = """
             {
-                "SettingsVersion": "1.0.0",
+                "SettingsVersion": "2.0.0",
                 "Database": {
                     "Name": "TestDB",
                     "ConnectionString": "Server=.;Database=Test;Integrated Security=true;",
@@ -81,11 +81,11 @@ public class ProjectSettingsIntegrationTests
                         "ConsistencyLevel": "Strong"
                     }
                 },
-                "FoundryModels": {
+                "MicrosoftFoundry": {
                     "Default": {
                         "AuthenticationType": "ApiKey",
                         "ApiKey": "test-key",
-                        "Endpoint": "https://test.cognitiveservices.azure.com/"
+                        "Endpoint": "https://test.services.ai.azure.com/api/projects/testproject"
                     },
                     "ChatCompletion": {
                         "DeploymentName": "gpt-4o"
@@ -142,7 +142,7 @@ public class ProjectSettingsIntegrationTests
         // Arrange
         var settingsJson = """
             {
-                "SettingsVersion": "1.0.0",
+                "SettingsVersion": "2.0.0",
                 "Database": {
                     "Name": "TestDB",
                     "ConnectionString": "Server=.;Database=Test;Integrated Security=true;",
@@ -160,11 +160,11 @@ public class ProjectSettingsIntegrationTests
                         "Directory": "TestSemanticModel"
                     }
                 },
-                "FoundryModels": {
+                "MicrosoftFoundry": {
                     "Default": {
                         "AuthenticationType": "ApiKey",
                         "ApiKey": "test-key",
-                        "Endpoint": "https://test.cognitiveservices.azure.com/"
+                        "Endpoint": "https://test.services.ai.azure.com/api/projects/testproject"
                     },
                     "ChatCompletion": {
                         "DeploymentName": "gpt-4o"
@@ -191,7 +191,7 @@ public class ProjectSettingsIntegrationTests
         // Arrange
         var settingsJson = """
             {
-                "SettingsVersion": "1.0.0",
+                "SettingsVersion": "2.0.0",
                 "Database": {
                     "Name": "TestDB",
                     "ConnectionString": "Server=.;Database=Test;Integrated Security=true;",
@@ -209,11 +209,11 @@ public class ProjectSettingsIntegrationTests
                         "Directory": "TestSemanticModel"
                     }
                 },
-                "FoundryModels": {
+                "MicrosoftFoundry": {
                     "Default": {
                         "AuthenticationType": "ApiKey",
                         "ApiKey": "test-key",
-                        "Endpoint": "https://test.cognitiveservices.azure.com/"
+                        "Endpoint": "https://test.services.ai.azure.com/api/projects/testproject"
                     },
                     "ChatCompletion": {
                         "DeploymentName": "gpt-4o"
@@ -235,12 +235,12 @@ public class ProjectSettingsIntegrationTests
     }
 
     [TestMethod]
-    public void LoadProjectConfiguration_OldOpenAIServiceWithValidFoundryModels_ShouldWarnNotThrow()
+    public void LoadProjectConfiguration_OldOpenAIServiceWithValidMicrosoftFoundry_ShouldWarnNotThrow()
     {
-        // Arrange - both FoundryModels (valid) and OpenAIService exist
+        // Arrange - both MicrosoftFoundry (valid) and OpenAIService exist
         var settingsJson = """
             {
-                "SettingsVersion": "1.0.0",
+                "SettingsVersion": "2.0.0",
                 "Database": {
                     "Name": "TestDB",
                     "ConnectionString": "Server=.;Database=Test;Integrated Security=true;",
@@ -258,11 +258,11 @@ public class ProjectSettingsIntegrationTests
                         "Directory": "TestSemanticModel"
                     }
                 },
-                "FoundryModels": {
+                "MicrosoftFoundry": {
                     "Default": {
                         "AuthenticationType": "ApiKey",
                         "ApiKey": "test-key",
-                        "Endpoint": "https://test.cognitiveservices.azure.com/"
+                        "Endpoint": "https://test.services.ai.azure.com/api/projects/testproject"
                     },
                     "ChatCompletion": {
                         "DeploymentName": "gpt-4o"
@@ -282,18 +282,18 @@ public class ProjectSettingsIntegrationTests
         var settingsPath = Path.Combine(_testDirectory.FullName, "settings.json");
         File.WriteAllText(settingsPath, settingsJson);
 
-        // Act & Assert - should NOT throw when FoundryModels is properly configured
+        // Act & Assert - should NOT throw when MicrosoftFoundry is properly configured
         FluentActions.Invoking(() => _project.LoadProjectConfiguration(_testDirectory))
-            .Should().NotThrow("FoundryModels is properly configured, so legacy OpenAIService section should only produce a warning");
+            .Should().NotThrow("MicrosoftFoundry is properly configured, so legacy OpenAIService section should only produce a warning");
     }
 
     [TestMethod]
-    public void LoadProjectConfiguration_OldOpenAIServiceWithoutValidFoundryModels_ShouldThrowValidationException()
+    public void LoadProjectConfiguration_OldOpenAIServiceWithoutValidMicrosoftFoundry_ShouldThrowValidationException()
     {
-        // Arrange - OpenAIService exists but FoundryModels.Default.Endpoint is not set
+        // Arrange - OpenAIService exists but MicrosoftFoundry.Default.Endpoint is not set
         var settingsJson = """
             {
-                "SettingsVersion": "1.0.0",
+                "SettingsVersion": "2.0.0",
                 "Database": {
                     "Name": "TestDB",
                     "ConnectionString": "Server=.;Database=Test;Integrated Security=true;",
@@ -311,7 +311,7 @@ public class ProjectSettingsIntegrationTests
                         "Directory": "TestSemanticModel"
                     }
                 },
-                "FoundryModels": {
+                "MicrosoftFoundry": {
                     "Default": {
                         "AuthenticationType": "ApiKey"
                     }
@@ -327,22 +327,21 @@ public class ProjectSettingsIntegrationTests
         var settingsPath = Path.Combine(_testDirectory.FullName, "settings.json");
         File.WriteAllText(settingsPath, settingsJson);
 
-        // Act & Assert - should throw because FoundryModels.Default.Endpoint is not configured
+        // Act & Assert - should throw because MicrosoftFoundry.Default.Endpoint is not configured
         FluentActions.Invoking(() => _project.LoadProjectConfiguration(_testDirectory))
             .Should().Throw<ValidationException>()
-            .WithMessage("*'OpenAIService'*has been replaced by 'FoundryModels'*");
+            .WithMessage("*'OpenAIService'*has been replaced by 'MicrosoftFoundry'*");
     }
 
     [TestMethod]
-    [DataRow("https://myresource.services.ai.azure.com/", DisplayName = "Foundry AI Services endpoint")]
-    [DataRow("https://myresource.openai.azure.com/", DisplayName = "Azure OpenAI endpoint")]
-    [DataRow("https://myresource.cognitiveservices.azure.com/", DisplayName = "Cognitive Services endpoint")]
+    [DataRow("https://myresource.services.ai.azure.com/api/projects/myproject", DisplayName = "Foundry project endpoint")]
+    [DataRow("https://myresource.services.ai.azure.com/api/projects/myproject/", DisplayName = "Foundry project endpoint with trailing slash")]
     public void LoadProjectConfiguration_ValidEndpointPatterns_ShouldSucceed(string endpointUrl)
     {
         // Arrange
         var settingsJson = $$"""
             {
-                "SettingsVersion": "1.0.0",
+                "SettingsVersion": "2.0.0",
                 "Database": {
                     "Name": "TestDB",
                     "ConnectionString": "Server=.;Database=Test;Integrated Security=true;",
@@ -360,7 +359,7 @@ public class ProjectSettingsIntegrationTests
                         "Directory": "TestSemanticModel"
                     }
                 },
-                "FoundryModels": {
+                "MicrosoftFoundry": {
                     "Default": {
                         "AuthenticationType": "ApiKey",
                         "ApiKey": "test-key",
@@ -390,7 +389,7 @@ public class ProjectSettingsIntegrationTests
         // Arrange
         var settingsJson = """
             {
-                "SettingsVersion": "1.0.0",
+                "SettingsVersion": "2.0.0",
                 "Database": {
                     "Name": "TestDB",
                     "ConnectionString": "Server=.;Database=Test;Integrated Security=true;",
@@ -408,7 +407,7 @@ public class ProjectSettingsIntegrationTests
                         "Directory": "TestSemanticModel"
                     }
                 },
-                "FoundryModels": {
+                "MicrosoftFoundry": {
                     "Default": {
                         "AuthenticationType": "ApiKey",
                         "ApiKey": "test-key",
@@ -430,6 +429,6 @@ public class ProjectSettingsIntegrationTests
         // Act & Assert
         FluentActions.Invoking(() => _project.LoadProjectConfiguration(_testDirectory))
             .Should().Throw<ValidationException>()
-            .WithMessage("*does not appear to be a valid Foundry Models endpoint*");
+            .WithMessage("*must be a Microsoft Foundry project endpoint*");
     }
 }

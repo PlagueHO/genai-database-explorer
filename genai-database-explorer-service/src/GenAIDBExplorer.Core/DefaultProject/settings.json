@@ -1,5 +1,5 @@
 {
-    "SettingsVersion": "1.0.0", // Internal schema version of this settings file
+    "SettingsVersion": "2.0.0", // Internal schema version of this settings file
     "Database": {
         "Name": "AdventureWorksLT", // Display name of the database/project used across outputs
         "Description": "Product, sales, and customer data for the AdventureWorks company.", // This helps ground the AI on the context of the database.
@@ -74,11 +74,11 @@
         },
         "MaxConcurrentOperations": 10 // Maximum number of concurrent repository operations (1-50)
     },
-    "FoundryModels": {
+    "MicrosoftFoundry": {
         "Default": {
             "AuthenticationType": "EntraIdAuthentication", // Authentication method: "EntraIdAuthentication" (default, uses managed identity/DefaultAzureCredential) or "ApiKey" (traditional API key)
             // "ApiKey": "<Set your API key>", // Only required when AuthenticationType is "ApiKey". When using "EntraIdAuthentication", this can be omitted
-            "Endpoint": "https://<Set your Foundry Models endpoint>.services.ai.azure.com/" // Foundry Models endpoint (also accepts .openai.azure.com or .cognitiveservices.azure.com)
+            "Endpoint": "https://<resource>.services.ai.azure.com/api/projects/<project-name>" // Microsoft Foundry project endpoint
             // "TenantId": "<AzureTenantId>" // Optional: Azure tenant ID for DefaultAzureCredential. Use when resource is in different tenant than default
         },
         "ChatCompletion": {

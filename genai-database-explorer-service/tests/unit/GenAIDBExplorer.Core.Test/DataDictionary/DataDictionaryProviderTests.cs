@@ -44,7 +44,7 @@ public class DataDictionaryProviderTests
                 Description = "A test database"
             },
             DataDictionary = new DataDictionarySettings(),
-            FoundryModels = new FoundryModelsSettings(),
+            MicrosoftFoundry = new MicrosoftFoundrySettings(),
             SemanticModel = new SemanticModelSettings
             {
                 MaxDegreeOfParallelism = 1

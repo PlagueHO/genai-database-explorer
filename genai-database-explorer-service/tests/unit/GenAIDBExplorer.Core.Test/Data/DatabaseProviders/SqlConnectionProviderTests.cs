@@ -30,7 +30,7 @@ namespace GenAIDBExplorer.Core.Tests.Data.DatabaseProviders
                 Database = new DatabaseSettings { ConnectionString = string.Empty },
                 DataDictionary = new DataDictionarySettings(),
                 SemanticModel = new SemanticModelSettings(),
-                FoundryModels = new FoundryModelsSettings(),
+                MicrosoftFoundry = new MicrosoftFoundrySettings(),
                 SemanticModelRepository = new SemanticModelRepositorySettings()
             };
             _mockProject.Setup(p => p.Settings).Returns(projectSettings);
@@ -78,7 +78,7 @@ namespace GenAIDBExplorer.Core.Tests.Data.DatabaseProviders
                 Database = new DatabaseSettings { ConnectionString = connectionString },
                 DataDictionary = new DataDictionarySettings(),
                 SemanticModel = new SemanticModelSettings(),
-                FoundryModels = new FoundryModelsSettings(),
+                MicrosoftFoundry = new MicrosoftFoundrySettings(),
                 SemanticModelRepository = new SemanticModelRepositorySettings()
             };
             _mockProject.Setup(p => p.Settings).Returns(projectSettings);

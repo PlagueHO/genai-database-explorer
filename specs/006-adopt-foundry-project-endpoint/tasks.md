@@ -23,12 +23,12 @@ All paths are relative to `genai-database-explorer-service/` unless otherwise no
 
 **Purpose**: NuGet upgrades and settings model renames that all user stories depend on.
 
-- [ ] T001 Upgrade `Azure.AI.Projects` from `1.1.0` to `1.2.0-beta.5` (or latest Foundry-new-compatible version) and `Azure.AI.Projects.OpenAI` to matching version in `src/GenAIDBExplorer.Core/GenAIDBExplorer.Core.csproj`
-- [ ] T002 [P] Rename `src/GenAIDBExplorer.Core/Models/Project/FoundryModelsSettings.cs` to `MicrosoftFoundrySettings.cs` — rename class `FoundryModelsSettings` → `MicrosoftFoundrySettings`, change `PropertyName` constant from `"FoundryModels"` to `"MicrosoftFoundry"`, remove `ChatCompletionStructured` property if present
-- [ ] T003 [P] Rename `src/GenAIDBExplorer.Core/Models/Project/FoundryModelsDefaultSettings.cs` to `MicrosoftFoundryDefaultSettings.cs` — rename class `FoundryModelsDefaultSettings` → `MicrosoftFoundryDefaultSettings`
-- [ ] T004 Update `src/GenAIDBExplorer.Core/Models/Project/ProjectSettings.cs` — rename property `FoundryModels` → `MicrosoftFoundry`, change type from `FoundryModelsSettings` → `MicrosoftFoundrySettings`
-- [ ] T005 Update all remaining references to `FoundryModelsSettings`, `FoundryModelsDefaultSettings`, and `Settings.FoundryModels` across the entire solution (fix all compilation errors from the renames in T002-T004)
-- [ ] T006 Build the solution (`dotnet build GenAIDBExplorer.slnx`) and verify zero compilation errors after renames
+- [X] T001 Upgrade `Azure.AI.Projects` from `1.1.0` to `1.2.0-beta.5` (or latest Foundry-new-compatible version) and `Azure.AI.Projects.OpenAI` to matching version in `src/GenAIDBExplorer.Core/GenAIDBExplorer.Core.csproj`
+- [X] T002 [P] Rename `src/GenAIDBExplorer.Core/Models/Project/FoundryModelsSettings.cs` to `MicrosoftFoundrySettings.cs` — rename class `FoundryModelsSettings` → `MicrosoftFoundrySettings`, change `PropertyName` constant from `"FoundryModels"` to `"MicrosoftFoundry"`, remove `ChatCompletionStructured` property if present
+- [X] T003 [P] Rename `src/GenAIDBExplorer.Core/Models/Project/FoundryModelsDefaultSettings.cs` to `MicrosoftFoundryDefaultSettings.cs` — rename class `FoundryModelsDefaultSettings` → `MicrosoftFoundryDefaultSettings`
+- [X] T004 Update `src/GenAIDBExplorer.Core/Models/Project/ProjectSettings.cs` — rename property `FoundryModels` → `MicrosoftFoundry`, change type from `FoundryModelsSettings` → `MicrosoftFoundrySettings`
+- [X] T005 Update all remaining references to `FoundryModelsSettings`, `FoundryModelsDefaultSettings`, and `Settings.FoundryModels` across the entire solution (fix all compilation errors from the renames in T002-T004)
+- [X] T006 Build the solution (`dotnet build GenAIDBExplorer.slnx`) and verify zero compilation errors after renames
 
 **Checkpoint**: Solution compiles with renamed settings classes. All `FoundryModels` type references replaced with `MicrosoftFoundry` equivalents.
 
@@ -42,7 +42,7 @@ All paths are relative to `genai-database-explorer-service/` unless otherwise no
 
 ### Phase 2a: Investigation (Architecture-Shaping)
 
-- [ ] T007 [US5] Investigate Foundry Prompt Agent tool support — determine if `PromptAgentDefinition` supports function tools that call back to the application for semantic model search. If yes, proceed with Foundry-hosted agent (Option A). If no, use local `AIAgent` with Foundry-backed `IChatClient` (Option C). Document decision in `specs/006-adopt-foundry-project-endpoint/research.md` R5. **This shapes US5 test design and must be resolved before writing US5 tests.**
+- [X] T007 [US5] Investigate Foundry Prompt Agent tool support — determine if `PromptAgentDefinition` supports function tools that call back to the application for semantic model search. If yes, proceed with Foundry-hosted agent (Option A). If no, use local `AIAgent` with Foundry-backed `IChatClient` (Option C). Document decision in `specs/006-adopt-foundry-project-endpoint/research.md` R5. **This shapes US5 test design and must be resolved before writing US5 tests.**
 
 ### Phase 2b: Tests (Write First — Constitution Principle V)
 

@@ -1,3 +1,4 @@
+using Azure.AI.Projects;
 using Microsoft.Extensions.AI;
 
 namespace GenAIDBExplorer.Core.ChatClients;
@@ -29,4 +30,13 @@ public interface IChatClientFactory
     /// </summary>
     /// <returns>An <see cref="IEmbeddingGenerator{String, Embedding}"/> for generating embeddings.</returns>
     IEmbeddingGenerator<string, Embedding<float>> CreateEmbeddingGenerator();
+
+    /// <summary>
+    /// Gets the <see cref="AIProjectClient"/> for the configured Microsoft Foundry project endpoint.
+    /// Used for agent service access and other Foundry project operations.
+    /// Only available with Entra ID authentication.
+    /// </summary>
+    /// <returns>An <see cref="AIProjectClient"/> connected to the configured Foundry project.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when using API key authentication.</exception>
+    AIProjectClient GetProjectClient();
 }

@@ -226,11 +226,11 @@ Edit the `settings.json` file in the project directory to set the desired config
         // ... other parameters
   },
   // ... other settings
-    "FoundryModels": {
+    "MicrosoftFoundry": {
         "Default": {
             "AuthenticationType": "EntraIdAuthentication", // EntraIdAuthentication (recommended), ApiKey
             // "ApiKey": "<Set your API key>", // Only required when AuthenticationType is ApiKey
-            "Endpoint": "https://<Set your Microsoft Foundry endpoint>.services.ai.azure.com/" // Foundry endpoint (also accepts .openai.azure.com and .cognitiveservices.azure.com)
+            "Endpoint": "https://<your-foundry-account>.services.ai.azure.com/api/projects/<your-project-name>" // Foundry project endpoint
         },
         "ChatCompletion": {
             "DeploymentName": "<Set your chat completion deployment name>" // Recommend gpt-5.2-chat or newer

@@ -45,9 +45,9 @@ public class ExtractModelCommandHandlerTests
             {
                 ColumnTypeMapping = []
             },
-            FoundryModels = new FoundryModelsSettings
+            MicrosoftFoundry = new MicrosoftFoundrySettings
             {
-                Default = new FoundryModelsDefaultSettings
+                Default = new MicrosoftFoundryDefaultSettings
                 {
                     ApiKey = "test-key",
                     Endpoint = "https://test.openai.azure.com/"

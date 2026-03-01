@@ -112,7 +112,7 @@ public class Project(
             Database = new DatabaseSettings(),
             DataDictionary = new DataDictionarySettings(),
             SemanticModel = new SemanticModelSettings(),
-            FoundryModels = new FoundryModelsSettings(),
+            MicrosoftFoundry = new MicrosoftFoundrySettings(),
             SemanticModelRepository = new SemanticModelRepositorySettings(),
             VectorIndex = new VectorIndexSettings()
         };
@@ -123,7 +123,7 @@ public class Project(
         _configuration?.GetSection(DatabaseSettings.PropertyName).Bind(Settings.Database);
         _configuration?.GetSection(DataDictionarySettings.PropertyName).Bind(Settings.DataDictionary);
         _configuration?.GetSection(SemanticModelSettings.PropertyName).Bind(Settings.SemanticModel);
-        _configuration?.GetSection(FoundryModelsSettings.PropertyName).Bind(Settings.FoundryModels);
+        _configuration?.GetSection(MicrosoftFoundrySettings.PropertyName).Bind(Settings.MicrosoftFoundry);
         _configuration?.GetSection(SemanticModelRepositorySettings.PropertyName).Bind(Settings.SemanticModelRepository);
         _configuration?.GetSection(VectorIndexSettings.PropertyName).Bind(Settings.VectorIndex);
 
@@ -136,6 +136,51 @@ public class Project(
     private void ValidateSettings()
     {
         logger.LogInformation("{Message}", _resourceManagerLogMessages.GetString("ProjectSettingsValidationStarted"));
+
+        // Detect legacy FoundryModels section (FR-009)
+        var legacyFoundryModelsSection = _configuration?.GetSection("FoundryModels");
+        var legacyFoundryModelsExists = legacyFoundryModelsSection?.GetChildren()?.Any() == true;
+        var microsoftFoundrySection = _configuration?.GetSection("MicrosoftFoundry");
+        var microsoftFoundryExists = microsoftFoundrySection?.GetChildren()?.Any() == true;
+
+        // Check for dual-section ambiguity (T018)
+        if (legacyFoundryModelsExists && microsoftFoundryExists)
+        {
+            throw new ValidationException(
+                "Both 'FoundryModels' and 'MicrosoftFoundry' sections found in settings.json. " +
+                "Remove the legacy 'FoundryModels' section and keep only 'MicrosoftFoundry'.\n\n" +
+                "Migration: Delete the entire \"FoundryModels\" block from your settings.json.");
+        }
+
+        // Check for legacy FoundryModels section (T016)
+        if (legacyFoundryModelsExists)
+        {
+            throw new ValidationException(
+                "The 'FoundryModels' configuration section has been renamed to 'MicrosoftFoundry'. " +
+                "Please rename it in your settings.json and update the endpoint to a Foundry project endpoint format.\n\n" +
+                "Before:\n" +
+                "  \"FoundryModels\": {\n" +
+                "    \"Default\": { \"Endpoint\": \"https://<resource>.services.ai.azure.com/\" }\n" +
+                "  }\n\n" +
+                "After:\n" +
+                "  \"SettingsVersion\": \"2.0.0\",\n" +
+                "  \"MicrosoftFoundry\": {\n" +
+                "    \"Default\": { \"Endpoint\": \"https://<resource>.services.ai.azure.com/api/projects/<project-name>\" }\n" +
+                "  }");
+        }
+
+        // Check SettingsVersion (T017, FR-021)
+        if (Settings.SettingsVersion is not null && Settings.SettingsVersion < new Version(2, 0))
+        {
+            throw new ValidationException(
+                $"Settings version {Settings.SettingsVersion} is no longer supported. Version 2.0.0 is required. " +
+                "The 'FoundryModels' section has been renamed to 'MicrosoftFoundry' and the endpoint must be " +
+                "a Foundry project endpoint.\n\n" +
+                "Migration steps:\n" +
+                "1. Rename \"FoundryModels\" to \"MicrosoftFoundry\"\n" +
+                "2. Update endpoint to: https://<resource>.services.ai.azure.com/api/projects/<project-name>\n" +
+                "3. Set \"SettingsVersion\": \"2.0.0\"");
+        }
 
         var validationContext = new ValidationContext(Settings.Database);
         Validator.ValidateObject(Settings.Database, validationContext, validateAllProperties: true);
@@ -161,12 +206,12 @@ public class Project(
         Validator.ValidateObject(Settings.VectorIndex, vectorIndexContext, validateAllProperties: true);
         logger.LogInformation("{Message} '{Section}'", _resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "VectorIndex");
 
-        validationContext = new ValidationContext(Settings.FoundryModels);
-        Validator.ValidateObject(Settings.FoundryModels, validationContext, validateAllProperties: true);
-        logger.LogInformation("{Message} '{Section}'", _resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "FoundryModels");
+        validationContext = new ValidationContext(Settings.MicrosoftFoundry);
+        Validator.ValidateObject(Settings.MicrosoftFoundry, validationContext, validateAllProperties: true);
+        logger.LogInformation("{Message} '{Section}'", _resourceManagerLogMessages.GetString("ProjectSettingsValidationSuccessful"), "MicrosoftFoundry");
 
-        // Validate Foundry Models-specific configuration
-        ValidateFoundryModelsConfiguration();
+        // Validate Microsoft Foundry-specific configuration
+        ValidateMicrosoftFoundryConfiguration();
 
         logger.LogInformation("{Message}", _resourceManagerLogMessages.GetString("ProjectSettingsValidationCompleted"));
     }
@@ -213,9 +258,9 @@ public class Project(
     }
 
     /// <summary>
-    /// Validates Foundry Models configuration to ensure endpoints are valid URIs and required settings are present.
+    /// Validates Microsoft Foundry configuration to ensure endpoints are valid URIs and required settings are present.
     /// </summary>
-    private void ValidateFoundryModelsConfiguration()
+    private void ValidateMicrosoftFoundryConfiguration()
     {
         // Detect old OpenAIService section and provide migration guidance.
         // Use GetChildren().Any() to check for actual child configuration keys,
@@ -224,23 +269,23 @@ public class Project(
         var openAiSection = _configuration?.GetSection("OpenAIService");
         if (openAiSection?.GetChildren()?.Any() == true)
         {
-            // If FoundryModels is already properly configured, log a warning instead of throwing.
+            // If MicrosoftFoundry is already properly configured, log a warning instead of throwing.
             // This allows partial migration scenarios where both sections exist.
-            if (Settings.FoundryModels?.Default?.Endpoint is not null)
+            if (Settings.MicrosoftFoundry?.Default?.Endpoint is not null)
             {
                 logger.LogWarning(
-                    "Found legacy 'OpenAIService' configuration section alongside 'FoundryModels'. " +
-                    "Using 'FoundryModels' configuration. Please remove the 'OpenAIService' section from your settings.json.");
+                    "Found legacy 'OpenAIService' configuration section alongside 'MicrosoftFoundry'. " +
+                    "Using 'MicrosoftFoundry' configuration. Please remove the 'OpenAIService' section from your settings.json.");
             }
             else
             {
                 throw new ValidationException(
-                    "The 'OpenAIService' configuration section has been replaced by 'FoundryModels'. " +
+                    "The 'OpenAIService' configuration section has been replaced by 'MicrosoftFoundry'. " +
                     "Please update your settings.json file. See documentation for the new configuration format.");
             }
         }
 
-        var foundrySettings = Settings.FoundryModels?.Default;
+        var foundrySettings = Settings.MicrosoftFoundry?.Default;
         if (foundrySettings == null)
         {
             return; // Basic validation will catch this
@@ -253,7 +298,7 @@ public class Project(
             {
                 throw new ValidationException(
                     $"Endpoint '{foundrySettings.Endpoint}' is not a valid URL. " +
-                    "Expected format: https://your-resource.services.ai.azure.com/");
+                    "Expected format: https://<resource>.services.ai.azure.com/api/projects/<project-name>");
             }
 
             // Validate that it's an HTTPS URL
@@ -263,25 +308,54 @@ public class Project(
                     $"Endpoint must use HTTPS. Current URL: {foundrySettings.Endpoint}");
             }
 
-            // Validate that it looks like a valid Foundry Models endpoint
+            // Reject legacy *.openai.azure.com endpoints
             var host = endpointUri.Host.ToLowerInvariant();
-            if (!host.EndsWith(".services.ai.azure.com") &&
-                !host.EndsWith(".openai.azure.com") &&
-                !host.EndsWith(".cognitiveservices.azure.com"))
+            if (host.EndsWith(".openai.azure.com"))
             {
                 throw new ValidationException(
-                    $"Endpoint '{foundrySettings.Endpoint}' does not appear to be a valid Foundry Models endpoint. " +
-                    "Expected hostname ending with .services.ai.azure.com, .openai.azure.com, or .cognitiveservices.azure.com");
+                    $"Legacy Azure OpenAI endpoints (*.openai.azure.com) are not supported. " +
+                    $"Use a Microsoft Foundry project endpoint instead: " +
+                    $"https://<resource>.services.ai.azure.com/api/projects/<project-name>");
+            }
+
+            // Reject legacy *.cognitiveservices.azure.com endpoints
+            if (host.EndsWith(".cognitiveservices.azure.com"))
+            {
+                throw new ValidationException(
+                    $"Legacy Cognitive Services endpoints (*.cognitiveservices.azure.com) are not supported. " +
+                    $"Use a Microsoft Foundry project endpoint instead: " +
+                    $"https://<resource>.services.ai.azure.com/api/projects/<project-name>");
+            }
+
+            // Validate that endpoint contains /api/projects/ path
+            var path = endpointUri.AbsolutePath.TrimEnd('/');
+            var projectsIndex = path.IndexOf("/api/projects/", StringComparison.OrdinalIgnoreCase);
+            if (projectsIndex < 0)
+            {
+                throw new ValidationException(
+                    $"The endpoint must be a Microsoft Foundry project endpoint containing '/api/projects/<project-name>'. " +
+                    $"Current endpoint: {foundrySettings.Endpoint}. " +
+                    $"Expected format: https://<resource>.services.ai.azure.com/api/projects/<project-name>");
+            }
+
+            // Ensure there's a project name after /api/projects/
+            var afterProjects = path[(projectsIndex + "/api/projects/".Length)..];
+            if (string.IsNullOrWhiteSpace(afterProjects))
+            {
+                throw new ValidationException(
+                    $"The endpoint must include a project name after '/api/projects/'. " +
+                    $"Current endpoint: {foundrySettings.Endpoint}. " +
+                    $"Expected format: https://<resource>.services.ai.azure.com/api/projects/<project-name>");
             }
         }
 
         // Validate deployment names are provided
-        if (string.IsNullOrWhiteSpace(Settings.FoundryModels?.ChatCompletion?.DeploymentName))
+        if (string.IsNullOrWhiteSpace(Settings.MicrosoftFoundry?.ChatCompletion?.DeploymentName))
         {
             throw new ValidationException("ChatCompletion.DeploymentName is required.");
         }
 
-        if (string.IsNullOrWhiteSpace(Settings.FoundryModels?.Embedding?.DeploymentName))
+        if (string.IsNullOrWhiteSpace(Settings.MicrosoftFoundry?.Embedding?.DeploymentName))
         {
             throw new ValidationException("Embedding.DeploymentName is required.");
         }

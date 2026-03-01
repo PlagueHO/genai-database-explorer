@@ -220,7 +220,7 @@ public class SemanticModelSearchServiceTests
             SettingsVersion = new Version("1.0.0"),
             Database = new DatabaseSettings { Name = "TestDB", Description = "Test database" },
             DataDictionary = new DataDictionarySettings(),
-            FoundryModels = new FoundryModelsSettings(),
+            MicrosoftFoundry = new MicrosoftFoundrySettings(),
             SemanticModel = new SemanticModelSettings { PersistenceStrategy = "LocalDisk" },
             SemanticModelRepository = new SemanticModelRepositorySettings(),
             VectorIndex = new VectorIndexSettings(),

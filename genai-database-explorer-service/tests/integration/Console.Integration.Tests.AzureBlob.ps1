@@ -74,8 +74,8 @@ Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
                 ProjectPath = $script:DbProjectPath
                 ConnectionString = $script:TestEnv.SQL_CONNECTION_STRING
                 DatabaseSchema = $script:TestEnv.DATABASE_SCHEMA
-                FoundryModelsEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
-                FoundryModelsApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
+                MicrosoftFoundryEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
+                MicrosoftFoundryApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
                 PersistenceStrategy = 'AzureBlob'
                 AzureStorageAccountEndpoint = $script:TestEnv.AZURE_STORAGE_ACCOUNT_ENDPOINT
                 AzureStorageContainer = $script:TestEnv.AZURE_STORAGE_CONTAINER
@@ -392,8 +392,8 @@ Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
                 ProjectPath = $script:AiProjectPath
                 ConnectionString = $script:TestEnv.SQL_CONNECTION_STRING
                 DatabaseSchema = $script:TestEnv.DATABASE_SCHEMA
-                FoundryModelsEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
-                FoundryModelsApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
+                MicrosoftFoundryEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
+                MicrosoftFoundryApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
                 PersistenceStrategy = 'AzureBlob'
                 AzureStorageAccountEndpoint = $script:TestEnv.AZURE_STORAGE_ACCOUNT_ENDPOINT
                 AzureStorageContainer = $script:TestEnv.AZURE_STORAGE_CONTAINER
@@ -674,8 +674,8 @@ Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
                 ProjectPath = $script:DisplayProjectPath
                 ConnectionString = $script:TestEnv.SQL_CONNECTION_STRING
                 DatabaseSchema = $script:TestEnv.DATABASE_SCHEMA
-                FoundryModelsEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
-                FoundryModelsApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
+                MicrosoftFoundryEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
+                MicrosoftFoundryApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
                 PersistenceStrategy = 'AzureBlob'
                 AzureStorageAccountEndpoint = $script:TestEnv.AZURE_STORAGE_ACCOUNT_ENDPOINT
                 AzureStorageContainer = $script:TestEnv.AZURE_STORAGE_CONTAINER
@@ -916,8 +916,8 @@ Describe 'GenAI Database Explorer Console Application - AzureBlob Strategy' {
             $config = @{
                 ProjectPath = $script:PrefixProjectPath
                 ConnectionString = $script:TestEnv.SQL_CONNECTION_STRING
-                FoundryModelsEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
-                FoundryModelsApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
+                MicrosoftFoundryEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
+                MicrosoftFoundryApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
                 PersistenceStrategy = 'AzureBlob'
                 AzureStorageAccountEndpoint = $script:TestEnv.AZURE_STORAGE_ACCOUNT_ENDPOINT
                 AzureStorageContainer = $script:TestEnv.AZURE_STORAGE_CONTAINER

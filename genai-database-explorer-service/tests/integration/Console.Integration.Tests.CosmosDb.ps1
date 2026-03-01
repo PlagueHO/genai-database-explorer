@@ -77,8 +77,8 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
                 ProjectPath = $script:DbProjectPath
                 ConnectionString = $script:TestEnv.SQL_CONNECTION_STRING
                 DatabaseSchema = $script:TestEnv.DATABASE_SCHEMA
-                FoundryModelsEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
-                FoundryModelsApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
+                MicrosoftFoundryEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
+                MicrosoftFoundryApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
                 PersistenceStrategy = 'CosmosDb'
                 AzureCosmosDbAccountEndpoint = $script:TestEnv.AZURE_COSMOS_DB_ACCOUNT_ENDPOINT
                 AzureCosmosDbDatabaseName = $script:TestEnv.AZURE_COSMOS_DB_DATABASE_NAME
@@ -174,8 +174,8 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
                 ProjectPath = $script:AiProjectPath
                 ConnectionString = $script:TestEnv.SQL_CONNECTION_STRING
                 DatabaseSchema = $script:TestEnv.DATABASE_SCHEMA
-                FoundryModelsEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
-                FoundryModelsApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
+                MicrosoftFoundryEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
+                MicrosoftFoundryApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
                 PersistenceStrategy = 'CosmosDb'
                 AzureCosmosDbAccountEndpoint = $script:TestEnv.AZURE_COSMOS_DB_ACCOUNT_ENDPOINT
                 AzureCosmosDbDatabaseName = $script:TestEnv.AZURE_COSMOS_DB_DATABASE_NAME
@@ -307,8 +307,8 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
                 ProjectPath = $script:DisplayProjectPath
                 ConnectionString = $script:TestEnv.SQL_CONNECTION_STRING
                 DatabaseSchema = $script:TestEnv.DATABASE_SCHEMA
-                FoundryModelsEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
-                FoundryModelsApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
+                MicrosoftFoundryEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
+                MicrosoftFoundryApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
                 PersistenceStrategy = 'CosmosDb'
                 AzureCosmosDbAccountEndpoint = $script:TestEnv.AZURE_COSMOS_DB_ACCOUNT_ENDPOINT
                 AzureCosmosDbDatabaseName = $script:TestEnv.AZURE_COSMOS_DB_DATABASE_NAME
@@ -395,8 +395,8 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
             $config = @{
                 ProjectPath = $projectPath
                 ConnectionString = $script:TestEnv.SQL_CONNECTION_STRING
-                FoundryModelsEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
-                FoundryModelsApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
+                MicrosoftFoundryEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
+                MicrosoftFoundryApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
                 PersistenceStrategy = 'CosmosDb'
                 AzureCosmosDbAccountEndpoint = $script:TestEnv.AZURE_COSMOS_DB_ACCOUNT_ENDPOINT
                 AzureCosmosDbDatabaseName = $script:TestEnv.AZURE_COSMOS_DB_DATABASE_NAME
@@ -428,8 +428,8 @@ Describe 'GenAI Database Explorer Console Application - CosmosDb Strategy' {
             $config = @{
                 ProjectPath = $projectPath
                 ConnectionString = $script:TestEnv.SQL_CONNECTION_STRING
-                FoundryModelsEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
-                FoundryModelsApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
+                MicrosoftFoundryEndpoint = $script:TestEnv.AZURE_OPENAI_ENDPOINT
+                MicrosoftFoundryApiKey = $script:TestEnv.AZURE_OPENAI_API_KEY
                 PersistenceStrategy = 'CosmosDb'
                 AzureCosmosDbAccountEndpoint = $script:TestEnv.AZURE_COSMOS_DB_ACCOUNT_ENDPOINT
                 AzureCosmosDbDatabaseName = $script:TestEnv.AZURE_COSMOS_DB_DATABASE_NAME
