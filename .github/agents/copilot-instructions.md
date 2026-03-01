@@ -17,6 +17,8 @@ Auto-generated from all feature plans. Last updated: 2026-02-20
 - Existing vector index (InMemory, CosmosDB, or Azure AI Search via `IVectorSearchService`) (005-query-model-agent)
 - .NET 10 with C# 14 (primary constructors, collection expressions, records, pattern matching) (006-adopt-foundry-project-endpoint)
 - JSON (`settings.json` per project, `semanticmodel.json`), multiple persistence strategies (LocalDisk, AzureBlob, CosmosDB) via `ISemanticModelRepository` (006-adopt-foundry-project-endpoint)
+- .NET 10 / C# 14 + ASP.NET Core Minimal API, Microsoft.Extensions.AI (`IChatClientFactory`, `IEmbeddingGenerator`), Microsoft.SemanticKernel.Connectors.InMemory (vector store) (007-api-vector-search)
+- Vector indices (InMemory default, CosmosDB/Azure AI Search per settings); semantic model via `ISemanticModelRepository` (LocalDisk/AzureBlob/CosmosDB) (007-api-vector-search)
 
 - C# 14 / .NET 10 (001-migrate-agent-framework)
 
@@ -36,9 +38,9 @@ tests/
 C# 14 / .NET 10: Follow standard conventions
 
 ## Recent Changes
+- 007-api-vector-search: Added .NET 10 / C# 14 + ASP.NET Core Minimal API, Microsoft.Extensions.AI (`IChatClientFactory`, `IEmbeddingGenerator`), Microsoft.SemanticKernel.Connectors.InMemory (vector store)
 - 006-adopt-foundry-project-endpoint: Added .NET 10 with C# 14 (primary constructors, collection expressions, records, pattern matching)
 - 005-query-model-agent: Added .NET 10 / C# 14
-- 004-frontend-semantic-explorer: Added TypeScript 5.x targeting ES2022, React 19, Node.js 22 LTS + React 19, Vite 6, @fluentui/react-components v9, tailwindcss v4, @tanstack/react-query v5, react-router v7
 
 
 <!-- MANUAL ADDITIONS START -->
