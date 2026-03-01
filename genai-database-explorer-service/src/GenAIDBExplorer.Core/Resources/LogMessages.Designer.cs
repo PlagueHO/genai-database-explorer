@@ -8,10 +8,11 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace GenAIDBExplorer.Core.Resources {
+namespace GenAIDBExplorer.Core.Resources
+{
     using System;
-    
-    
+
+
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
     /// </summary>
@@ -22,238 +23,290 @@ namespace GenAIDBExplorer.Core.Resources {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class LogMessages {
-        
+    internal class LogMessages
+    {
+
         private static global::System.Resources.ResourceManager resourceMan;
-        
+
         private static global::System.Globalization.CultureInfo resourceCulture;
-        
+
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal LogMessages() {
+        internal LogMessages()
+        {
         }
-        
+
         /// <summary>
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
-            get {
-                if (object.ReferenceEquals(resourceMan, null)) {
+        internal static global::System.Resources.ResourceManager ResourceManager
+        {
+            get
+            {
+                if (object.ReferenceEquals(resourceMan, null))
+                {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("GenAIDBExplorer.Core.Resources.LogMessages", typeof(LogMessages).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
             }
         }
-        
+
         /// <summary>
         ///   Overrides the current thread's CurrentUICulture property for all
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
-            get {
+        internal static global::System.Globalization.CultureInfo Culture
+        {
+            get
+            {
                 return resourceCulture;
             }
-            set {
+            set
+            {
                 resourceCulture = value;
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Adding stored procedure to the semantic model..
         /// </summary>
-        internal static string AddingStoredProcedureToSemanticModel {
-            get {
+        internal static string AddingStoredProcedureToSemanticModel
+        {
+            get
+            {
                 return ResourceManager.GetString("AddingStoredProcedureToSemanticModel", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Adding table to the semantic model..
         /// </summary>
-        internal static string AddingTableToSemanticModel {
-            get {
+        internal static string AddingTableToSemanticModel
+        {
+            get
+            {
                 return ResourceManager.GetString("AddingTableToSemanticModel", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Adding view to the semantic model..
         /// </summary>
-        internal static string AddingViewToSemanticModel {
-            get {
+        internal static string AddingViewToSemanticModel
+        {
+            get
+            {
                 return ResourceManager.GetString("AddingViewToSemanticModel", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Connecting to SQL database.
         /// </summary>
-        internal static string ConnectingSQLDatabase {
-            get {
+        internal static string ConnectingSQLDatabase
+        {
+            get
+            {
                 return ResourceManager.GetString("ConnectingSQLDatabase", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Connection to SQL database opened successfully.
         /// </summary>
-        internal static string ConnectSQLSuccessful {
-            get {
+        internal static string ConnectSQLSuccessful
+        {
+            get
+            {
                 return ResourceManager.GetString("ConnectSQLSuccessful", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Database connection state..
         /// </summary>
-        internal static string DatabaseConnectionState {
-            get {
+        internal static string DatabaseConnectionState
+        {
+            get
+            {
                 return ResourceManager.GetString("DatabaseConnectionState", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Data Dictionary files not found..
         /// </summary>
-        internal static string DataDictionaryFilesNotFound {
-            get {
+        internal static string DataDictionaryFilesNotFound
+        {
+            get
+            {
                 return ResourceManager.GetString("DataDictionaryFilesNotFound", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Enriching table in semantic model from data dictionary..
         /// </summary>
-        internal static string EnrichingTableFromDataDictionary {
-            get {
+        internal static string EnrichingTableFromDataDictionary
+        {
+            get
+            {
                 return ResourceManager.GetString("EnrichingTableFromDataDictionary", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Executing SQL query..
         /// </summary>
-        internal static string ExecutingSQLQuery {
-            get {
+        internal static string ExecutingSQLQuery
+        {
+            get
+            {
                 return ResourceManager.GetString("ExecutingSQLQuery", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Extracting semantic model for database..
         /// </summary>
-        internal static string ExtractingModelForDatabase {
-            get {
+        internal static string ExtractingModelForDatabase
+        {
+            get
+            {
                 return ResourceManager.GetString("ExtractingModelForDatabase", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Completed generation of semantic description for entity..
         /// </summary>
-        internal static string GeneratedSemanticDescriptionForEntity {
-            get {
+        internal static string GeneratedSemanticDescriptionForEntity
+        {
+            get
+            {
                 return ResourceManager.GetString("GeneratedSemanticDescriptionForEntity", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Generating semantic description for entity..
         /// </summary>
-        internal static string GenerateSemanticDescriptionForEntity {
-            get {
+        internal static string GenerateSemanticDescriptionForEntity
+        {
+            get
+            {
                 return ResourceManager.GetString("GenerateSemanticDescriptionForEntity", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Getting list of tables from view definition..
         /// </summary>
-        internal static string GetTableListFromViewDefinition {
-            get {
+        internal static string GetTableListFromViewDefinition
+        {
+            get
+            {
                 return ResourceManager.GetString("GetTableListFromViewDefinition", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Completed getting list of tables from view definition..
         /// </summary>
-        internal static string GotTableListFromViewDefinition {
-            get {
+        internal static string GotTableListFromViewDefinition
+        {
+            get
+            {
                 return ResourceManager.GetString("GotTableListFromViewDefinition", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Semantic model loaded successfully for database..
         /// </summary>
-        internal static string LoadedSemanticModelForDatabase {
-            get {
+        internal static string LoadedSemanticModelForDatabase
+        {
+            get
+            {
                 return ResourceManager.GetString("LoadedSemanticModelForDatabase", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Loading data dictionary information for tables into semantic model..
         /// </summary>
-        internal static string LoadingDataDictionaryTable {
-            get {
+        internal static string LoadingDataDictionaryTable
+        {
+            get
+            {
                 return ResourceManager.GetString("LoadingDataDictionaryTable", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Loading semantic model from model path..
         /// </summary>
-        internal static string LoadingSemanticModel {
-            get {
+        internal static string LoadingSemanticModel
+        {
+            get
+            {
                 return ResourceManager.GetString("LoadingSemanticModel", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Project settings validation completed..
         /// </summary>
-        internal static string ProjectSettingsValidationCompleted {
-            get {
+        internal static string ProjectSettingsValidationCompleted
+        {
+            get
+            {
                 return ResourceManager.GetString("ProjectSettingsValidationCompleted", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Project settings validation started..
         /// </summary>
-        internal static string ProjectSettingsValidationStarted {
-            get {
+        internal static string ProjectSettingsValidationStarted
+        {
+            get
+            {
                 return ResourceManager.GetString("ProjectSettingsValidationStarted", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Project settings validated successfully..
         /// </summary>
-        internal static string ProjectSettingsValidationSuccessful {
-            get {
+        internal static string ProjectSettingsValidationSuccessful
+        {
+            get
+            {
                 return ResourceManager.GetString("ProjectSettingsValidationSuccessful", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Table does not exist in Semantic Model..
         /// </summary>
-        internal static string TableDoesNotExistInSemanticModel {
-            get {
+        internal static string TableDoesNotExistInSemanticModel
+        {
+            get
+            {
                 return ResourceManager.GetString("TableDoesNotExistInSemanticModel", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Semantic description for table is not available. It will be generated..
         /// </summary>
-        internal static string TableMissingSemanticDescription {
-            get {
+        internal static string TableMissingSemanticDescription
+        {
+            get
+            {
                 return ResourceManager.GetString("TableMissingSemanticDescription", resourceCulture);
             }
         }

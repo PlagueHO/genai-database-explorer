@@ -2,6 +2,7 @@ using GenAIDBExplorer.Api.Services;
 using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.Models.SemanticModel;
 using GenAIDBExplorer.Core.Repository;
+using GenAIDBExplorer.Core.SemanticModelQuery;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +19,7 @@ public class TestApiFactory : WebApplicationFactory<Program>
     public Mock<ISemanticModelCacheService> MockCacheService { get; } = new();
     public Mock<IProject> MockProject { get; } = new();
     public Mock<ISemanticModelRepository> MockRepository { get; } = new();
+    public Mock<ISemanticModelSearchService> MockSearchService { get; } = new();
 
     public TestApiFactory()
     {
@@ -59,6 +61,9 @@ public class TestApiFactory : WebApplicationFactory<Program>
 
             services.RemoveAll<ISemanticModelRepository>();
             services.AddSingleton(MockRepository.Object);
+
+            services.RemoveAll<ISemanticModelSearchService>();
+            services.AddSingleton(MockSearchService.Object);
         });
     }
 
@@ -69,6 +74,7 @@ public class TestApiFactory : WebApplicationFactory<Program>
     {
         MockCacheService.Reset();
         MockRepository.Reset();
+        MockSearchService.Reset();
 
         // Re-establish default so future requests don't fail unexpectedly
         var defaultModel = TestData.CreateTestModel();

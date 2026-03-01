@@ -1,8 +1,14 @@
+using GenAIDBExplorer.Core.ChatClients;
 using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.Repository;
 using GenAIDBExplorer.Core.Repository.Caching;
 using GenAIDBExplorer.Core.Repository.Performance;
 using GenAIDBExplorer.Core.Repository.Security;
+using GenAIDBExplorer.Core.SemanticModelQuery;
+using GenAIDBExplorer.Core.SemanticVectors.Embeddings;
+using GenAIDBExplorer.Core.SemanticVectors.Infrastructure;
+using GenAIDBExplorer.Core.SemanticVectors.Policy;
+using GenAIDBExplorer.Core.SemanticVectors.Search;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -108,6 +114,25 @@ public static class ServiceRegistrationExtensions
 
         services.AddTransient<IPerformanceMonitoringOptionsBuilder>(
             _ => PerformanceMonitoringOptionsBuilder.Create());
+
+        return services;
+    }
+
+    /// <summary>
+    /// Registers the vector search services required for the search endpoint.
+    /// Includes embedding generation and vector similarity search, but excludes
+    /// generation-only services (such as <c>IVectorGenerationService</c>).
+    /// </summary>
+    public static IServiceCollection AddGenAIDBExplorerVectorSearchServices(
+        this IServiceCollection services)
+    {
+        services.AddSingleton<IChatClientFactory, ChatClientFactory>();
+        services.AddSingleton<IVectorIndexPolicy, VectorIndexPolicy>();
+        services.AddSingleton<IVectorInfrastructureFactory, VectorInfrastructureFactory>();
+        services.AddSingleton<IEmbeddingGenerator, ChatClientEmbeddingGenerator>();
+        services.AddSingleton<Microsoft.SemanticKernel.Connectors.InMemory.InMemoryVectorStore>();
+        services.AddSingleton<IVectorSearchService, SkInMemoryVectorSearchService>();
+        services.AddSingleton<ISemanticModelSearchService, SemanticModelSearchService>();
 
         return services;
     }

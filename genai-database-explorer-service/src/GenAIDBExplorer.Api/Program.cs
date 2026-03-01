@@ -13,6 +13,9 @@ builder.AddServiceDefaults();
 // Register shared Core services (repository, persistence, caching, security, performance monitoring)
 builder.Services.AddGenAIDBExplorerCoreServices(builder.Configuration);
 
+// Register vector search services (query embedding, similarity search)
+builder.Services.AddGenAIDBExplorerVectorSearchServices();
+
 // Register API-layer services
 builder.Services.AddSingleton<ISemanticModelCacheService, SemanticModelCacheService>();
 
@@ -111,6 +114,7 @@ app.MapTableEndpoints();
 app.MapViewEndpoints();
 app.MapStoredProcedureEndpoints();
 app.MapProjectEndpoints();
+app.MapSearchEndpoints();
 
 app.Run();
 
