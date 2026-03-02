@@ -32,12 +32,20 @@ param principalId string
 ])
 param principalIdType string = 'User'
 
-@sys.description('The SQL logical server administrator username.')
-param sqlServerUsername string
+@sys.description('SQL Server authentication mode. SqlAndEntraId (default) enables both SQL and Entra ID authentication. SqlOnly enables SQL authentication only. EntraIdOnly enables Entra ID authentication only (required by Microsoft internal policy).')
+@allowed([
+  'SqlOnly'
+  'SqlAndEntraId'
+  'EntraIdOnly'
+])
+param sqlAuthenticationMode string = 'SqlAndEntraId'
 
-@sys.description('The SQL logical server administrator password.')
+@sys.description('The SQL logical server administrator username. Required when sqlAuthenticationMode is SqlOnly or SqlAndEntraId.')
+param sqlServerUsername string = ''
+
+@sys.description('The SQL logical server administrator password. Required when sqlAuthenticationMode is SqlOnly or SqlAndEntraId.')
 @secure()
-param sqlServerPassword string
+param sqlServerPassword string = ''
 
 @sys.description('Whether to deploy Azure AI Search service.')
 param azureAiSearchDeploy bool = false
@@ -243,6 +251,11 @@ module foundryRoleAssignments './core/security/role_foundry.bicep' = {
   }
 }
 
+// SQL authentication mode computed variables
+var sqlAuthEnabled = sqlAuthenticationMode != 'EntraIdOnly'
+var entraIdAuthEnabled = sqlAuthenticationMode != 'SqlOnly'
+var azureADOnlyAuthentication = sqlAuthenticationMode == 'EntraIdOnly'
+
 // Map principalIdType to SQL administrator principalType
 var sqlAdminPrincipalType = principalIdType == 'ServicePrincipal' ? 'Application' : (principalIdType == 'User' ? 'User' : 'Application')
 
@@ -256,16 +269,16 @@ module sqlServer 'br/public:avm/res/sql/server:0.21.1' = {
   params: {
     name: '${abbrs.sqlServers}${environmentName}'
     location: location
-    administratorLogin: sqlServerUsername
-    administratorLoginPassword: sqlServerPassword
-    administrators: {
-      azureADOnlyAuthentication: false
+    administratorLogin: sqlAuthEnabled ? sqlServerUsername : null
+    administratorLoginPassword: sqlAuthEnabled ? sqlServerPassword : null
+    administrators: entraIdAuthEnabled ? {
+      azureADOnlyAuthentication: azureADOnlyAuthentication
       login: principalId // Use the principal ID as the login name (can be email for users, application name for service principals)
       principalType: sqlAdminPrincipalType // 'Application', 'Group', or 'User'
       sid: principalId // The object ID (principal ID) of the administrator
       administratorType: 'ActiveDirectory'
       tenantId: tenant().tenantId // Current tenant ID
-    }
+    } : null
     databases: [
       {
         name: 'AdventureWorksLT'
@@ -516,7 +529,8 @@ output AZURE_AI_FOUNDRY_PROJECT_ENDPOINT string = 'https://${foundryCustomSubDom
 // Output the SQL Server resources
 output SQL_SERVER_NAME string = sqlServer.outputs.name
 output SQL_SERVER_RESOURCE_ID string = sqlServer.outputs.resourceId
-output SQL_SERVER_ADMIN_USERNAME string = sqlServerUsername
+output SQL_SERVER_AUTH_MODE string = sqlAuthenticationMode
+output SQL_SERVER_ADMIN_USERNAME string = sqlAuthEnabled ? sqlServerUsername : ''
 output SQL_DATABASE_ENDPOINT string = sqlServer.outputs.fullyQualifiedDomainName
 
 // Output the Client IP Address

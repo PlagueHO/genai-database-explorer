@@ -139,9 +139,16 @@ azd env set VARIABLE_NAME value
 
 | Environment Variable | Description | Default | Example |
 |---------------------|-------------|---------|---------|
-| `SQL_SERVER_USERNAME` | SQL Server administrator username | `sqladmin` | `dbadmin` |
-| `SQL_SERVER_PASSWORD` | SQL Server administrator password | *Required* | `ComplexP@ssw0rd!` |
+| `SQL_AUTH_MODE` | SQL Server authentication mode: `SqlOnly`, `SqlAndEntraId`, or `EntraIdOnly` | `SqlAndEntraId` | `EntraIdOnly` |
+| `SQL_SERVER_USERNAME` | SQL Server administrator username (required for `SqlOnly` and `SqlAndEntraId`) | `sqladmin` | `dbadmin` |
+| `SQL_SERVER_PASSWORD` | SQL Server administrator password (required for `SqlOnly` and `SqlAndEntraId`) | *empty* | `ComplexP@ssw0rd!` |
 | `CLIENT_IP_ADDRESS` | Client IP address to allow access to Azure resources | *None* | `123.45.67.89` |
+
+> **Authentication modes:**
+>
+> - **`SqlAndEntraId`** (default): Enables both SQL Authentication and Microsoft Entra ID authentication. Requires `SQL_SERVER_USERNAME`, `SQL_SERVER_PASSWORD`, and `AZURE_PRINCIPAL_ID`. The principal ID is configured as the Entra ID admin.
+> - **`SqlOnly`**: Enables SQL Authentication only. Requires `SQL_SERVER_USERNAME` and `SQL_SERVER_PASSWORD`. No Entra ID admin is configured.
+> - **`EntraIdOnly`**: Enables Microsoft Entra ID authentication only. Requires `AZURE_PRINCIPAL_ID` which is set as the SQL admin. SQL username and password are not used. This mode is required by Microsoft internal policy.
 
 > **Note:** The `CLIENT_IP_ADDRESS` parameter creates access rules that allow the specified IP address to connect to both the Azure SQL Server and Azure Storage Account. This is useful for development scenarios where you need to connect from your local machine or a specific server. If not provided, no client-specific access rules will be created.
 
@@ -152,6 +159,9 @@ azd env set VARIABLE_NAME value
 azd env set ENABLE_PUBLIC_NETWORK_ACCESS false
 azd env set AZURE_AI_SEARCH_DEPLOY true
 azd env set COSMOS_DB_DEPLOY true
+
+# Deploy with Entra ID only authentication (required by Microsoft internal policy)
+azd env set SQL_AUTH_MODE EntraIdOnly
 
 # Deploy with public access and client IP allowlist (recommended for development/testing)
 azd env set ENABLE_PUBLIC_NETWORK_ACCESS true

@@ -1,12 +1,11 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
-  "languageVersion": "2.0",
   "contentVersion": "1.0.0.0",
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.40.2.10011",
-      "templateHash": "3417445400211732629"
+      "version": "0.34.44.8038",
+      "templateHash": "9293563254781042730"
     }
   },
   "parameters": {
@@ -55,16 +54,30 @@
         "description": "Type of the principal referenced by principalId."
       }
     },
+    "sqlAuthenticationMode": {
+      "type": "string",
+      "defaultValue": "SqlAndEntraId",
+      "allowedValues": [
+        "SqlOnly",
+        "SqlAndEntraId",
+        "EntraIdOnly"
+      ],
+      "metadata": {
+        "description": "SQL Server authentication mode. SqlAndEntraId (default) enables both SQL and Entra ID authentication. SqlOnly enables SQL authentication only. EntraIdOnly enables Entra ID authentication only (required by Microsoft internal policy)."
+      }
+    },
     "sqlServerUsername": {
       "type": "string",
+      "defaultValue": "",
       "metadata": {
-        "description": "The SQL logical server administrator username."
+        "description": "The SQL logical server administrator username. Required when sqlAuthenticationMode is SqlOnly or SqlAndEntraId."
       }
     },
     "sqlServerPassword": {
       "type": "securestring",
+      "defaultValue": "",
       "metadata": {
-        "description": "The SQL logical server administrator password."
+        "description": "The SQL logical server administrator password. Required when sqlAuthenticationMode is SqlOnly or SqlAndEntraId."
       }
     },
     "azureAiSearchDeploy": {
@@ -255,10 +268,10 @@
       {
         "model": {
           "format": "OpenAI",
-          "name": "text-embedding-ada-002",
-          "version": "2"
+          "name": "text-embedding-3-large",
+          "version": "1"
         },
-        "name": "text-embedding-ada-002",
+        "name": "text-embedding-3-large",
         "sku": {
           "name": "GlobalStandard",
           "capacity": 150
@@ -280,12 +293,15 @@
     "aiSearchName": "[format('{0}{1}', variables('abbrs').aiSearchSearchServices, parameters('environmentName'))]",
     "cosmosDbAccountName": "[format('{0}{1}', variables('abbrs').cosmosDBAccounts, parameters('environmentName'))]",
     "storageAccountName": "[format('{0}{1}', variables('abbrs').storageStorageAccounts, toLower(replace(parameters('environmentName'), '-', '')))]",
+    "sqlAuthEnabled": "[not(equals(parameters('sqlAuthenticationMode'), 'EntraIdOnly'))]",
+    "entraIdAuthEnabled": "[not(equals(parameters('sqlAuthenticationMode'), 'SqlOnly'))]",
+    "azureADOnlyAuthentication": "[equals(parameters('sqlAuthenticationMode'), 'EntraIdOnly')]",
     "sqlAdminPrincipalType": "[if(equals(parameters('principalIdType'), 'ServicePrincipal'), 'Application', if(equals(parameters('principalIdType'), 'User'), 'User', 'Application'))]"
   },
-  "resources": {
-    "rg": {
+  "resources": [
+    {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2025-04-01",
+      "apiVersion": "2022-09-01",
       "name": "[format('resource-group-deployment-{0}', variables('resourceToken'))]",
       "location": "[deployment().location]",
       "properties": {
@@ -783,9 +799,9 @@
         }
       }
     },
-    "logAnalyticsWorkspace": {
+    {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2025-04-01",
+      "apiVersion": "2022-09-01",
       "name": "[format('log-analytics-workspace-deployment-{0}', variables('resourceToken'))]",
       "resourceGroup": "[parameters('resourceGroupName')]",
       "properties": {
@@ -3883,12 +3899,12 @@
         }
       },
       "dependsOn": [
-        "rg"
+        "[subscriptionResourceId('Microsoft.Resources/deployments', format('resource-group-deployment-{0}', variables('resourceToken')))]"
       ]
     },
-    "applicationInsights": {
+    {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2025-04-01",
+      "apiVersion": "2022-09-01",
       "name": "[format('application-insights-deployment-{0}', variables('resourceToken'))]",
       "resourceGroup": "[parameters('resourceGroupName')]",
       "properties": {
@@ -3907,7 +3923,7 @@
             "value": "[variables('tags')]"
           },
           "workspaceResourceId": {
-            "value": "[reference('logAnalyticsWorkspace').outputs.resourceId.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('log-analytics-workspace-deployment-{0}', variables('resourceToken'))), '2022-09-01').outputs.resourceId.value]"
           }
         },
         "template": {
@@ -4631,13 +4647,13 @@
         }
       },
       "dependsOn": [
-        "logAnalyticsWorkspace",
-        "rg"
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('log-analytics-workspace-deployment-{0}', variables('resourceToken')))]",
+        "[subscriptionResourceId('Microsoft.Resources/deployments', format('resource-group-deployment-{0}', variables('resourceToken')))]"
       ]
     },
-    "foundryService": {
+    {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2025-04-01",
+      "apiVersion": "2022-09-01",
       "name": "[format('microsoft-foundry-service-deployment-{0}', variables('resourceToken'))]",
       "resourceGroup": "[parameters('resourceGroupName')]",
       "properties": {
@@ -4668,7 +4684,7 @@
             "value": [
               {
                 "name": "send-to-log-analytics",
-                "workspaceResourceId": "[reference('logAnalyticsWorkspace').outputs.resourceId.value]",
+                "workspaceResourceId": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('log-analytics-workspace-deployment-{0}', variables('resourceToken'))), '2022-09-01').outputs.resourceId.value]",
                 "logCategoriesAndGroups": [
                   {
                     "categoryGroup": "allLogs",
@@ -4722,8 +4738,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.40.2.10011",
-              "templateHash": "11218765782900133283"
+              "version": "0.34.44.8038",
+              "templateHash": "5507976831859411933"
             },
             "name": "Cognitive Services",
             "description": "This module deploys a Cognitive Service account.\nThis is a temporary module for deploying Azure Foundry Cognitive Services accounts.\nIt is intended to be replaced by the Azure Verified Module (AVM) for Microsoft.CognitiveServices accounts\nonce it supports Foundry V2 (projects, connections etc)\nhttps://github.com/Azure/bicep-registry-modules/issues/5390\n"
@@ -7520,7 +7536,7 @@
                 "allowedFqdnList": "[parameters('allowedFqdnList')]",
                 "apiProperties": "[parameters('apiProperties')]",
                 "disableLocalAuth": "[parameters('disableLocalAuth')]",
-                "encryption": "[if(not(empty(parameters('customerManagedKey'))), createObject('keySource', 'Microsoft.KeyVault', 'keyVaultProperties', createObject('identityClientId', if(not(empty(coalesce(tryGet(parameters('customerManagedKey'), 'userAssignedIdentityResourceId'), ''))), tryGet(if(not(empty(tryGet(parameters('customerManagedKey'), 'userAssignedIdentityResourceId'))), reference('cMKUserAssignedIdentity', '2023-01-31', 'full'), null()), 'properties', 'clientId'), null()), 'keyVaultUri', tryGet(if(not(empty(tryGet(parameters('customerManagedKey'), 'keyVaultResourceId'))), reference('cMKKeyVault', '2023-07-01', 'full'), null()), 'properties', 'vaultUri'), 'keyName', parameters('customerManagedKey').keyName, 'keyVersion', if(not(empty(coalesce(tryGet(parameters('customerManagedKey'), 'keyVersion'), ''))), tryGet(parameters('customerManagedKey'), 'keyVersion'), last(split(tryGet(if(and(not(empty(tryGet(parameters('customerManagedKey'), 'keyVaultResourceId'))), and(not(empty(tryGet(parameters('customerManagedKey'), 'keyVaultResourceId'))), not(empty(tryGet(parameters('customerManagedKey'), 'keyName'))))), reference('cMKKeyVault::cMKKey', '2023-07-01', 'full'), null()), 'properties', 'keyUriWithVersion'), '/'))))), null())]",
+                "encryption": "[if(not(empty(parameters('customerManagedKey'))), createObject('keySource', 'Microsoft.KeyVault', 'keyVaultProperties', createObject('identityClientId', if(not(empty(coalesce(tryGet(parameters('customerManagedKey'), 'userAssignedIdentityResourceId'), ''))), tryGet(reference('cMKUserAssignedIdentity', '2023-01-31', 'full'), 'properties', 'clientId'), null()), 'keyVaultUri', tryGet(reference('cMKKeyVault', '2023-07-01', 'full'), 'properties', 'vaultUri'), 'keyName', parameters('customerManagedKey').keyName, 'keyVersion', if(not(empty(coalesce(tryGet(parameters('customerManagedKey'), 'keyVersion'), ''))), tryGet(parameters('customerManagedKey'), 'keyVersion'), last(split(tryGet(reference('cMKKeyVault::cMKKey', '2023-07-01', 'full'), 'properties', 'keyUriWithVersion'), '/'))))), null())]",
                 "migrationToken": "[parameters('migrationToken')]",
                 "restore": "[parameters('restore')]",
                 "restrictOutboundNetworkAccess": "[parameters('restrictOutboundNetworkAccess')]",
@@ -7559,7 +7575,7 @@
               "condition": "[and(not(empty(coalesce(parameters('lock'), createObject()))), not(equals(tryGet(parameters('lock'), 'kind'), 'None')))]",
               "type": "Microsoft.Authorization/locks",
               "apiVersion": "2020-05-01",
-              "scope": "[resourceId('Microsoft.CognitiveServices/accounts', parameters('name'))]",
+              "scope": "[format('Microsoft.CognitiveServices/accounts/{0}', parameters('name'))]",
               "name": "[coalesce(tryGet(parameters('lock'), 'name'), format('lock-{0}', parameters('name')))]",
               "properties": {
                 "level": "[coalesce(tryGet(parameters('lock'), 'kind'), '')]",
@@ -7576,7 +7592,7 @@
               },
               "type": "Microsoft.Insights/diagnosticSettings",
               "apiVersion": "2021-05-01-preview",
-              "scope": "[resourceId('Microsoft.CognitiveServices/accounts', parameters('name'))]",
+              "scope": "[format('Microsoft.CognitiveServices/accounts/{0}', parameters('name'))]",
               "name": "[coalesce(tryGet(coalesce(parameters('diagnosticSettings'), createArray())[copyIndex()], 'name'), format('{0}-diagnosticSettings', parameters('name')))]",
               "properties": {
                 "copy": [
@@ -7617,7 +7633,7 @@
               },
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
-              "scope": "[resourceId('Microsoft.CognitiveServices/accounts', parameters('name'))]",
+              "scope": "[format('Microsoft.CognitiveServices/accounts/{0}', parameters('name'))]",
               "name": "[coalesce(tryGet(coalesce(variables('formattedRoleAssignments'), createArray())[copyIndex()], 'name'), guid(resourceId('Microsoft.CognitiveServices/accounts', parameters('name')), coalesce(variables('formattedRoleAssignments'), createArray())[copyIndex()].principalId, coalesce(variables('formattedRoleAssignments'), createArray())[copyIndex()].roleDefinitionId))]",
               "properties": {
                 "roleDefinitionId": "[coalesce(variables('formattedRoleAssignments'), createArray())[copyIndex()].roleDefinitionId]",
@@ -7640,7 +7656,7 @@
                 "batchSize": 1
               },
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2025-04-01",
+              "apiVersion": "2022-09-01",
               "name": "[take(format('{0}-cognitiveService-PrivateEndpoint-{1}', uniqueString(deployment().name, parameters('location')), copyIndex()), 64)]",
               "subscriptionId": "[split(coalesce(tryGet(coalesce(parameters('privateEndpoints'), createArray())[copyIndex()], 'resourceGroupResourceId'), resourceGroup().id), '/')[2]]",
               "resourceGroup": "[split(coalesce(tryGet(coalesce(parameters('privateEndpoints'), createArray())[copyIndex()], 'resourceGroupResourceId'), resourceGroup().id), '/')[4]]",
@@ -8302,7 +8318,7 @@
                 "batchSize": 1
               },
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2025-04-01",
+              "apiVersion": "2022-09-01",
               "name": "[format('{0}-cognitiveService-project-{1}', uniqueString(deployment().name, parameters('location')), copyIndex())]",
               "subscriptionId": "[split(coalesce(tryGet(coalesce(parameters('projects'), createArray())[copyIndex()], 'resourceGroupResourceId'), resourceGroup().id), '/')[2]]",
               "resourceGroup": "[split(coalesce(tryGet(coalesce(parameters('projects'), createArray())[copyIndex()], 'resourceGroupResourceId'), resourceGroup().id), '/')[4]]",
@@ -8350,8 +8366,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.40.2.10011",
-                      "templateHash": "10502417471076423993"
+                      "version": "0.34.44.8038",
+                      "templateHash": "18399113193289751815"
                     },
                     "name": "Cognitive Services Project",
                     "description": "This module deploys a Project within a Cognitive Services account.\nIt allows for the creation of a Foundry Project with optional managed identities and role assignments.\n"
@@ -10126,7 +10142,7 @@
                       },
                       "type": "Microsoft.Authorization/roleAssignments",
                       "apiVersion": "2022-04-01",
-                      "scope": "[resourceId('Microsoft.CognitiveServices/accounts/projects', parameters('accountName'), parameters('name'))]",
+                      "scope": "[format('Microsoft.CognitiveServices/accounts/{0}/projects/{1}', parameters('accountName'), parameters('name'))]",
                       "name": "[coalesce(tryGet(coalesce(variables('formattedRoleAssignments'), createArray())[copyIndex()], 'name'), guid(resourceId('Microsoft.CognitiveServices/accounts/projects', parameters('accountName'), parameters('name')), coalesce(variables('formattedRoleAssignments'), createArray())[copyIndex()].principalId, coalesce(variables('formattedRoleAssignments'), createArray())[copyIndex()].roleDefinitionId))]",
                       "properties": {
                         "roleDefinitionId": "[coalesce(variables('formattedRoleAssignments'), createArray())[copyIndex()].roleDefinitionId]",
@@ -10148,7 +10164,7 @@
                       },
                       "type": "Microsoft.Insights/diagnosticSettings",
                       "apiVersion": "2021-05-01-preview",
-                      "scope": "[resourceId('Microsoft.CognitiveServices/accounts/projects', parameters('accountName'), parameters('name'))]",
+                      "scope": "[format('Microsoft.CognitiveServices/accounts/{0}/projects/{1}', parameters('accountName'), parameters('name'))]",
                       "name": "[coalesce(tryGet(coalesce(parameters('diagnosticSettings'), createArray())[copyIndex()], 'name'), format('{0}-diagnosticSettings', parameters('name')))]",
                       "properties": {
                         "copy": [
@@ -10190,7 +10206,7 @@
                         "batchSize": 1
                       },
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2025-04-01",
+                      "apiVersion": "2022-09-01",
                       "name": "[format('{0}-cph', take(format('{0}-{1}-{2}', parameters('accountName'), parameters('name'), coalesce(parameters('capabilityHosts'), createArray())[copyIndex()].name), 60))]",
                       "properties": {
                         "expressionEvaluationOptions": {
@@ -10219,8 +10235,8 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.40.2.10011",
-                              "templateHash": "13271068657458212328"
+                              "version": "0.34.44.8038",
+                              "templateHash": "1566189967957308085"
                             },
                             "name": "Cognitive Services Project Capability Host",
                             "description": "This module creates a capability host in a Cognitive Services project.\r\nProject-level capability hosts configure per-project storage backends for threads, vectors, and files,\r\nallowing different projects to use different storage connections.\r\nSee: https://learn.microsoft.com/en-us/azure/templates/microsoft.cognitiveservices/accounts/projects/capabilityhosts\r\n"
@@ -10426,7 +10442,7 @@
                         "batchSize": 1
                       },
                       "type": "Microsoft.Resources/deployments",
-                      "apiVersion": "2025-04-01",
+                      "apiVersion": "2022-09-01",
                       "name": "[format('{0}-app', take(format('{0}-{1}-{2}', parameters('accountName'), parameters('name'), coalesce(parameters('applications'), createArray())[copyIndex()].name), 60))]",
                       "properties": {
                         "expressionEvaluationOptions": {
@@ -10481,8 +10497,8 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.40.2.10011",
-                              "templateHash": "16182969756855805011"
+                              "version": "0.34.44.8038",
+                              "templateHash": "12397258346460660738"
                             },
                             "name": "Cognitive Services Application",
                             "description": "This module creates an application within a Cognitive Services project.\r\nApplications are agentic application instances that can contain agent deployments.\r\nSee: https://learn.microsoft.com/en-us/azure/templates/microsoft.cognitiveservices/accounts/projects/applications\r\n"
@@ -11169,7 +11185,7 @@
                 "batchSize": 1
               },
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2025-04-01",
+              "apiVersion": "2022-09-01",
               "name": "[format('{0}-con', take(format('{0}-{1}', parameters('name'), parameters('connections')[copyIndex()].name), 60))]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -11215,8 +11231,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.40.2.10011",
-                      "templateHash": "12620248503948793664"
+                      "version": "0.34.44.8038",
+                      "templateHash": "2768996518319539103"
                     },
                     "name": "Machine Learning Services Workspaces Connections",
                     "description": "This module creates a connection in a Machine Learning Services workspace."
@@ -12094,7 +12110,7 @@
                 "batchSize": 1
               },
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2025-04-01",
+              "apiVersion": "2022-09-01",
               "name": "[format('{0}-cph', take(format('{0}-{1}', parameters('name'), parameters('capabilityHosts')[copyIndex()].name), 60))]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -12122,8 +12138,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.40.2.10011",
-                      "templateHash": "8173527886164927861"
+                      "version": "0.34.44.8038",
+                      "templateHash": "16309400430422865805"
                     },
                     "name": "Cognitive Services Capability Hosts",
                     "description": "This module creates a capability host in a Cognitive Services account.\r\nCapability hosts enable AI agent functionality by configuring storage for threads, vectors, and files.\r\nSee: https://learn.microsoft.com/en-us/azure/ai-foundry/agents/concepts/capability-hosts\r\n"
@@ -12290,7 +12306,7 @@
             "secretsExport": {
               "condition": "[not(equals(parameters('secretsExportConfiguration'), null()))]",
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2025-04-01",
+              "apiVersion": "2022-09-01",
               "name": "[format('{0}-secrets-kv', uniqueString(deployment().name, parameters('location')))]",
               "subscriptionId": "[split(tryGet(parameters('secretsExportConfiguration'), 'keyVaultResourceId'), '/')[2]]",
               "resourceGroup": "[split(tryGet(parameters('secretsExportConfiguration'), 'keyVaultResourceId'), '/')[4]]",
@@ -12304,7 +12320,7 @@
                     "value": "[last(split(tryGet(parameters('secretsExportConfiguration'), 'keyVaultResourceId'), '/'))]"
                   },
                   "secretsToSet": {
-                    "value": "[union(createArray(), if(contains(parameters('secretsExportConfiguration'), 'accessKey1Name'), createArray(createObject('name', tryGet(parameters('secretsExportConfiguration'), 'accessKey1Name'), 'value', listKeys('cognitiveService', '2025-10-01-preview').key1)), createArray()), if(contains(parameters('secretsExportConfiguration'), 'accessKey2Name'), createArray(createObject('name', tryGet(parameters('secretsExportConfiguration'), 'accessKey2Name'), 'value', listKeys('cognitiveService', '2025-10-01-preview').key2)), createArray()))]"
+                    "value": "[union(createArray(), if(contains(parameters('secretsExportConfiguration'), 'accessKey1Name'), createArray(createObject('name', tryGet(parameters('secretsExportConfiguration'), 'accessKey1Name'), 'value', listKeys(resourceId('Microsoft.CognitiveServices/accounts', parameters('name')), '2025-10-01-preview').key1)), createArray()), if(contains(parameters('secretsExportConfiguration'), 'accessKey2Name'), createArray(createObject('name', tryGet(parameters('secretsExportConfiguration'), 'accessKey2Name'), 'value', listKeys(resourceId('Microsoft.CognitiveServices/accounts', parameters('name')), '2025-10-01-preview').key2)), createArray()))]"
                   }
                 },
                 "template": {
@@ -12314,8 +12330,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.40.2.10011",
-                      "templateHash": "10797061714279501803"
+                      "version": "0.34.44.8038",
+                      "templateHash": "1918521410653805349"
                     }
                   },
                   "definitions": {
@@ -12491,7 +12507,7 @@
               "metadata": {
                 "description": "A hashtable of references to the secrets exported to the provided Key Vault. The key of each reference is each secret's name."
               },
-              "value": "[if(not(equals(parameters('secretsExportConfiguration'), null())), toObject(tryGet(if(not(equals(parameters('secretsExportConfiguration'), null())), reference('secretsExport'), null()), 'outputs', 'secretsSet', 'value'), lambda('secret', last(split(lambdaVariables('secret').secretResourceId, '/'))), lambda('secret', lambdaVariables('secret'))), createObject())]"
+              "value": "[if(not(equals(parameters('secretsExportConfiguration'), null())), toObject(tryGet(reference('secretsExport'), 'outputs').secretsSet.value, lambda('secret', last(split(lambdaVariables('secret').secretResourceId, '/'))), lambda('secret', lambdaVariables('secret'))), createObject())]"
             },
             "privateEndpoints": {
               "type": "array",
@@ -12551,13 +12567,13 @@
         }
       },
       "dependsOn": [
-        "logAnalyticsWorkspace",
-        "rg"
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('log-analytics-workspace-deployment-{0}', variables('resourceToken')))]",
+        "[subscriptionResourceId('Microsoft.Resources/deployments', format('resource-group-deployment-{0}', variables('resourceToken')))]"
       ]
     },
-    "foundryRoleAssignments": {
+    {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2025-04-01",
+      "apiVersion": "2022-09-01",
       "name": "[format('microsoft-foundry-role-assignments-{0}', variables('resourceToken'))]",
       "resourceGroup": "[parameters('resourceGroupName')]",
       "properties": {
@@ -12570,7 +12586,7 @@
             "value": "[variables('foundryName')]"
           },
           "roleAssignments": {
-            "value": "[flatten(createArray(if(parameters('azureAiSearchDeploy'), createArray(createObject('roleDefinitionIdOrName', 'Cognitive Services Contributor', 'principalType', 'ServicePrincipal', 'principalId', if(parameters('azureAiSearchDeploy'), reference('aiSearchService').outputs.systemAssignedMIPrincipalId.value, '')), createObject('roleDefinitionIdOrName', 'Cognitive Services OpenAI Contributor', 'principalType', 'ServicePrincipal', 'principalId', if(parameters('azureAiSearchDeploy'), reference('aiSearchService').outputs.systemAssignedMIPrincipalId.value, ''))), createArray()), if(not(empty(parameters('principalId'))), createArray(createObject('roleDefinitionIdOrName', 'Contributor', 'principalType', parameters('principalIdType'), 'principalId', parameters('principalId')), createObject('roleDefinitionIdOrName', 'Cognitive Services OpenAI Contributor', 'principalType', parameters('principalIdType'), 'principalId', parameters('principalId'))), createArray())))]"
+            "value": "[flatten(createArray(if(parameters('azureAiSearchDeploy'), createArray(createObject('roleDefinitionIdOrName', 'Cognitive Services Contributor', 'principalType', 'ServicePrincipal', 'principalId', if(parameters('azureAiSearchDeploy'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('ai-search-service-deployment-{0}', variables('resourceToken'))), '2022-09-01').outputs.systemAssignedMIPrincipalId.value, '')), createObject('roleDefinitionIdOrName', 'Cognitive Services OpenAI Contributor', 'principalType', 'ServicePrincipal', 'principalId', if(parameters('azureAiSearchDeploy'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('ai-search-service-deployment-{0}', variables('resourceToken'))), '2022-09-01').outputs.systemAssignedMIPrincipalId.value, ''))), createArray()), if(not(empty(parameters('principalId'))), createArray(createObject('roleDefinitionIdOrName', 'Contributor', 'principalType', parameters('principalIdType'), 'principalId', parameters('principalId')), createObject('roleDefinitionIdOrName', 'Cognitive Services OpenAI Contributor', 'principalType', parameters('principalIdType'), 'principalId', parameters('principalId'))), createArray())))]"
           }
         },
         "template": {
@@ -12580,8 +12596,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.40.2.10011",
-              "templateHash": "12350850528596767611"
+              "version": "0.34.44.8038",
+              "templateHash": "17028465554593302083"
             },
             "name": "Microsoft Foundry Role Assignments",
             "description": "Creates role assignments on a Microsoft Foundry account."
@@ -12732,7 +12748,7 @@
               },
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
-              "scope": "[resourceId('Microsoft.CognitiveServices/accounts', parameters('foundryName'))]",
+              "scope": "[format('Microsoft.CognitiveServices/accounts/{0}', parameters('foundryName'))]",
               "name": "[coalesce(tryGet(coalesce(variables('formattedRoleAssignments'), createArray())[copyIndex()], 'name'), guid(resourceId('Microsoft.CognitiveServices/accounts', parameters('foundryName')), coalesce(variables('formattedRoleAssignments'), createArray())[copyIndex()].principalId, coalesce(variables('formattedRoleAssignments'), createArray())[copyIndex()].roleDefinitionId))]",
               "properties": {
                 "roleDefinitionId": "[coalesce(variables('formattedRoleAssignments'), createArray())[copyIndex()].roleDefinitionId]",
@@ -12770,14 +12786,14 @@
         }
       },
       "dependsOn": [
-        "aiSearchService",
-        "foundryService",
-        "rg"
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('ai-search-service-deployment-{0}', variables('resourceToken')))]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('microsoft-foundry-service-deployment-{0}', variables('resourceToken')))]",
+        "[subscriptionResourceId('Microsoft.Resources/deployments', format('resource-group-deployment-{0}', variables('resourceToken')))]"
       ]
     },
-    "sqlServer": {
+    {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2025-04-01",
+      "apiVersion": "2022-09-01",
       "name": "[format('sql-server-deployment-{0}', variables('resourceToken'))]",
       "resourceGroup": "[parameters('resourceGroupName')]",
       "properties": {
@@ -12792,22 +12808,9 @@
           "location": {
             "value": "[parameters('location')]"
           },
-          "administratorLogin": {
-            "value": "[parameters('sqlServerUsername')]"
-          },
-          "administratorLoginPassword": {
-            "value": "[parameters('sqlServerPassword')]"
-          },
-          "administrators": {
-            "value": {
-              "azureADOnlyAuthentication": false,
-              "login": "[parameters('principalId')]",
-              "principalType": "[variables('sqlAdminPrincipalType')]",
-              "sid": "[parameters('principalId')]",
-              "administratorType": "ActiveDirectory",
-              "tenantId": "[tenant().tenantId]"
-            }
-          },
+          "administratorLogin": "[if(variables('sqlAuthEnabled'), createObject('value', parameters('sqlServerUsername')), createObject('value', null()))]",
+          "administratorLoginPassword": "[if(variables('sqlAuthEnabled'), createObject('value', parameters('sqlServerPassword')), createObject('value', null()))]",
+          "administrators": "[if(variables('entraIdAuthEnabled'), createObject('value', createObject('azureADOnlyAuthentication', variables('azureADOnlyAuthentication'), 'login', parameters('principalId'), 'principalType', variables('sqlAdminPrincipalType'), 'sid', parameters('principalId'), 'administratorType', 'ActiveDirectory', 'tenantId', tenant().tenantId)), createObject('value', null()))]",
           "databases": {
             "value": [
               {
@@ -19334,13 +19337,13 @@
         }
       },
       "dependsOn": [
-        "rg"
+        "[subscriptionResourceId('Microsoft.Resources/deployments', format('resource-group-deployment-{0}', variables('resourceToken')))]"
       ]
     },
-    "cosmosDbAccount": {
+    {
       "condition": "[parameters('cosmosDbDeploy')]",
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2025-04-01",
+      "apiVersion": "2022-09-01",
       "name": "[format('cosmos-db-account-deployment-{0}', variables('resourceToken'))]",
       "resourceGroup": "[parameters('resourceGroupName')]",
       "properties": {
@@ -19379,7 +19382,7 @@
             "value": [
               {
                 "name": "send-to-log-analytics",
-                "workspaceResourceId": "[reference('logAnalyticsWorkspace').outputs.resourceId.value]",
+                "workspaceResourceId": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('log-analytics-workspace-deployment-{0}', variables('resourceToken'))), '2022-09-01').outputs.resourceId.value]",
                 "logCategoriesAndGroups": [
                   {
                     "categoryGroup": "allLogs",
@@ -25329,14 +25332,14 @@
         }
       },
       "dependsOn": [
-        "logAnalyticsWorkspace",
-        "rg"
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('log-analytics-workspace-deployment-{0}', variables('resourceToken')))]",
+        "[subscriptionResourceId('Microsoft.Resources/deployments', format('resource-group-deployment-{0}', variables('resourceToken')))]"
       ]
     },
-    "storageAccount": {
+    {
       "condition": "[parameters('storageAccountDeploy')]",
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2025-04-01",
+      "apiVersion": "2022-09-01",
       "name": "[format('storage-account-deployment-{0}', variables('resourceToken'))]",
       "resourceGroup": "[parameters('resourceGroupName')]",
       "properties": {
@@ -25382,7 +25385,7 @@
             "value": [
               {
                 "name": "send-to-log-analytics",
-                "workspaceResourceId": "[reference('logAnalyticsWorkspace').outputs.resourceId.value]",
+                "workspaceResourceId": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('log-analytics-workspace-deployment-{0}', variables('resourceToken'))), '2022-09-01').outputs.resourceId.value]",
                 "metricCategories": [
                   {
                     "category": "AllMetrics",
@@ -33364,14 +33367,14 @@
         }
       },
       "dependsOn": [
-        "logAnalyticsWorkspace",
-        "rg"
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('log-analytics-workspace-deployment-{0}', variables('resourceToken')))]",
+        "[subscriptionResourceId('Microsoft.Resources/deployments', format('resource-group-deployment-{0}', variables('resourceToken')))]"
       ]
     },
-    "aiSearchService": {
+    {
       "condition": "[parameters('azureAiSearchDeploy')]",
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2025-04-01",
+      "apiVersion": "2022-09-01",
       "name": "[format('ai-search-service-deployment-{0}', variables('resourceToken'))]",
       "resourceGroup": "[parameters('resourceGroupName')]",
       "properties": {
@@ -33393,7 +33396,7 @@
             "value": [
               {
                 "name": "send-to-log-analytics",
-                "workspaceResourceId": "[reference('logAnalyticsWorkspace').outputs.resourceId.value]",
+                "workspaceResourceId": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('log-analytics-workspace-deployment-{0}', variables('resourceToken'))), '2022-09-01').outputs.resourceId.value]",
                 "logCategoriesAndGroups": [
                   {
                     "categoryGroup": "allLogs",
@@ -35472,15 +35475,15 @@
         }
       },
       "dependsOn": [
-        "logAnalyticsWorkspace",
-        "rg"
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('log-analytics-workspace-deployment-{0}', variables('resourceToken')))]",
+        "[subscriptionResourceId('Microsoft.Resources/deployments', format('resource-group-deployment-{0}', variables('resourceToken')))]"
       ]
     }
-  },
+  ],
   "outputs": {
     "AZURE_RESOURCE_GROUP": {
       "type": "string",
-      "value": "[reference('rg').outputs.name.value]"
+      "value": "[reference(subscriptionResourceId('Microsoft.Resources/deployments', format('resource-group-deployment-{0}', variables('resourceToken'))), '2022-09-01').outputs.name.value]"
     },
     "AZURE_PRINCIPAL_ID": {
       "type": "string",
@@ -35492,51 +35495,51 @@
     },
     "LOG_ANALYTICS_WORKSPACE_NAME": {
       "type": "string",
-      "value": "[reference('logAnalyticsWorkspace').outputs.name.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('log-analytics-workspace-deployment-{0}', variables('resourceToken'))), '2022-09-01').outputs.name.value]"
     },
     "LOG_ANALYTICS_RESOURCE_ID": {
       "type": "string",
-      "value": "[reference('logAnalyticsWorkspace').outputs.resourceId.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('log-analytics-workspace-deployment-{0}', variables('resourceToken'))), '2022-09-01').outputs.resourceId.value]"
     },
     "LOG_ANALYTICS_WORKSPACE_ID": {
       "type": "string",
-      "value": "[reference('logAnalyticsWorkspace').outputs.logAnalyticsWorkspaceId.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('log-analytics-workspace-deployment-{0}', variables('resourceToken'))), '2022-09-01').outputs.logAnalyticsWorkspaceId.value]"
     },
     "APPLICATION_INSIGHTS_NAME": {
       "type": "string",
-      "value": "[reference('applicationInsights').outputs.name.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('application-insights-deployment-{0}', variables('resourceToken'))), '2022-09-01').outputs.name.value]"
     },
     "APPLICATION_INSIGHTS_RESOURCE_ID": {
       "type": "string",
-      "value": "[reference('applicationInsights').outputs.resourceId.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('application-insights-deployment-{0}', variables('resourceToken'))), '2022-09-01').outputs.resourceId.value]"
     },
     "APPLICATION_INSIGHTS_INSTRUMENTATION_KEY": {
       "type": "string",
-      "value": "[reference('applicationInsights').outputs.instrumentationKey.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('application-insights-deployment-{0}', variables('resourceToken'))), '2022-09-01').outputs.instrumentationKey.value]"
     },
     "AZURE_AI_SEARCH_NAME": {
       "type": "string",
-      "value": "[if(parameters('azureAiSearchDeploy'), reference('aiSearchService').outputs.name.value, '')]"
+      "value": "[if(parameters('azureAiSearchDeploy'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('ai-search-service-deployment-{0}', variables('resourceToken'))), '2022-09-01').outputs.name.value, '')]"
     },
     "AZURE_AI_SEARCH_ID": {
       "type": "string",
-      "value": "[if(parameters('azureAiSearchDeploy'), reference('aiSearchService').outputs.resourceId.value, '')]"
+      "value": "[if(parameters('azureAiSearchDeploy'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('ai-search-service-deployment-{0}', variables('resourceToken'))), '2022-09-01').outputs.resourceId.value, '')]"
     },
     "AZURE_AI_FOUNDRY_NAME": {
       "type": "string",
-      "value": "[reference('foundryService').outputs.name.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('microsoft-foundry-service-deployment-{0}', variables('resourceToken'))), '2022-09-01').outputs.name.value]"
     },
     "AZURE_AI_FOUNDRY_ID": {
       "type": "string",
-      "value": "[reference('foundryService').outputs.resourceId.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('microsoft-foundry-service-deployment-{0}', variables('resourceToken'))), '2022-09-01').outputs.resourceId.value]"
     },
     "AZURE_AI_FOUNDRY_ENDPOINT": {
       "type": "string",
-      "value": "[reference('foundryService').outputs.endpoint.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('microsoft-foundry-service-deployment-{0}', variables('resourceToken'))), '2022-09-01').outputs.endpoint.value]"
     },
     "AZURE_AI_FOUNDRY_RESOURCE_ID": {
       "type": "string",
-      "value": "[reference('foundryService').outputs.resourceId.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('microsoft-foundry-service-deployment-{0}', variables('resourceToken'))), '2022-09-01').outputs.resourceId.value]"
     },
     "AZURE_AI_FOUNDRY_PROJECT_ENDPOINT": {
       "type": "string",
@@ -35544,19 +35547,23 @@
     },
     "SQL_SERVER_NAME": {
       "type": "string",
-      "value": "[reference('sqlServer').outputs.name.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('sql-server-deployment-{0}', variables('resourceToken'))), '2022-09-01').outputs.name.value]"
     },
     "SQL_SERVER_RESOURCE_ID": {
       "type": "string",
-      "value": "[reference('sqlServer').outputs.resourceId.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('sql-server-deployment-{0}', variables('resourceToken'))), '2022-09-01').outputs.resourceId.value]"
+    },
+    "SQL_SERVER_AUTH_MODE": {
+      "type": "string",
+      "value": "[parameters('sqlAuthenticationMode')]"
     },
     "SQL_SERVER_ADMIN_USERNAME": {
       "type": "string",
-      "value": "[parameters('sqlServerUsername')]"
+      "value": "[if(variables('sqlAuthEnabled'), parameters('sqlServerUsername'), '')]"
     },
     "SQL_DATABASE_ENDPOINT": {
       "type": "string",
-      "value": "[reference('sqlServer').outputs.fullyQualifiedDomainName.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('sql-server-deployment-{0}', variables('resourceToken'))), '2022-09-01').outputs.fullyQualifiedDomainName.value]"
     },
     "CLIENT_IP_ADDRESS": {
       "type": "string",
@@ -35564,27 +35571,27 @@
     },
     "COSMOS_DB_ACCOUNT_NAME": {
       "type": "string",
-      "value": "[if(parameters('cosmosDbDeploy'), reference('cosmosDbAccount').outputs.name.value, '')]"
+      "value": "[if(parameters('cosmosDbDeploy'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('cosmos-db-account-deployment-{0}', variables('resourceToken'))), '2022-09-01').outputs.name.value, '')]"
     },
     "COSMOS_DB_ACCOUNT_RESOURCE_ID": {
       "type": "string",
-      "value": "[if(parameters('cosmosDbDeploy'), reference('cosmosDbAccount').outputs.resourceId.value, '')]"
+      "value": "[if(parameters('cosmosDbDeploy'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('cosmos-db-account-deployment-{0}', variables('resourceToken'))), '2022-09-01').outputs.resourceId.value, '')]"
     },
     "COSMOS_DB_ACCOUNT_ENDPOINT": {
       "type": "string",
-      "value": "[if(parameters('cosmosDbDeploy'), reference('cosmosDbAccount').outputs.endpoint.value, '')]"
+      "value": "[if(parameters('cosmosDbDeploy'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('cosmos-db-account-deployment-{0}', variables('resourceToken'))), '2022-09-01').outputs.endpoint.value, '')]"
     },
     "STORAGE_ACCOUNT_NAME": {
       "type": "string",
-      "value": "[if(parameters('storageAccountDeploy'), reference('storageAccount').outputs.name.value, '')]"
+      "value": "[if(parameters('storageAccountDeploy'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-account-deployment-{0}', variables('resourceToken'))), '2022-09-01').outputs.name.value, '')]"
     },
     "STORAGE_ACCOUNT_RESOURCE_ID": {
       "type": "string",
-      "value": "[if(parameters('storageAccountDeploy'), reference('storageAccount').outputs.resourceId.value, '')]"
+      "value": "[if(parameters('storageAccountDeploy'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-account-deployment-{0}', variables('resourceToken'))), '2022-09-01').outputs.resourceId.value, '')]"
     },
     "STORAGE_ACCOUNT_BLOB_ENDPOINT": {
       "type": "string",
-      "value": "[if(parameters('storageAccountDeploy'), reference('storageAccount').outputs.primaryBlobEndpoint.value, '')]"
+      "value": "[if(parameters('storageAccountDeploy'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Resources/deployments', format('storage-account-deployment-{0}', variables('resourceToken'))), '2022-09-01').outputs.primaryBlobEndpoint.value, '')]"
     }
   }
 }

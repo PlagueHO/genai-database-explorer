@@ -15,7 +15,7 @@
     "model": {
       "format": "OpenAI",
       "name": "text-embedding-3-large",
-      "version": "2"
+      "version": "1"
     },
     "name": "text-embedding-3-large",
     "sku": {

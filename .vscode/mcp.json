@@ -13,6 +13,10 @@
                 "start"
             ]
         },
+        "azure-verified-module-bicep-docs": {
+            "type": "sse",
+            "url": "https://gitmcp.io/Azure/bicep-registry-modules"
+        },
         "context7": {
             "type": "stdio",
             "command": "npx",

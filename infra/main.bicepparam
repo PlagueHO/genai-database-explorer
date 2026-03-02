@@ -10,6 +10,11 @@ param principalId = readEnvironmentVariable('AZURE_PRINCIPAL_ID', '')
 param principalIdType = toLower(readEnvironmentVariable('AZURE_PRINCIPAL_ID_TYPE', 'user')) == 'serviceprincipal' ? 'ServicePrincipal' : 'User'
 
 // SQL Server parameters
+// SQL_AUTH_MODE: 'SqlOnly' | 'SqlAndEntraId' (default) | 'EntraIdOnly'
+// - SqlOnly: requires SQL_SERVER_USERNAME and SQL_SERVER_PASSWORD
+// - SqlAndEntraId: requires SQL_SERVER_USERNAME, SQL_SERVER_PASSWORD, and AZURE_PRINCIPAL_ID
+// - EntraIdOnly: requires AZURE_PRINCIPAL_ID (Microsoft internal policy compliance)
+param sqlAuthenticationMode = readEnvironmentVariable('SQL_AUTH_MODE', 'SqlAndEntraId')
 param sqlServerUsername = readEnvironmentVariable('SQL_SERVER_USERNAME', 'sqladmin')
 param sqlServerPassword = readEnvironmentVariable('SQL_SERVER_PASSWORD', '')
 
