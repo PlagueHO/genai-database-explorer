@@ -159,6 +159,14 @@ public sealed class SkInMemoryVectorSearchService : IVectorSearchService
     public async Task<IEnumerable<(EntityVectorRecord Record, double Score)>> SearchAsync(ReadOnlyMemory<float> vector, int topK, VectorInfrastructure infrastructure, CancellationToken cancellationToken = default)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(topK);
+
+        if (!string.Equals(infrastructure.Provider, "InMemory", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                $"SkInMemoryVectorSearchService only supports the 'InMemory' provider, but the resolved provider is '{infrastructure.Provider}'. " +
+                "Register a provider-specific IVectorSearchService implementation or change the VectorIndex.Provider setting to 'InMemory'.");
+        }
+
         if (vector.IsEmpty)
         {
             return Enumerable.Empty<(EntityVectorRecord, double)>();
