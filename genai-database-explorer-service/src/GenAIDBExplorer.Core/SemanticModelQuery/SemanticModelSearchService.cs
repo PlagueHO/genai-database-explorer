@@ -29,6 +29,16 @@ public sealed class SemanticModelSearchService(
     /// </summary>
     private const int OverFetchMultiplier = 3;
 
+    /// <summary>
+    /// Maximum number of results returned by <see cref="SearchAsync"/>.
+    /// </summary>
+    private const int MaxTopK = 10;
+
+    /// <summary>
+    /// Minimum cosine similarity score for a result to be included in <see cref="SearchAsync"/> output.
+    /// </summary>
+    private const double MinimumScoreThreshold = 0.3;
+
     /// <inheritdoc />
     public async Task<IReadOnlyList<SemanticModelSearchResult>> SearchTablesAsync(
         string query, int topK, CancellationToken cancellationToken = default)
@@ -48,6 +58,61 @@ public sealed class SemanticModelSearchService(
         string query, int topK, CancellationToken cancellationToken = default)
     {
         return await SearchByEntityTypeAsync(query, "StoredProcedure", topK, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<SemanticModelSearchResult>> SearchAsync(
+        string query,
+        int topK,
+        IReadOnlyList<string>? entityTypes,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(query);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(topK);
+
+        topK = Math.Min(topK, MaxTopK);
+
+        var infrastructure = _vectorInfrastructureFactory.Create(
+            _project.Settings.VectorIndex,
+            _project.Settings.SemanticModel.PersistenceStrategy);
+
+        _logger.LogDebug(
+            "Generating embedding for unified search query: {Query}, TopK: {TopK}",
+            query, topK);
+
+        var embedding = await _embeddingGenerator.GenerateAsync(query, infrastructure, cancellationToken);
+
+        var overFetchTopK = topK * OverFetchMultiplier;
+        var results = await _vectorSearchService.SearchAsync(embedding, overFetchTopK, infrastructure, cancellationToken);
+
+        var filtered = results.AsEnumerable();
+
+        if (entityTypes is not null && entityTypes.Count > 0)
+        {
+            filtered = filtered.Where(r => entityTypes.Any(et =>
+                string.Equals(r.Record.EntityType, et, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        filtered = filtered.Where(r => r.Score >= MinimumScoreThreshold);
+
+        var resultList = filtered
+            .OrderByDescending(r => r.Score)
+            .Take(topK)
+            .Select(r => new SemanticModelSearchResult(
+                EntityType: r.Record.EntityType ?? string.Empty,
+                SchemaName: r.Record.Schema ?? string.Empty,
+                EntityName: r.Record.Name ?? string.Empty,
+                Content: r.Record.Content,
+                Score: r.Score))
+            .ToList();
+
+        _logger.LogDebug(
+            "Unified search completed for Query: {Query}, EntityTypes: {EntityTypes}, Results: {Count}",
+            query,
+            entityTypes is null ? "all" : string.Join(",", entityTypes),
+            resultList.Count);
+
+        return resultList;
     }
 
     private async Task<IReadOnlyList<SemanticModelSearchResult>> SearchByEntityTypeAsync(

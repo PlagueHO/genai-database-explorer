@@ -8,10 +8,11 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace GenAIDBExplorer.Console.Resources {
+namespace GenAIDBExplorer.Console.Resources
+{
     using System;
-    
-    
+
+
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
     /// </summary>
@@ -22,85 +23,103 @@ namespace GenAIDBExplorer.Console.Resources {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class ErrorMessages {
-        
+    internal class ErrorMessages
+    {
+
         private static global::System.Resources.ResourceManager resourceMan;
-        
+
         private static global::System.Globalization.CultureInfo resourceCulture;
-        
+
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal ErrorMessages() {
+        internal ErrorMessages()
+        {
         }
-        
+
         /// <summary>
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
-            get {
-                if (object.ReferenceEquals(resourceMan, null)) {
+        internal static global::System.Resources.ResourceManager ResourceManager
+        {
+            get
+            {
+                if (object.ReferenceEquals(resourceMan, null))
+                {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("GenAIDBExplorer.Console.Resources.ErrorMessages", typeof(ErrorMessages).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
             }
         }
-        
+
         /// <summary>
         ///   Overrides the current thread's CurrentUICulture property for all
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
-            get {
+        internal static global::System.Globalization.CultureInfo Culture
+        {
+            get
+            {
                 return resourceCulture;
             }
-            set {
+            set
+            {
                 resourceCulture = value;
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to The data dictionary source path does not exist..
         /// </summary>
-        internal static string DataDictionarySourcePathDoesNotExist {
-            get {
+        internal static string DataDictionarySourcePathDoesNotExist
+        {
+            get
+            {
                 return ResourceManager.GetString("DataDictionarySourcePathDoesNotExist", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Invalid object type specified. Must be &apos;table&apos;,&apos;view&apos; or &apos;storedprocedure&apos;..
         /// </summary>
-        internal static string InvalidObjectType {
-            get {
+        internal static string InvalidObjectType
+        {
+            get
+            {
                 return ResourceManager.GetString("InvalidObjectType", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Stored Procedure not found..
         /// </summary>
-        internal static string StoredProcedureNotFound {
-            get {
+        internal static string StoredProcedureNotFound
+        {
+            get
+            {
                 return ResourceManager.GetString("StoredProcedureNotFound", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Table not found..
         /// </summary>
-        internal static string TableNotFound {
-            get {
+        internal static string TableNotFound
+        {
+            get
+            {
                 return ResourceManager.GetString("TableNotFound", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to View not found..
         /// </summary>
-        internal static string ViewNotFound {
-            get {
+        internal static string ViewNotFound
+        {
+            get
+            {
                 return ResourceManager.GetString("ViewNotFound", resourceCulture);
             }
         }

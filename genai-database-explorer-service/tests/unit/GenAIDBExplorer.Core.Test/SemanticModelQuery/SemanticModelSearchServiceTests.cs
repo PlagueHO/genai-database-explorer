@@ -192,6 +192,154 @@ public class SemanticModelSearchServiceTests
             Times.Once);
     }
 
+    [TestMethod]
+    public async Task SearchAsync_ValidQuery_ReturnsRankedResults()
+    {
+        // Arrange
+        var embedding = new ReadOnlyMemory<float>([1.0f, 2.0f, 3.0f]);
+        _mockEmbeddingGenerator
+            .Setup(e => e.GenerateAsync(It.IsAny<string>(), It.IsAny<VectorInfrastructure>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(embedding);
+
+        var records = new List<(EntityVectorRecord Record, double Score)>
+        {
+            (CreateRecord("Table", "SalesLT", "Customer", "Customer table"), 0.95),
+            (CreateRecord("View", "SalesLT", "vOrders", "Orders view"), 0.82),
+            (CreateRecord("StoredProcedure", "dbo", "uspGetCustomer", "Get customer proc"), 0.65),
+        };
+        _mockVectorSearchService
+            .Setup(s => s.SearchAsync(It.IsAny<ReadOnlyMemory<float>>(), It.IsAny<int>(), It.IsAny<VectorInfrastructure>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(records);
+
+        // Act
+        var results = await _service.SearchAsync("customer orders", 5, null);
+
+        // Assert
+        results.Should().HaveCount(3);
+        results[0].Score.Should().Be(0.95);
+        results[1].Score.Should().Be(0.82);
+        results[2].Score.Should().Be(0.65);
+    }
+
+    [TestMethod]
+    public async Task SearchAsync_EmptyVectorStore_ReturnsEmptyList()
+    {
+        // Arrange
+        var embedding = new ReadOnlyMemory<float>([1.0f]);
+        _mockEmbeddingGenerator
+            .Setup(e => e.GenerateAsync(It.IsAny<string>(), It.IsAny<VectorInfrastructure>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(embedding);
+
+        _mockVectorSearchService
+            .Setup(s => s.SearchAsync(It.IsAny<ReadOnlyMemory<float>>(), It.IsAny<int>(), It.IsAny<VectorInfrastructure>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Enumerable.Empty<(EntityVectorRecord, double)>());
+
+        // Act
+        var results = await _service.SearchAsync("nonexistent", 5, null);
+
+        // Assert
+        results.Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public async Task SearchAsync_ScoreThreshold_FiltersLowRelevanceResults()
+    {
+        // Arrange
+        var embedding = new ReadOnlyMemory<float>([1.0f]);
+        _mockEmbeddingGenerator
+            .Setup(e => e.GenerateAsync(It.IsAny<string>(), It.IsAny<VectorInfrastructure>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(embedding);
+
+        var records = new List<(EntityVectorRecord Record, double Score)>
+        {
+            (CreateRecord("Table", "dbo", "HighScore", "High relevance"), 0.80),
+            (CreateRecord("Table", "dbo", "LowScore", "Low relevance"), 0.20),
+            (CreateRecord("Table", "dbo", "MidScore", "Medium relevance"), 0.50),
+        };
+        _mockVectorSearchService
+            .Setup(s => s.SearchAsync(It.IsAny<ReadOnlyMemory<float>>(), It.IsAny<int>(), It.IsAny<VectorInfrastructure>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(records);
+
+        // Act
+        var results = await _service.SearchAsync("test query", 5, null);
+
+        // Assert — LowScore (0.20) should be filtered out by the 0.3 threshold
+        results.Should().HaveCount(2);
+        results.Should().NotContain(r => r.EntityName == "LowScore");
+    }
+
+    [TestMethod]
+    public async Task SearchAsync_TopKCappedAtMaximum_ReturnsOnlyMaxResults()
+    {
+        // Arrange
+        var embedding = new ReadOnlyMemory<float>([1.0f]);
+        _mockEmbeddingGenerator
+            .Setup(e => e.GenerateAsync(It.IsAny<string>(), It.IsAny<VectorInfrastructure>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(embedding);
+
+        var records = Enumerable.Range(1, 12)
+            .Select(i => (CreateRecord("Table", "dbo", $"Table{i}", $"Table {i}"), 0.9 - (i * 0.01)))
+            .ToList<(EntityVectorRecord, double)>();
+        _mockVectorSearchService
+            .Setup(s => s.SearchAsync(It.IsAny<ReadOnlyMemory<float>>(), It.IsAny<int>(), It.IsAny<VectorInfrastructure>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(records);
+
+        // Act — request topK=15 which exceeds the maximum of 10
+        var results = await _service.SearchAsync("test", 15, null);
+
+        // Assert
+        results.Count.Should().BeLessThanOrEqualTo(10);
+    }
+
+    [TestMethod]
+    public async Task SearchAsync_SingleEmbeddingGenerationCall()
+    {
+        // Arrange
+        var embedding = new ReadOnlyMemory<float>([1.0f]);
+        _mockEmbeddingGenerator
+            .Setup(e => e.GenerateAsync(It.IsAny<string>(), It.IsAny<VectorInfrastructure>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(embedding);
+
+        _mockVectorSearchService
+            .Setup(s => s.SearchAsync(It.IsAny<ReadOnlyMemory<float>>(), It.IsAny<int>(), It.IsAny<VectorInfrastructure>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Enumerable.Empty<(EntityVectorRecord, double)>());
+
+        // Act
+        await _service.SearchAsync("test query", 5, null);
+
+        // Assert — exactly one embedding generation call regardless of entity types
+        _mockEmbeddingGenerator.Verify(
+            e => e.GenerateAsync(It.IsAny<string>(), It.IsAny<VectorInfrastructure>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [TestMethod]
+    public async Task SearchAsync_WithEntityTypeFilter_ReturnsOnlyMatchingTypes()
+    {
+        // Arrange
+        var embedding = new ReadOnlyMemory<float>([1.0f]);
+        _mockEmbeddingGenerator
+            .Setup(e => e.GenerateAsync(It.IsAny<string>(), It.IsAny<VectorInfrastructure>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(embedding);
+
+        var records = new List<(EntityVectorRecord Record, double Score)>
+        {
+            (CreateRecord("Table", "SalesLT", "Customer", "Customer table"), 0.95),
+            (CreateRecord("View", "SalesLT", "vCustomer", "Customer view"), 0.90),
+            (CreateRecord("StoredProcedure", "dbo", "uspGetCustomer", "Get customer"), 0.85),
+        };
+        _mockVectorSearchService
+            .Setup(s => s.SearchAsync(It.IsAny<ReadOnlyMemory<float>>(), It.IsAny<int>(), It.IsAny<VectorInfrastructure>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(records);
+
+        // Act
+        var results = await _service.SearchAsync("customer", 5, ["Table"]);
+
+        // Assert
+        results.Should().HaveCount(1);
+        results.Should().AllSatisfy(r => r.EntityType.Should().Be("Table"));
+    }
+
     private static EntityVectorRecord CreateRecord(string entityType, string schema, string name, string content)
     {
         return new EntityVectorRecord
