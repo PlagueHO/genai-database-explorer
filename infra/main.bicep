@@ -77,7 +77,7 @@ var resourceToken = toLower(uniqueString(subscription().id, environmentName, loc
 
 var logAnalyticsWorkspaceName = '${abbrs.operationalInsightsWorkspaces}${environmentName}'
 var applicationInsightsName = '${abbrs.insightsComponents}${environmentName}'
-var foundryName = '${abbrs.aiFoundryAccounts}${environmentName}'
+var foundryName = '${abbrs.microsoftFoundryAccounts}${environmentName}'
 var foundryCustomSubDomainName = toLower(replace(environmentName, '-', ''))
 var defaultProjectName = 'genaidbexplorer'
 var aiSearchName = '${abbrs.aiSearchSearchServices}${environmentName}'
