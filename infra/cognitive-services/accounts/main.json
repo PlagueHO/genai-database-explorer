@@ -5,8 +5,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.40.2.10011",
-      "templateHash": "1347987701197972217"
+      "version": "0.34.44.8038",
+      "templateHash": "394171183359757869"
     },
     "name": "Cognitive Services",
     "description": "This module deploys a Cognitive Service account.\nThis is a temporary module for deploying Azure Foundry Cognitive Services accounts.\nIt is intended to be replaced by the Azure Verified Module (AVM) for Microsoft.CognitiveServices accounts\nonce it supports Foundry V2 (projects, connections etc)\nhttps://github.com/Azure/bicep-registry-modules/issues/5390\n"
@@ -106,6 +106,16 @@
           "nullable": true,
           "metadata": {
             "description": "The applications created in the project."
+          }
+        },
+        "capabilityHosts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/projectCapabilityHostOutputType"
+          },
+          "nullable": true,
+          "metadata": {
+            "description": "The capability hosts created in the project."
           }
         }
       },
@@ -339,6 +349,16 @@
           "nullable": true,
           "metadata": {
             "description": "Applications to deploy within this Foundry Project."
+          }
+        },
+        "capabilityHosts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/projectCapabilityHostType"
+          },
+          "nullable": true,
+          "metadata": {
+            "description": "Capability hosts to deploy within this Foundry Project. These configure per-project storage backends for threads, vectors, and files."
           }
         }
       },
@@ -2185,6 +2205,86 @@
         }
       }
     },
+    "projectCapabilityHostOutputType": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "metadata": {
+            "description": "The name of the project capability host."
+          }
+        },
+        "resourceId": {
+          "type": "string",
+          "metadata": {
+            "description": "The resource ID of the project capability host."
+          }
+        }
+      },
+      "metadata": {
+        "description": "The output type for a project-level capability host.",
+        "__bicep_imported_from!": {
+          "sourceTemplate": "project/capabilityHost/main.bicep"
+        }
+      }
+    },
+    "projectCapabilityHostType": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "metadata": {
+            "description": "Required. Name of the capability host to create."
+          }
+        },
+        "aiServicesConnectionNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "nullable": true,
+          "metadata": {
+            "description": "Optional. Array of AI services connection names. These must match connection names defined in the account or project connections."
+          }
+        },
+        "threadStorageConnectionNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "nullable": true,
+          "metadata": {
+            "description": "Optional. Array of connection names for thread storage. These must match connection names defined in the account or project connections."
+          }
+        },
+        "vectorStoreConnectionNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "nullable": true,
+          "metadata": {
+            "description": "Optional. Array of connection names for vector stores. These must match connection names defined in the account or project connections."
+          }
+        },
+        "storageConnectionNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "nullable": true,
+          "metadata": {
+            "description": "Optional. Array of connection names for file storage. These must match connection names defined in the account or project connections."
+          }
+        }
+      },
+      "metadata": {
+        "description": "The type for a project-level capability host configuration.",
+        "__bicep_imported_from!": {
+          "sourceTemplate": "project/capabilityHost/main.bicep"
+        }
+      }
+    },
     "roleAssignmentType": {
       "type": "object",
       "properties": {
@@ -2703,7 +2803,7 @@
         "allowedFqdnList": "[parameters('allowedFqdnList')]",
         "apiProperties": "[parameters('apiProperties')]",
         "disableLocalAuth": "[parameters('disableLocalAuth')]",
-        "encryption": "[if(not(empty(parameters('customerManagedKey'))), createObject('keySource', 'Microsoft.KeyVault', 'keyVaultProperties', createObject('identityClientId', if(not(empty(coalesce(tryGet(parameters('customerManagedKey'), 'userAssignedIdentityResourceId'), ''))), tryGet(if(not(empty(tryGet(parameters('customerManagedKey'), 'userAssignedIdentityResourceId'))), reference('cMKUserAssignedIdentity', '2023-01-31', 'full'), null()), 'properties', 'clientId'), null()), 'keyVaultUri', tryGet(if(not(empty(tryGet(parameters('customerManagedKey'), 'keyVaultResourceId'))), reference('cMKKeyVault', '2023-07-01', 'full'), null()), 'properties', 'vaultUri'), 'keyName', parameters('customerManagedKey').keyName, 'keyVersion', if(not(empty(coalesce(tryGet(parameters('customerManagedKey'), 'keyVersion'), ''))), tryGet(parameters('customerManagedKey'), 'keyVersion'), last(split(tryGet(if(and(not(empty(tryGet(parameters('customerManagedKey'), 'keyVaultResourceId'))), and(not(empty(tryGet(parameters('customerManagedKey'), 'keyVaultResourceId'))), not(empty(tryGet(parameters('customerManagedKey'), 'keyName'))))), reference('cMKKeyVault::cMKKey', '2023-07-01', 'full'), null()), 'properties', 'keyUriWithVersion'), '/'))))), null())]",
+        "encryption": "[if(not(empty(parameters('customerManagedKey'))), createObject('keySource', 'Microsoft.KeyVault', 'keyVaultProperties', createObject('identityClientId', if(not(empty(coalesce(tryGet(parameters('customerManagedKey'), 'userAssignedIdentityResourceId'), ''))), tryGet(reference('cMKUserAssignedIdentity', '2023-01-31', 'full'), 'properties', 'clientId'), null()), 'keyVaultUri', tryGet(reference('cMKKeyVault', '2023-07-01', 'full'), 'properties', 'vaultUri'), 'keyName', parameters('customerManagedKey').keyName, 'keyVersion', if(not(empty(coalesce(tryGet(parameters('customerManagedKey'), 'keyVersion'), ''))), tryGet(parameters('customerManagedKey'), 'keyVersion'), last(split(tryGet(reference('cMKKeyVault::cMKKey', '2023-07-01', 'full'), 'properties', 'keyUriWithVersion'), '/'))))), null())]",
         "migrationToken": "[parameters('migrationToken')]",
         "restore": "[parameters('restore')]",
         "restrictOutboundNetworkAccess": "[parameters('restrictOutboundNetworkAccess')]",
@@ -2742,7 +2842,7 @@
       "condition": "[and(not(empty(coalesce(parameters('lock'), createObject()))), not(equals(tryGet(parameters('lock'), 'kind'), 'None')))]",
       "type": "Microsoft.Authorization/locks",
       "apiVersion": "2020-05-01",
-      "scope": "[resourceId('Microsoft.CognitiveServices/accounts', parameters('name'))]",
+      "scope": "[format('Microsoft.CognitiveServices/accounts/{0}', parameters('name'))]",
       "name": "[coalesce(tryGet(parameters('lock'), 'name'), format('lock-{0}', parameters('name')))]",
       "properties": {
         "level": "[coalesce(tryGet(parameters('lock'), 'kind'), '')]",
@@ -2759,7 +2859,7 @@
       },
       "type": "Microsoft.Insights/diagnosticSettings",
       "apiVersion": "2021-05-01-preview",
-      "scope": "[resourceId('Microsoft.CognitiveServices/accounts', parameters('name'))]",
+      "scope": "[format('Microsoft.CognitiveServices/accounts/{0}', parameters('name'))]",
       "name": "[coalesce(tryGet(coalesce(parameters('diagnosticSettings'), createArray())[copyIndex()], 'name'), format('{0}-diagnosticSettings', parameters('name')))]",
       "properties": {
         "copy": [
@@ -2800,7 +2900,7 @@
       },
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2022-04-01",
-      "scope": "[resourceId('Microsoft.CognitiveServices/accounts', parameters('name'))]",
+      "scope": "[format('Microsoft.CognitiveServices/accounts/{0}', parameters('name'))]",
       "name": "[coalesce(tryGet(coalesce(variables('formattedRoleAssignments'), createArray())[copyIndex()], 'name'), guid(resourceId('Microsoft.CognitiveServices/accounts', parameters('name')), coalesce(variables('formattedRoleAssignments'), createArray())[copyIndex()].principalId, coalesce(variables('formattedRoleAssignments'), createArray())[copyIndex()].roleDefinitionId))]",
       "properties": {
         "roleDefinitionId": "[coalesce(variables('formattedRoleAssignments'), createArray())[copyIndex()].roleDefinitionId]",
@@ -2823,7 +2923,7 @@
         "batchSize": 1
       },
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2025-04-01",
+      "apiVersion": "2022-09-01",
       "name": "[take(format('{0}-cognitiveService-PrivateEndpoint-{1}', uniqueString(deployment().name, parameters('location')), copyIndex()), 64)]",
       "subscriptionId": "[split(coalesce(tryGet(coalesce(parameters('privateEndpoints'), createArray())[copyIndex()], 'resourceGroupResourceId'), resourceGroup().id), '/')[2]]",
       "resourceGroup": "[split(coalesce(tryGet(coalesce(parameters('privateEndpoints'), createArray())[copyIndex()], 'resourceGroupResourceId'), resourceGroup().id), '/')[4]]",
@@ -3485,7 +3585,7 @@
         "batchSize": 1
       },
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2025-04-01",
+      "apiVersion": "2022-09-01",
       "name": "[format('{0}-cognitiveService-project-{1}', uniqueString(deployment().name, parameters('location')), copyIndex())]",
       "subscriptionId": "[split(coalesce(tryGet(coalesce(parameters('projects'), createArray())[copyIndex()], 'resourceGroupResourceId'), resourceGroup().id), '/')[2]]",
       "resourceGroup": "[split(coalesce(tryGet(coalesce(parameters('projects'), createArray())[copyIndex()], 'resourceGroupResourceId'), resourceGroup().id), '/')[4]]",
@@ -3521,6 +3621,9 @@
           },
           "applications": {
             "value": "[coalesce(tryGet(coalesce(parameters('projects'), createArray())[copyIndex()], 'applications'), createArray())]"
+          },
+          "capabilityHosts": {
+            "value": "[coalesce(tryGet(coalesce(parameters('projects'), createArray())[copyIndex()], 'capabilityHosts'), createArray())]"
           }
         },
         "template": {
@@ -3530,11 +3633,11 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.40.2.10011",
-              "templateHash": "13997152295364815667"
+              "version": "0.34.44.8038",
+              "templateHash": "15747906737730514082"
             },
             "name": "Cognitive Services Project",
-            "description": "This module deploys a Project within a Cognitive Services account.\nIt allows for the creation of a Foundry Project with optional managed identities and role assignments.\n"
+            "description": "This module deploys a Project within a Cognitive Services account.\r\nIt allows for the creation of a Foundry Project with optional managed identities and role assignments.\r\n"
           },
           "definitions": {
             "_1.aadAuthTypeWorkspaceConnectionPropertyType": {
@@ -4942,6 +5045,86 @@
                 }
               }
             },
+            "projectCapabilityHostOutputType": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "metadata": {
+                    "description": "The name of the project capability host."
+                  }
+                },
+                "resourceId": {
+                  "type": "string",
+                  "metadata": {
+                    "description": "The resource ID of the project capability host."
+                  }
+                }
+              },
+              "metadata": {
+                "description": "The output type for a project-level capability host.",
+                "__bicep_imported_from!": {
+                  "sourceTemplate": "capabilityHost/main.bicep"
+                }
+              }
+            },
+            "projectCapabilityHostType": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "metadata": {
+                    "description": "Required. Name of the capability host to create."
+                  }
+                },
+                "aiServicesConnectionNames": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "nullable": true,
+                  "metadata": {
+                    "description": "Optional. Array of AI services connection names. These must match connection names defined in the account or project connections."
+                  }
+                },
+                "threadStorageConnectionNames": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "nullable": true,
+                  "metadata": {
+                    "description": "Optional. Array of connection names for thread storage. These must match connection names defined in the account or project connections."
+                  }
+                },
+                "vectorStoreConnectionNames": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "nullable": true,
+                  "metadata": {
+                    "description": "Optional. Array of connection names for vector stores. These must match connection names defined in the account or project connections."
+                  }
+                },
+                "storageConnectionNames": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "nullable": true,
+                  "metadata": {
+                    "description": "Optional. Array of connection names for file storage. These must match connection names defined in the account or project connections."
+                  }
+                }
+              },
+              "metadata": {
+                "description": "The type for a project-level capability host configuration.",
+                "__bicep_imported_from!": {
+                  "sourceTemplate": "capabilityHost/main.bicep"
+                }
+              }
+            },
             "roleAssignmentType": {
               "type": "object",
               "properties": {
@@ -5018,6 +5201,29 @@
               }
             }
           },
+          "functions": [
+            {
+              "namespace": "__bicep",
+              "members": {
+                "buildConnectionResourceId": {
+                  "parameters": [
+                    {
+                      "type": "string",
+                      "name": "accountId"
+                    },
+                    {
+                      "type": "string",
+                      "name": "connectionName"
+                    }
+                  ],
+                  "output": {
+                    "type": "string",
+                    "value": "[format('{0}/connections/{1}', parameters('accountId'), parameters('connectionName'))]"
+                  }
+                }
+              }
+            }
+          ],
           "parameters": {
             "accountName": {
               "type": "string",
@@ -5102,6 +5308,16 @@
               "defaultValue": [],
               "metadata": {
                 "description": "Optional. Applications to create in the Foundry Project."
+              }
+            },
+            "capabilityHosts": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/projectCapabilityHostType"
+              },
+              "defaultValue": [],
+              "metadata": {
+                "description": "Optional. Capability hosts to create in the Foundry Project. These configure per-project storage backends for threads, vectors, and files."
               }
             }
           },
@@ -5193,7 +5409,7 @@
               },
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
-              "scope": "[resourceId('Microsoft.CognitiveServices/accounts/projects', parameters('accountName'), parameters('name'))]",
+              "scope": "[format('Microsoft.CognitiveServices/accounts/{0}/projects/{1}', parameters('accountName'), parameters('name'))]",
               "name": "[coalesce(tryGet(coalesce(variables('formattedRoleAssignments'), createArray())[copyIndex()], 'name'), guid(resourceId('Microsoft.CognitiveServices/accounts/projects', parameters('accountName'), parameters('name')), coalesce(variables('formattedRoleAssignments'), createArray())[copyIndex()].principalId, coalesce(variables('formattedRoleAssignments'), createArray())[copyIndex()].roleDefinitionId))]",
               "properties": {
                 "roleDefinitionId": "[coalesce(variables('formattedRoleAssignments'), createArray())[copyIndex()].roleDefinitionId]",
@@ -5215,7 +5431,7 @@
               },
               "type": "Microsoft.Insights/diagnosticSettings",
               "apiVersion": "2021-05-01-preview",
-              "scope": "[resourceId('Microsoft.CognitiveServices/accounts/projects', parameters('accountName'), parameters('name'))]",
+              "scope": "[format('Microsoft.CognitiveServices/accounts/{0}/projects/{1}', parameters('accountName'), parameters('name'))]",
               "name": "[coalesce(tryGet(coalesce(parameters('diagnosticSettings'), createArray())[copyIndex()], 'name'), format('{0}-diagnosticSettings', parameters('name')))]",
               "properties": {
                 "copy": [
@@ -5249,6 +5465,242 @@
                 "project"
               ]
             },
+            "project_capabilityHosts": {
+              "copy": {
+                "name": "project_capabilityHosts",
+                "count": "[length(coalesce(parameters('capabilityHosts'), createArray()))]",
+                "mode": "serial",
+                "batchSize": 1
+              },
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2022-09-01",
+              "name": "[format('{0}-cph', take(format('{0}-{1}-{2}', parameters('accountName'), parameters('name'), coalesce(parameters('capabilityHosts'), createArray())[copyIndex()].name), 60))]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "accountName": {
+                    "value": "[parameters('accountName')]"
+                  },
+                  "projectName": {
+                    "value": "[parameters('name')]"
+                  },
+                  "name": {
+                    "value": "[coalesce(parameters('capabilityHosts'), createArray())[copyIndex()].name]"
+                  },
+                  "aiServicesConnections": "[if(not(equals(tryGet(coalesce(parameters('capabilityHosts'), createArray())[copyIndex()], 'aiServicesConnectionNames'), null())), createObject('value', map(coalesce(parameters('capabilityHosts'), createArray())[copyIndex()].aiServicesConnectionNames, lambda('connName', __bicep.buildConnectionResourceId(resourceId('Microsoft.CognitiveServices/accounts', parameters('accountName')), lambdaVariables('connName'))))), createObject('value', null()))]",
+                  "threadStorageConnections": "[if(not(equals(tryGet(coalesce(parameters('capabilityHosts'), createArray())[copyIndex()], 'threadStorageConnectionNames'), null())), createObject('value', map(coalesce(parameters('capabilityHosts'), createArray())[copyIndex()].threadStorageConnectionNames, lambda('connName', __bicep.buildConnectionResourceId(resourceId('Microsoft.CognitiveServices/accounts', parameters('accountName')), lambdaVariables('connName'))))), createObject('value', null()))]",
+                  "vectorStoreConnections": "[if(not(equals(tryGet(coalesce(parameters('capabilityHosts'), createArray())[copyIndex()], 'vectorStoreConnectionNames'), null())), createObject('value', map(coalesce(parameters('capabilityHosts'), createArray())[copyIndex()].vectorStoreConnectionNames, lambda('connName', __bicep.buildConnectionResourceId(resourceId('Microsoft.CognitiveServices/accounts', parameters('accountName')), lambdaVariables('connName'))))), createObject('value', null()))]",
+                  "storageConnections": "[if(not(equals(tryGet(coalesce(parameters('capabilityHosts'), createArray())[copyIndex()], 'storageConnectionNames'), null())), createObject('value', map(coalesce(parameters('capabilityHosts'), createArray())[copyIndex()].storageConnectionNames, lambda('connName', __bicep.buildConnectionResourceId(resourceId('Microsoft.CognitiveServices/accounts', parameters('accountName')), lambdaVariables('connName'))))), createObject('value', null()))]"
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "languageVersion": "2.0",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.34.44.8038",
+                      "templateHash": "1566189967957308085"
+                    },
+                    "name": "Cognitive Services Project Capability Host",
+                    "description": "This module creates a capability host in a Cognitive Services project.\r\nProject-level capability hosts configure per-project storage backends for threads, vectors, and files,\r\nallowing different projects to use different storage connections.\r\nSee: https://learn.microsoft.com/en-us/azure/templates/microsoft.cognitiveservices/accounts/projects/capabilityhosts\r\n"
+                  },
+                  "definitions": {
+                    "projectCapabilityHostType": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "metadata": {
+                            "description": "Required. Name of the capability host to create."
+                          }
+                        },
+                        "aiServicesConnectionNames": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "nullable": true,
+                          "metadata": {
+                            "description": "Optional. Array of AI services connection names. These must match connection names defined in the account or project connections."
+                          }
+                        },
+                        "threadStorageConnectionNames": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "nullable": true,
+                          "metadata": {
+                            "description": "Optional. Array of connection names for thread storage. These must match connection names defined in the account or project connections."
+                          }
+                        },
+                        "vectorStoreConnectionNames": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "nullable": true,
+                          "metadata": {
+                            "description": "Optional. Array of connection names for vector stores. These must match connection names defined in the account or project connections."
+                          }
+                        },
+                        "storageConnectionNames": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "nullable": true,
+                          "metadata": {
+                            "description": "Optional. Array of connection names for file storage. These must match connection names defined in the account or project connections."
+                          }
+                        }
+                      },
+                      "metadata": {
+                        "__bicep_export!": true,
+                        "description": "The type for a project-level capability host configuration."
+                      }
+                    },
+                    "projectCapabilityHostOutputType": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "metadata": {
+                            "description": "The name of the project capability host."
+                          }
+                        },
+                        "resourceId": {
+                          "type": "string",
+                          "metadata": {
+                            "description": "The resource ID of the project capability host."
+                          }
+                        }
+                      },
+                      "metadata": {
+                        "__bicep_export!": true,
+                        "description": "The output type for a project-level capability host."
+                      }
+                    }
+                  },
+                  "parameters": {
+                    "name": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Required. Name of the capability host to create."
+                      }
+                    },
+                    "accountName": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Required. The name of the parent Cognitive Services account."
+                      }
+                    },
+                    "projectName": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Required. The name of the parent Foundry Project."
+                      }
+                    },
+                    "aiServicesConnections": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "nullable": true,
+                      "metadata": {
+                        "description": "Optional. Array of AI services connection resource IDs. These connections reference AI services available to the project."
+                      }
+                    },
+                    "threadStorageConnections": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "nullable": true,
+                      "metadata": {
+                        "description": "Optional. Array of connection resource IDs for thread storage. These connections store conversation thread data for agents."
+                      }
+                    },
+                    "vectorStoreConnections": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "nullable": true,
+                      "metadata": {
+                        "description": "Optional. Array of connection resource IDs for vector stores. These connections store vector embeddings for semantic search."
+                      }
+                    },
+                    "storageConnections": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "nullable": true,
+                      "metadata": {
+                        "description": "Optional. Array of connection resource IDs for file storage. These connections store files uploaded to agents."
+                      }
+                    }
+                  },
+                  "resources": {
+                    "parentAccount": {
+                      "existing": true,
+                      "type": "Microsoft.CognitiveServices/accounts",
+                      "apiVersion": "2025-10-01-preview",
+                      "name": "[parameters('accountName')]"
+                    },
+                    "parentProject": {
+                      "existing": true,
+                      "type": "Microsoft.CognitiveServices/accounts/projects",
+                      "apiVersion": "2025-10-01-preview",
+                      "name": "[format('{0}/{1}', parameters('accountName'), parameters('projectName'))]"
+                    },
+                    "capabilityHost": {
+                      "type": "Microsoft.CognitiveServices/accounts/projects/capabilityHosts",
+                      "apiVersion": "2025-10-01-preview",
+                      "name": "[format('{0}/{1}/{2}', parameters('accountName'), parameters('projectName'), parameters('name'))]",
+                      "properties": {
+                        "aiServicesConnections": "[parameters('aiServicesConnections')]",
+                        "threadStorageConnections": "[parameters('threadStorageConnections')]",
+                        "vectorStoreConnections": "[parameters('vectorStoreConnections')]",
+                        "storageConnections": "[parameters('storageConnections')]"
+                      }
+                    }
+                  },
+                  "outputs": {
+                    "resourceId": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "The resource ID of the project capability host."
+                      },
+                      "value": "[resourceId('Microsoft.CognitiveServices/accounts/projects/capabilityHosts', parameters('accountName'), parameters('projectName'), parameters('name'))]"
+                    },
+                    "name": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "The name of the project capability host."
+                      },
+                      "value": "[parameters('name')]"
+                    },
+                    "resourceGroupName": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "The name of the resource group the project capability host was created in."
+                      },
+                      "value": "[resourceGroup().name]"
+                    }
+                  }
+                }
+              },
+              "dependsOn": [
+                "project",
+                "project_connections"
+              ]
+            },
             "project_applications": {
               "copy": {
                 "name": "project_applications",
@@ -5257,7 +5709,7 @@
                 "batchSize": 1
               },
               "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2025-04-01",
+              "apiVersion": "2022-09-01",
               "name": "[format('{0}-app', take(format('{0}-{1}-{2}', parameters('accountName'), parameters('name'), coalesce(parameters('applications'), createArray())[copyIndex()].name), 60))]",
               "properties": {
                 "expressionEvaluationOptions": {
@@ -5312,8 +5764,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.40.2.10011",
-                      "templateHash": "16182969756855805011"
+                      "version": "0.34.44.8038",
+                      "templateHash": "12397258346460660738"
                     },
                     "name": "Cognitive Services Application",
                     "description": "This module creates an application within a Cognitive Services project.\r\nApplications are agentic application instances that can contain agent deployments.\r\nSee: https://learn.microsoft.com/en-us/azure/templates/microsoft.cognitiveservices/accounts/projects/applications\r\n"
@@ -5968,6 +6420,22 @@
                   "resourceId": "[reference(format('project_applications[{0}]', copyIndex())).outputs.resourceId.value]"
                 }
               }
+            },
+            "capabilityHostsOutput": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/projectCapabilityHostOutputType"
+              },
+              "metadata": {
+                "description": "The capability hosts created in the Foundry Project."
+              },
+              "copy": {
+                "count": "[length(coalesce(parameters('capabilityHosts'), createArray()))]",
+                "input": {
+                  "name": "[reference(format('project_capabilityHosts[{0}]', copyIndex())).outputs.name.value]",
+                  "resourceId": "[reference(format('project_capabilityHosts[{0}]', copyIndex())).outputs.resourceId.value]"
+                }
+              }
             }
           }
         }
@@ -5984,7 +6452,7 @@
         "batchSize": 1
       },
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2025-04-01",
+      "apiVersion": "2022-09-01",
       "name": "[format('{0}-con', take(format('{0}-{1}', parameters('name'), parameters('connections')[copyIndex()].name), 60))]",
       "properties": {
         "expressionEvaluationOptions": {
@@ -6030,8 +6498,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.40.2.10011",
-              "templateHash": "12620248503948793664"
+              "version": "0.34.44.8038",
+              "templateHash": "2768996518319539103"
             },
             "name": "Machine Learning Services Workspaces Connections",
             "description": "This module creates a connection in a Machine Learning Services workspace."
@@ -6909,7 +7377,7 @@
         "batchSize": 1
       },
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2025-04-01",
+      "apiVersion": "2022-09-01",
       "name": "[format('{0}-cph', take(format('{0}-{1}', parameters('name'), parameters('capabilityHosts')[copyIndex()].name), 60))]",
       "properties": {
         "expressionEvaluationOptions": {
@@ -6937,8 +7405,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.40.2.10011",
-              "templateHash": "8173527886164927861"
+              "version": "0.34.44.8038",
+              "templateHash": "16309400430422865805"
             },
             "name": "Cognitive Services Capability Hosts",
             "description": "This module creates a capability host in a Cognitive Services account.\r\nCapability hosts enable AI agent functionality by configuring storage for threads, vectors, and files.\r\nSee: https://learn.microsoft.com/en-us/azure/ai-foundry/agents/concepts/capability-hosts\r\n"
@@ -7105,7 +7573,7 @@
     "secretsExport": {
       "condition": "[not(equals(parameters('secretsExportConfiguration'), null()))]",
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2025-04-01",
+      "apiVersion": "2022-09-01",
       "name": "[format('{0}-secrets-kv', uniqueString(deployment().name, parameters('location')))]",
       "subscriptionId": "[split(tryGet(parameters('secretsExportConfiguration'), 'keyVaultResourceId'), '/')[2]]",
       "resourceGroup": "[split(tryGet(parameters('secretsExportConfiguration'), 'keyVaultResourceId'), '/')[4]]",
@@ -7119,7 +7587,7 @@
             "value": "[last(split(tryGet(parameters('secretsExportConfiguration'), 'keyVaultResourceId'), '/'))]"
           },
           "secretsToSet": {
-            "value": "[union(createArray(), if(contains(parameters('secretsExportConfiguration'), 'accessKey1Name'), createArray(createObject('name', tryGet(parameters('secretsExportConfiguration'), 'accessKey1Name'), 'value', listKeys('cognitiveService', '2025-10-01-preview').key1)), createArray()), if(contains(parameters('secretsExportConfiguration'), 'accessKey2Name'), createArray(createObject('name', tryGet(parameters('secretsExportConfiguration'), 'accessKey2Name'), 'value', listKeys('cognitiveService', '2025-10-01-preview').key2)), createArray()))]"
+            "value": "[union(createArray(), if(contains(parameters('secretsExportConfiguration'), 'accessKey1Name'), createArray(createObject('name', tryGet(parameters('secretsExportConfiguration'), 'accessKey1Name'), 'value', listKeys(resourceId('Microsoft.CognitiveServices/accounts', parameters('name')), '2025-10-01-preview').key1)), createArray()), if(contains(parameters('secretsExportConfiguration'), 'accessKey2Name'), createArray(createObject('name', tryGet(parameters('secretsExportConfiguration'), 'accessKey2Name'), 'value', listKeys(resourceId('Microsoft.CognitiveServices/accounts', parameters('name')), '2025-10-01-preview').key2)), createArray()))]"
           }
         },
         "template": {
@@ -7129,8 +7597,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.40.2.10011",
-              "templateHash": "10797061714279501803"
+              "version": "0.34.44.8038",
+              "templateHash": "1918521410653805349"
             }
           },
           "definitions": {
@@ -7306,7 +7774,7 @@
       "metadata": {
         "description": "A hashtable of references to the secrets exported to the provided Key Vault. The key of each reference is each secret's name."
       },
-      "value": "[if(not(equals(parameters('secretsExportConfiguration'), null())), toObject(tryGet(if(not(equals(parameters('secretsExportConfiguration'), null())), reference('secretsExport'), null()), 'outputs', 'secretsSet', 'value'), lambda('secret', last(split(lambdaVariables('secret').secretResourceId, '/'))), lambda('secret', lambdaVariables('secret'))), createObject())]"
+      "value": "[if(not(equals(parameters('secretsExportConfiguration'), null())), toObject(tryGet(reference('secretsExport'), 'outputs').secretsSet.value, lambda('secret', last(split(lambdaVariables('secret').secretResourceId, '/'))), lambda('secret', lambdaVariables('secret'))), createObject())]"
     },
     "privateEndpoints": {
       "type": "array",
@@ -7341,7 +7809,8 @@
           "name": "[reference(format('cognitiveService_projects[{0}]', copyIndex())).outputs.projectResourceName.value]",
           "resourceId": "[reference(format('cognitiveService_projects[{0}]', copyIndex())).outputs.projectResourceId.value]",
           "systemAssignedMIPrincipalId": "[tryGet(tryGet(reference(format('cognitiveService_projects[{0}]', copyIndex())).outputs, 'systemAssignedMIPrincipalId'), 'value')]",
-          "applications": "[coalesce(tryGet(tryGet(reference(format('cognitiveService_projects[{0}]', copyIndex())).outputs, 'applications'), 'value'), createArray())]"
+          "applications": "[coalesce(tryGet(tryGet(reference(format('cognitiveService_projects[{0}]', copyIndex())).outputs, 'applications'), 'value'), createArray())]",
+          "capabilityHosts": "[coalesce(tryGet(tryGet(reference(format('cognitiveService_projects[{0}]', copyIndex())).outputs, 'capabilityHostsOutput'), 'value'), createArray())]"
         }
       }
     },

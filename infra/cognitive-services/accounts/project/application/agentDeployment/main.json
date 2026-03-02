@@ -5,8 +5,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.40.2.10011",
-      "templateHash": "16621922061991050056"
+      "version": "0.34.44.8038",
+      "templateHash": "4461673078826666884"
     },
     "name": "Cognitive Services Application Agent Deployment",
     "description": "This module creates an agent deployment within an application in a Cognitive Services project.\r\nAgent deployments define how agents within an application are deployed and scaled.\r\nSee: https://learn.microsoft.com/en-us/azure/templates/microsoft.cognitiveservices/accounts/projects/applications/agentdeployments\r\n"

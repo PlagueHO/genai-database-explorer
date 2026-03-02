@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.34.44.8038",
-      "templateHash": "9293563254781042730"
+      "templateHash": "8860459313882693128"
     }
   },
   "parameters": {
@@ -119,7 +119,7 @@
   "variables": {
     "$fxv#0": {
       "aiSearchSearchServices": "aisrch-",
-      "aiFoundryAccounts": "aif-",
+      "microsoftFoundryAccounts": "msf-",
       "aiFoundryHubs": "aihub-",
       "analysisServicesServers": "as",
       "apiManagementService": "apim-",
@@ -287,8 +287,8 @@
     "resourceToken": "[toLower(uniqueString(subscription().id, parameters('environmentName'), parameters('location')))]",
     "logAnalyticsWorkspaceName": "[format('{0}{1}', variables('abbrs').operationalInsightsWorkspaces, parameters('environmentName'))]",
     "applicationInsightsName": "[format('{0}{1}', variables('abbrs').insightsComponents, parameters('environmentName'))]",
-    "foundryName": "[format('{0}{1}', variables('abbrs').aiFoundryAccounts, parameters('environmentName'))]",
-    "foundryCustomSubDomainName": "[toLower(replace(parameters('environmentName'), '-', ''))]",
+    "foundryName": "[format('{0}{1}', variables('abbrs').microsoftFoundryAccounts, parameters('environmentName'))]",
+    "foundryCustomSubDomainName": "[variables('foundryName')]",
     "defaultProjectName": "genaidbexplorer",
     "aiSearchName": "[format('{0}{1}', variables('abbrs').aiSearchSearchServices, parameters('environmentName'))]",
     "cosmosDbAccountName": "[format('{0}{1}', variables('abbrs').cosmosDBAccounts, parameters('environmentName'))]",
@@ -4705,6 +4705,13 @@
               "systemAssigned": true
             }
           },
+          "networkAcls": {
+            "value": {
+              "defaultAction": "Allow",
+              "virtualNetworkRules": [],
+              "ipRules": []
+            }
+          },
           "publicNetworkAccess": "[if(parameters('enablePublicNetworkAccess'), createObject('value', 'Enabled'), createObject('value', 'Disabled'))]",
           "sku": {
             "value": "S0"
@@ -4739,7 +4746,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.34.44.8038",
-              "templateHash": "5507976831859411933"
+              "templateHash": "394171183359757869"
             },
             "name": "Cognitive Services",
             "description": "This module deploys a Cognitive Service account.\nThis is a temporary module for deploying Azure Foundry Cognitive Services accounts.\nIt is intended to be replaced by the Azure Verified Module (AVM) for Microsoft.CognitiveServices accounts\nonce it supports Foundry V2 (projects, connections etc)\nhttps://github.com/Azure/bicep-registry-modules/issues/5390\n"
@@ -8367,10 +8374,10 @@
                     "_generator": {
                       "name": "bicep",
                       "version": "0.34.44.8038",
-                      "templateHash": "18399113193289751815"
+                      "templateHash": "15747906737730514082"
                     },
                     "name": "Cognitive Services Project",
-                    "description": "This module deploys a Project within a Cognitive Services account.\nIt allows for the creation of a Foundry Project with optional managed identities and role assignments.\n"
+                    "description": "This module deploys a Project within a Cognitive Services account.\r\nIt allows for the creation of a Foundry Project with optional managed identities and role assignments.\r\n"
                   },
                   "definitions": {
                     "_1.aadAuthTypeWorkspaceConnectionPropertyType": {

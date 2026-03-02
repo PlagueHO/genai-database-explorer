@@ -78,7 +78,7 @@ var resourceToken = toLower(uniqueString(subscription().id, environmentName, loc
 var logAnalyticsWorkspaceName = '${abbrs.operationalInsightsWorkspaces}${environmentName}'
 var applicationInsightsName = '${abbrs.insightsComponents}${environmentName}'
 var foundryName = '${abbrs.microsoftFoundryAccounts}${environmentName}'
-var foundryCustomSubDomainName = toLower(replace(environmentName, '-', ''))
+var foundryCustomSubDomainName = foundryName // <-- To enable v2 this needs to be same as the foundryName
 var defaultProjectName = 'genaidbexplorer'
 var aiSearchName = '${abbrs.aiSearchSearchServices}${environmentName}'
 var cosmosDbAccountName = '${abbrs.cosmosDBAccounts}${environmentName}'
@@ -167,6 +167,11 @@ module foundryService './cognitive-services/accounts/main.bicep' = {
     ]
     managedIdentities: {
       systemAssigned: true
+    }
+    networkAcls: {
+      defaultAction: 'Allow'
+      virtualNetworkRules: []
+      ipRules: []
     }
     publicNetworkAccess: enablePublicNetworkAccess ? 'Enabled' : 'Disabled'
     sku: 'S0'
