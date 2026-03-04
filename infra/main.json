@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.34.44.8038",
-      "templateHash": "8860459313882693128"
+      "templateHash": "482931594781631964"
     }
   },
   "parameters": {
@@ -4746,7 +4746,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.34.44.8038",
-              "templateHash": "394171183359757869"
+              "templateHash": "5457039565874199221"
             },
             "name": "Cognitive Services",
             "description": "This module deploys a Cognitive Service account.\nThis is a temporary module for deploying Azure Foundry Cognitive Services accounts.\nIt is intended to be replaced by the Azure Verified Module (AVM) for Microsoft.CognitiveServices accounts\nonce it supports Foundry V2 (projects, connections etc)\nhttps://github.com/Azure/bicep-registry-modules/issues/5390\n"
@@ -11181,7 +11181,8 @@
                 }
               },
               "dependsOn": [
-                "cognitiveService"
+                "cognitiveService",
+                "cognitiveService_deployments"
               ]
             },
             "cognitiveServices_connections": {
