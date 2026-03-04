@@ -40,6 +40,9 @@ jobs:
     
     environment: ${{ inputs.ENVIRONMENT }}
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     
     steps:
       - name: Checkout
@@ -62,5 +65,48 @@ jobs:
             --federated-credential-provider "github" \
             --tenant-id "$AZURE_TENANT_ID"
 
+      - name: Authenticate Azure CLI (Federated Credentials)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Ensure azd environment exists
+        run: |
+          azd env new "$AZURE_ENV_NAME" --location "$AZURE_LOCATION" 2>/dev/null || true
+          azd env set AZURE_RESOURCE_GROUP "rg-${AZURE_ENV_NAME}"
+
       - name: Delete Infrastructure
-        run: azd down --no-prompt --purge --force
+        run: |
+          RESOURCE_GROUP="rg-${AZURE_ENV_NAME}"
+          echo "Deleting infrastructure for environment '$AZURE_ENV_NAME'..."
+
+          # Phase 1: Try azd down first (may fail if no deployment state)
+          echo "Phase 1: Attempting azd down..."
+          azd down --no-prompt --purge --force || true
+
+          # Phase 2: Fall back to az group delete using deterministic resource group name
+          echo "Phase 2: Checking for resource group '$RESOURCE_GROUP'..."
+          if [ "$(az group exists --name "$RESOURCE_GROUP")" = "true" ]; then
+            echo "Resource group '$RESOURCE_GROUP' exists. Deleting..."
+            az group delete --name "$RESOURCE_GROUP" --yes
+            echo "Resource group deleted."
+          else
+            echo "Resource group '$RESOURCE_GROUP' does not exist."
+          fi
+
+          # Phase 3: Purge soft-deleted Cognitive Services accounts from this resource group
+          echo "Phase 3: Purging soft-deleted Cognitive Services accounts..."
+          DELETED_ACCOUNTS=$(az cognitiveservices account list-deleted --query "[?resourceGroup=='$RESOURCE_GROUP']" -o json 2>/dev/null || echo "[]")
+          echo "$DELETED_ACCOUNTS" | jq -c '.[]' 2>/dev/null | while IFS= read -r account; do
+            ACCOUNT_NAME=$(echo "$account" | jq -r '.name')
+            ACCOUNT_LOCATION=$(echo "$account" | jq -r '.location')
+            echo "Purging soft-deleted Cognitive Services account '$ACCOUNT_NAME' in '$ACCOUNT_LOCATION'..."
+            az cognitiveservices account purge \
+              --name "$ACCOUNT_NAME" \
+              --resource-group "$RESOURCE_GROUP" \
+              --location "$ACCOUNT_LOCATION" || true
+          done
+
+          echo "Deletion completed."
