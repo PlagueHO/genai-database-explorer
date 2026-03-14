@@ -1,19 +1,7 @@
 {
     "inputs": [],
     "servers": {
-        "agent-framework-docs": {
-            "type": "sse",
-            "url": "https://gitmcp.io/microsoft/agent-framework"
-        },
-        "aspire": {
-            "type": "stdio",
-            "command": "aspire",
-            "args": [
-                "mcp",
-                "start"
-            ]
-        },
-        "azure-verified-module-bicep-docs": {
+        "azure/verified-module-bicep": {
             "type": "sse",
             "url": "https://gitmcp.io/Azure/bicep-registry-modules"
         },
@@ -37,13 +25,25 @@
             "type": "http",
             "url": "https://api.githubcopilot.com/mcp/",
         },
-        "microsoft-learn": {
-            "type": "http",
-            "url": "https://learn.microsoft.com/api/mcp"
+        "microsoft/agent-framework": {
+            "type": "sse",
+            "url": "https://gitmcp.io/microsoft/agent-framework"
         },
-        "microsoft-foundry": {
+        "microsoft/aspire": {
+            "type": "stdio",
+            "command": "aspire",
+            "args": [
+                "mcp",
+                "start"
+            ]
+        },
+        "microsoft/foundry": {
             "type": "http",
             "url": "https://mcp.ai.azure.com"
+        },
+        "microsoft/learn": {
+            "type": "http",
+            "url": "https://learn.microsoft.com/api/mcp"
         },
         "nodejs-docs": {
             "url": "https://gitmcp.io/nodejs/node",
