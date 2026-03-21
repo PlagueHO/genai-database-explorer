@@ -39,8 +39,9 @@ param baseUrl string?
 @sys.description('Optional. The traffic routing policy for the application\'s deployments.')
 param trafficRoutingPolicy applicationTrafficRoutingPolicyType?
 
-@sys.description('Optional. The list of agent references in this application.')
-param agents agentReferenceType[]?
+@sys.description('Required. The list of agent references in this application. Must contain at least one agent. Agents must exist in the project before the application can be created (created via data-plane APIs or az cognitiveservices agent create).')
+@minLength(1)
+param agents agentReferenceType[]
 
 @sys.description('Optional. Tags for the application properties.')
 param tags object?
@@ -69,18 +70,21 @@ resource parentProject 'Microsoft.CognitiveServices/accounts/projects@2025-10-01
 resource application 'Microsoft.CognitiveServices/accounts/projects/applications@2025-10-01-preview' = {
   parent: parentProject
   name: name
-  properties: {
-    displayName: displayName
-    description: description
-    #disable-next-line BCP225 // authorizationPolicy discriminator resolved at runtime from parameter
-    authorizationPolicy: authorizationPolicy
-    agentIdentityBlueprint: agentIdentityBlueprint
-    defaultInstanceIdentity: defaultInstanceIdentity
-    baseUrl: baseUrl
-    trafficRoutingPolicy: trafficRoutingPolicy
-    agents: agents
-    tags: tags
-  }
+  properties: union(
+    {
+      displayName: displayName
+      description: description
+      #disable-next-line BCP225 BCP078 // authorizationPolicy uses authorizationScheme discriminator; ARM schema still references 'type' (RP schema mismatch)
+      authorizationPolicy: authorizationPolicy
+      agents: agents
+    },
+    // Only include optional complex properties when non-null to avoid API rejecting null values
+    agentIdentityBlueprint != null ? { agentIdentityBlueprint: agentIdentityBlueprint! } : {},
+    defaultInstanceIdentity != null ? { defaultInstanceIdentity: defaultInstanceIdentity! } : {},
+    baseUrl != null ? { baseUrl: baseUrl! } : {},
+    trafficRoutingPolicy != null ? { trafficRoutingPolicy: trafficRoutingPolicy! } : {},
+    tags != null ? { tags: tags! } : {}
+  )
 }
 
 @batchSize(1)
@@ -91,13 +95,14 @@ resource application_agentDeployments 'Microsoft.CognitiveServices/accounts/proj
     properties: union(
       {
         deploymentType: agentDeployment.deploymentType
-        displayName: agentDeployment.?displayName
-        description: agentDeployment.?description
-        deploymentId: agentDeployment.?deploymentId
-        agents: agentDeployment.?agents
-        protocols: agentDeployment.?protocols
-        tags: agentDeployment.?tags
+        agents: agentDeployment.agents
+        protocols: agentDeployment.protocols
       },
+      // Only include optional properties when non-null to avoid API rejecting null values
+      agentDeployment.?displayName != null ? { displayName: agentDeployment.displayName! } : {},
+      agentDeployment.?description != null ? { description: agentDeployment.description! } : {},
+      agentDeployment.?deploymentId != null ? { deploymentId: agentDeployment.deploymentId! } : {},
+      agentDeployment.?tags != null ? { tags: agentDeployment.tags! } : {},
       agentDeployment.deploymentType == 'Hosted'
         ? {
             minReplicas: agentDeployment.?minReplicas
@@ -128,18 +133,18 @@ output resourceGroupName string = resourceGroup().name
 @export()
 @sys.description('The type for a reference to an agent within an application.')
 type agentReferenceType = {
-  @sys.description('Optional. The agent\'s unique identifier within the organization.')
+  @sys.description('Optional. The agent\'s unique identifier within the organization (subscription).')
   agentId: string?
 
-  @sys.description('Optional. The agent\'s name (unique within the project/app).')
-  agentName: string?
+  @sys.description('Required. The agent\'s name (unique within the project/app). The agent must already exist in the project.')
+  agentName: string
 }
 
 @export()
 @sys.description('The type for the authorization policy of an application.')
 type applicationAuthorizationPolicyType = {
   @sys.description('Required. The authorization scheme type.')
-  type: 'Channels' | 'Default' | 'OrganizationScope'
+  authorizationScheme: 'Channels' | 'Default' | 'OrganizationScope'
 }
 
 @export()
@@ -217,8 +222,8 @@ type applicationType = {
   @sys.description('Optional. The traffic routing policy for the application\'s deployments.')
   trafficRoutingPolicy: applicationTrafficRoutingPolicyType?
 
-  @sys.description('Optional. The list of agent references in this application.')
-  agents: agentReferenceType[]?
+  @sys.description('Required. The list of agent references in this application. Must contain at least one agent reference with agentName. Agents must exist in the project before the application can be deployed.')
+  agents: agentReferenceType[]
 
   @sys.description('Optional. Tags for the application properties.')
   tags: object?

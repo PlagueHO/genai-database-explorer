@@ -13,11 +13,11 @@
                 "@upstash/context7-mcp@latest"
             ]
         },
-        "copilotkit-docs": {
+        "copilotkit-repo": {
             "url": "https://gitmcp.io/copilotkit/copilotkit",
             "type": "sse"
         },        
-        "fluentui-docs": {
+        "fluentui-repo": {
             "url": "https://gitmcp.io/microsoft/fluentui",
             "type": "sse"
         },        
@@ -25,11 +25,11 @@
             "type": "http",
             "url": "https://api.githubcopilot.com/mcp/",
         },
-        "microsoft/agent-framework": {
+        "microsoft-agent-framework-repo": {
             "type": "sse",
             "url": "https://gitmcp.io/microsoft/agent-framework"
         },
-        "microsoft/aspire": {
+        "microsoft-aspire": {
             "type": "stdio",
             "command": "aspire",
             "args": [
@@ -37,19 +37,19 @@
                 "start"
             ]
         },
-        "microsoft/foundry": {
+        "microsoft-foundry": {
             "type": "http",
             "url": "https://mcp.ai.azure.com"
         },
-        "microsoft/learn": {
+        "microsoft-learn": {
             "type": "http",
             "url": "https://learn.microsoft.com/api/mcp"
         },
-        "nodejs-docs": {
+        "nodejs-repo": {
             "url": "https://gitmcp.io/nodejs/node",
             "type": "sse"
         },
-        "react-docs": {
+        "react-repo": {
             "url": "https://gitmcp.io/facebook/react",
             "type": "sse"
         },
