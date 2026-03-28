@@ -72,7 +72,7 @@ jobs:
           enable-AzPSSession: true
 
       - name: Enable Microsoft Foundry Public Access
-        uses: azure/powershell@v2
+        uses: azure/powershell@v3
         with:
           azPSVersion: "latest"
           inlineScript: |
@@ -127,7 +127,7 @@ jobs:
           enable-AzPSSession: true
 
       - name: Disable Microsoft Foundry Public Access
-        uses: azure/powershell@v2
+        uses: azure/powershell@v3
         with:
           azPSVersion: "latest"
           inlineScript: |
