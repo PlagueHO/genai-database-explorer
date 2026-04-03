@@ -6,15 +6,15 @@
   <ItemGroup>
     <!-- Azure SDKs -->
     <PackageVersion Include="Azure.AI.OpenAI" Version="2.1.0" />
-    <PackageVersion Include="Azure.AI.Projects" Version="1.2.0-beta.5" />
+    <PackageVersion Include="Azure.AI.Projects" Version="2.0.0" />
     <PackageVersion Include="Azure.AI.Projects.OpenAI" Version="1.0.0-beta.5" />
     <PackageVersion Include="Azure.Core" Version="1.52.0" />
-    <PackageVersion Include="Azure.Identity" Version="1.19.0" />
+    <PackageVersion Include="Azure.Identity" Version="1.20.0" />
     <PackageVersion Include="Azure.Security.KeyVault.Secrets" Version="4.9.0" />
     <PackageVersion Include="Azure.Storage.Blobs" Version="12.27.0" />
 
     <!-- Aspire -->
-    <PackageVersion Include="Aspire.Hosting.JavaScript" Version="13.2.0" />
+    <PackageVersion Include="Aspire.Hosting.JavaScript" Version="13.2.1" />
 
     <!-- Microsoft Extensions -->
     <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="10.4.1" />
@@ -48,15 +48,15 @@
     <PackageVersion Include="Microsoft.SemanticKernel.Connectors.InMemory" Version="1.73.0-preview" />
 
     <!-- OpenTelemetry -->
-    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.0" />
-    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.15.0" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.1" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.15.1" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.15.1" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.15.0" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.15.0" />
 
     <!-- Third-party -->
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageVersion Include="Scriban" Version="7.0.5" />
+    <PackageVersion Include="Scriban" Version="7.0.6" />
     <PackageVersion Include="System.CommandLine" Version="2.0.5" />
     <PackageVersion Include="System.Linq.Async" Version="7.0.0" />
     <PackageVersion Include="YamlDotNet" Version="16.3.0" />
