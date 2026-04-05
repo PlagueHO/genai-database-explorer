@@ -1,7 +1,7 @@
 using System.ClientModel;
 using System.ClientModel.Primitives;
 using Azure.AI.Projects;
-using Azure.AI.Projects.OpenAI;
+using Azure.AI.Extensions.OpenAI;
 using Azure.Identity;
 using GenAIDBExplorer.Core.Models.Project;
 using Microsoft.Extensions.AI;
@@ -101,7 +101,7 @@ public sealed class ChatClientFactory(
                     tenantInfo);
 
                 _projectClient = new AIProjectClient(endpointUri, credential);
-                _openAIClient = _projectClient.OpenAI;
+                _openAIClient = _projectClient.ProjectOpenAIClient;
             }
             else
             {
