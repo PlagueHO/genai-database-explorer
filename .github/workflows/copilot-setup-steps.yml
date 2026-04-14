@@ -18,6 +18,9 @@ jobs:
       contents: read
 
     environment: copilot
+    env:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -31,7 +34,7 @@ jobs:
         uses: Azure/setup-azd@v2
 
       - name: Azure login
-        if: ${{ secrets.AZURE_CLIENT_ID != '' }}
+        if: env.AZURE_CLIENT_ID != ''
         uses: azure/login@v3
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
