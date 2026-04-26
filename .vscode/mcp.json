@@ -1,9 +1,13 @@
 {
     "inputs": [],
     "servers": {
-        "azure/verified-module-bicep": {
-            "type": "sse",
-            "url": "https://gitmcp.io/Azure/bicep-registry-modules"
+        "aspire": {
+            "type": "stdio",
+            "command": "aspire",
+            "args": [
+                "mcp",
+                "start"
+            ]
         },
         "context7": {
             "type": "stdio",
@@ -13,29 +17,9 @@
                 "@upstash/context7-mcp@latest"
             ]
         },
-        "copilotkit-repo": {
-            "url": "https://gitmcp.io/copilotkit/copilotkit",
-            "type": "sse"
-        },        
-        "fluentui-repo": {
-            "url": "https://gitmcp.io/microsoft/fluentui",
-            "type": "sse"
-        },        
         "github": {
             "type": "http",
             "url": "https://api.githubcopilot.com/mcp/",
-        },
-        "microsoft-agent-framework-repo": {
-            "type": "sse",
-            "url": "https://gitmcp.io/microsoft/agent-framework"
-        },
-        "microsoft-aspire": {
-            "type": "stdio",
-            "command": "aspire",
-            "args": [
-                "mcp",
-                "start"
-            ]
         },
         "microsoft-foundry": {
             "type": "http",
@@ -45,21 +29,13 @@
             "type": "http",
             "url": "https://learn.microsoft.com/api/mcp"
         },
-        "nodejs-repo": {
-            "url": "https://gitmcp.io/nodejs/node",
-            "type": "sse"
-        },
-        "react-repo": {
-            "url": "https://gitmcp.io/facebook/react",
-            "type": "sse"
-        },
         "playwright": {
             "type": "stdio",
             "command": "npx",
             "args": [
                 "-y",
                 "@playwright/mcp@latest"
-            ],
+            ]
         }
     }
 }
