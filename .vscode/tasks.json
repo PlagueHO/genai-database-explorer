@@ -440,11 +440,7 @@
 
         // Bicep tasks
 		{
-			"label": "bicep: build",
-			"icon": {
-				"id": "file-code",
-				"color": "terminal.ansiBlue"
-			},
+			"label": "infra: build (bicep)",
 			"type": "shell",
 			"command": "pwsh",
 			"args": [
@@ -457,7 +453,11 @@
 				"isDefault": false
 			},
 			"presentation": { "reveal": "always" },
-			"problemMatcher": []
+			"problemMatcher": [],
+	        "icon": {
+				"id": "cloud",
+				"color": "terminal.ansiYellow"
+		   }
 		},
 
 		// Markdown Linting Tasks
