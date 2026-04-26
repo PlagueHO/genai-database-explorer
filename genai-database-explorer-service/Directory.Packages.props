@@ -14,7 +14,7 @@
     <PackageVersion Include="Azure.Storage.Blobs" Version="12.27.0" />
 
     <!-- Aspire -->
-    <PackageVersion Include="Aspire.Hosting.JavaScript" Version="13.2.2" />
+    <PackageVersion Include="Aspire.Hosting.JavaScript" Version="13.2.4" />
 
     <!-- Microsoft Extensions -->
     <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="10.4.1" />
