@@ -397,7 +397,7 @@ module cosmosDbAccount 'br/public:avm/res/document-db/database-account:0.19.0' =
 }
 
 // --------- STORAGE ACCOUNT ---------
-module storageAccount 'br/public:avm/res/storage/storage-account:0.31.1' = if (storageAccountDeploy) {
+module storageAccount 'br/public:avm/res/storage/storage-account:0.32.0' = if (storageAccountDeploy) {
   name: 'storage-account-deployment-${resourceToken}'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [
