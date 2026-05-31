@@ -56,7 +56,7 @@
 
     <!-- Third-party -->
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageVersion Include="Scriban" Version="7.2.0" />
+    <PackageVersion Include="Scriban" Version="7.2.1" />
     <PackageVersion Include="System.CommandLine" Version="2.0.8" />
     <PackageVersion Include="System.Linq.Async" Version="7.0.1" />
     <PackageVersion Include="YamlDotNet" Version="18.0.0" />
