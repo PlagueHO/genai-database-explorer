@@ -14,7 +14,7 @@
     <PackageVersion Include="Azure.Storage.Blobs" Version="12.29.0" />
 
     <!-- Aspire -->
-    <PackageVersion Include="Aspire.Hosting.JavaScript" Version="13.4.3" />
+    <PackageVersion Include="Aspire.Hosting.JavaScript" Version="13.4.5" />
 
     <!-- Microsoft Extensions -->
     <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="10.7.0" />
@@ -29,7 +29,7 @@
     <PackageVersion Include="Microsoft.Extensions.Logging" Version="10.0.9" />
     <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.9" />
     <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="10.7.0" />
-    <PackageVersion Include="Microsoft.Extensions.VectorData.Abstractions" Version="10.1.0" />
+    <PackageVersion Include="Microsoft.Extensions.VectorData.Abstractions" Version="10.7.0" />
 
     <!-- Microsoft Agents -->
     <PackageVersion Include="Microsoft.Agents.AI.OpenAI" Version="*-*" />
