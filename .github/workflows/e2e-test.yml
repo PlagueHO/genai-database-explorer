@@ -62,7 +62,7 @@ jobs:
     environment: ${{ inputs.ENVIRONMENT }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Login to Azure
         uses: azure/login@v3
@@ -118,7 +118,7 @@ jobs:
     environment: ${{ inputs.ENVIRONMENT }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Login to Azure
         uses: azure/login@v3
