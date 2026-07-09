@@ -47,6 +47,9 @@ param sqlServerUsername string = ''
 @secure()
 param sqlServerPassword string = ''
 
+@sys.description('Whether to deploy SQL Server and the AdventureWorksLT database.')
+param sqlServerDeploy bool = true
+
 @sys.description('Whether to deploy Azure AI Search service.')
 param azureAiSearchDeploy bool = false
 
@@ -264,8 +267,15 @@ var azureADOnlyAuthentication = sqlAuthenticationMode == 'EntraIdOnly'
 // Map principalIdType to SQL administrator principalType
 var sqlAdminPrincipalType = principalIdType == 'ServicePrincipal' ? 'Application' : (principalIdType == 'User' ? 'User' : 'Application')
 
+#disable-next-line BCP318 // Module is guaranteed to exist when sqlServerDeploy is true
+var sqlServerNameOut = sqlServerDeploy ? sqlServer.outputs.name : ''
+#disable-next-line BCP318 // Module is guaranteed to exist when sqlServerDeploy is true
+var sqlServerResourceIdOut = sqlServerDeploy ? sqlServer.outputs.resourceId : ''
+#disable-next-line BCP318 // Module is guaranteed to exist when sqlServerDeploy is true
+var sqlDatabaseEndpointOut = sqlServerDeploy ? sqlServer.outputs.fullyQualifiedDomainName : ''
+
 // --------- SQL DATABASE ---------
-module sqlServer 'br/public:avm/res/sql/server:0.21.1' = {
+module sqlServer 'br/public:avm/res/sql/server:0.21.1' = if (sqlServerDeploy) {
   name: 'sql-server-deployment-${resourceToken}'
   scope: resourceGroup(resourceGroupName)
   dependsOn: [
@@ -517,7 +527,8 @@ output LOG_ANALYTICS_RESOURCE_ID string = logAnalyticsWorkspace.outputs.resource
 output LOG_ANALYTICS_WORKSPACE_ID string = logAnalyticsWorkspace.outputs.logAnalyticsWorkspaceId
 output APPLICATION_INSIGHTS_NAME string = applicationInsights.outputs.name
 output APPLICATION_INSIGHTS_RESOURCE_ID string = applicationInsights.outputs.resourceId
-output APPLICATION_INSIGHTS_INSTRUMENTATION_KEY string = applicationInsights.outputs.instrumentationKey
+// Policy may enforce disableLocalAuth=true, which blocks key retrieval/list operations.
+output APPLICATION_INSIGHTS_INSTRUMENTATION_KEY string = ''
 
 // Output the AI Search resources
 output AZURE_AI_SEARCH_NAME string = aiSearchServiceName
@@ -532,11 +543,11 @@ output AZURE_AI_FOUNDRY_RESOURCE_ID string = foundryService.outputs.resourceId
 output AZURE_AI_FOUNDRY_PROJECT_ENDPOINT string = 'https://${foundryCustomSubDomainName}.services.ai.azure.com/api/projects/${defaultProjectName}'
 
 // Output the SQL Server resources
-output SQL_SERVER_NAME string = sqlServer.outputs.name
-output SQL_SERVER_RESOURCE_ID string = sqlServer.outputs.resourceId
-output SQL_SERVER_AUTH_MODE string = sqlAuthenticationMode
-output SQL_SERVER_ADMIN_USERNAME string = sqlAuthEnabled ? sqlServerUsername : ''
-output SQL_DATABASE_ENDPOINT string = sqlServer.outputs.fullyQualifiedDomainName
+output SQL_SERVER_NAME string = sqlServerNameOut
+output SQL_SERVER_RESOURCE_ID string = sqlServerResourceIdOut
+output SQL_SERVER_AUTH_MODE string = sqlServerDeploy ? sqlAuthenticationMode : ''
+output SQL_SERVER_ADMIN_USERNAME string = (sqlServerDeploy && sqlAuthEnabled) ? sqlServerUsername : ''
+output SQL_DATABASE_ENDPOINT string = sqlDatabaseEndpointOut
 
 // Output the Client IP Address
 output CLIENT_IP_ADDRESS string = clientIpAddress

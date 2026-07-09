@@ -46,6 +46,7 @@ jobs:
       BUILD_VERSION: ${{ inputs.BUILD_VERSION }}
       AZURE_LOCATION: ${{ inputs.AZURE_LOCATION }}
       AZURE_ENV_NAME: ${{ inputs.AZURE_ENV_NAME }}
+      SQL_SERVER_DEPLOY: false
     secrets:
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
@@ -92,6 +93,7 @@ jobs:
 
   console-app-integration-tests:
     name: Run Console App Integration Tests
+    if: needs.provision-infrastructure.outputs.SQL_SERVER_NAME != ''
     needs: [provision-infrastructure, pre-test-network-setup]
     uses: ./.github/workflows/console-integration-tests.yml
     with:
@@ -110,7 +112,7 @@ jobs:
 
   post-test-network-cleanup:
     name: Post-Test Network Cleanup
-    needs: [console-app-integration-tests]
+    needs: [provision-infrastructure, console-app-integration-tests]
     runs-on: ubuntu-latest
     if: always()
     environment: ${{ inputs.ENVIRONMENT }}

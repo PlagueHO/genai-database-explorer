@@ -17,6 +17,7 @@ param principalIdType = toLower(readEnvironmentVariable('AZURE_PRINCIPAL_ID_TYPE
 param sqlAuthenticationMode = readEnvironmentVariable('SQL_AUTH_MODE', 'SqlAndEntraId')
 param sqlServerUsername = readEnvironmentVariable('SQL_SERVER_USERNAME', 'sqladmin')
 param sqlServerPassword = readEnvironmentVariable('SQL_SERVER_PASSWORD', '')
+param sqlServerDeploy = bool(readEnvironmentVariable('SQL_SERVER_DEPLOY', 'true'))
 
 // AI Search parameter
 param azureAiSearchDeploy = bool(readEnvironmentVariable('AZURE_AI_SEARCH_DEPLOY', 'false'))
