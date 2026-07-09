@@ -382,7 +382,7 @@ resource cognitiveService 'Microsoft.CognitiveServices/accounts@2025-10-01-previ
   sku: {
     name: sku
   }
-  properties: {
+  properties: union({
     allowProjectManagement: allowProjectManagement
     customSubDomainName: customSubDomainName
     networkAcls: !empty(networkAcls ?? {})
@@ -433,8 +433,7 @@ resource cognitiveService 'Microsoft.CognitiveServices/accounts@2025-10-01-previ
     userOwnedStorage: !empty(userOwnedStorage) ? userOwnedStorage : null
     dynamicThrottlingEnabled: dynamicThrottlingEnabled
     storedCompletionsDisabled: storedCompletionsDisabled
-    defaultProject: defaultProject
-  }
+  }, !empty(defaultProject ?? '') ? { defaultProject: defaultProject } : {})
 }
 
 resource cognitiveService_raiPolicies 'Microsoft.CognitiveServices/accounts/raiPolicies@2025-10-01-preview' = [
@@ -672,7 +671,7 @@ resource cognitiveService_roleAssignments 'Microsoft.Authorization/roleAssignmen
   }
 ]
 
-module secretsExport 'modules/keyVaultExport.bicep' = if (secretsExportConfiguration != null) {
+module secretsExport 'modules/key-vault-export.bicep' = if (secretsExportConfiguration != null) {
   name: '${uniqueString(deployment().name, location)}-secrets-kv'
   scope: az.resourceGroup(
     split(secretsExportConfiguration.?keyVaultResourceId!, '/')[2],
@@ -720,8 +719,16 @@ output endpoints endpointType = cognitiveService.properties.endpoints
 @description('The principal ID of the system assigned identity.')
 output systemAssignedMIPrincipalId string? = cognitiveService.?identity.?principalId
 
+@description('The system-assigned managed identity principal IDs of the created projects, in the same order as the projects input array. Empty strings indicate projects without a system-assigned identity.')
+output projectSystemAssignedMIPrincipalIds string[] = [
+  for (project, index) in (projects ?? []): cognitiveService_projects[index].outputs.?systemAssignedMIPrincipalId ?? ''
+]
+
 @description('The location the resource was deployed into.')
 output location string = cognitiveService.location
+
+@description('The custom subdomain name of the cognitive services account.')
+output customSubDomainName string = cognitiveService.properties.customSubDomainName ?? ''
 
 import { secretsOutputType } from 'br/public:avm/utl/types/avm-common-types:0.6.0'
 @description('A hashtable of references to the secrets exported to the provided Key Vault. The key of each reference is each secret\'s name.')

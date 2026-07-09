@@ -439,26 +439,108 @@
 		},
 
         // Bicep tasks
-		{
-			"label": "infra: build (bicep)",
-			"type": "shell",
-			"command": "pwsh",
-			"args": [
-				"-NoProfile",
-				"-Command",
-				"bicep build .\\infra\\main.bicep; Get-ChildItem -Path .\\infra -Filter 'main.bicep' -Recurse | ForEach-Object { if ($_.FullName -ne (Resolve-Path '.\\infra\\main.bicep').Path) { bicep build $_.FullName } }"
-			],
-			"group": {
-				"kind": "build",
-				"isDefault": false
-			},
-			"presentation": { "reveal": "always" },
-			"problemMatcher": [],
-	        "icon": {
-				"id": "cloud",
-				"color": "terminal.ansiYellow"
-		   }
-		},
+        {
+            "label": "infra: build (bicep)",
+            "type": "shell",
+            "command": "pwsh",
+            "args": [
+              "-NoProfile",
+              "-Command",
+              "Get-ChildItem -Path infra -Recurse -Filter '*.bicep' | ForEach-Object { Write-Host \"Building $($_.FullName)...\"; az bicep build --file $($_.FullName) }"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/infra"
+            },
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "icon": {
+                "id": "server-environment",
+                "color": "terminal.ansiBlue"
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "infra: lint (bicep)",
+            "type": "shell",
+            "command": "az",
+            "args": ["bicep", "lint", "--file", "main.bicep"],
+            "options": {
+                "cwd": "${workspaceFolder}/infra"
+            },
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "icon": {
+                "id": "pass",
+                "color": "terminal.ansiCyan"
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "azd: provision",
+            "type": "shell",
+            "command": "azd",
+            "args": ["provision"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "icon": {
+                "id": "tools",
+                "color": "terminal.ansiBlue"
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "azd: up",
+            "type": "shell",
+            "command": "azd",
+            "args": ["up"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "icon": {
+                "id": "rocket",
+                "color": "terminal.ansiGreen"
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "azd: down",
+            "type": "shell",
+            "command": "azd",
+            "args": ["down", "--force", "--purge"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "icon": {
+                "id": "trash",
+                "color": "terminal.ansiRed"
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
 
 		// Markdown Linting Tasks
 		{

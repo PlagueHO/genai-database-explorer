@@ -406,3 +406,9 @@ FodyWeavers.xsd
 
 # C# DevKit
 *.lscache
+
+# Bicep-compiled ARM templates (generated artifacts; azd compiles Bicep at deploy time)
+infra/main.json
+infra/main.parameters.json
+infra/cognitive-services/**/*.json
+infra/core/**/*.json
