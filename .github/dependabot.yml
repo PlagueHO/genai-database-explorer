@@ -22,6 +22,9 @@ updates:
           - "*"
     allow:
       - dependency-type: "all"
+    ignore:
+      - dependency-name: "Microsoft.Agents.AI.OpenAI"
+      - dependency-name: "Microsoft.Extensions.VectorData.Abstractions"
 
   # GitHub Actions dependencies
   - package-ecosystem: "github-actions"
