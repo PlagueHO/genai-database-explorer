@@ -46,6 +46,14 @@ All commands require the -p/--project setting that specifies a folder on disk ca
 
 This is a representation of the database schema that is enriched by Generative AI. The semantic model is stored in subfolder in the project folder with the name of the database in a file called `semanticmodel.json`. The **semantic model** must be produced by the console tool before it can be used to querying or with the web application.
 
+## Dependency maintenance
+
+Dependabot follows the `dependabot-monthly-v1` policy. Routine version updates are scheduled monthly for the first calendar day of the month at 09:00 `Pacific/Auckland` time. Minor and patch updates are grouped per configured ecosystem and directory as `nuget-minor-and-patch` or `github-actions-minor-and-patch`; major updates remain separate pull requests. A three-day release-age cooldown applies to version updates.
+
+Security updates are the exception to the monthly window: Dependabot security pull requests remain event-driven and are grouped separately as `nuget-security` or `github-actions-security`. For an urgent routine update, manually check the relevant Dependabot entry for updates rather than waiting for the next monthly scan. A manual check can run outside the normal schedule; the release-age cooldown may still defer recent versions.
+
+The configured coverage remains NuGet in `/genai-database-explorer-service` and GitHub Actions in `/`. Other manifests and configuration types are not enabled by this policy.
+
 ## Disclaimer
 
 This repository is provided "as is" without warranty of any kind, whether express or implied. Use at your own risk! The author will not be liable for any losses or damages associated with the use of this repository.
